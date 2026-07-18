@@ -1,4 +1,5 @@
 {
+  "outputStyle": "cognitive-load-min",
   "hooks": {
     "PreToolUse": [
       {
