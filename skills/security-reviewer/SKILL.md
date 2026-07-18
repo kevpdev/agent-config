@@ -98,40 +98,6 @@ Produis le rapport selon `assets/security-report-template.md`.
   ```
 ```
 
-### Pattern : vérification JWT correcte (Node)
-```typescript
-// ❌ NE PAS FAIRE — accepte n'importe quel algorithme
-jwt.verify(token, secret);
+### Patterns de correction
 
-// ✅ FAIRE — algorithme et issuer pinned
-jwt.verify(token, publicKey, {
-  algorithms: ['RS256'],
-  issuer: 'https://auth.example.com',
-  audience: 'api.example.com',
-});
-```
-
-### Pattern : password hashing
-```java
-// ❌ NE PAS FAIRE
-String hash = MessageDigest.getInstance("MD5").digest(password.getBytes());
-
-// ✅ FAIRE — bcrypt avec cost ≥ 12
-PasswordEncoder encoder = new BCryptPasswordEncoder(12);
-String hash = encoder.encode(password);
-```
-
-### Pattern : validation input (Node + Zod)
-```typescript
-// ❌ NE PAS FAIRE
-const { email, role } = req.body;
-await User.create({ email, role });  // role attacker-controlled !
-
-// ✅ FAIRE — schéma strict
-const schema = z.object({
-  email: z.string().email(),
-  // role NE FAIT PAS PARTIE du schéma → ignoré
-});
-const data = schema.parse(req.body);
-await User.create({ ...data, role: 'user' });  // forcé côté serveur
-```
+JWT, password hashing, validation d'input, CORS, headers, injections SQL/XSS — Java et Node : `references/fix-patterns.md`. Ne pas recopier ces exemples ici, les consommer depuis la référence.
