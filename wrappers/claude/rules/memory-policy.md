@@ -15,6 +15,6 @@ La **couche projet a deux homes dédiés**, selon la nature du fait :
 **CE QUE L'AUTO-MEMORY GARDE** (parent-only, sans autre home) :
 - Profil user (`user_*`), config dev / environnement perso et référence Claude (`reference_*`), feedback parent-only (`feedback_*`).
 
-**RÈGLES ET FEEDBACK FORK-PERTINENTS** → `CLAUDE.md` (ou un de ses fichiers importés), seul store qui traverse un contexte isolé (sous-agent, skill `context: fork`). Jamais dans le vault : un fork ne le lit pas.
+**RÈGLES ET FEEDBACK PERTINENTS EN CONTEXTE ISOLÉ** → `rules/` ou `CLAUDE.md` : les deux traversent un sous-agent (doc-vérifié pour les project rules, supposé pour les user rules). Jamais dans le vault ni en auto-memory — un sous-agent ne lit ni l'un ni l'autre.
 
-> Doublon de **règle statique** (style, méthodo) entre auto-memory et CLAUDE.md = bénin (ne dérive pas) → ne pas imposer de purge. Seule la couche projet volatile justifie le garde-fou ci-dessus. Gating **probabiliste** (évalué par Claude, pas un hook) : coût d'un raté = une mémoire stale, faible et différé.
+> Doublon de **règle statique** (style, méthodo) entre auto-memory et `rules/` = bénin (ne dérive pas) → ne pas imposer de purge. Seule la couche projet volatile justifie le garde-fou ci-dessus. Gating **probabiliste** (évalué par Claude, pas un hook) : coût d'un raté = une mémoire stale, faible et différé.
