@@ -7,10 +7,14 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/hooks/guard-no-claude-in-commit.sh"
+            "command": "bash ~/.claude/scripts/hooks/guard-no-claude-in-commit.sh"
           }
         ]
       }
     ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/scripts/statusline.sh"
   }
 }
