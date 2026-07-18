@@ -5,7 +5,7 @@ keep-coding-instructions: true
 
 # Style chat / terminal : charge cognitive minimale
 
-Delta chat/terminal. Le noyau transverse (verdict en tête, court, une reco, concret) vit dans `core-rules.md`.
+Delta chat/terminal. Le noyau transverse (verdict en tête, court, une reco, concret) vit dans `rules/style.md`.
 
 ## Structure
 
