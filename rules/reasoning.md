@@ -13,7 +13,7 @@
 
 Toute règle ou instruction écrite pour Claude (ici, dans un skill, une commande, une note) énonce sa **raison**, pas seulement l'ordre.
 
-**POURQUOI** : un LLM suit mieux une raison qu'un ordre rigide — sans le pourquoi, taux de violation plus élevé et pas de transfert au cas non prévu (règle d'or #1, `MyObsidianProVault/3_KNOWLEDGE/Tutorials/les-skills-claude-lessentiel.md`).
+**POURQUOI** : un LLM suit mieux une raison qu'un ordre rigide — sans le pourquoi, taux de violation plus élevé et pas de transfert au cas non prévu.
 
 **FORME** : préférer « négation + alternative » à l'interdit sec (« ne fais jamais X — à la place, fais Y »).
 

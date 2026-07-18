@@ -8,7 +8,7 @@ La **couche projet a deux homes dédiés**, selon la nature du fait :
 **POURQUOI** : un même fait à deux endroits dérive (la copie stale survit jusqu'à ce qu'une session la corrige — l'auto-memory ne s'auto-purge pas). Tant que l'AIDD **ou** le vault couvre la couche projet, l'auto-memory n'a rien à y ajouter.
 
 **RÈGLE D'ÉCRITURE — ne pas écrire de fait projet en auto-memory**
-- Détection : `aidd_docs/` dans un repo du workspace (→ AIDD actif) **ou** MOC vault / `_claudeTeam.vaultRoot` (→ vault actif). Si l'un des deux est présent, la couche projet est **suspendue** en auto-memory.
+- Détection : `aidd_docs/` dans un repo du workspace (→ AIDD actif) **ou** présence d'un vault (→ vault actif). Si l'un des deux est présent, la couche projet est **suspendue** en auto-memory.
 - **Fallback** : l'auto-memory ne reprend la couche projet **que si ni AIDD ni vault** n'assurent le récap/contexte.
 - Le vrai risque visé = les **faits projet volatils** (config, clés, runs, état) — ils deviennent faux et ont un autre home. Ne pas les laisser entrer empêche le stock stale de se reconstituer (auto-géré, pas de purge récurrente manuelle).
 

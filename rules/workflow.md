@@ -21,25 +21,8 @@ un subagent lit, le parent ne garde que le résultat.
 
 **À LA PLACE de** lire 10 fichiers toi-même → un Agent qui renvoie la conclusion.
 
-## Memory-Bank & Workflows
+## Règle — Skills : pas de liste figée
 
-Le contexte de session (Focus, Next Steps) est chargé automatiquement par le hook `SessionStart`.
-Les skills sont proposés nativement par le harness selon le prompt, ou chargés via `/skill <nom>`.
+**POURQUOI** : une liste de skills recopiée dans une règle dérive dès qu'on en ajoute ou renomme un — et une liste fausse coûte plus qu'une liste absente.
 
-### Workflow quotidien
-- **Début** : `/session-start` — confirme le focus ou en fixe un nouveau
-- **En cours** : `/capture "note"` — capture sans casser le flow
-- **Fin** : `/session-end` — sauvegarde progress et next steps
-
-### Commandes principales
-| Commande | Usage |
-|---|---|
-| `/session-start` · `/session-end` | Charge / sauvegarde le contexte de session |
-| `/capture` | Note rapide sans interrompre le flow |
-| `/memory-bank-init` · `/memory-bank-setup` | Initialise / configure le memory-bank projet |
-| `/plan` → `/epct` | Plan (s'arrête avant le code) puis implémentation |
-| `/create-pull-request` | PR avec titre + description auto |
-| `/skill <nom>` | Charge manuellement un skill (sinon auto-proposé) |
-
-### Skills
-Source de vérité = le dossier `skills/`. Pas de liste figée ici (elle dériverait) ; les skills sont proposés nativement selon le prompt, ou chargés via `/skill <nom>`.
+**SOURCE DE VÉRITÉ** = le dossier `skills/`. Les skills sont proposés selon le prompt, ou chargés explicitement via `/<nom>`.
