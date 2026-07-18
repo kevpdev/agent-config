@@ -2,7 +2,7 @@
 
 aidd-pilot **invoque** (outil Skill → `test-runner`) **toujours** le skill `test-runner` pour la validation live/e2e — jamais en dérouler les étapes en bash inline (écart du 1er run). Pas d'adaptateur par projet à déclarer, pas de résolution, pas de question à l'humain en intake.
 
-**Source de vérité = le skill `test-runner`** (`~/.claude/skills/test-runner/`). Son comportement (découverte de la recette, déduction par finalité, garde-coût, hors-scope auth front) y vit et ne doit **pas** être recopié ici — juste consommé. Ce fichier ne fixe que l'interface sur laquelle aidd-pilot s'appuie.
+**Source de vérité = le skill `test-runner`** (skill voisin `test-runner`). Son comportement (découverte de la recette, déduction par finalité, garde-coût, hors-scope auth front) y vit et ne doit **pas** être recopié ici — juste consommé. Ce fichier ne fixe que l'interface sur laquelle aidd-pilot s'appuie.
 
 ## Pourquoi ce modèle
 

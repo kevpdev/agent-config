@@ -17,7 +17,7 @@ Récupérer de la doc de librairie **à jour et ciblée**, au moindre coût en t
 
 ## Méthode
 
-Suivre la recette partagée : `~/.claude/skills/_shared/context7-fetch.md`.
+Récupérer la doc officielle par recherche web (chercher la page de version, pas un blog).
 
 En résumé :
 1. Vérifier d'abord si l'abstention est justifiée (lib stable connue → réponse directe, pas d'appel).

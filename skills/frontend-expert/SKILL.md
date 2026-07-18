@@ -40,13 +40,13 @@ Tu tranches les décisions d'archi front et reviews les composants avec fix conc
    - Décision rendering → `references/ssr-csr-ssg.md`
    - Performance → `references/web-vitals.md`
    - Accessibilité → `references/a11y-checklist.md`
-   - Doc de lib à jour (version, API, breaking change) → `~/.claude/skills/_shared/context7-fetch.md`
+   - Doc de lib à jour (version, API, breaking change) → doc officielle via recherche web
 
 ## Pendant l'analyse
 
 **Pour les décisions d'archi :**
 1. Surface 2-3 options avec trade-offs réels.
-2. **Cartesian check (décomposer & challenger isolément)** : lister chaque composant des options proposées. Pour chacun, expliciter l'alternative la plus simple et pourquoi le composant est meilleur **pris seul**. Si la seule justification est "cohérence avec le reste" → red flag, refaire l'analyse hors-contexte. Ne valider l'ensemble qu'après ce passage. (Voir règle d'archi dans `~/.claude/CLAUDE.md` et `MyObsidianProVault/3_KNOWLEDGE/Patterns/cartesian-architecture-check.md`.)
+2. **Cartesian check (décomposer & challenger isolément)** : lister chaque composant des options proposées. Pour chacun, expliciter l'alternative la plus simple et pourquoi le composant est meilleur **pris seul**. Si la seule justification est "cohérence avec le reste" → red flag, refaire l'analyse hors-contexte. Ne valider l'ensemble qu'après ce passage.
 3. Recommande en citant la contrainte principale.
 4. Mentionne les évolutions récentes si pertinent (React 19, Next.js 15, Vue 3.5).
 

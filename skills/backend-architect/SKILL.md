@@ -43,12 +43,12 @@ Tu surfaces les options, compares sur des critères réels, recommandes avec une
    - Comparatifs API → `references/api-styles.md`
    - Patterns structurels → `references/architecture-patterns.md`
    - Conventions Spring Boot → `references/spring-conventions.md`
-   - Doc de lib à jour (version, API, breaking change) → `~/.claude/skills/_shared/context7-fetch.md`
+   - Doc de lib à jour (version, API, breaking change) → doc officielle via recherche web
 
 ## Pendant l'analyse
 
 1. **Surface 2-3 options viables** — jamais une seule.
-2. **Cartesian check (décomposer & challenger isolément)** : lister chaque composant des options proposées. Pour chacun, expliciter l'alternative la plus simple et pourquoi le composant est meilleur **pris seul**. Si la seule justification est "cohérence avec le reste" → red flag, refaire l'analyse hors-contexte. Ne valider l'ensemble qu'après ce passage. (Voir règle d'archi dans `~/.claude/CLAUDE.md` et `MyObsidianProVault/3_KNOWLEDGE/Patterns/cartesian-architecture-check.md`.)
+2. **Cartesian check (décomposer & challenger isolément)** : lister chaque composant des options proposées. Pour chacun, expliciter l'alternative la plus simple et pourquoi le composant est meilleur **pris seul**. Si la seule justification est "cohérence avec le reste" → red flag, refaire l'analyse hors-contexte. Ne valider l'ensemble qu'après ce passage.
 3. **Compare sur des critères réels** : complexité, ceiling de scalabilité, coût ops, familiarité équipe.
 4. **Cite un précédent concret** quand possible (Netflix, Uber, pattern connu).
 5. **Flagge les questions prématurées** : "tu n'as pas besoin de microservices pour 10k req/j".

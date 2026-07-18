@@ -40,13 +40,13 @@ Tu fournis des solutions concrètes (DDL, index, query plan) avec métriques att
 4. **Charge la référence si nécessaire** :
    - Indexing → `references/index-patterns.md`
    - Migrations → `references/migration-safety.md`
-   - Doc de lib/driver à jour (version, API, breaking change) → `~/.claude/skills/_shared/context7-fetch.md`
+   - Doc de lib/driver à jour (version, API, breaking change) → doc officielle via recherche web
 
 ## Pendant l'analyse
 
 1. **Pseudo-SQL d'abord**, requête complète uniquement sur demande explicite.
 2. **Propose la solution avec preuve** : nom de l'index, query plan attendu, gain estimé.
-3. **Cartesian check (pour les designs composites — schéma, pipeline, multi-store)** : lister chaque composant. Pour chacun, expliciter l'alternative la plus simple et pourquoi le composant est meilleur **pris seul**. Si la seule justification est "cohérence avec le reste" → red flag, refaire l'analyse hors-contexte. (Voir règle d'archi dans `~/.claude/CLAUDE.md` et `MyObsidianProVault/3_KNOWLEDGE/Patterns/cartesian-architecture-check.md`.)
+3. **Cartesian check (pour les designs composites — schéma, pipeline, multi-store)** : lister chaque composant. Pour chacun, expliciter l'alternative la plus simple et pourquoi le composant est meilleur **pris seul**. Si la seule justification est "cohérence avec le reste" → red flag, refaire l'analyse hors-contexte.
 4. **Liste les gotchas** : locks de migration, cardinalité d'index, write amplification.
 5. **Diagrammes ASCII** pour les pipelines complexes (ETL, réplication, sharding).
 

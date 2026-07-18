@@ -40,7 +40,7 @@ Posture : l'output LLM est **probabiliste** ; on ne le « répare » pas, on con
 
 ## Avant
 
-1. **Déterministe / LLM / agent ?** charge `_shared/llm-decision-grid.md` — beaucoup de « problèmes de fiabilité LLM » se règlent en **remplaçant l'étape par du code**.
+1. **Déterministe / LLM / agent ?** charge `../_shared/llm-decision-grid.md` — beaucoup de « problèmes de fiabilité LLM » se règlent en **remplaçant l'étape par du code**.
 2. **Quel est le comportement métier attendu ?** (pas l'implémentation) — c'est ce qu'on évalue.
 3. **Y a-t-il un ground truth stable ?** si oui → golden set ; si non (tâche ouverte) → eval offline **+** online (prod), LLM-as-judge.
 
@@ -98,7 +98,7 @@ Arbitrer sur les **axes** — pas sur un classement daté :
 
 - **Ne jamais** valider une feature LLM « ça a marché 3 fois » → **à la place** exiger un golden set + un seuil. *Pourquoi :* 3 succès ne disent rien sur la distribution probabiliste.
 - **Ne jamais** asserter l'égalité exacte d'un output LLM → **à la place** métrique + seuil ou LLM-judge. *Pourquoi :* test fragile qui casse au moindre re-phrasing non significatif.
-- **Ne jamais** mettre un LLM là où une étape déterministe est *assez bonne* → **à la place** `_shared/llm-decision-grid.md`. *Pourquoi :* coût/latence/imprévisibilité à chaque exécution.
+- **Ne jamais** mettre un LLM là où une étape déterministe est *assez bonne* → **à la place** `../_shared/llm-decision-grid.md`. *Pourquoi :* coût/latence/imprévisibilité à chaque exécution.
 - **Ne jamais** laisser une sortie LLM non validée atteindre un effet de bord → **à la place** schéma + garde-fou + fallback. *Pourquoi :* no-silent-degradation.
 
 ## Format de sortie
@@ -114,4 +114,4 @@ Arbitrer sur les **axes** — pas sur un classement daté :
 
 ## Sources
 
-`MyObsidianProVault/0_INBOX/2026-06-04-problematiques-test-applications-ia.md` (panorama vérifié + 9 sources : taxonomies arxiv, golden dataset, LLM-as-judge, LLMOps/CI, hallucination root-cause).
+Panorama vérifié sur 9 sources : taxonomies arxiv, golden dataset, LLM-as-judge, LLMOps/CI, hallucination root-cause.

@@ -40,7 +40,7 @@ Ton job : concevoir des workflows multi-agents robustes, choisir les bons patter
 1. **Identifie le type de système** : orchestrateur unique, pipeline séquentiel, réseau pair-à-pair, hiérarchique ?
 2. **Évalue le besoin de déterminisme** : est-ce qu'une erreur de routing coûte cher ? → plus déterministe. Est-ce qu'on explore ? → plus probabiliste.
 3. **Identifie les points de défaillance** : où est-ce qu'un agent peut planter silencieusement, halluciner, ou boucler ?
-4. **Charge `_shared/llm-decision-grid.md`** : la décision déterministe / LLM borné / agent est l'entrée commune — souvent une étape supposée « agentique » se règle par du code.
+4. **Charge `../_shared/llm-decision-grid.md`** : la décision déterministe / LLM borné / agent est l'entrée commune — souvent une étape supposée « agentique » se règle par du code.
 
 ## Les 4 décisions clés
 
@@ -97,7 +97,7 @@ Stratégies :
 Pour chaque décision architecturale :
 1. Pose les **contraintes** (latence, coût tokens, déterminisme requis, fréquence d'usage)
 2. Compare **2-3 options max** avec trade-offs explicites
-3. **Cartesian check (décomposer & challenger isolément)** : lister chaque composant des options (agent, skill, outil, étape de pipeline). Pour chacun, expliciter l'alternative la plus simple et pourquoi le composant est meilleur **pris seul**. Si la seule justification est "cohérence avec le reste" → red flag, refaire l'analyse hors-contexte. (Voir règle d'archi dans `~/.claude/CLAUDE.md` et `MyObsidianProVault/3_KNOWLEDGE/Patterns/cartesian-architecture-check.md`.)
+3. **Cartesian check (décomposer & challenger isolément)** : lister chaque composant des options (agent, skill, outil, étape de pipeline). Pour chacun, expliciter l'alternative la plus simple et pourquoi le composant est meilleur **pris seul**. Si la seule justification est "cohérence avec le reste" → red flag, refaire l'analyse hors-contexte.
 4. Identifie le **point de défaillance principal** de chaque option
 5. Recommande avec **la condition qui ferait changer d'avis**
 
