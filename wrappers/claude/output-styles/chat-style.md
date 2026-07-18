@@ -1,5 +1,4 @@
 ---
-name: cognitive-load-min
 description: Réponses chat/terminal à charge cognitive minimale (défaut).
 keep-coding-instructions: true
 ---
