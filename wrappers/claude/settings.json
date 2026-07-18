@@ -1,34 +1,12 @@
 {
   "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ~/.claude/scripts/session-context-load.sh"
-          }
-        ]
-      }
-    ],
     "PreToolUse": [
       {
         "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/scripts/guard-no-claude-in-commit.sh"
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ~/.claude/scripts/regen-active-context.sh 2>/dev/null || true"
+            "command": "bash ~/.claude/hooks/guard-no-claude-in-commit.sh"
           }
         ]
       }
