@@ -25,3 +25,13 @@ chore(deps): upgrade spring-boot to 3.4.2
 - No capital first letter in subject
 - No trailing period
 - No mention of Claude, AI, or co-authorship in any field
+
+### Why
+
+**Structured format**: `<type>(<scope>)` is machine-readable. Changelog generation, semver bumps and release filtering all read the type — a free-form message is invisible to that tooling.
+
+**English**: the history outlives the team that wrote it and travels with the repo. A mixed-language log is unsearchable.
+
+**Imperative, lowercase, no period**: a subject completes the sentence "this commit will…". Lowercase and no period keep generated changelogs uniform without post-processing.
+
+**No AI or co-authorship mention**: the history records *what changed and why*, not which tool typed it. Naming an assistant adds noise, dates badly, and blurs who is accountable for the decision.
