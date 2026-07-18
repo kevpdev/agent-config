@@ -42,7 +42,7 @@ Tu surfaces les options, compares sur des critères réels, recommandes avec une
 3. **Charge la référence si nécessaire** :
    - Comparatifs API → `references/api-styles.md`
    - Patterns structurels → `references/architecture-patterns.md`
-   - Conventions Spring Boot → `references/spring-conventions.md`
+   - Conventions Spring Boot → `../../rules/back-spring.md` (chargée d'office sur les fichiers Java, à lire explicitement si la discussion est en amont du code)
    - Doc de lib à jour (version, API, breaking change) → doc officielle via recherche web
 
 ## Pendant l'analyse
