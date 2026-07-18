@@ -63,6 +63,10 @@ Claude Code découvre ces dossiers automatiquement, sans rien déclarer. Aucun `
 
 Les symlinks sont supportés — lier plutôt que copier garde le repo comme source unique.
 
+## Dépendance externe
+
+`skills/aidd-pilot/` orchestre les plugins du framework [AI-Driven Dev](https://github.com/ai-driven-dev/framework) et ne fonctionne pas sans eux — voir `skills/aidd-pilot/README.md`. Les dix autres skills sont autonomes.
+
 ## Reprendre ce repo
 
 Un seul fichier n'est pas transposable : **`rules/profil.md`**. Il décrit la personne à qui l'agent s'adresse — niveau technique, contraintes cognitives, mode de compréhension — pour calibrer ton et profondeur. Le remplacer par le sien ; le format compte, pas le contenu.
