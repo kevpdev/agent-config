@@ -65,7 +65,7 @@ Les symlinks sont supportés — lier plutôt que copier garde le repo comme sou
 
 ## Dépendance externe
 
-`skills/aidd-pilot/` orchestre les plugins du framework [AI-Driven Dev](https://github.com/ai-driven-dev/framework) et ne fonctionne pas sans eux — voir `skills/aidd-pilot/README.md`. Les dix autres skills sont autonomes.
+`skills/aidd-pilot/` orchestre les plugins du framework [AI-Driven Dev](https://github.com/ai-driven-dev/framework) et ne fonctionne pas sans eux — voir `skills/aidd-pilot/README.md`. Les autres skills sont autonomes.
 
 ## Reprendre ce repo
 
