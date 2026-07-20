@@ -31,16 +31,24 @@ GRAY='\033[2;37m'
 segments=()
 branch_label=""
 
-# single jq call: extract every field we need in one subprocess instead
-# of one jq fork per field.
-IFS=$'\t' read -r cwd current_tokens max_tokens used_pct model_name effort <<< "$(echo "$input" | jq -r '[
-  (.workspace.current_dir // .cwd // ""),
-  (.context_window.total_input_tokens // ""),
-  (.context_window.context_window_size // ""),
-  (.context_window.used_percentage // ""),
-  (.model.display_name // ""),
-  (.effort.level // "")
-] | @tsv')"
+# single python3 call: extract every field we need in one subprocess.
+# python3 rather than jq — jq is not guaranteed present (agnostic default),
+# python3 is. Emits the same tab-separated fields.
+IFS=$'\t' read -r cwd current_tokens max_tokens used_pct model_name effort <<< "$(echo "$input" | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+cw = d.get("context_window") or {}
+ws = d.get("workspace") or {}
+def s(x): return "" if x is None else str(x)
+print("\t".join([
+    s(ws.get("current_dir") or d.get("cwd")),
+    s(cw.get("total_input_tokens")),
+    s(cw.get("context_window_size")),
+    s(cw.get("used_percentage")),
+    s((d.get("model") or {}).get("display_name")),
+    s((d.get("effort") or {}).get("level")),
+]))
+')"
 
 # --- 1. project name + git branch (leftmost) ---
 # single git call for the toplevel dir, which also doubles as the
