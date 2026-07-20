@@ -1,5 +1,7 @@
 {
   "outputStyle": "chat-style",
+  "effortLevel": "high",
+  "skipDangerousModePermissionPrompt": true,
   "hooks": {
     "PreToolUse": [
       {
@@ -16,5 +18,20 @@
   "statusLine": {
     "type": "command",
     "command": "bash ~/.claude/scripts/statusline.sh"
+  },
+  "enabledPlugins": {
+    "aidd-context@aidd-framework": true,
+    "aidd-refine@aidd-framework": true,
+    "aidd-dev@aidd-framework": true,
+    "aidd-vcs@aidd-framework": true,
+    "aidd-pm@aidd-framework": true
+  },
+  "extraKnownMarketplaces": {
+    "aidd-framework": {
+      "source": {
+        "source": "github",
+        "repo": "ai-driven-dev/framework"
+      }
+    }
   }
 }
