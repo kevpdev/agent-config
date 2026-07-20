@@ -1,7 +1,6 @@
 {
   "outputStyle": "chat-style",
   "effortLevel": "high",
-  "skipDangerousModePermissionPrompt": true,
   "hooks": {
     "PreToolUse": [
       {
