@@ -67,10 +67,14 @@ Les symlinks sont supportés — lier plutôt que copier garde le repo comme sou
 
 `skills/aidd-pilot/` orchestre les plugins du framework [AI-Driven Dev](https://github.com/ai-driven-dev/framework) et ne fonctionne pas sans eux — voir `skills/aidd-pilot/README.md`. Les autres skills sont autonomes.
 
-Les skills `vault-*` sont des passerelles vers un vault Obsidian : ils délèguent aux skills canoniques situés sous `$OBSIDIAN_VAULT_PRO/agent/skills/`. Pour les activer, exporter la variable dans son shell :
+Les skills `vault-*` sont des passerelles vers un vault Obsidian : ils délèguent aux skills canoniques situés sous `$OBSIDIAN_VAULT_PRO/agent/skills/`. Pour les activer, déclarer la variable dans le bloc `env` de `~/.claude/settings.local.json` (fichier local, non versionné) — Claude Code l'injecte alors dans chaque session, sans dépendre du shell de lancement :
 
-```bash
-export OBSIDIAN_VAULT_PRO="/chemin/absolu/vers/le/vault"
+```json
+{
+  "env": {
+    "OBSIDIAN_VAULT_PRO": "/chemin/absolu/vers/le/vault"
+  }
+}
 ```
 
 Sans cette variable, chaque `vault-*` dégrade sans casse (garde-fou en tête du SKILL.md : message « vault non configuré » puis arrêt, jamais d'écriture dans le repo courant).
