@@ -67,6 +67,14 @@ Les symlinks sont supportés — lier plutôt que copier garde le repo comme sou
 
 `skills/aidd-pilot/` orchestre les plugins du framework [AI-Driven Dev](https://github.com/ai-driven-dev/framework) et ne fonctionne pas sans eux — voir `skills/aidd-pilot/README.md`. Les autres skills sont autonomes.
 
+Les skills `vault-*` sont des passerelles vers un vault Obsidian : ils délèguent aux skills canoniques situés sous `$OBSIDIAN_VAULT_PRO/agent/skills/`. Pour les activer, exporter la variable dans son shell :
+
+```bash
+export OBSIDIAN_VAULT_PRO="/chemin/absolu/vers/le/vault"
+```
+
+Sans cette variable, chaque `vault-*` dégrade sans casse (garde-fou en tête du SKILL.md : message « vault non configuré » puis arrêt, jamais d'écriture dans le repo courant).
+
 ## Reprendre ce repo
 
 Un seul fichier n'est pas transposable : **`rules/profil.md`**. Il décrit la personne à qui l'agent s'adresse — niveau technique, contraintes cognitives, mode de compréhension — pour calibrer ton et profondeur. Le remplacer par le sien ; le format compte, pas le contenu.

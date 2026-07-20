@@ -1,6 +1,6 @@
 ---
 name: aidd-pilot
-description: Orchestrateur autonome du workflow AIDD calé sur l'usage de Kevin. Prend une expression de besoin (story, note de cadrage, texte brut) ou un plan AIDD déjà rédigé, et déroule le tunnel besoin→analyse→plan→implémentation+test→review→commit→doc en semi-auto (ne sollicite l'humain que sur un arbitrage lourd). Compose /00-sdlc pour le cœur dev, un testeur générique pour la validation live/e2e, et doc-sync pour la doc. Utiliser quand l'utilisateur dit "automatise cette feature", "déroule le tunnel", "fais cette feature en autonome", "pilote AIDD", ou "/aidd-pilot". NE PAS utiliser pour un simple commit (→ aidd-vcs:01), une review isolée (→ aidd-dev:05), ou lancer/tester une instance sans développer (→ dev-pilot).
+description: Orchestrateur autonome du workflow AIDD calé sur l'usage de Kevin. Prend une expression de besoin (story, note de cadrage, texte brut) ou un plan AIDD déjà rédigé, et déroule le tunnel besoin→analyse→plan→implémentation+test→review→commit→doc en semi-auto (ne sollicite l'humain que sur un arbitrage lourd). Compose /00-sdlc pour le cœur dev, un testeur générique pour la validation live/e2e, et doc-sync pour la doc. Utiliser quand l'utilisateur dit "automatise cette feature", "déroule le tunnel", "fais cette feature en autonome", "pilote AIDD", ou "/aidd-pilot". NE PAS utiliser pour un simple commit (→ aidd-vcs:01), une review isolée (→ aidd-dev:05), ou lancer/tester une instance sans développer (→ test-runner).
 ---
 
 # aidd-pilot
