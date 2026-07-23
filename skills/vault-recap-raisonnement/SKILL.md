@@ -6,6 +6,9 @@ description: >
   avec résolution des chemins contre la racine absolue du vault.
   Utiliser quand : "recap", "recap raisonnement", "fais un snapshot" depuis un repo,
   "/vault-recap-raisonnement".
+  Utiliser AUSSI, proactivement, quand une explication repose sur un schéma (mermaid,
+  flowchart, diagramme) que le terminal Claude Code ne rend pas : produire le recap visuel
+  dans Obsidian plutôt que dumper un diagramme illisible en texte brut.
 ---
 
 # Passerelle vault — recap-raisonnement
