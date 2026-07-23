@@ -26,6 +26,12 @@ chore(deps): upgrade spring-boot to 3.4.2
 - No trailing period
 - No mention of Claude, AI, or co-authorship in any field
 
+### Exception — Obsidian vault
+
+A vault commit follows the same grammar, with the date as scope: `<type>(<date>): <subject>` (e.g. `docs(2026-07-23): import refs RAG`). **Only the `<subject>` may be in French** — the vault holds personal French notes, and its history has no external reader to serve. The `<type>(<scope>):` structure is enforced identically. Everything else (no capital, no trailing period, no AI mention) still applies.
+
+**Why the carve-out is narrow**: the English rule buys searchability for a shared, long-lived code history. A personal vault has neither audience nor tooling that pays for English — so the subject bends, the machine-readable structure does not.
+
 ### Why
 
 **Structured format**: `<type>(<scope>)` is machine-readable. Changelog generation, semver bumps and release filtering all read the type — a free-form message is invisible to that tooling.

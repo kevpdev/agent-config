@@ -109,7 +109,10 @@ if m:
 print('')
 " 2>/dev/null || echo "")
 
-# Validate Conventional Commits EN format when extractable (fail-open if not)
+# Validate Conventional Commits EN format when extractable (fail-open if not).
+# Applies to every repo, vault included: a vault commit is `<type>(<date>): <subject>`
+# (e.g. docs(2026-07-23): import refs RAG). Only the <subject> may be French for the vault
+# (personal FR notes) — the type/scope grammar is enforced identically everywhere.
 if [ -n "$msg" ]; then
   if ! printf "%s" "$msg" | grep -qE "^(feat|fix|refactor|docs|test|chore|perf|ci)(\(.+\))?: .+"; then
     python3 -c "
