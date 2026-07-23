@@ -25,9 +25,9 @@ et **STOP**. N'écris **jamais** dans le repo courant (sinon capture perdue).
 ## Délégation
 
 - **Racine vault** : `$OBSIDIAN_VAULT_PRO`.
-- **Skill canonique à exécuter** : `$OBSIDIAN_VAULT_PRO/agent/skills/capture/SKILL.md`.
+- **Skill canonique à exécuter** : `$OBSIDIAN_VAULT_PRO/.agents/skills/capture/SKILL.md`.
 
-1. Lis et suis les instructions de `$OBSIDIAN_VAULT_PRO/agent/skills/capture/SKILL.md`.
+1. Lis et suis les instructions de `$OBSIDIAN_VAULT_PRO/.agents/skills/capture/SKILL.md`.
 2. **Résous tout chemin relatif contre la racine absolue.** Le fichier d'inbox se crée dans
    `$OBSIDIAN_VAULT_PRO/0_INBOX/`, **jamais** dans le repo courant.
 3. Pour la date du nom de fichier (`YYYY-MM-DD`) : `bash -lc 'date +%F'`.

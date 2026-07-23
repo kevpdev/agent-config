@@ -25,9 +25,9 @@ et **STOP**. N'écris **jamais** dans le repo courant.
 ## Délégation
 
 - **Racine vault** : `$OBSIDIAN_VAULT_PRO`.
-- **Skill canonique à exécuter** : `$OBSIDIAN_VAULT_PRO/agent/skills/slides/SKILL.md`.
+- **Skill canonique à exécuter** : `$OBSIDIAN_VAULT_PRO/.agents/skills/slides/SKILL.md`.
 
-1. Lis et suis les instructions de `$OBSIDIAN_VAULT_PRO/agent/skills/slides/SKILL.md`.
+1. Lis et suis les instructions de `$OBSIDIAN_VAULT_PRO/.agents/skills/slides/SKILL.md`.
 2. **Résous tout chemin relatif contre la racine absolue.** Le deck se crée dans
    `$OBSIDIAN_VAULT_PRO/2_PROJECTS/<projet>/slides/`, **jamais** dans le repo courant.
 3. Si la source de contenu est le repo courant, lis-le depuis le CWD ; n'y écris rien.

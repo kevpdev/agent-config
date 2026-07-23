@@ -26,9 +26,9 @@ et **STOP**. N'écris **jamais** dans le repo courant.
 ## Délégation
 
 - **Racine vault** : `$OBSIDIAN_VAULT_PRO`.
-- **Skill canonique à exécuter** : `$OBSIDIAN_VAULT_PRO/agent/skills/recap-raisonnement/SKILL.md`.
+- **Skill canonique à exécuter** : `$OBSIDIAN_VAULT_PRO/.agents/skills/recap-raisonnement/SKILL.md`.
 
-1. Lis et suis les instructions de `$OBSIDIAN_VAULT_PRO/agent/skills/recap-raisonnement/SKILL.md`.
+1. Lis et suis les instructions de `$OBSIDIAN_VAULT_PRO/.agents/skills/recap-raisonnement/SKILL.md`.
 2. **Résous tout chemin relatif contre la racine absolue.** Le fichier se crée dans
    `$OBSIDIAN_VAULT_PRO/agent/chat recap/<sujet>/`, **jamais** dans le repo courant.
 3. Horodatage du nom de fichier : `bash -lc 'date "+%Y-%m-%d-%H%M"'`.
