@@ -50,7 +50,7 @@ et **STOP**. N'écris **jamais** dans le repo courant (sinon note perdue).
    - `inbox` (ou aucun projet deviné) → fallback `0_INBOX/` (capture brute classique).
 
 5. **Charge la convention de style** (dès que tu composes ou restructures la note — pas pour un dump brut) :
-   - Lis `$OBSIDIAN_VAULT_PRO/agent/conventions/notes.md` et applique son style (ton, structure, densité).
+   - Lis `$OBSIDIAN_VAULT_PRO/conventions/notes.md` et applique son style (ton, structure, densité).
    - **Pourquoi** : c'est la source de vérité agnostique des notes vault ; l'output style `vault-notes.md` ne s'active que quand le CWD est le vault, or ici le CWD est un repo dev → sans cette lecture, la note dérive vers le style dense.
    - **Exception** : dump brut verbatim (cf. point 6 « brut tel quel ») → ne pas reformater.
 

@@ -33,7 +33,7 @@ et **STOP**. N'écris **jamais** dans le repo courant.
 
 1. Lis et suis les instructions de `$OBSIDIAN_VAULT_PRO/.agents/skills/recap-raisonnement/SKILL.md`.
 2. **Résous tout chemin relatif contre la racine absolue.** Le fichier se crée dans
-   `$OBSIDIAN_VAULT_PRO/agent/chat recap/<sujet>/`, **jamais** dans le repo courant.
+   `$OBSIDIAN_VAULT_PRO/chat-recaps/<sujet>/`, **jamais** dans le repo courant.
 3. Horodatage du nom de fichier : `bash -lc 'date "+%Y-%m-%d-%H%M"'`.
 4. Renseigne `session_id`, `session_path` et `project` dans le frontmatter si tu peux les
    déduire du contexte (chemin scratchpad, CWD du repo).
