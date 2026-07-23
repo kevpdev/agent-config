@@ -17,7 +17,7 @@ Les README impactés patchés par edits ciblés (jamais de réécriture complèt
    > Sous-agent (Explore ou doc-writer) : « Lis le `README.md` du repo <X> et le diff du scope validé. **Relève d'abord la structure et les conventions existantes du README** (sections, format des tables, ton, niveaux de titre) et conforme-t'y. Pour chaque section impactée par le changement, propose les **edits ciblés** reflétant le nouvel état, dans le style existant. Ne touche que les sections concernées. Rends une liste d'edits (section → avant/après), pas le fichier réécrit. »
 3. **Appliquer.** Le parent applique les edits validés via `Edit` (ciblé), après les avoir montrés à l'utilisateur.
    - **Jamais de réécriture complète** : le README contient des passages soignés (conventions OS, notes init Docker) qu'une regénération écraserait.
-4. **Proposer le commit.** Proposer — sans imposer — un commit doc **par repo touché** (les commits atterrissent dans des repos git différents) :
+4. **Proposer le commit.** Proposer — sans imposer — un commit doc **par repo touché** (les commits atterrissent dans des repos git différents). En coordinateur **centralisé**, un même changement enfant produit deux commits dans deux repos : la **memory** dans le **parent** (`aidd_docs/memory/<enfant>/`), le **README** dans l'**enfant** — les proposer séparément.
    ```
    docs: sync memory + README to match <scope>
    ```

@@ -25,7 +25,7 @@ Après un dev qui change l'archi ou le schéma DB, la memory AIDD (`aidd_docs/me
 - **reflet** (le code fait foi) → `03-sync-memory` → `04-sync-readme`
 - **décision** (la décision fait foi) → `05-reconcile` (signaler, ne jamais écraser)
 
-En coordinateur, le flux vaut **par repo** : chaque enfant traité comme un mono-repo (Boulot 1), plus le contrat partagé au parent traité en régime décision (Boulot 2, → `05`). Si `02` ne trouve aucune surface impactée, s'arrêter là.
+En coordinateur, le flux vaut **par repo** : chaque enfant traité comme un mono-repo (Boulot 1), plus le contrat partagé au parent traité en régime décision (Boulot 2, → `05`). Le home memory de l'enfant se résout à l'action `01` : **distribué** (memory chez l'enfant) ou **centralisé** (memory namespacée dans le parent `aidd_docs/memory/<enfant>/` — l'enfant reste code + README). Si `02` ne trouve aucune surface impactée, s'arrêter là.
 
 ## Actions
 
@@ -57,7 +57,7 @@ La doc reflète l'état **commité / mergé**, jamais du code en vol : documente
 
 ## Topologie — autorité universelle, homes variables
 
-L'autorité (régimes ci-dessus) est **universelle**. Ce qui change d'un projet à l'autre, c'est seulement **où chercher le code** et **combien de homes de doc** existent — c'est ce que l'action 01 détecte. En coordinateur, l'autorité s'établit **par fait** : le repo qui implémente fait foi (backend pour endpoints/DB/DTO, front pour routes UI/comportement consommé). Divergence entre enfants → signaler, pas deviner (action 05).
+L'autorité (régimes ci-dessus) est **universelle**. Ce qui change d'un projet à l'autre, c'est seulement **où chercher le code** et **combien de homes de doc** existent — c'est ce que l'action 01 détecte. Code-home et doc-home peuvent être **dissociés** : en coordinateur centralisé, le code vit dans l'enfant mais sa memory-reflet vit dans le parent (`aidd_docs/memory/<enfant>/`) — le commit memory atterrit alors au parent, le commit README chez l'enfant. En coordinateur, l'autorité s'établit **par fait** : le repo qui implémente fait foi (backend pour endpoints/DB/DTO, front pour routes UI/comportement consommé). Divergence entre enfants → signaler, pas deviner (action 05).
 
 ## Règle d'édition directe — lire la structure d'abord
 
@@ -69,7 +69,7 @@ Dès que le skill édite une surface doc **sans skill délégué qui en gouverne
 
 ## Pré-conditions
 
-- Repo git, convention AIDD (`aidd_docs/memory/`) ET `README.md`. En coordinateur, ces conventions s'appliquent **par repo** (parent + chaque enfant). Si l'une manque quelque part, le dire et ne traiter que les surfaces présentes.
+- Repo git, convention AIDD (`aidd_docs/memory/`) ET `README.md`. En coordinateur, le home memory de chaque enfant est **distribué** (chez l'enfant) ou **centralisé** (dans le parent, `aidd_docs/memory/<enfant>/`) : un enfant code-only **sans** `aidd_docs/` local n'est donc **pas** une anomalie si sa memory est centralisée au parent. Ne traiter comme « surface manquante » qu'un enfant qui n'a de memory **ni** locale **ni** centralisée.
 
 ## Garde-fous
 
