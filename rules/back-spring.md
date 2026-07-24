@@ -22,6 +22,6 @@ paths:
 ## Nommage
 - Suffixe par rôle : `XxxController`, `XxxService`, `XxxRepository`, `XxxDto`.
 - Un type public par fichier ; nom de fichier = nom du type.
-- Packages en minuscules, par feature avant par couche si le module grossit.
+- Packages en minuscules. Le découpage par domaine relève du **DDD stratégique** : un bounded context = un microservice. À l'intérieur d'un module, organisation **par couche** (`controllers/`, `services/`, `repositories/`, `models/`) — pas de DDD tactique (hexagonal, agrégats) tant que le domaine reste du CRUD auto-exposé. Ne pas subdiviser un domaine unique en sous-packages par feature, même s'il grossit ; un module qui grossit parce qu'il agrège plusieurs domaines → extraire le domaine surnuméraire dans son propre microservice.
 
-**POURQUOI** : le suffixe encode la couche dans le nom — on situe un type sans ouvrir le fichier ni remonter les imports. Le découpage par feature garde ensemble ce qui change ensemble ; par couche, une seule fonctionnalité se disperse dans tout le module.
+**POURQUOI** : la frontière qui porte du sens est le bounded context, matérialisé par le microservice (DDD stratégique), pas la feature interne. Le suffixe de couche situe un type sans ouvrir le fichier. Le DDD tactique se paie sur des invariants métier riches ; l'imposer à du CRUD référentiel = sur-ingénierie. Le signal de séparation = la pluralité de domaines (un bloc consommé de façon autonome), jamais le seul nombre de classes.
