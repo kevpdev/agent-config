@@ -6,6 +6,13 @@
 **AUTORISÉ**
 - Proposer, expliquer, puis attendre la validation avant de toucher un fichier
 
+## Règle — Vérifier après édition d'un fichier de build
+
+**OBLIGATOIRE**
+- Après édition d'un fichier de build (migration, fixture, config CI, dépendances) : lancer la **suite complète**, pas un spot-check, **et** un `git diff` de contrôle avant de déclarer *done*.
+
+**POURQUOI** : un spot-check laisse passer les régressions et les corruptions silencieuses (ex. un nom de contrainte corrompu par une édition, vu seulement après coup). La suite complète est la seule preuve ; le `git diff` attrape ce que l'édition a modifié à ton insu.
+
 ## Règle — Préserver le contexte parent (déléguer par défaut)
 
 **POURQUOI** : le contexte parent est la ressource rare. Un fan-out de

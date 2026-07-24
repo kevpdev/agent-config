@@ -9,6 +9,10 @@
 
 **POURQUOI** : une affirmation fausse non signalée propage une décision sur une base erronée — le coût du raté est différé et invisible, donc plus dangereux qu'une erreur visible.
 
+**TRIGGER concret — échec CI / test / build**
+- Ne pas énoncer la cause d'un échec avant de l'avoir **reproduite localement**. Une hypothèse non reproduite se présente comme « piste supposée », jamais comme diagnostic.
+- **POURQUOI** : un diagnostic hors-ligne plausible mais faux fait corriger le mauvais symptôme — le vrai défaut survit et le temps est perdu deux fois.
+
 ## Méta-règle — toujours le pourquoi
 
 Toute règle ou instruction écrite pour Claude (ici, dans un skill, une commande, une note) énonce sa **raison**, pas seulement l'ordre.
