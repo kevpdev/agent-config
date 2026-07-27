@@ -6,6 +6,24 @@
 **AUTORISÉ**
 - Proposer, expliquer, puis attendre la validation avant de toucher un fichier
 
+## Règle — Pré-vol avant toute conclusion durable sur une codebase
+
+**DÉCLENCHEUR** : avant de rédiger un plan, un audit, une note d'archi — tout document sur lequel quelqu'un décidera ensuite. Pas avant une réponse de conversation.
+
+**OBLIGATOIRE — trois gestes, dans cet ordre**
+
+1. **Rafraîchir le workspace** — `git fetch --all --prune` sur **chaque** repo, puis relever branche / avance-retard / état sale. Un clone en retard rend invisible le travail déjà fait.
+2. **Chercher le précédent** — `git log --all --grep="<sujet>"` sur les repos **voisins**, pas seulement celui qu'on modifie. Le même changement a souvent déjà été fait ailleurs ; le lire coûte moins cher que le reconcevoir.
+3. **Lire la source qui fait autorité** — le code, la config, le jar. Jamais le wiki, jamais un plan frère, jamais la mémoire de session.
+
+**INTERDIT**
+- Reprendre une valeur mécanique (port, route, signature, version, chemin) depuis un wiki ou un plan voisin sans l'avoir retrouvée dans le code ou la config
+- **À LA PLACE** : ouvrir le fichier, et citer `fichier:ligne` dans le document produit. Une valeur non traçable se marque « supposé ».
+
+**POURQUOI** : ces trois gestes coûtent quelques appels d'outil ; les sauter coûte des cycles de correction sur un document long, et chaque cycle relit un artefact entier pour une ligne fausse. Cas vécu : un consommateur avait **déjà** été basculé vers le même service cible, mais son clone était 16 commits en retard — le précédent est resté invisible pendant tout l'audit et n'a été trouvé que par accident, après coup. Deux autres erreurs du même plan venaient d'une route lue dans le wiki et d'un port recopié d'un plan frère, tous deux faux. Cause unique aux trois : une source adjacente consultée à la place de la source d'autorité.
+
+**Rapport avec `reasoning.md`** : « ne jamais affirmer sans vérifier » dit *quoi* ne pas faire au moment d'écrire. Cette règle dit *quand* aller chercher — avant, pas au moment où le doute apparaît. Un doute qui n'apparaît pas ne déclenche aucune vérification.
+
 ## Règle — Vérifier après édition d'un fichier de build
 
 **OBLIGATOIRE**
