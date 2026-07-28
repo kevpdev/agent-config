@@ -64,20 +64,32 @@ target="${target//\$\{HOME\}/$HOME}"
 target="${target//\$HOME/$HOME}"
 case "$target" in /*) ;; *) target="$cwd/$target" ;; esac
 
-toplevel=$(git -C "$target" rev-parse --show-toplevel 2>/dev/null || true)
-
-if [ "$toplevel" = "$HOME/.claude" ]; then
-  if git -C "$HOME/.claude" diff --cached -- settings.json 2>/dev/null \
+# Matched by FILENAME in the targeted repo, not by repo path. The file used to
+# live in ~/.claude and now lives in agent-config (wrappers/claude/settings.json,
+# reached by symlink); gating on "$HOME/.claude" meant the guard silently stopped
+# covering it the day it moved. Same failure mode as listing hosts instead of
+# resolving them: an enumeration of homes drifts, a property does not.
+offender=""
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  if git -C "$target" diff --cached -- "$f" 2>/dev/null \
        | grep -qE "^\+.*skipDangerousModePermissionPrompt"; then
-    python3 -c "
-import json
+    offender="$f"
+    break
+  fi
+done < <(git -C "$target" diff --cached --name-only 2>/dev/null \
+           | grep -E '(^|/)settings\.json$' || true)
+
+if [ -n "$offender" ]; then
+  python3 -c "
+import json, sys
+p = sys.argv[1]
 print(json.dumps({
     'decision': 'block',
-    'reason': 'settings.json is staged with skipDangerousModePermissionPrompt (a personal bypass risk-ack). It must never land in the tracked team file. Run: git restore --staged --worktree settings.json  — this key lives in settings.local.json.'
+    'reason': 'Staged file ' + p + ' adds skipDangerousModePermissionPrompt (a personal bypass risk-ack). It must never land in a tracked settings file. Unstage it with: git restore --staged ' + p + '  — keep your worktree copy, this key belongs in settings.local.json.'
 }))
-"
-    exit 0
-  fi
+" "$offender"
+  exit 0
 fi
 
 # Block Claude co-authorship mentions
