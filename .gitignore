@@ -1,0 +1,5 @@
+# Python bytecode cache — regenerated on import, never worth versioning.
+# Created when a hook script is imported as a module (e.g. by a test harness),
+# not when it runs as the hook entry point.
+__pycache__/
+*.pyc
