@@ -2,7 +2,9 @@
 
 Décide si une phase est **validée** (donc committable). Une phase l'est quand le **signal le plus fort disponible** est vert **et** qu'il n'y a **aucune régression** (suite pertinente complète verte, pas seulement le nouveau test).
 
-**Pourquoi une ladder** : `/00-sdlc` ne garantit ni curl live ni captures navigateur et suppose l'app déjà lancée (vérifié). aidd-pilot **possède** donc la validation, via le testeur générique (`references/test-runner.md`).
+**Pourquoi une ladder** : `/00-sdlc` n'a **aucune étape de test** (ses 5 actions sont `spec|plan|implement|review|ship`) et le framework suppose l'app **déjà lancée** — `03-assert-frontend` : *« Never start or restart a server »*, `06-test:02-test-journey` : *« Assume every server is already running »*. Personne n'y démarre l'app. aidd-pilot **possède** donc la validation, via le testeur générique (`references/test-runner.md`).
+
+**Un vert ne vaut que ce que vaut la suite.** Mesuré sur un run réel : un tunnel complet s'est terminé « 3/3 tests verts, plan `implemented` » alors qu'une mutation du code de prod (remettre l'ancien service en dur) laissait la suite **verte**. D'où le rung 2 (curl live), signal **indépendant du code testé** : c'est le seul rung qu'une suite complaisante ne peut pas faire mentir.
 
 ## Précondition — invoquer le testeur (skill), ne pas l'improviser
 
@@ -20,10 +22,22 @@ Le « testeur générique » **est le skill `test-runner`** : on l'**invoque** (
 | 0 | tests UI/unitaires présents | `testeur.runTests()` — doivent passer |
 | 1 | tests d'intégration présents | `testeur.runTests()` (intégration) |
 | 2 | **pas de TI** pour la couche visée (backend) | `testeur.exerciseApi()` — **curl live** contre l'endpoint réel |
-| 3 | validation UI / e2e | **`dev:03-assert`** pilote le navigateur (outil de navigation du testeur, ex. chrome-devtools) sur l'URL lancée, captures comme preuve. Pas le testeur : il ne fournit que l'outil + l'URL |
+| 3 | validation UI / e2e | **`dev:06-test:02-test-journey`** pilote le navigateur sur l'URL lancée : un screenshot par étape, un verdict pass/fail par étape. Le testeur ne fournit que **l'URL** |
 
 - On prend le rung disponible le plus fort pour la couche touchée ; on **descend** en fallback.
 - « Sans régression » = rejouer la **suite pertinente complète**, pas juste le test neuf.
+
+### Le rung 3 mesure, il ne répare pas
+
+**Ne jamais utiliser `dev:03-assert` comme rung 3.** Sa facette `03-assert-frontend` est une **boucle de réparation** : *« Take a cause, apply a candidate fix, validate […] On failure, mark it and take the next »*, et la règle transversale du skill dit *« the coding and frontend facets **fix and re-run** until they pass »*. Il modifierait donc du code pendant la validation d'une phase, hors périmètre planifié et sans passer par la review.
+
+`06-test:02-test-journey` est le thermomètre : *« Report actual behavior even when it differs from expected, **never silently fix or skip** »*.
+
+`03-assert-frontend` garde sa place **dans la boucle debug** (`02-pipeline`, étape b), là où sa réparation est voulue et cadrée.
+
+**Et ne jamais invoquer `dev:03-assert` nu** : *« Run every applicable facet by default »*, et la facette `01-assert` (assertions projet) *« always applies »* — on rejouerait la suite déjà passée aux rungs 0/1. Nommer l'action, toujours.
+
+**L'outil de navigation appartient au projet**, pas au testeur : `03-assert` et `06-test` parlent du *« project's **configured** browser tool »*. `discover()` ne renvoie d'ailleurs aucun outil de navigation dans sa recette.
 
 ## Quand déclencher le rung 3 (e2e)
 

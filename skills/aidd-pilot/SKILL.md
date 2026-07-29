@@ -1,11 +1,14 @@
 ---
 name: aidd-pilot
-description: Orchestrateur autonome du workflow AIDD calé sur l'usage de Kevin. Prend une expression de besoin (story, note de cadrage, texte brut) ou un plan AIDD déjà rédigé, et déroule le tunnel besoin→analyse→plan→implémentation+test→review→commit→doc en semi-auto (ne sollicite l'humain que sur un arbitrage lourd). Compose /00-sdlc pour le cœur dev, un testeur générique pour la validation live/e2e, et doc-sync pour la doc. Utiliser quand l'utilisateur dit "automatise cette feature", "déroule le tunnel", "fais cette feature en autonome", "pilote AIDD", ou "/aidd-pilot". NE PAS utiliser pour un simple commit (→ aidd-vcs:01), une review isolée (→ aidd-dev:05), ou lancer/tester une instance sans développer (→ test-runner).
+description: Orchestrateur autonome du workflow AIDD calé sur l'usage de Kevin. Prend une expression de besoin (story, note de cadrage, texte brut) ou un plan AIDD déjà rédigé, et déroule le tunnel besoin→analyse→plan→implémentation+test→review→commit→doc en semi-auto (ne sollicite l'humain que sur un arbitrage lourd). Pilote directement les skills aidd-dev (plan rédigé inline, executor pour le code, checker pour la review), un testeur générique pour la validation live/e2e, et doc-sync pour la doc. Utiliser quand l'utilisateur dit "automatise cette feature", "déroule le tunnel", "fais cette feature en autonome", "pilote AIDD", ou "/aidd-pilot". NE PAS utiliser pour un simple commit (→ aidd-vcs:01), une review isolée (→ aidd-dev:05), ou lancer/tester une instance sans développer (→ test-runner).
 ---
 
 # aidd-pilot
 
 Orchestrateur **autonome** du workflow AIDD. Il ne réinvente rien : il **compose** les briques existantes (`aidd-*`, `doc-sync`) et un **testeur générique** de validation, en ajoutant ce que `/00-sdlc` seul ne fait pas : garantir le test e2e réel, gérer le multi-repo, et une autonomie *sélective*.
+
+> [!important] Il ne compose **pas** `/00-sdlc` — il pilote ses skills directement.
+> `00-sdlc` spawne **un seul** `executor` pour *toutes* les phases (`00-sdlc/actions/03-implement.md`) puis review le tout d'un bloc. Le composer ferait perdre la cadence commit + review **par phase**, qui est l'apport propre de ce skill. On appelle donc `aidd-dev:01-plan`, `02-implement`, `05-review` directement.
 
 > [!note] Logique fermée — gabarits v1
 > Flux et décisions arrêtés (F1–F6 + testeur générique + validation e2e découplée, ancrés sur le comportement réel des plugins AIDD). Restent des **gabarits v1** (recap, escalade, lot arbitrage) à affiner après quelques vrais runs, et le testeur générique à créer.
@@ -18,9 +21,25 @@ Orchestrateur **autonome** du workflow AIDD. Il ne réinvente rien : il **compos
 
 ## Principe d'exécution
 
-Le skill **vit inline dans la session parente** : c'est le chef d'orchestre. Il **délègue** le travail borné à des sous-agents (implementer, reviewer, scans), mais garde inline : les décisions, les gates d'arbitrage, et le testeur quand un serveur doit survivre à une boucle debug ou qu'un dialogue interactif est requis.
+Le skill **vit inline dans la session parente** : c'est le chef d'orchestre. Il **délègue** le travail borné à des sous-agents (`executor`, `checker`, scans), mais garde inline : les décisions, les gates d'arbitrage, **le plan**, et le testeur quand un serveur doit survivre à une boucle debug ou qu'un dialogue interactif est requis.
 
 **Pourquoi** : un serveur ou un dialogue de confirmation ne peut pas vivre dans un subagent (le serveur meurt avec lui, l'interactif est impossible) ; une tâche bornée qui rend un résultat sature au contraire le fil parent si elle tourne inline. Règle : borné et sans interaction humaine → subagent ; persistant ou interactif → parent.
+
+### Qui fait quoi
+
+| Étape | Locus | Agent |
+|---|---|---|
+| Affinage / spec | **inline** | — (dialogue humain) |
+| Plan | **inline** | — *(le plan est le contrat ; un worker qui le rédige peut le réécrire pour s'arranger)* |
+| Implémenter + commit de phase | subagent | `executor` |
+| Tester (ladder) | inline ou subagent selon le locus | — (skill `test-runner`) |
+| Review | subagent | `checker` |
+| Doc + clôture | **inline** | — |
+| Push / MR | **humain** | — |
+
+**Le commit de phase appartient à l'`executor`, pas à l'orchestrateur.** `aidd-dev:02-implement` l'impose : *« one context now owns both code and status, so there is nothing to guard against »* — le code et le `status: done` de la phase partent dans le **même** commit, donc c'est celui qui écrit le code qui commit. L'orchestrateur ne garde que la frontière push/MR.
+
+**Les agents ont été renommés en aidd-dev 2.x** : `implementer` → `executor` (sonnet), `reviewer` → `checker` (opus). `planner` a été **supprimé** — il n'a pas d'équivalent, la planification revient à l'appelant.
 
 ## Directive prime — PAS DE SUPPOSITION
 
@@ -43,7 +62,7 @@ besoin → [affinage?] → plan → { implémenter → tester(ladder) → boucle
 ```
 
 - **Affinage/spec conditionnels (garde-fou dur)** : on ne les saute **que si** le brief porte un cadrage fiable des critères d'acceptance ; défaut = on les fait (`01-intake`).
-- **Commit par phase validée** ; **review par phase**, différée en fin de bloc si phases interdépendantes (`02-pipeline`).
+- **Commit par phase validée** (posé par l'`executor`) ; **review par phase** sur les axes `code` + `functional`, l'axe `relevancy` une seule fois en fin de feature. Review différée en fin de bloc si phases interdépendantes (`02-pipeline`).
 - **Fin = commit-only + recap storytelling dans le chat** ; **jamais de MR**, le push reste une décision humaine (`04-doc-ship`).
 
 ## Les 2 modes selon la taille
@@ -64,8 +83,8 @@ Chaque repo concerné = **pipeline séparé avec son plan autonome** (implément
 | Étape | Fichier | Rôle |
 |---|---|---|
 | Intake | `actions/01-intake.md` | normalise l'entrée, gate de clarté (affinage ?), classe taille, détecte topologie + mode |
-| Pipeline | `actions/02-pipeline.md` | boucle par repo/phase : compose `/00-sdlc`, injecte la ladder, commit + review par phase |
-| Validation | `actions/03-validate.md` | la ladder de test (UI → intégration → curl → e2e via `dev:03-assert`), app tenue par le testeur générique |
+| Pipeline | `actions/02-pipeline.md` | boucle par repo/phase : pilote `01-plan`/`02-implement`/`05-review` directement, injecte la ladder, commit + review par phase |
+| Validation | `actions/03-validate.md` | la ladder de test (UI → intégration → curl → e2e via `dev:06-test:02-test-journey`), app tenue par le testeur générique |
 | Doc & clôture | `actions/04-doc-ship.md` | routage `doc-sync` (reflet/décision) + commit-only + recap storytelling (pas de MR) |
 
 Références : `references/test-runner.md`, `references/governor.md`.

@@ -12,7 +12,8 @@ Une déclaration `test_adapter` en mémoire = bricolage, friction, casse l'auton
 
 Il ne double aucun skill AIDD :
 
-- **e2e / validation UI** → `dev:03-assert`. Le testeur fournit l'URL + l'outil de navigation ; il ne conduit pas le navigateur.
+- **e2e / validation UI** → `dev:06-test:02-test-journey` (mesure pure : un screenshot par étape, jamais de correction). Le testeur fournit **l'URL** ; il ne conduit pas le navigateur, et l'outil de navigation est celui **configuré par le projet**. *Pas* `dev:03-assert` : sa facette frontend répare le code au lieu de le mesurer (cf. `actions/03-validate.md`).
+- **réparation UI en boucle debug** → `dev:03-assert` (facette `03-assert-frontend` nommée explicitement, jamais le skill nu).
 - **écrire des tests** → `dev:06-test`.
 - **planifier** → `dev:01-plan`.
 
@@ -34,7 +35,7 @@ Règle : **parent** = décisions + ce qui parle à l'humain ; **subagent** = bou
 |---|---|---|
 | `start`/`status`/`stop` | **parent** si l'app doit persister dans une boucle debug ; sinon **subagent** one-shot | un process orphelin doit être tué explicitement |
 | `runTests` / `exerciseApi` | **subagent** | borné, rend un rapport |
-| e2e via `dev:03-assert` | **subagent** | le navigateur est tenu par le serveur MCP |
+| e2e via `dev:06-test:02-test-journey` | **subagent** | le navigateur est tenu par le serveur MCP |
 | `costGuard` | **parent** | un subagent ne peut pas demander une confirmation humaine |
 
 - TODO: figer la signature exacte au 1er run réel du testeur.
