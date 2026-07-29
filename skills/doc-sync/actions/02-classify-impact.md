@@ -21,7 +21,7 @@ Une classification par fichier : `chemin → impact → régime → cible doc`. 
    | `*Service*`, `*Config*`, `*Orchestrator*` | archi/comportement | reflet | memory `codebase-map.md` + README (section archi/pipeline) |
 
 2. **Cibler.** Les **noms de sections README ne sont pas figés** : viser « la section qui couvre X ». La structure réelle du README (lue au préalable, cf. action 04) fait foi.
-3. **Router par régime.** Les cibles reflet partent vers les actions 03 (memory) puis 04 (README). Les cibles décision (contrat partagé, ADR, memory `decisions`) partent vers l'action 05 (signaler, ne pas écraser). En coordinateur, la classification vaut par repo : chaque enfant contre son propre code, le contrat partagé au parent.
+3. **Router par régime.** Les cibles reflet partent vers les actions 03 (memory) puis 04 (README). Les cibles décision partent vers l'action 05 (signaler, ne pas écraser). Lire la table des régimes du `SKILL.md` pour savoir laquelle est laquelle — ne pas travailler de mémoire sur une liste recopiée ici. *Pourquoi : une énumération dupliquée finit par omettre une surface ajoutée depuis, et cette surface se fait réécrire au lieu d'être signalée.* En coordinateur, la classification vaut par repo : chaque enfant contre son propre code, le contrat partagé au parent.
 4. **Arrêter si vide.** Si rien d'impactant (fix pur, test, refacto interne sans surface publique) → **le dire et s'arrêter**. Ne pas inventer de mises à jour pour justifier le run.
 
 ## Test

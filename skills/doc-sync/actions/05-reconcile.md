@@ -4,7 +4,7 @@ Compare doc-vs-code à HEAD quand l'ancre git est non fiable, et signale les éc
 
 ## Input
 
-- Les cibles de régime **décision** classées en action 02 (contrat partagé, ADR, memory `decisions`).
+- Les cibles de régime **décision** classées en action 02, quelles qu'elles soient — la table des régimes du `SKILL.md` en donne la liste, cette action n'en tient pas sa propre copie.
 - Tout scope où l'ancre git est non fiable (features mergées, doc peut-être touchée après un merge non documenté), ou tout contrat partagé de coordinateur.
 
 ## Output
@@ -32,5 +32,5 @@ Une liste de dérives : pour chaque affirmation factuelle, ce que la doc affirme
 
 - La comparaison porte sur doc-vs-code à HEAD, pas sur un diff de commits.
 - Chaque écart sur une doc-décision est formulé « décision affirme X / code fait Y » avec le repo autorité identifié.
-- Aucun edit n'est appliqué à une doc-décision (contrat partagé, ADR, memory `decisions`) : la sortie s'arrête à la proposition d'issues.
+- Aucun edit n'est appliqué à **aucune** des surfaces que la table des régimes classe en décision : la sortie s'arrête à la proposition d'issues. Vérifier contre la table, pas contre une liste mémorisée — sinon une surface ajoutée depuis passe le test sans être couverte.
 - Une contradiction entre deux enfants est signalée comme divergence, pas tranchée par le skill.

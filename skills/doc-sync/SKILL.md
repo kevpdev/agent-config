@@ -44,9 +44,11 @@ Le mot « doc » recouvre deux choses d'autorité **opposée**. Confondre les de
 | Régime | Ce que c'est | Exemples | Autorité | doc-sync fait |
 |---|---|---|---|---|
 | **Reflet** | *décrit* ce que le code fait déjà | README, memory `codebase-map` / `api-docs` / `database` | **le CODE fait foi** | **réécrit** la doc pour matcher le code |
-| **Décision** | *prescrit* ce qui a été décidé/agréé | contrat partagé, ADR, memory `decisions`, specs | **la DÉCISION fait foi** sur l'intention | **signale** l'écart code↔décision, **n'écrase jamais** seul |
+| **Décision** | *prescrit* ce qui a été décidé/agréé | contrat partagé, ADR, memory `decisions` / `coding-assertions`, specs | **la DÉCISION fait foi** sur l'intention | **signale** l'écart code↔décision, **n'écrase jamais** seul |
 
 Pourquoi ce garde-fou : quand le code s'écarte d'une décision (ex. un champ `category` non prévu au contrat), doc-sync ne peut pas savoir si c'est une découverte à entériner ou une bavure à corriger. Réécrire la décision seul graverait peut-être un bug dans la loi. Donc il met devant l'écart et **tu** tranches (action 05).
+
+Cas qui se classe mal au premier regard — `coding-assertions` : que `./mvnw test` existe est un **fait**, donc du reflet ; en faire une **porte** avant chaque commit est une politique, donc de la décision. C'est le second qui gouverne le fichier, il part en régime décision. Un script `lint` ajouté à un enfant se **signale** (action 05) : c'est à l'humain de dire s'il gate. Le fait brut, lui, a son propre home en reflet (`<enfant>/tooling.md`, écrit par `memory-bootstrap`).
 
 ## La doc ne couvre que le VALIDÉ
 
