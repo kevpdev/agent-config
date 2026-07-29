@@ -66,7 +66,9 @@ Le séparateur après la date passe de `-` à `_`. La notion **master-plan / par
 
 ### Nouveautés
 
-Skills : `aidd-context:12-cook` (fiches recette), `aidd-vcs:00-repo-init`, `aidd-dev:10-todo` (fan-out d'un executor par todo). Plugins non installés par défaut : `aidd-orchestrator` (issues GitHub labellisées → PR), `aidd-ui` (embryon, un seul skill).
+Skills : `aidd-context:12-cook` (fiches recette, 4 actions `list`/`upsert`/`research`/`apply` + 5 recettes livrées) et `aidd-vcs:00-repo-init`. Tous deux absents de `aidd-context` 1.1.2 et `aidd-vcs` 1.0.2 — vérifié par `ls` du cache des deux versions. Plugins non installés par défaut : `aidd-orchestrator` (issues GitHub labellisées → PR), `aidd-ui` (embryon, un seul skill).
+
+**`aidd-dev:10-todo` n'est pas une nouveauté** — il existait en 1.2.1, cette ligne le comptait à tort. Son delta 2.x est mineur : l'agent spawné passe de `implementer` à `executor`, et l'étape d'affinage se détend (la 1.x exigeait de découvrir un skill de refine, la 2.x accepte de reformuler inline, avec la consigne *« Never block on the user »*). Le principe est inchangé : un `executor` par todo en parallèle, aucune coordination entre eux, une table en sortie.
 
 ### Vérifié empiriquement
 
