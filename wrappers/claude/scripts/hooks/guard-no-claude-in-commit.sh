@@ -104,22 +104,111 @@ print(json.dumps({
   exit 0
 fi
 
-# Extract first line of commit message (handles -m "msg" and heredoc patterns)
-msg=$(printf "%s" "$cmd" | python3 -c "
-import sys, re
-cmd = sys.stdin.read()
-# Match: -m \"message\" or -m 'message'
-m = re.search(r\"-m\s+[\\\"'](.*?)[\\\"|']\", cmd)
-if m:
-    print(m.group(1).splitlines()[0].strip())
-    sys.exit(0)
-# Match heredoc: <<'EOF' ... EOF
-m = re.search(r\"<<'?EOF'?\s*\n(.*?)\nEOF\", cmd, re.DOTALL)
-if m:
-    print(m.group(1).strip().splitlines()[0])
-    sys.exit(0)
-print('')
-" 2>/dev/null || echo "")
+# Extract the subject of the message THIS `git commit` will actually use.
+#
+# A bare search for `-m` over the whole command is wrong: the first `-m` does not
+# necessarily belong to the commit. Measured 2026-07-30 — `git commit -F - <<'EOF'
+# … EOF` followed by `git tag -m 'point de depart'` in the same command validated
+# the TAG's message and blocked a perfectly conformant commit. A guard that
+# refuses valid work is the kind that gets switched off.
+#
+# So: set heredoc bodies aside, isolate the shell segment carrying `git commit`,
+# and read only that invocation's own arguments. Every ambiguity resolves to "no
+# subject extracted" — fail-open, matching the intent stated below: this validates
+# what it can read, it is not a gate that must have the last word.
+msg=$(CMD="$cmd" python3 - <<'PY' 2>/dev/null || echo ""
+import os, re, shlex
+
+cmd = os.environ.get("CMD", "")
+
+# 1. Lift heredoc bodies out. They hold free text, and a "&&" or ";" inside a
+#    sentence would otherwise cut the command into bogus segments.
+heredocs = {}
+lines = cmd.split("\n")
+kept, i = [], 0
+while i < len(lines):
+    kept.append(lines[i])
+    # <<EOF, <<'EOF', <<"EOF", <<-MSG … first marker on the line only: two
+    # heredocs opened by one line is exotic, and guessing there would cost more
+    # than the fail-open it replaces.
+    m = re.search(r"<<-?\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1", lines[i])
+    i += 1
+    if m:
+        delim, body = m.group(2), []
+        while i < len(lines) and lines[i].strip() != delim:
+            body.append(lines[i])
+            i += 1
+        i += 1  # skip the terminator line itself
+        heredocs.setdefault(delim, "\n".join(body))
+flat = "\n".join(kept)
+
+# 2. Keep only the segment that carries the commit. Same token walk as the
+#    detection above, so `git -C <path> commit` is recognized here too.
+TWO_ARG = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--exec-path"}
+
+def commit_args(tokens):
+    """Arguments of the `git … commit` invocation, or None if there is none."""
+    for i, t in enumerate(tokens):
+        if t != "git":
+            continue
+        j = i + 1
+        while j < len(tokens):
+            if tokens[j] in TWO_ARG:
+                j += 2
+            elif tokens[j].startswith("-"):
+                j += 1
+            else:
+                break
+        if j < len(tokens) and tokens[j] == "commit":
+            return tokens[j + 1:]
+    return None
+
+args = None
+for segment in re.split(r"&&|\|\||;|\||\n", flat):
+    try:
+        tokens = shlex.split(segment)
+    except ValueError:
+        tokens = segment.split()
+    found = commit_args(tokens)
+    if found is not None:
+        args = found
+        break
+
+if args is None:
+    print("")
+    raise SystemExit(0)
+
+# 3. Read the message from those arguments only.
+subject, reads_stdin, k = "", False, 0
+while k < len(args):
+    a = args[k]
+    if a in ("-m", "--message"):
+        subject = args[k + 1] if k + 1 < len(args) else ""
+        break
+    if a.startswith("--message="):
+        subject = a.split("=", 1)[1]
+        break
+    # Bundled short flags: `git commit -am "msg"` used to slip through entirely,
+    # because the old regex required a standalone `-m`.
+    if re.fullmatch(r"-[A-Za-z]*m", a):
+        subject = args[k + 1] if k + 1 < len(args) else ""
+        break
+    if a in ("-F", "--file") and k + 1 < len(args) and args[k + 1] == "-":
+        reads_stdin = True
+    if a == "--file=-":
+        reads_stdin = True
+    k += 1
+
+# A commit reading stdin takes the heredoc — but only when there is exactly one.
+# With several, which one feeds the commit is a guess, and guessing here risks
+# blocking on text that is not the commit message at all.
+if not subject and reads_stdin and len(heredocs) == 1:
+    subject = next(iter(heredocs.values()))
+
+first = subject.strip().splitlines()
+print(first[0].strip() if first else "")
+PY
+)
 
 # Validate Conventional Commits EN format when extractable (fail-open if not).
 # Applies to every repo, vault included: a vault commit is `<type>(<date>): <subject>`
