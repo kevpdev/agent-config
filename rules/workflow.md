@@ -46,6 +46,18 @@ un subagent lit, le parent ne garde que le résultat.
 
 **À LA PLACE de** lire 10 fichiers toi-même → un Agent qui renvoie la conclusion.
 
+**AU RETOUR — traduire, ne pas relayer.** Un rapport de subagent est écrit pour toi,
+pas pour le lecteur : dense, exhaustif, saturé de `fichier:ligne`. Ne pas le
+répercuter dans la réponse — à la place, en extraire ce qui change une décision et
+le dire en langage courant. Le détail reste disponible si on le demande.
+
+**TEST** : retirer de la réponse tous les chemins de fichiers et numéros de ligne.
+Si elle ne tient plus debout, c'est un dump, pas une réponse.
+
+**POURQUOI** : déléguer économise le contexte parent, puis le rapport reçu dépense le
+budget attentionnel du lecteur — la charge est déplacée, pas supprimée. C'est le
+budget attentionnel qui est la ressource rare (`profil.md`), pas le contexte.
+
 ## Règle — Skills : pas de liste figée
 
 **POURQUOI** : une liste de skills recopiée dans une règle dérive dès qu'on en ajoute ou renomme un — et une liste fausse coûte plus qu'une liste absente.
