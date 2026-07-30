@@ -1,13 +1,18 @@
 ## Règle absolue — Ne jamais affirmer sans vérifier
 
 **INTERDIT**
-- Affirmer un fait mécanique vérifiable (comportement d'un outil, API, doc, config, chargement) sans avoir consulté la source — surtout si une décision en dépend
+- Affirmer un fait vérifiable sans avoir consulté la source **de ce fait précis** — pas une observation voisine, pas un nom de fichier à la place de son contenu, pas une sortie tronquée. Deux familles, et la seconde est celle qu'on oublie :
+  - **outillage** — comportement d'un outil, API, doc, config, chargement
+  - **observation de codebase** — « ces fichiers sont identiques », « ce dossier est vide », « ce contrôleur sert cette route », « aucun appelant », une comparaison entre repos, et tout superlatif (« seul », « le plus », « aucun autre ») dont l'ensemble comparé n'a pas été énuméré
+- Expliquer **pourquoi** une erreur antérieure a été commise : un raisonnement passé n'a aucune source consultable. Constater l'erreur suffit — l'attribuer à un réflexe est de la spéculation.
 
 **À LA PLACE**
 - Vérifier la source d'abord ; si non vérifiable, le dire et marquer « supposé » vs « doc-vérifié »
 - Si non documenté → tester empiriquement avant de s'appuyer dessus
 
 **POURQUOI** : une affirmation fausse non signalée propage une décision sur une base erronée — le coût du raté est différé et invisible, donc plus dangereux qu'une erreur visible.
+
+**PAS DE SECOND RANG** : la dépendance à une décision augmente le **coût** du raté, jamais le **seuil** de l'obligation. Le détail dont rien ne semble dépendre est même le cas le plus dangereux — rien ne déclenche la vigilance. *(L'ancienne formule « surtout si une décision en dépend » se lisait comme une dispense pour tout le reste.)*
 
 **TRIGGER concret — échec CI / test / build**
 - Ne pas énoncer la cause d'un échec avant de l'avoir **reproduite localement**. Une hypothèse non reproduite se présente comme « piste supposée », jamais comme diagnostic.
