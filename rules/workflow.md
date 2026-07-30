@@ -41,6 +41,7 @@ un subagent lit, le parent ne garde que le résultat.
 - Recherche multi-fichiers, exploration codebase, « où est X » → Explore
 - Lecture de gros fichiers / logs dont tu ne veux que la synthèse
 - Tâche autonome multi-étapes vérifiable → subagent dédié
+- Invocation d'un skill au trigger large mais au contenu massif face à une tâche qui n'en couvre qu'une fraction (ex. skill de référence SDK entier déclenché par un simple fetch/résumé d'article) → juger la pertinence réelle avant de charger inline ; si le skill reste nécessaire, l'exécuter via un sous-agent plutôt que d'injecter son contenu dans le contexte parent
 
 **GARDER au parent** : la décision, l'édition ciblée, le fil de conversation.
 
@@ -57,6 +58,8 @@ Si elle ne tient plus debout, c'est un dump, pas une réponse.
 **POURQUOI** : déléguer économise le contexte parent, puis le rapport reçu dépense le
 budget attentionnel du lecteur — la charge est déplacée, pas supprimée. C'est le
 budget attentionnel qui est la ressource rare (`profil.md`), pas le contexte.
+
+**Cas limite — trigger de skill littéral vs intention réelle** : un trigger de skill formulé au sens large (« dès que X est nommé ») ne dispense pas de juger si la tâche en cours a besoin du contenu complet. Rattaché à `ai-principles.md` — « l'agent sert l'intention, pas la commande littérale ».
 
 ## Règle — Skills : pas de liste figée
 
