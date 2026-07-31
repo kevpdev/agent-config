@@ -1,25 +1,28 @@
 # Template — Décision d'architecture
 
-```markdown
-## Contexte assumé
+> L'ordre compte : la recommandation ouvre le rapport, les options la justifient ensuite. Un lecteur qui s'arrête après trois lignes doit déjà connaître la décision — cf. `rules/style.md`, « verdict d'abord ». Ne pas restaurer un catalogue en tête sous prétexte d'exposer le raisonnement.
 
-- [Contrainte 1 : charge, équipe, deadline, stack existante]
-- [Contrainte 2]
-- [Incertitude : ce qui n'est pas clair et influence la décision]
+```markdown
+## Recommandation
+
+**Go with <Option X>** parce que <raison load-bearing — le critère qui fait pencher la balance>.
+
+**Trade-off accepté :** <inconvénient principal de l'option choisie, explicitement reconnu>.
+
+**Contexte assumé :** <contraintes retenues — charge, équipe, deadline, stack existante> · **Incertitude :** <ce qui n'est pas clair et ferait basculer la décision>.
 
 ---
 
-## Options
+## Options écartées
 
 ### 1. **<Option A>** — <résumé en une ligne>
 
 **Pros :**
 - <avantage concret>
-- <avantage concret>
 
 **Cons :**
 - <inconvénient concret>
-- <coût ou risque>
+- <coût ou risque — dont celui qui l'a fait écarter>
 
 ### 2. **<Option B>** — <résumé en une ligne>
 
@@ -31,14 +34,6 @@
 
 ### 3. **<Option C>** *(optionnelle)*
 - …
-
----
-
-## Recommandation
-
-**Go with <Option X>** parce que <raison load-bearing — le critère qui fait pencher la balance>.
-
-**Trade-off accepté :** <inconvénient principal de l'option choisie, explicitement reconnu>.
 
 ---
 
