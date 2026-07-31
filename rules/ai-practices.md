@@ -28,6 +28,8 @@
 
 **Ce que « testé » veut dire ici** : l'artefact porte un critère qu'on peut faire passer ou échouer. Pour une fiche descriptive, le test minimal est la **traçabilité** — chaque affirmation cite sa source ou porte son marqueur (`supposé`, `à confirmer`).
 
+**Pour une règle ou un skill, le test est comportemental** : donner à un contexte neuf (un sous-agent en lit les règles à son démarrage) une tâche qui devrait la déclencher, **fixer les critères de réussite avant de lire la réponse**, puis juger. Compter les lignes ou vérifier qu'un bloc est toujours présent ne teste rien du comportement — et le comportement est la seule chose que la règle prétend produire.
+
 **EN TEST DEPUIS** 2026-07-30 — appliquée une fois : le test ajouté a attrapé 7 défauts réels le jour même.
 
 ---
@@ -43,6 +45,18 @@
 **Le bon foyer se choisit par la portée** : un fait sur un repo → mémoire du projet ; une manière de travailler → règle ; une procédure à rejouer → skill. En cas de doute, la règle, qui traverse les sous-agents.
 
 **EN TEST DEPUIS** 2026-07-30 — appliquée une fois, tenue.
+
+---
+
+## 4. Une instruction dupliquée s'élimine, elle ne se hiérarchise pas
+
+**DÉCLENCHEUR** : découper un artefact de contexte en couche permanente + couche à la demande — règle + skill, `CLAUDE.md` + référence.
+
+**À LA PLACE DE** répéter le critère dans les deux couches en désignant laquelle fait foi → ne l'énoncer qu'une fois, et faire dire à la couche permanente qu'elle est **délibérément partielle**.
+
+**POURQUOI** : une note de préséance documente le risque de dérive au lieu de le retirer — deux copies ne divergent qu'au premier edit, et rien n'empêche cet edit. Pire, une couche résiduelle qui a l'air complète *supprime* le chargement de l'autre.
+
+**EN TEST DEPUIS** 2026-07-31 — n=1 : un sous-agent a sauté un skill au motif que la règle résiduelle suffisait, et un conflit d'ordre entre une règle et le template d'un skill n'est apparu qu'à l'exécution, invisible à la relecture des deux fichiers.
 
 ---
 
