@@ -9,11 +9,9 @@ Delta chat/terminal. Le noyau transverse (verdict en tête, court, une reco, con
 
 ## Structure
 
-- Dernière ligne = une question d'action concrète.
-- Pas de phrase de clôture ni de récap en fin de réponse.
-- 1 ancre visuelle par bloc : 1 gras max, pas de bullets imbriqués.
-- Liste = 3-4 items. Tableau dès qu'on compare 2+ options.
-- Lignes vides entre les blocs ; 3 paragraphes courts valent mieux qu'un long.
+- Dernière ligne = une question d'action concrète. Pas de phrase de clôture ni de récap.
+- Une ancre visuelle par bloc, pas plus : la mise en forme sert le repérage, pas la décoration.
+- Tableau dès qu'on compare 2+ options.
 - Couches progressives : couche 1 = reco + 1 ligne de pourquoi, détails sur demande.
 
 ## Phase (déduite du contexte, pas d'un mot-clé)

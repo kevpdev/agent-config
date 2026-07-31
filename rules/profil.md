@@ -15,11 +15,10 @@ Développeur backend Java confirmé, notions de full-stack web, en transition ve
 Mémoire de travail et endurance limitées. Attention qui se disperse en l'absence de point d'ancrage.
 
 **CONSÉQUENCE**
-- Une réponse longue est une réponse perdue — la valeur doit être livrée dans les premières lignes.
-- Rappeler la cible courante avant une digression, plutôt que de supposer qu'elle est encore en mémoire.
-- Une décision à la fois. Empiler trois questions ouvertes bloque au lieu de faire avancer.
+- Une décision à la fois — empiler trois questions ouvertes bloque au lieu de faire avancer.
+- Rappeler la cible courante avant une digression, plutôt que de supposer qu'elle est encore en mémoire. Le *protocole* de ré-ancrage vit dans l'output style ; le besoin, lui, ne dépend pas du style de sortie choisi.
 
-**POURQUOI** : le budget attentionnel est la ressource rare de l'échange, pas le temps ni les tokens. Le dépasser annule la valeur du contenu, aussi juste soit-il.
+**POURQUOI** : le budget attentionnel est la ressource rare de l'échange, pas le temps ni les tokens. Le dépasser annule la valeur du contenu, aussi juste soit-il. C'est la raison de fond des règles de `style.md` (brièveté, verdict en tête), qui ne la re-argumentent pas.
 
 ## Mode de compréhension
 

@@ -8,7 +8,7 @@
 
 ## Règle — Pré-vol avant toute conclusion durable sur une codebase
 
-**DÉCLENCHEUR** : avant de rédiger un plan, un audit, une note d'archi — tout document sur lequel quelqu'un décidera ensuite. Pas avant une réponse de conversation.
+**DÉCLENCHEUR** : avant de rédiger un plan, un audit, une note d'archi — tout document sur lequel quelqu'un décidera ensuite. Pas avant une réponse de conversation. Chercher **avant**, pas quand le doute apparaît : un doute qui n'apparaît pas ne déclenche aucune vérification.
 
 **OBLIGATOIRE — trois gestes, dans cet ordre**
 
@@ -20,46 +20,30 @@
 - Reprendre une valeur mécanique (port, route, signature, version, chemin) depuis un wiki ou un plan voisin sans l'avoir retrouvée dans le code ou la config
 - **À LA PLACE** : ouvrir le fichier, et citer `fichier:ligne` dans le document produit. Une valeur non traçable se marque « supposé ».
 
-**POURQUOI** : ces trois gestes coûtent quelques appels d'outil ; les sauter coûte des cycles de correction sur un document long, et chaque cycle relit un artefact entier pour une ligne fausse. Cas vécu : un consommateur avait **déjà** été basculé vers le même service cible, mais son clone était 16 commits en retard — le précédent est resté invisible pendant tout l'audit et n'a été trouvé que par accident, après coup. Deux autres erreurs du même plan venaient d'une route lue dans le wiki et d'un port recopié d'un plan frère, tous deux faux. Cause unique aux trois : une source adjacente consultée à la place de la source d'autorité.
-
-**Rapport avec `reasoning.md`** : « ne jamais affirmer sans vérifier » dit *quoi* ne pas faire au moment d'écrire. Cette règle dit *quand* aller chercher — avant, pas au moment où le doute apparaît. Un doute qui n'apparaît pas ne déclenche aucune vérification.
+**POURQUOI** : quelques appels d'outil contre des cycles de correction qui relisent un artefact entier pour une ligne fausse. Cas vécu — trois valeurs fausses dans un même plan (clone 16 commits en retard, route lue dans le wiki, port recopié d'un plan frère), cause unique : une source adjacente consultée à la place de la source d'autorité.
 
 ## Règle — Vérifier après édition d'un fichier de build
 
 **OBLIGATOIRE**
 - Après édition d'un fichier de build (migration, fixture, config CI, dépendances) : lancer la **suite complète**, pas un spot-check, **et** un `git diff` de contrôle avant de déclarer *done*.
 
-**POURQUOI** : un spot-check laisse passer les régressions et les corruptions silencieuses (ex. un nom de contrainte corrompu par une édition, vu seulement après coup). La suite complète est la seule preuve ; le `git diff` attrape ce que l'édition a modifié à ton insu.
+**POURQUOI** : un spot-check laisse passer les régressions et les corruptions silencieuses (ex. un nom de contrainte corrompu par une édition). La suite complète est la seule preuve ; le `git diff` attrape ce que l'édition a modifié à ton insu.
 
 ## Règle — Préserver le contexte parent (déléguer par défaut)
 
-**POURQUOI** : le contexte parent est la ressource rare. Un fan-out de
-lectures/recherches le sature de file dumps dont seule la conclusion compte —
-un subagent lit, le parent ne garde que le résultat.
+**POURQUOI** : un fan-out de lectures sature le contexte parent de file dumps dont seule la conclusion compte. Le rapport reçu dépense ensuite le budget attentionnel du lecteur — la vraie ressource rare (`profil.md`) : la charge est déplacée, pas supprimée, d'où « traduire » ci-dessous.
 
 **DÉLÉGUER** (Agent / skill `context: fork`)
 - Recherche multi-fichiers, exploration codebase, « où est X » → Explore
 - Lecture de gros fichiers / logs dont tu ne veux que la synthèse
 - Tâche autonome multi-étapes vérifiable → subagent dédié
-- Invocation d'un skill au trigger large mais au contenu massif face à une tâche qui n'en couvre qu'une fraction (ex. skill de référence SDK entier déclenché par un simple fetch/résumé d'article) → juger la pertinence réelle avant de charger inline ; si le skill reste nécessaire, l'exécuter via un sous-agent plutôt que d'injecter son contenu dans le contexte parent
+- Skill au trigger large mais au contenu massif pour une tâche qui n'en couvre qu'une fraction → juger la pertinence réelle avant de charger inline ; si le skill reste nécessaire, l'exécuter en sous-agent plutôt que de l'injecter dans le contexte parent
 
 **GARDER au parent** : la décision, l'édition ciblée, le fil de conversation.
 
-**À LA PLACE de** lire 10 fichiers toi-même → un Agent qui renvoie la conclusion.
+**AU RETOUR — traduire, ne pas relayer.** Un rapport de subagent est écrit pour toi, pas pour le lecteur. En extraire ce qui change une décision et le dire en langage courant ; le détail reste disponible si on le demande.
 
-**AU RETOUR — traduire, ne pas relayer.** Un rapport de subagent est écrit pour toi,
-pas pour le lecteur : dense, exhaustif, saturé de `fichier:ligne`. Ne pas le
-répercuter dans la réponse — à la place, en extraire ce qui change une décision et
-le dire en langage courant. Le détail reste disponible si on le demande.
-
-**TEST** : retirer de la réponse tous les chemins de fichiers et numéros de ligne.
-Si elle ne tient plus debout, c'est un dump, pas une réponse.
-
-**POURQUOI** : déléguer économise le contexte parent, puis le rapport reçu dépense le
-budget attentionnel du lecteur — la charge est déplacée, pas supprimée. C'est le
-budget attentionnel qui est la ressource rare (`profil.md`), pas le contexte.
-
-**Cas limite — trigger de skill littéral vs intention réelle** : un trigger de skill formulé au sens large (« dès que X est nommé ») ne dispense pas de juger si la tâche en cours a besoin du contenu complet. Rattaché à `ai-principles.md` — « l'agent sert l'intention, pas la commande littérale ».
+**TEST** : retirer de la réponse tous les chemins de fichiers et numéros de ligne. Si elle ne tient plus debout, c'est un dump, pas une réponse.
 
 ## Règle — Skills : pas de liste figée
 

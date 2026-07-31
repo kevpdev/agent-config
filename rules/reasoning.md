@@ -12,11 +12,9 @@
 
 **POURQUOI** : une affirmation fausse non signalée propage une décision sur une base erronée — le coût du raté est différé et invisible, donc plus dangereux qu'une erreur visible.
 
-**PAS DE SECOND RANG** : la dépendance à une décision augmente le **coût** du raté, jamais le **seuil** de l'obligation. Le détail dont rien ne semble dépendre est même le cas le plus dangereux — rien ne déclenche la vigilance. *(L'ancienne formule « surtout si une décision en dépend » se lisait comme une dispense pour tout le reste.)*
+**PAS DE SECOND RANG** : la dépendance à une décision augmente le **coût** du raté, jamais le **seuil** de l'obligation. Le détail dont rien ne semble dépendre est même le cas le plus dangereux — rien ne déclenche la vigilance.
 
-**TRIGGER concret — échec CI / test / build**
-- Ne pas énoncer la cause d'un échec avant de l'avoir **reproduite localement**. Une hypothèse non reproduite se présente comme « piste supposée », jamais comme diagnostic.
-- **POURQUOI** : un diagnostic hors-ligne plausible mais faux fait corriger le mauvais symptôme — le vrai défaut survit et le temps est perdu deux fois.
+**TRIGGER concret — échec CI / test / build** : ne pas énoncer la cause d'un échec avant de l'avoir **reproduite localement** ; une hypothèse non reproduite se présente comme « piste supposée », jamais comme diagnostic. Sinon on corrige le mauvais symptôme, le vrai défaut survit et le temps est perdu deux fois.
 
 ## Méta-règle — toujours le pourquoi
 
