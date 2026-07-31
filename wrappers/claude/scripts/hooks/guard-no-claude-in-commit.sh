@@ -199,6 +199,19 @@ while k < len(args):
         reads_stdin = True
     k += 1
 
+# `-m "$(cat <<'EOF' … EOF)"` — the argument is a command substitution, not a
+# message. Measured 2026-07-31: the unbalanced quote makes shlex give up, the
+# fallback split yields the token `"$(cat`, and a conformant commit was blocked on
+# it. Failing open here would be worse than elsewhere: this is the standard shape
+# for a multi-line message, so the most common commit of all would go unvalidated.
+# With exactly one heredoc, its body IS the message; with several, which one feeds
+# the commit is a guess — renounce, as everywhere else in this extractor.
+#
+# The test is an UNTERMINATED substitution, not the mere presence of `$(`: a closed
+# `$(pwd)` inside a subject is a subject, and must keep being validated.
+if subject.count("$(") > subject.count(")"):
+    subject = next(iter(heredocs.values())) if len(heredocs) == 1 else ""
+
 # A commit reading stdin takes the heredoc — but only when there is exactly one.
 # With several, which one feeds the commit is a guess, and guessing here risks
 # blocking on text that is not the commit message at all.

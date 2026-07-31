@@ -69,6 +69,34 @@ CMD
 )"
 
 echo
+echo "=== -m alimente par une substitution de commande ==="
+# Mesure le 2026-07-31 : c'est la forme standard d'un message multi-lignes, et le
+# hook la bloquait alors qu'elle est conforme. Ce qui suit `-m` n'est pas le
+# message mais le debut de `$(cat …)` ; l'extracteur en tirait le jeton `"$(cat`
+# et jugeait CA contre la convention. Le `-F -` voisin, lui, etait deja teste et
+# passait — d'ou un garde-fou qui refusait la forme la plus courante.
+verifier "-m \$(cat heredoc) conforme"       PASSE "$(cat <<'CMD'
+git commit -m "$(cat <<'EOF'
+feat(db): add the bootstrap script
+
+Corps du message.
+EOF
+)"
+CMD
+)"
+verifier "-m \$(cat heredoc) non conforme"   BLOQUE "$(cat <<'CMD'
+git commit -m "$(cat <<'EOF'
+ajout du script
+EOF
+)"
+CMD
+)"
+# Garde-fou du correctif : une substitution FERMEE dans le sujet reste un sujet.
+# Sans cette borne, le correctif renoncerait a valider tout message contenant
+# `$(...)`, et un sujet non conforme passerait par cette porte.
+verifier "substitution fermee dans le sujet" BLOQUE 'git commit -m "ajout de $(pwd)"'
+
+echo
 echo "=== Messages non conformes : doivent bloquer ==="
 verifier "-m sujet libre"                    BLOQUE 'git commit -m "ajout du script"'
 verifier "-am sujet libre"                   BLOQUE 'git commit -am "ajout du script"'
