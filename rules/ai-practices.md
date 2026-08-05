@@ -60,6 +60,18 @@
 
 ---
 
+## 5. Charger le journal avant de répondre sur le passé
+
+**DÉCLENCHEUR** : l'utilisateur demande où on en était, le reste-à-faire d'une tâche, ou l'historique d'une décision. Une question dont la réponse vit dans les session logs et non dans le code courant.
+
+**CONDITION** : seulement si un home de session logs existe. Le vérifier factuellement (`test -d "$OBSIDIAN_VAULT_PRO"`), pas au jugé.
+
+**À LA PLACE DE** répondre de mémoire → charger le journal d'abord (`/vault-load`, scopé sur l'id de task s'il est repérable), puis répondre depuis le contexte chargé. Aucun push automatique n'existe : par défaut aucune source n'est chargée, et rien ne signale son absence.
+
+**POURQUOI** : une réponse tirée de la mémoire de session a l'air complète, donc rien ne déclenche la vérification.
+
+**EN TEST DEPUIS** 2026-08-05 — n=1, et c'est un **échec** : à la question « où en sommes-nous sur la config agentique », j'ai répondu qu'aucune trace d'audit n'existait. Elle était dans le log du 31 juillet. La règle existait déjà sous une autre forme et n'a pas suffi, ce qui est la raison de sa présence ici plutôt que dans `rules/`.
+
 ## Écartées du banc d'essai
 
 Une pratique qu'une règle ne peut pas exercer dilue les autres sans rien gagner :

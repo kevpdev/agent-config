@@ -27,6 +27,8 @@
 
 Cas vécu, les deux le même jour sur le même fait : zéro point-virgule fautif annoncé sur six corpus, d'abord parce que le corpus le plus propre avait été nettoyé sur demande, ensuite parce que la regex exigeait `mot; mot` et ignorait la typographie française `mot ; mot`. Comptage réel après calibrage : 1 019 occurrences.
 
+**TRIGGER concret — un session log ou un récap de session** : il fige l'état du jour où il a été écrit, jamais l'état courant. Depuis, le code, une migration ou la décision elle-même ont pu bouger. **À LA PLACE de** le restituer comme vérité présente → le marquer « d'après la session du {date}, à vérifier » et le confronter à la source qui fait autorité (git, `aidd_docs/`, le code) avant toute affirmation dont dépend une décision.
+
 ## Méta-règle — toujours le pourquoi
 
 Toute règle ou instruction écrite pour Claude (ici, dans un skill, une commande, une note) énonce sa **raison**, pas seulement l'ordre.
