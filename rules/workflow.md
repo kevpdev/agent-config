@@ -36,11 +36,14 @@
 **OBLIGATOIRE**
 - Refuser quand le mécanisme ne peut pas conclure : dépendance absente, entrée illisible, racine introuvable. Ne pas laisser le chemin d'erreur retomber sur `exit 0` — c'est là que la panne devient invisible.
 - Aucun chemin absolu en dur : le dériver de l'emplacement du script (`$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)`), puis s'arrêter si la racine dérivée ne porte pas un marqueur attendu.
+- Ne pas conditionner le garde à l'artefact dont l'absence **est** le mode de défaillance : il ne surveillerait que les passes déjà bien conduites. Faire porter le contrôle sur ce que le défaut produit, jamais sur ce que produit la bonne pratique.
 - Calibrer sur un cas positif **fabriqué à la main** avant de déclarer le garde en place. Un garde sans cible vivante se comporte exactement pareil qu'il soit cassé ou intact.
 
 **POURQUOI** : un garde qui échoue ouvert est pire que pas de garde, parce qu'il inspire confiance — on cesse de surveiller la zone qu'il ne protège plus. Même famille de panne qu'une mesure aveugle (cf. `reasoning.md`), et l'échec ouvert est le défaut par nature : il faut l'écrire pour qu'il n'arrive pas.
 
 Cas vécu, le 2026-08-05, deux fois le même jour. `jq` absent du poste rendait une chaîne vide, que le hook prenait pour « outil sans chemin de fichier » : le `PreToolUse` du Garden autorisait toute écriture depuis son installation. Et un `VAULT_ROOT` pointant l'ancien poste faisait rendre `0` à douze scripts de comptage — un vault vide, parfaitement plausible.
+
+**Cas vécu du troisième point** : un garde écrit puis supprimé le même jour refusait d'écrire une recommandation tant que la note d'analyse du ticket restait incomplète, mais il ne se déclenchait qu'**en présence** de cette note. Or celui qui ne mesure pas est précisément celui qui ne l'a pas ouverte. Le verrou ne pouvait donc attraper qu'une passe déjà à moitié conduite, et jamais celle qui sautait le processus entier. La règle de prose, elle, a bien déclenché trois mesures ce jour-là. Quand le défaut vit dans le raisonnement et non dans un artefact, aucun hook ne l'atteint : le hook ne voit que les appels d'outil.
 
 ## Règle — Préserver le contexte parent (déléguer par défaut)
 
