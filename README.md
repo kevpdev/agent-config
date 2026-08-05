@@ -65,6 +65,15 @@ Claude Code découvre ces dossiers automatiquement, sans rien déclarer. Aucun `
 
 Les symlinks sont supportés — lier plutôt que copier garde le repo comme source unique.
 
+**`~/.claude/rules/` est le seul cas particulier.** Deux dossiers de ce repo s'y déversent, et un lien de dossier ne fusionne pas : il faut donc un lien **par fichier**. Un fichier de règle neuf reste donc inerte jusqu'à ce que son lien existe, sans qu'aucun signal ne le dise. Les cinq autres cibles sont des liens uniques et ne peuvent pas dériver.
+
+```bash
+bash wrappers/claude/scripts/sync-rules.sh          # vérifie, échoue sur tout écart
+bash wrappers/claude/scripts/sync-rules.sh --fix    # crée, répare, retire les orphelins
+```
+
+À lancer après tout ajout, renommage ou suppression dans `rules/` ou `wrappers/claude/rules/`.
+
 ## Dépendance externe
 
 `skills/aidd-pilot/` orchestre les plugins du framework [AI-Driven Dev](https://github.com/ai-driven-dev/framework) et ne fonctionne pas sans eux — voir `skills/aidd-pilot/README.md`. Les autres skills sont autonomes.
