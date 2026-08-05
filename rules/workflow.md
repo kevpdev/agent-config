@@ -29,6 +29,19 @@
 
 **POURQUOI** : un spot-check laisse passer les régressions et les corruptions silencieuses (ex. un nom de contrainte corrompu par une édition). La suite complète est la seule preuve ; le `git diff` attrape ce que l'édition a modifié à ton insu.
 
+## Règle — Un mécanisme déterministe échoue fermé
+
+**DÉCLENCHEUR** : écrire ou modifier un hook, un garde-fou, un script de lint — tout ce dont le métier est de refuser ou d'alerter.
+
+**OBLIGATOIRE**
+- Refuser quand le mécanisme ne peut pas conclure : dépendance absente, entrée illisible, racine introuvable. Ne pas laisser le chemin d'erreur retomber sur `exit 0` — c'est là que la panne devient invisible.
+- Aucun chemin absolu en dur : le dériver de l'emplacement du script (`$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)`), puis s'arrêter si la racine dérivée ne porte pas un marqueur attendu.
+- Calibrer sur un cas positif **fabriqué à la main** avant de déclarer le garde en place. Un garde sans cible vivante se comporte exactement pareil qu'il soit cassé ou intact.
+
+**POURQUOI** : un garde qui échoue ouvert est pire que pas de garde, parce qu'il inspire confiance — on cesse de surveiller la zone qu'il ne protège plus. Même famille de panne qu'une mesure aveugle (cf. `reasoning.md`), et l'échec ouvert est le défaut par nature : il faut l'écrire pour qu'il n'arrive pas.
+
+Cas vécu, le 2026-08-05, deux fois le même jour. `jq` absent du poste rendait une chaîne vide, que le hook prenait pour « outil sans chemin de fichier » : le `PreToolUse` du Garden autorisait toute écriture depuis son installation. Et un `VAULT_ROOT` pointant l'ancien poste faisait rendre `0` à douze scripts de comptage — un vault vide, parfaitement plausible.
+
 ## Règle — Préserver le contexte parent (déléguer par défaut)
 
 **POURQUOI** : un fan-out de lectures sature le contexte parent de file dumps dont seule la conclusion compte. Le rapport reçu dépense ensuite le budget attentionnel du lecteur — la vraie ressource rare (`profil.md`) : la charge est déplacée, pas supprimée, d'où « traduire » ci-dessous.
