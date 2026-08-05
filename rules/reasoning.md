@@ -5,14 +5,18 @@
   - **outillage** — comportement d'un outil, API, doc, config, chargement
   - **observation de codebase** — « ces fichiers sont identiques », « ce dossier est vide », « ce contrôleur sert cette route », « aucun appelant », une comparaison entre repos, et tout superlatif (« seul », « le plus », « aucun autre ») dont l'ensemble comparé n'a pas été énuméré
 - Expliquer **pourquoi** une erreur antérieure a été commise : un raisonnement passé n'a aucune source consultable. Constater l'erreur suffit — l'attribuer à un réflexe est de la spéculation.
+- **Bâtir un raisonnement sur une prémisse non mesurée**, même sans rien affirmer encore. L'interdit ne porte pas que sur la conclusion : une chaîne d'arguments posée sur une prémisse fausse devra être démolie, et démolir coûte une seconde fois.
 
 **À LA PLACE**
+- Mesurer d'abord, raisonner ensuite. Lancer la vérification la moins chère (une commande, un grep, un `ls`) **avant** d'ouvrir l'analyse, pas quand un doute apparaît : un doute qui n'apparaît pas ne déclenche rien.
 - Vérifier la source d'abord ; si non vérifiable, le dire et marquer « supposé » vs « doc-vérifié »
 - Si non documenté → tester empiriquement avant de s'appuyer dessus
 
 **POURQUOI** : une affirmation fausse non signalée propage une décision sur une base erronée — le coût du raté est différé et invisible, donc plus dangereux qu'une erreur visible.
 
 **PAS DE SECOND RANG** : la dépendance à une décision augmente le **coût** du raté, jamais le **seuil** de l'obligation. Le détail dont rien ne semble dépendre est même le cas le plus dangereux — rien ne déclenche la vigilance.
+
+**CE QUE TUE UNE MESURE, UN ARGUMENT NE LE TUE PAS** : sur les 14 affirmations fausses relevées au rejeu de VW3-3256 (2026-08-04), 12 sont tombées sur une mesure et 2 sur un arbitrage. Trois tenaient à un `ls` jamais lancé, dont le coût a été 757 lignes de raisonnement à détruire. Une heure d'analyse juste posée sur une prémisse non testée ne vaut rien.
 
 **TRIGGER concret — échec CI / test / build** : ne pas énoncer la cause d'un échec avant de l'avoir **reproduite localement** ; une hypothèse non reproduite se présente comme « piste supposée », jamais comme diagnostic. Sinon on corrige le mauvais symptôme, le vrai défaut survit et le temps est perdu deux fois.
 
