@@ -16,6 +16,13 @@
 
 **TRIGGER concret — échec CI / test / build** : ne pas énoncer la cause d'un échec avant de l'avoir **reproduite localement** ; une hypothèse non reproduite se présente comme « piste supposée », jamais comme diagnostic. Sinon on corrige le mauvais symptôme, le vrai défaut survit et le temps est perdu deux fois.
 
+**TRIGGER concret — un comptage qui rend « zéro »** : ne pas conclure à l'absence du défaut, pour deux raisons qui se cumulent.
+
+- Le corpus peut avoir été relu, corrigé ou nettoyé : il ne mesure alors que ce qui a survécu à la correction, jamais la propension qui l'a produit — et une correction faite en cours de rédaction ne laisse aucune trace dans git. **À LA PLACE** : prendre comme contrôle un corpus que personne ne relit, sinon marquer le chiffre « sur corpus corrigé ».
+- L'instrument peut être aveugle. **À LA PLACE** : le calibrer d'abord sur un cas positif connu, exhibé à la main. Un détecteur non calibré ne distingue pas l'absence du défaut de son incapacité à le voir, et il rend le même « zéro » dans les deux cas.
+
+Cas vécu, les deux le même jour sur le même fait : zéro point-virgule fautif annoncé sur six corpus, d'abord parce que le corpus le plus propre avait été nettoyé sur demande, ensuite parce que la regex exigeait `mot; mot` et ignorait la typographie française `mot ; mot`. Comptage réel après calibrage : 1 019 occurrences.
+
 ## Méta-règle — toujours le pourquoi
 
 Toute règle ou instruction écrite pour Claude (ici, dans un skill, une commande, une note) énonce sa **raison**, pas seulement l'ordre.
