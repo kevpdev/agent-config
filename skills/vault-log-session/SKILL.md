@@ -40,3 +40,13 @@ et **STOP**.
 4. Nuance recap : la session porte sur un **repo externe**. Source le travail depuis ce repo
    (git log/diff, fichiers touchés), mais écris le recap **dans le vault**.
 5. **Pas de commit** : le skill canonique log-session ne commit pas. Pour sauvegarder le vault, lance `/vault-save`.
+
+## Test
+
+```
+bash ~/.claude/skills/_shared/check-vault-bridge.sh vault-log-session
+```
+
+- `exit 0` : chaque cible canonique citée plus haut résout réellement.
+- Cible renommée ou déplacée → `exit 1`. Vault absent, `SKILL.md` illisible, racine douteuse → `exit 2`. Jamais un succès silencieux.
+- Le garde-fou se vérifie à la main : invoquer le skill avec `$OBSIDIAN_VAULT_PRO` vidé doit produire l'arrêt annoncé, pas une écriture dans le repo courant.

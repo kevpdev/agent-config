@@ -38,3 +38,13 @@ et **STOP**. N'écris **jamais** dans le repo courant.
 4. Renseigne `session_id`, `session_path` et `project` dans le frontmatter si tu peux les
    déduire du contexte (chemin scratchpad, CWD du repo).
 5. Confirme à l'utilisateur le chemin absolu créé.
+
+## Test
+
+```
+bash ~/.claude/skills/_shared/check-vault-bridge.sh vault-recap-raisonnement
+```
+
+- `exit 0` : chaque cible canonique citée plus haut résout réellement.
+- Cible renommée ou déplacée → `exit 1`. Vault absent, `SKILL.md` illisible, racine douteuse → `exit 2`. Jamais un succès silencieux.
+- Le garde-fou se vérifie à la main : invoquer le skill avec `$OBSIDIAN_VAULT_PRO` vidé doit produire l'arrêt annoncé, pas une écriture dans le repo courant.

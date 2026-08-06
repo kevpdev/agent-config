@@ -34,3 +34,13 @@ et **STOP**.
    ```
 3. Résume à l'utilisateur le contexte chargé (sprint/priorités, ou tâche/statut/blockers/next).
 4. Signale tout mode dégradé remonté par le script (id introuvable, liens cassés) — no silent degradation.
+
+## Test
+
+```
+bash ~/.claude/skills/_shared/check-vault-bridge.sh vault-load
+```
+
+- `exit 0` : chaque cible canonique citée plus haut résout réellement.
+- Cible renommée ou déplacée → `exit 1`. Vault absent, `SKILL.md` illisible, racine douteuse → `exit 2`. Jamais un succès silencieux.
+- Le garde-fou se vérifie à la main : invoquer le skill avec `$OBSIDIAN_VAULT_PRO` vidé doit produire l'arrêt annoncé, pas un repli sur le repo courant.

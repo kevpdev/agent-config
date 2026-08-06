@@ -32,3 +32,13 @@ et **STOP**. N'écris **jamais** dans le repo courant (sinon capture perdue).
    `$OBSIDIAN_VAULT_PRO/0_INBOX/`, **jamais** dans le repo courant.
 3. Pour la date du nom de fichier (`YYYY-MM-DD`) : `bash -lc 'date +%F'`.
 4. Confirme à l'utilisateur le chemin absolu créé.
+
+## Test
+
+```
+bash ~/.claude/skills/_shared/check-vault-bridge.sh vault-capture
+```
+
+- `exit 0` : chaque cible canonique citée plus haut résout réellement.
+- Cible renommée ou déplacée → `exit 1`. Vault absent, `SKILL.md` illisible, racine douteuse → `exit 2`. Jamais un succès silencieux.
+- Le garde-fou se vérifie à la main : invoquer le skill avec `$OBSIDIAN_VAULT_PRO` vidé doit produire l'arrêt annoncé, pas une écriture dans le repo courant.

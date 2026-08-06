@@ -33,3 +33,13 @@ et **STOP**. N'écris **jamais** dans le repo courant.
 3. Si la source de contenu est le repo courant, lis-le depuis le CWD ; n'y écris rien.
 4. Pour la date / les noms de fichier : `bash -lc 'date +%F'`.
 5. Confirme à l'utilisateur le chemin absolu créé + la commande de rendu.
+
+## Test
+
+```
+bash ~/.claude/skills/_shared/check-vault-bridge.sh vault-slides
+```
+
+- `exit 0` : chaque cible canonique citée plus haut résout réellement.
+- Cible renommée ou déplacée → `exit 1`. Vault absent, `SKILL.md` illisible, racine douteuse → `exit 2`. Jamais un succès silencieux.
+- Le garde-fou se vérifie à la main : invoquer le skill avec `$OBSIDIAN_VAULT_PRO` vidé doit produire l'arrêt annoncé, pas une écriture dans le repo courant.
