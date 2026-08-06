@@ -29,6 +29,18 @@ Cas vécu, les deux le même jour sur le même fait : zéro point-virgule fautif
 
 **TRIGGER concret — un session log ou un récap de session** : il fige l'état du jour où il a été écrit, jamais l'état courant. Depuis, le code, une migration ou la décision elle-même ont pu bouger. **À LA PLACE de** le restituer comme vérité présente → le marquer « d'après la session du {date}, à vérifier » et le confronter à la source qui fait autorité (git, `aidd_docs/`, le code) avant toute affirmation dont dépend une décision.
 
+## Règle — Borner l'analyse : le contrat de questions est figé
+
+**DÉCLENCHEUR** : ouvrir l'analyse d'un ticket, d'un bug ou d'un sujet large — dès que le périmètre de ce qu'on cherche n'est pas déjà donné par la demande.
+
+**OBLIGATOIRE — poser le contrat avant de creuser** : énoncer les questions auxquelles l'analyse doit répondre, et ce qu'on ne creuse **pas**. Puis n'y plus toucher.
+
+- **NE PAS ajouter une question en cours d'analyse** — à la place, la capturer et continuer. L'agent peut déclarer le contrat cassé (une question devenue fausse ou sans objet → stop, rendre le partiel, remonter l'arbitrage), jamais le rouvrir : seul l'humain rouvre.
+- **NE PAS creuser une découverte qui ne touche aucune question du contrat** — à la place, la capturer en une ligne et continuer. Capturer coûte dix secondes, traiter coûte la session.
+- **Re-trier après les mesures.** Une question classée « à trancher par l'humain » avant de mesurer l'est souvent par ignorance, pas par nature. Avant de rendre un arbitrage, chercher la commande qui le tuerait.
+
+**POURQUOI** : le tri d'une découverte est un jugement, donc il se trompera ; « pas le droit d'ajouter de question » est déterministe et coupe la récursion à la racine. Sans cette borne, chaque découverte ouvre une branche et l'analyse n'a plus de condition d'arrêt — le coût ne se voit pas, parce qu'à chaque pas la branche suivante paraît justifiée. La borne porte sur les **questions**, jamais sur les **mesures**.
+
 ## Méta-règle — toujours le pourquoi
 
 Toute règle ou instruction écrite pour Claude (ici, dans un skill, une commande, une note) énonce sa **raison**, pas seulement l'ordre.
