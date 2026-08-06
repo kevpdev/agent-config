@@ -95,3 +95,9 @@ Produis le rapport selon `assets/review-template.md`.
 - 🟡 **`auth.controller.ts:12`** — Logique métier dans le contrôleur
   **Fix** : extraire dans `AuthService.login()` pour testabilité.
 ```
+
+## Test
+
+- La sortie porte toutes les sections de `assets/review-template.md` : verdict, contexte assumé, bloquants, suggestions, points positifs, hors périmètre.
+- Chaque bloquant cite un `fichier:ligne`. Un bloquant non localisable n'est pas actionnable.
+- Calibrage sur cas négatif : soumettre un diff propre. La section bloquants doit être explicitement vide, pas remplie d'un bloquant fabriqué pour justifier la review.

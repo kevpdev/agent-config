@@ -76,3 +76,9 @@ Pour chaque recommandation :
 - **Ne jamais** déployer sans health check défini → **à la place** `readinessProbe` + `livenessProbe` minimum. Pourquoi : sans readinessProbe, K8s envoie du trafic avant que l'app soit prête.
 
 - **Ne jamais** lancer des containers en root → **à la place** `USER <non-root>` dans le Dockerfile. Pourquoi : compromission du container = accès root à l'hôte sans isolation supplémentaire.
+
+## Test
+
+- La sortie porte les quatre champs du format « Après » : problème, impact, fix, priorité.
+- Le fix est une commande ou un fragment de config copiable, pas une intention. « Optimise le cache » n'est pas un fix.
+- Calibrage sur cas négatif : soumettre « ma build est lente » sans le log. La sortie doit réclamer le log avant de désigner l'étape coûteuse, sinon elle optimise au hasard.

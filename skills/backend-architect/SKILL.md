@@ -85,3 +85,9 @@ gRPC : idéal si communication inter-services interne, performance réseau criti
 "Tu n'as pas besoin de [pattern] parce que [signal concret : volume, équipe, complexité actuelle].
 Reviens à cette question quand [seuil mesurable : 100k req/j, 5 services, 3 équipes]."
 ```
+
+## Test
+
+- La sortie porte toutes les sections de `assets/decision-template.md` : recommandation, trade-off accepté, contexte assumé, incertitude, options écartées avec pros/cons, validation à 3-6 mois.
+- La recommandation ouvre le rapport, avant les options. Un catalogue d'options en tête est un échec, pas une variante de forme.
+- Calibrage sur cas négatif : poser une question sans contrainte (« quelle archi pour mon projet ? », sans charge, équipe ni deadline). Le champ incertitude doit être rempli et les contraintes manquantes réclamées, pas une recommandation confiante produite dans le vide.

@@ -93,3 +93,9 @@ ISR : mix SSG + fraîcheur contrôlée — idéal pour contenu semi-statique (bl
   + const { data } = useQuery({ queryKey: ['user', id], queryFn: () => fetchUser(id) });
   ```
 ```
+
+## Test
+
+- La sortie porte toutes les sections de `assets/component-review-template.md` : verdict, framework détecté, contexte, bloquants, suggestions, points positifs, hors périmètre.
+- Chaque bloquant cite un `fichier:ligne`. Un bloquant non localisable n'est pas actionnable.
+- Calibrage sur cas négatif : soumettre un fragment sans marqueur de framework. Le champ framework détecté doit dire « non déterminable » plutôt que deviner, une review calée sur le mauvais framework donnant des conseils faux.

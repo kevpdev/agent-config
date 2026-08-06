@@ -125,3 +125,9 @@ Format de sortie pour une décision architecturale :
 ## Exemples de patterns
 
 Routing déterministe (hooks + sous-agents) et passage de contexte minimal à un sous-agent : `references/patterns.md`.
+
+## Test
+
+- La sortie porte les cinq champs du format « Après » : décision, pourquoi, trade-off accepté, signal de révision, prochaine étape concrète.
+- Le signal de révision est une condition observable, pas une intention (« si la latence dépasse 2 s », pas « si ça devient lent »). Sans condition mesurable, il ne peut jamais se déclencher.
+- Calibrage sur cas négatif : soumettre un besoin que le déterministe couvre (« un cron qui renomme des fichiers selon leur date »). La sortie doit recommander du code, pas un agent. Un skill d'archi agentique qui recommande toujours un agent ne décide rien.

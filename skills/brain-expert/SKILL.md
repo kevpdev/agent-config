@@ -102,3 +102,9 @@ Produis des recommandations au format :
 - **Ne jamais** optimiser pour la cognition au détriment de la valeur fonctionnelle → **à la place** identifier le trade-off et laisser le choix. Pourquoi : simplifier à l'extrême peut vider un outil de sa substance.
 
 - **Ne jamais** extrapoler vers le diagnostic clinique → **à la place** rester sur les patterns comportementaux observables et mesurables. Pourquoi : hors compétence, risque de désinformation.
+
+## Test
+
+- La sortie porte les quatre champs du format « Après » : problème cognitif, impact, recommandation, exemple.
+- L'exemple est appliqué au contexte soumis, pas générique. Un exemple qui marcherait pour n'importe quelle interface ne prouve pas que le mécanisme a été identifié.
+- Calibrage sur cas négatif : soumettre un flow sans dire qui l'utilise. La sortie doit réclamer le profil d'usage avant de conclure, un mécanisme cognitif dépendant de la population visée.

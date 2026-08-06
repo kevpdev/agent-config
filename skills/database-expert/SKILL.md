@@ -104,3 +104,9 @@ users.forEach(u -> u.getOrders().size());  // lazy loading
 @Query("SELECT u FROM User u JOIN FETCH u.orders WHERE u.active = true")
 List<User> findAllWithOrders();
 ```
+
+## Test
+
+- La sortie porte toutes les sections de `assets/db-recommendation-template.md` : diagnostic, recommandation, trade-offs, validation, hors périmètre.
+- Le diagnostic s'appuie sur un plan d'exécution cité, pas sur la lecture de la requête. Une cause de lenteur déduite du SQL seul est une hypothèse, pas un diagnostic.
+- Calibrage sur cas négatif : soumettre une requête lente sans son `EXPLAIN`. La sortie doit réclamer le plan avant d'affirmer la cause.

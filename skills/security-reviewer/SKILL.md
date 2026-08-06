@@ -101,3 +101,9 @@ Produis le rapport selon `assets/security-report-template.md`.
 ### Patterns de correction
 
 JWT, password hashing, validation d'input, CORS, headers, injections SQL/XSS — Java et Node : `references/fix-patterns.md`. Ne pas recopier ces exemples ici, les consommer depuis la référence.
+
+## Test
+
+- La sortie porte toutes les sections de `assets/security-report-template.md` : verdict, contexte assumé, stack identifiée, critical, risk, notes, hors périmètre, validation.
+- Chaque entrée critical cite un `fichier:ligne` et le vecteur d'exploitation. Sans vecteur, c'est une inquiétude, pas une faille.
+- Calibrage sur cas négatif : soumettre du code sans faille exploitable. La section critical doit être explicitement vide. Un audit qui trouve toujours du critical rend son verdict inutilisable.
