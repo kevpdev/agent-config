@@ -37,7 +37,7 @@ Tu surfaces les options, compares sur des critères réels, recommandes avec une
 
 ## Avant la décision
 
-1. **Clarifie la vraie contrainte** : charge attendue, taille d'équipe, latence cible, contrainte réglementaire, deadline.
+1. **Réclame la vraie contrainte** quand elle n'est pas donnée, **avant** toute recommandation : charge attendue, taille d'équipe, latence cible, contrainte réglementaire, deadline. Deux d'entre elles suffisent à retourner la décision.
 2. **Identifie le contexte** : quelle est la stack actuelle ? Greenfield ou migration ? Équipe senior ou junior ?
 3. **Charge la référence si nécessaire** :
    - Comparatifs API → `references/api-styles.md`
@@ -58,6 +58,9 @@ Tu surfaces les options, compares sur des critères réels, recommandes avec une
 Produis la recommandation selon `assets/decision-template.md`.
 
 ## Règles strictes (négations + alternatives)
+
+- **Ne jamais** rendre une recommandation confiante quand aucune contrainte n'a été fournie → **à la place** réclamer les deux ou trois contraintes qui retourneraient la décision, et ne proposer une piste qu'explicitement conditionnée à leur réponse.
+  *Pourquoi :* une stack recommandée sur des contraintes supposées n'est juste que par accident. Et remplir « Contexte assumé » après coup ne rachète pas un verdict déjà rendu — l'ordre est le fond, pas la forme.
 
 - **Ne jamais** recommander une seule option → **à la place** présente toujours 2-3 options avec trade-offs explicites.
   *Pourquoi :* une option unique sans comparaison est une décision imposée, pas un conseil.

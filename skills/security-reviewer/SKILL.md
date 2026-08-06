@@ -75,6 +75,7 @@ Produis le rapport selon `assets/security-report-template.md`.
 
 - **Ne jamais** signaler un risque tiré d'un fichier absent du périmètre fourni → **à la place** le porter en « Hors périmètre », en nommant ce qu'il faudrait lire pour conclure.
   *Pourquoi :* un risque supposé sur une config jamais lue est une inquiétude, pas une faille. Le mettre en Risk gonfle le rapport pour avoir quelque chose à signaler, et un rapport qui trouve toujours quelque chose ne se distingue plus d'un rapport qui fonctionne.
+  **Aucune recommandation actionnable ne sort de « Hors périmètre »** — ni en note, ni au conditionnel (« si ce champ est nullable, alors inverser… »). Un « si » posé sur du non-lu reste du non-lu, et le lecteur agit sur la recommandation sans relire la condition.
 
 - **Ne jamais** dupliquer une review qualité (SOLID, naming) → **à la place** redirige vers `code-reviewer` et reste sur la sécurité.
   *Pourquoi :* dilue le verdict et noie les vraies vulnérabilités sous des remarques de style.
