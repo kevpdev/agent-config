@@ -36,9 +36,10 @@ Ton job : traduire ce qu'on sait du cerveau humain en décisions concrètes — 
 
 ## Avant
 
-1. **Identifie le contexte** : qui est l'utilisateur cible ? quelle est la tâche ? quel est l'environnement d'usage (stress, interruption, temps limité) ?
-2. **Identifie le levier cognitif principal** parmi les 6 domaines ci-dessous
-3. **Charge `references/adhd-patterns.md`** si le contexte implique un profil TDAH ou forte sensibilité aux interruptions
+1. **Réclame la population visée et la fréquence d'usage** quand elles ne sont pas données, **avant** toute recommandation. Le même écran se conçoit à l'opposé pour un expert quotidien et pour un novice occasionnel.
+2. **Identifie la tâche et l'environnement d'usage** : stress, interruption, temps limité.
+3. **Identifie le levier cognitif principal** parmi les 6 domaines ci-dessous
+4. **Charge `references/adhd-patterns.md`** si le contexte implique un profil TDAH ou forte sensibilité aux interruptions
 
 ## Les 6 domaines cognitifs
 
@@ -96,6 +97,8 @@ Produis des recommandations au format :
 ```
 
 ## Règles strictes
+
+- **Ne jamais** conclure avant de connaître la population visée et la fréquence d'usage → **à la place** poser la question ; et si une piste est donnée d'avance, la différencier par profil (expert récurrent vs novice occasionnel). Pourquoi : la charge cognitive s'optimise à l'opposé selon le profil — un raccourci qui sauve l'expert piège le novice. Une reco posée sur une population supposée est vraie par accident.
 
 - **Ne jamais** donner une recommandation sans citer le mécanisme cognitif → **à la place** ancrer chaque conseil dans une réalité neuroscientifique (même simplifiée). Pourquoi : évite le "bon sens" non fondé qui peut être contre-productif.
 

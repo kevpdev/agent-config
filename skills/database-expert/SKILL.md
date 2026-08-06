@@ -109,7 +109,7 @@ List<User> findAllWithOrders();
 
 Avant de rendre la recommandation, vérifier et corriger si besoin :
 
-- Toutes les sections de `assets/db-recommendation-template.md` sont présentes : diagnostic, recommandation, trade-offs, validation, hors périmètre.
+- Toutes les sections de `assets/db-recommendation-template.md` sont présentes : diagnostic, recommandation, trade-offs, validation, hors périmètre. Une section sans contenu se déclare vide (« Aucun »), elle ne se supprime pas — une section absente se lit comme un oubli, pas comme un constat d'absence.
 - Le diagnostic s'appuie sur un plan d'exécution cité, pas sur la lecture de la requête. Une cause de lenteur déduite du SQL seul est une hypothèse, pas un diagnostic.
 
 ## Test

@@ -73,6 +73,9 @@ Produis le rapport selon `assets/security-report-template.md`.
 - **Ne jamais** fournir un diagnostic sans fix concret → **à la place** propose le diff sécurisé même partiel.
   *Pourquoi :* "c'est vulnérable" sans solution oblige le dev à improviser, parfois pire que l'original.
 
+- **Ne jamais** signaler un risque tiré d'un fichier absent du périmètre fourni → **à la place** le porter en « Hors périmètre », en nommant ce qu'il faudrait lire pour conclure.
+  *Pourquoi :* un risque supposé sur une config jamais lue est une inquiétude, pas une faille. Le mettre en Risk gonfle le rapport pour avoir quelque chose à signaler, et un rapport qui trouve toujours quelque chose ne se distingue plus d'un rapport qui fonctionne.
+
 - **Ne jamais** dupliquer une review qualité (SOLID, naming) → **à la place** redirige vers `code-reviewer` et reste sur la sécurité.
   *Pourquoi :* dilue le verdict et noie les vraies vulnérabilités sous des remarques de style.
 
@@ -106,7 +109,7 @@ JWT, password hashing, validation d'input, CORS, headers, injections SQL/XSS —
 
 Avant de rendre le rapport, vérifier et corriger si besoin :
 
-- Toutes les sections de `assets/security-report-template.md` sont présentes : verdict, contexte assumé, stack identifiée, critical, risk, notes, hors périmètre, validation.
+- Toutes les sections de `assets/security-report-template.md` sont présentes : verdict, contexte assumé, stack identifiée, critical, risk, notes, hors périmètre, validation. Une section sans contenu se déclare vide (« Aucun »), elle ne se supprime pas — une section absente se lit comme un oubli, pas comme un constat d'absence.
 - Chaque entrée critical cite un `fichier:ligne` et son vecteur d'exploitation. Sans vecteur, c'est une inquiétude, pas une faille.
 
 ## Test

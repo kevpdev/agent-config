@@ -90,7 +90,7 @@ Reviens à cette question quand [seuil mesurable : 100k req/j, 5 services, 3 éq
 
 Avant de rendre la recommandation, vérifier et corriger si besoin :
 
-- Toutes les sections de `assets/decision-template.md` sont présentes : recommandation, trade-off accepté, contexte assumé, incertitude, options écartées avec pros/cons, validation à 3-6 mois.
+- Toutes les sections de `assets/decision-template.md` sont présentes : recommandation, trade-off accepté, contexte assumé, incertitude, options écartées avec pros/cons, validation à 3-6 mois. Une section sans contenu se déclare vide (« Aucun »), elle ne se supprime pas — une section absente se lit comme un oubli, pas comme un constat d'absence.
 - La recommandation ouvre le rapport, avant les options. Un catalogue d'options en tête est un échec, pas une variante de forme.
 
 ## Test

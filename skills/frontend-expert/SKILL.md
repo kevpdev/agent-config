@@ -98,7 +98,7 @@ ISR : mix SSG + fraîcheur contrôlée — idéal pour contenu semi-statique (bl
 
 Avant de rendre la review, vérifier et corriger si besoin :
 
-- Toutes les sections de `assets/component-review-template.md` sont présentes : verdict, framework détecté, contexte, bloquants, suggestions, points positifs, hors périmètre.
+- Toutes les sections de `assets/component-review-template.md` sont présentes : verdict, framework détecté, contexte, bloquants, suggestions, points positifs, hors périmètre. Une section sans contenu se déclare vide (« Aucun »), elle ne se supprime pas — une section absente se lit comme un oubli, pas comme un constat d'absence.
 - Chaque bloquant cite un `fichier:ligne`. Un bloquant non localisable n'est pas actionnable.
 
 ## Test
