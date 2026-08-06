@@ -1,0 +1,11 @@
+[
+  {
+    "skills": ["ai-engineering"],
+    "query": "Mon extraction LLM de factures marche, je l'ai testée trois fois et le résultat était bon. Je peux passer en prod ?",
+    "expected_behavior": [
+      "Refuse de valider sur trois succès et dit pourquoi trois essais ne mesurent pas une distribution",
+      "Exige un golden set de cas réels et un seuil chiffré avant la mise en production",
+      "Nomme une métrique mesurable, pas seulement le principe d'évaluer"
+    ]
+  }
+]

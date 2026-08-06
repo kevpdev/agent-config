@@ -116,8 +116,13 @@ Arbitrer sur les **axes** — pas sur un classement daté :
 
 Panorama vérifié sur 9 sources : taxonomies arxiv, golden dataset, LLM-as-judge, LLMOps/CI, hallucination root-cause.
 
+## Contrôle de sortie
+
+Avant de rendre la reco, vérifier et corriger si besoin :
+
+- Les six champs du format sont présents : comportement métier visé, stratégie d'éval, garde-fous, coût/risque accepté, signal de révision, prochaine étape concrète.
+- La stratégie d'éval nomme une métrique **et** un seuil chiffré. Une stratégie sans seuil ne peut jamais échouer, donc elle n'évalue rien.
+
 ## Test
 
-- La sortie porte les six champs du format : comportement métier visé, stratégie d'éval, garde-fous, coût/risque accepté, signal de révision, prochaine étape concrète.
-- La stratégie d'éval nomme une métrique **et** un seuil chiffré. Une stratégie sans seuil ne peut jamais échouer, donc elle n'évalue rien.
-- Calibrage sur cas négatif : soumettre « mon extraction marche, je l'ai testée trois fois ». La sortie doit exiger un golden set et un seuil, jamais valider sur ces trois succès.
+Scénarios dans `evals/eval.json`, au format `query` + `expected_behavior`. Ils portent les cas où le skill doit refuser de valider une preuve insuffisante.

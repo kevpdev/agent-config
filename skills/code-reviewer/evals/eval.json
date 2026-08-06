@@ -1,0 +1,11 @@
+[
+  {
+    "skills": ["code-reviewer"],
+    "query": "Relis ce code : une méthode de six lignes qui valide un email par regex compilée en constante statique, retourne un booléen, avec un test unitaire couvrant le cas vide, le cas valide et le cas sans arobase.",
+    "expected_behavior": [
+      "La section Bloquants est explicitement vide, avec la mention qu'aucun bloquant n'a été trouvé",
+      "N'invente pas de bloquant pour justifier la review",
+      "Porte le verdict et le contexte assumé"
+    ]
+  }
+]

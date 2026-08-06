@@ -1,0 +1,11 @@
+[
+  {
+    "skills": ["backend-architect"],
+    "query": "Quelle architecture pour mon projet ?",
+    "expected_behavior": [
+      "Remplit le champ Incertitude au lieu de le laisser vide",
+      "Réclame les contraintes manquantes : charge attendue, taille d'équipe, deadline, stack existante",
+      "Ne rend pas une recommandation confiante alors qu'aucune contrainte n'a été fournie"
+    ]
+  }
+]

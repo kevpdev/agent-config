@@ -31,8 +31,13 @@ En résumé :
 - Bloc code si pertinent
 - Liste des sources (URLs Context7 ou doc officielle)
 
+## Contrôle de sortie
+
+Avant de répondre, vérifier et corriger si besoin :
+
+- La source utilisée est nommée (Context7, `llms.txt`, ou doc officielle). Un repli silencieux fait passer une source faible pour la source visée.
+- La réponse cite au moins une URL renvoyée par l'appel, et le nombre d'appels ne dépasse pas 2.
+
 ## Test
 
-- Sur une lib précise et mouvante, la réponse cite au moins une URL renvoyée par l'appel, et le nombre d'appels WebFetch ne dépasse pas 2.
-- La source utilisée est nommée (Context7, `llms.txt`, ou doc officielle). Un repli silencieux fait passer une source faible pour la source visée.
-- Calibrage sur cas négatif : demander la signature d'un hook React classique. Le skill doit s'abstenir et répondre directement, avec zéro appel. Un skill de récupération de doc qui appelle toujours ne sait pas s'abstenir.
+Scénarios dans `evals/eval.json`, au format `query` + `expected_behavior`. Ils portent le cas de l'abstention — un skill de récupération de doc qui appelle toujours ne sait pas s'abstenir, et paie deux appels pour rien.

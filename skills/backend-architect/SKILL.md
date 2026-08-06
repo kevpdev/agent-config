@@ -86,8 +86,13 @@ gRPC : idéal si communication inter-services interne, performance réseau criti
 Reviens à cette question quand [seuil mesurable : 100k req/j, 5 services, 3 équipes]."
 ```
 
+## Contrôle de sortie
+
+Avant de rendre la recommandation, vérifier et corriger si besoin :
+
+- Toutes les sections de `assets/decision-template.md` sont présentes : recommandation, trade-off accepté, contexte assumé, incertitude, options écartées avec pros/cons, validation à 3-6 mois.
+- La recommandation ouvre le rapport, avant les options. Un catalogue d'options en tête est un échec, pas une variante de forme.
+
 ## Test
 
-- La sortie porte toutes les sections de `assets/decision-template.md` : recommandation, trade-off accepté, contexte assumé, incertitude, options écartées avec pros/cons, validation à 3-6 mois.
-- La recommandation ouvre le rapport, avant les options. Un catalogue d'options en tête est un échec, pas une variante de forme.
-- Calibrage sur cas négatif : poser une question sans contrainte (« quelle archi pour mon projet ? », sans charge, équipe ni deadline). Le champ incertitude doit être rempli et les contraintes manquantes réclamées, pas une recommandation confiante produite dans le vide.
+Scénarios dans `evals/eval.json`, au format `query` + `expected_behavior`. Ils portent les cas où le skill doit refuser de conclure — la seule chose qui distingue un architecte qui arbitre d'un architecte qui recommande toujours.

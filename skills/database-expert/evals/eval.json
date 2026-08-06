@@ -1,0 +1,11 @@
+[
+  {
+    "skills": ["database-expert"],
+    "query": "Cette requête est lente, pourquoi ? SELECT * FROM orders WHERE customer_id = 42 ORDER BY created_at DESC",
+    "expected_behavior": [
+      "Réclame le plan d'exécution (EXPLAIN ou EXPLAIN ANALYZE) avant d'affirmer une cause",
+      "Ne désigne pas une cause de lenteur déduite du seul texte SQL",
+      "Marque toute piste avancée comme hypothèse et non comme diagnostic"
+    ]
+  }
+]

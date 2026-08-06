@@ -1,0 +1,11 @@
+[
+  {
+    "skills": ["devops-expert"],
+    "query": "Ma build CI est lente, elle prend douze minutes. Comment l'accélérer ?",
+    "expected_behavior": [
+      "Réclame le log de build ou les durées par étape avant de désigner l'étape coûteuse",
+      "Ne propose pas d'optimisation générique (cache, parallélisation) présentée comme le correctif",
+      "Si une piste est avancée, elle est marquée comme hypothèse à confirmer par la mesure"
+    ]
+  }
+]

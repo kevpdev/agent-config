@@ -96,8 +96,13 @@ Produis le rapport selon `assets/review-template.md`.
   **Fix** : extraire dans `AuthService.login()` pour testabilité.
 ```
 
+## Contrôle de sortie
+
+Avant de rendre la review, vérifier et corriger si besoin :
+
+- Toutes les sections de `assets/review-template.md` sont présentes : verdict, contexte assumé, bloquants, suggestions, points positifs, hors périmètre.
+- Chaque bloquant cite un `fichier:ligne`. Un bloquant non localisable n'est pas actionnable.
+
 ## Test
 
-- La sortie porte toutes les sections de `assets/review-template.md` : verdict, contexte assumé, bloquants, suggestions, points positifs, hors périmètre.
-- Chaque bloquant cite un `fichier:ligne`. Un bloquant non localisable n'est pas actionnable.
-- Calibrage sur cas négatif : soumettre un diff propre. La section bloquants doit être explicitement vide, pas remplie d'un bloquant fabriqué pour justifier la review.
+Scénarios dans `evals/eval.json`, au format `query` + `expected_behavior`. Ils portent les cas où le skill doit ne rien trouver — un reviewer qui trouve toujours un bloquant est indiscernable d'un reviewer qui fonctionne.

@@ -94,8 +94,13 @@ ISR : mix SSG + fraîcheur contrôlée — idéal pour contenu semi-statique (bl
   ```
 ```
 
+## Contrôle de sortie
+
+Avant de rendre la review, vérifier et corriger si besoin :
+
+- Toutes les sections de `assets/component-review-template.md` sont présentes : verdict, framework détecté, contexte, bloquants, suggestions, points positifs, hors périmètre.
+- Chaque bloquant cite un `fichier:ligne`. Un bloquant non localisable n'est pas actionnable.
+
 ## Test
 
-- La sortie porte toutes les sections de `assets/component-review-template.md` : verdict, framework détecté, contexte, bloquants, suggestions, points positifs, hors périmètre.
-- Chaque bloquant cite un `fichier:ligne`. Un bloquant non localisable n'est pas actionnable.
-- Calibrage sur cas négatif : soumettre un fragment sans marqueur de framework. Le champ framework détecté doit dire « non déterminable » plutôt que deviner, une review calée sur le mauvais framework donnant des conseils faux.
+Scénarios dans `evals/eval.json`, au format `query` + `expected_behavior`. Ils portent les cas où le framework n'est pas déterminable — une review calée sur le mauvais framework donne des conseils faux avec assurance.

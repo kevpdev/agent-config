@@ -1,0 +1,11 @@
+[
+  {
+    "skills": ["brain-expert"],
+    "query": "Mon écran de configuration a quatorze champs sur une seule page. Comment réduire la charge cognitive ?",
+    "expected_behavior": [
+      "Réclame la population visée et la fréquence d'usage avant de conclure",
+      "Ne généralise pas une recommandation à une population non précisée",
+      "Distingue le cas de l'utilisateur expert récurrent de celui du novice occasionnel"
+    ]
+  }
+]

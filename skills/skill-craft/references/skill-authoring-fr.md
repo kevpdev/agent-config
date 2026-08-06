@@ -24,8 +24,10 @@ Deux règles (R1, R6) ne sont vérifiées par aucun outil, même côté AIDD. C'
   - Le nom de l'artefact en tête. Une parenthèse pour définir, pas un tiret.
   - Clause « NE PAS utiliser pour X (→ frère) » seulement si un skill voisin peut se déclencher à tort.
 - **R6. Zéro doublon.** Un fait, un seul home. Les gabarits vivent dans `assets/`, les actions les citent.
-- **R7. Rôle des dossiers.** `references/` se LIT. `assets/` se COPIE ou s'INJECTE.
+- **R7. Rôle des dossiers.** `references/` se LIT. `assets/` se COPIE ou s'INJECTE. `evals/` se JOUE par un exécuteur, et n'est jamais lu par le skill lui-même.
+  - Un `evals/eval.json` porte des scénarios en données pures, `query` + `expected_behavior`, sans aucun appel d'outil. Pourquoi : l'exécuteur est forcément spécifique à l'agent et vit dans son wrapper. Un skill qui nomme un agent ne tourne plus sous un autre.
 - **R8. Chaque action suit l'anatomie et porte un `## Test`.** En mono-fichier (pas d'`actions/`), c'est `SKILL.md` qui porte le `## Test`, dès qu'il produit un artefact vérifiable.
+  - **Ne pas confondre deux natures.** Un critère que le skill applique **pendant** qu'il travaille est un contrôle de sortie, il reste inline (`## Contrôle de sortie`) puisqu'il sert à chaque exécution. Un scénario qui juge **si le skill marche** est une éval, elle part dans `evals/` et `## Test` n'en garde que le pointeur. Pourquoi : une éval inline se paie en contexte à chaque invocation pour une vérification qui ne tourne jamais à ce moment-là.
 - **R9. Pas de section vide.** J'omets une section optionnelle sans contenu. Jamais de placeholder « ## X → Aucun ».
 - **R10. Contenu en français** (frontmatter, corps, actions, références). Seuls les en-têtes d'anatomie restent en anglais (voir plus bas, ce sont des mots-clés de structure).
 - **R11. Une idée par phrase.** Je coupe une phrase qui dépasse la ligne. Exceptions : la `description` mono-ligne et les cellules de tableau.
