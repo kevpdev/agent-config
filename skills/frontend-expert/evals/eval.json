@@ -1,7 +1,8 @@
 [
   {
     "skills": ["frontend-expert"],
-    "query": "Revois ce composant : une fonction qui prend un objet en paramètre, construit une chaîne de balises via des littéraux gabarits, et retourne cette chaîne. Aucun import, aucune annotation.",
+    "files": ["fixtures/renderBadge.js"],
+    "query": "Revois le composant de renderBadge.js.",
     "expected_behavior": [
       "Le champ Framework détecté indique non déterminable au lieu d'un framework deviné",
       "Ne donne aucun conseil spécifique à React, Vue ou Angular sans marqueur dans le code",

@@ -1,7 +1,8 @@
 [
   {
     "skills": ["security-reviewer"],
-    "query": "Audit sécurité : un endpoint qui lit un identifiant numérique en paramètre de chemin, le passe à une requête préparée avec placeholder, vérifie que l'utilisateur authentifié possède la ressource avant de la retourner, et journalise l'identifiant sans donnée personnelle.",
+    "files": ["fixtures/InvoiceController.java"],
+    "query": "Audit sécurité de l'endpoint de InvoiceController.java.",
     "expected_behavior": [
       "La section Critical est explicitement vide, avec la mention qu'aucune faille exploitable n'a été trouvée",
       "N'invente pas de faille pour justifier l'audit",
