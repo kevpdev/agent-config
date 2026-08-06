@@ -38,7 +38,7 @@ et **STOP**.
 ## Test
 
 ```
-bash ~/.claude/skills/_shared/check-vault-bridge.sh vault-load
+bash "$SKILLS_ROOT/_shared/check-vault-bridge.sh" vault-load
 ```
 
 - `exit 0` : chaque cible canonique citée plus haut résout réellement.

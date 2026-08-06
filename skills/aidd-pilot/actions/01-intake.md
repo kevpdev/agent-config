@@ -31,7 +31,7 @@ entry_artifact: le brief normalisé (objectif + critères d'acceptation)
 2. **Détecter la topologie ET les projets concernés (F5).** Mono-projet vs coordinateur + projets enfants + contrat partagé. Puis **déterminer quels repos la feature touche réellement** (passe Explore / grounding du brief) et ne retenir que ceux-là dans `repos[]` — on ne planifie **que** les repos concernés. Un repo « touché mais rien à coder » (ex. M5 : front déjà prêt) est **exclu du plan**, pas planifié à vide — **mais pas exclu de la validation** : s'il porte un critère non prouvable à la frontière API (rendu front, ou câblage back↔front neuf), il reste dans le périmètre e2e (`03-validate`, rung 3). L'e2e est découplé des repos planifiés.
    - **Détection topologie** : appeler le script partagé, **ne pas réimplémenter**.
      ```
-     bash "$HOME/.claude/skills/_shared/detect-children.sh" --long
+     bash "$SKILLS_ROOT/_shared/detect-children.sh" --long
      ```
      Un script n'est pas un skill : l'appeler n'invoque **pas** `doc-sync` et n'hérite d'aucune gate de confirmation. L'invocation lourde de `doc-sync` reste réservée à `04-doc-ship`.
      - *Pourquoi un home unique :* la règle a été recopiée à l'identique dans trois skills, et elle a dérivé — la copie locale cherchait un `.git` sur deux niveaux, donc voyait **0** enfant sur un monorepo (mesuré) et ratait un enfant rangé à `apps/backend/svc/`. La règle, ses contre-exemples mesurés et le `basename` du home memory vivent désormais dans les commentaires du script (R6 : un fait, un seul home).

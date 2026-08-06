@@ -37,7 +37,7 @@ et **STOP**. N'écris **jamais** dans le repo courant.
 ## Test
 
 ```
-bash ~/.claude/skills/_shared/check-vault-bridge.sh vault-slides
+bash "$SKILLS_ROOT/_shared/check-vault-bridge.sh" vault-slides
 ```
 
 - `exit 0` : chaque cible canonique citée plus haut résout réellement.

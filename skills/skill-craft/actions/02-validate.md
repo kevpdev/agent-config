@@ -4,7 +4,7 @@ Contrôle un skill contre la convention. Deux passes : les `## Test` des actions
 
 ## Input
 
-Le chemin d'un skill (`~/.claude/skills/<nom>/` ou une cible perso). Un skill neuf sorti de `01-scaffold`, ou un skill existant à auditer.
+Le chemin d'un skill (`$SKILLS_ROOT/<nom>/` ou une cible perso). Un skill neuf sorti de `01-scaffold`, ou un skill existant à auditer.
 
 ## Output
 

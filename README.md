@@ -74,11 +74,25 @@ bash wrappers/claude/scripts/sync-rules.sh --fix    # crée, répare, retire les
 
 À lancer après tout ajout, renommage ou suppression dans `rules/` ou `wrappers/claude/rules/`.
 
+### `SKILLS_ROOT` — le contrat entre un skill et son agent
+
+Plusieurs skills appellent un script partagé de `skills/_shared/`. Ils le désignent par `$SKILLS_ROOT/_shared/<script>.sh`, jamais par le chemin d'un agent précis. À déclarer dans le bloc `env` de `~/.claude/settings.local.json`, à côté de `OBSIDIAN_VAULT_PRO` :
+
+```json
+{
+  "env": {
+    "SKILLS_ROOT": "/chemin/absolu/vers/agent-config/skills"
+  }
+}
+```
+
+**Pourquoi une variable** : un `~/.claude/skills/…` écrit dans un skill le rend inutilisable sous un autre agent, alors que le script visé est au même endroit relatif partout. Le skill dit quoi appeler, le wrapper dit où. Sans la variable, l'appel échoue bruyamment — il ne dégrade pas en silence.
+
 ## Dépendance externe
 
 `skills/aidd-pilot/` orchestre les plugins du framework [AI-Driven Dev](https://github.com/ai-driven-dev/framework) et ne fonctionne pas sans eux — voir `skills/aidd-pilot/README.md`. Les autres skills sont autonomes.
 
-Les skills `vault-*` sont des passerelles vers un vault Obsidian : ils délèguent aux skills canoniques situés sous `$OBSIDIAN_VAULT_PRO/agent/skills/`. Pour les activer, déclarer la variable dans le bloc `env` de `~/.claude/settings.local.json` (fichier local, non versionné) — Claude Code l'injecte alors dans chaque session, sans dépendre du shell de lancement :
+Les skills `vault-*` sont des passerelles vers un vault Obsidian : ils délèguent aux skills canoniques situés sous `$OBSIDIAN_VAULT_PRO/.agents/skills/`. Pour les activer, déclarer la variable dans le bloc `env` de `~/.claude/settings.local.json` (fichier local, non versionné) — Claude Code l'injecte alors dans chaque session, sans dépendre du shell de lancement :
 
 ```json
 {

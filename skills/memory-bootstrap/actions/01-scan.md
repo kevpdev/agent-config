@@ -22,7 +22,7 @@ index racine      : présent | absent
 1. **Situer.** Confirmer que le CWD est bien un parent orchestrateur : un `aidd_docs/memory/` existe, et l'étape 2 rend au moins un enfant. Si le CWD n'a **aucun** projet enfant, s'arrêter et renvoyer vers `aidd-context:02-project-memory`, qui y est chez lui.
 2. **Détecter les enfants.** Appeler le script partagé, **ne pas réimplémenter** :
    ```
-   bash "$HOME/.claude/skills/_shared/detect-children.sh" --long
+   bash "$SKILLS_ROOT/_shared/detect-children.sh" --long
    ```
    La règle qu'il applique, ses contre-exemples mesurés et le `basename` du home memory vivent dans ses commentaires — un seul home (R6). *Pourquoi un script et pas la consigne d'avant : elle cherchait un `.git`, donc un projet enfant non versionné à part restait invisible. Un monorepo back+front y ressortait « mono-repo » et personne ne voyait que deux projets étaient sans porte.*
    - La colonne `MEMORY` sert directement l'étape 3 ; la colonne `BUILD` sert l'étape 4 (elle **nomme déjà** le manifeste, quand il y en a un).

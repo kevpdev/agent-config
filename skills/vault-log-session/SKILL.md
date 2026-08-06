@@ -44,7 +44,7 @@ et **STOP**.
 ## Test
 
 ```
-bash ~/.claude/skills/_shared/check-vault-bridge.sh vault-log-session
+bash "$SKILLS_ROOT/_shared/check-vault-bridge.sh" vault-log-session
 ```
 
 - `exit 0` : chaque cible canonique citée plus haut résout réellement.

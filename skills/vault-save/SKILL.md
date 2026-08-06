@@ -47,7 +47,7 @@ et **STOP**.
 ## Test
 
 ```
-bash ~/.claude/skills/_shared/check-vault-bridge.sh vault-save
+bash "$SKILLS_ROOT/_shared/check-vault-bridge.sh" vault-save
 ```
 
 - `exit 0` : chaque cible canonique citée plus haut résout réellement.

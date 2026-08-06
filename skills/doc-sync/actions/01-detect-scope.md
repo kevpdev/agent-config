@@ -23,7 +23,7 @@ Détecte où vit le code et la doc, propose un scope de commits, et le fait conf
    - Commandes de détection :
      ```
      # enfants + home memory de chacun, en une passe (implémentation unique)
-     bash "$HOME/.claude/skills/_shared/detect-children.sh" --long
+     bash "$SKILLS_ROOT/_shared/detect-children.sh" --long
      # candidats contrat partagé au parent (pas de nom figé) — top-level only
      ls aidd_docs/memory/*.md 2>/dev/null
      ```
@@ -48,7 +48,7 @@ Détecte où vit le code et la doc, propose un scope de commits, et le fait conf
 - La topologie est explicite : mono-projet, ou coordinateur avec la liste d'enfants **produite par `_shared/detect-children.sh --long`** — jamais par une commande recopiée sur place. Trois symptômes signalent que la détection a été réimplémentée à côté : un coordinateur dont les enfants sont groupés (`backend/<x>`) qui ressort « mono-repo », un monorepo dont les projets ne ressortent pas du tout, ou tous les enfants classés « sans memory ».
 - Le script tourne et rend un résultat non vide sur un coordinateur. Contrôle à jouer depuis la racine du parent :
   ```
-  bash "$HOME/.claude/skills/_shared/detect-children.sh" --long
+  bash "$SKILLS_ROOT/_shared/detect-children.sh" --long
   ```
   Chaque ligne porte ses trois attributs. `VCS` vaut `propre` ou `parent` ; `BUILD` nomme le manifeste trouvé ou `aucun` ; `MEMORY` vaut `distribué`, `centralisé (memory/<nom>)` ou `aucune`. Un enfant à `BUILD = aucun` est normal (dépôt de doc ou de config) et n'est pas une erreur de détection.
 - En coordinateur, aucune doc n'est traitée en contrat partagé sans confirmation utilisateur explicite.

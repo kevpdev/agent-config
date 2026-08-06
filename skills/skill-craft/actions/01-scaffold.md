@@ -28,7 +28,7 @@ Une arborescence de skill sous `skills/<nom>/` :
 6. **Écrire chaque action** (si routeur). Suivre l'anatomie de la convention : `# NN - Titre` + phrase, `## Input` (si utile), `## Output` (obligatoire), `## Process` (étapes numérotées, label gras d'un mot par étape), `## Test`. Une idée par phrase (R11). Toujours le pourquoi sur une règle (R12).
 7. **Sortir les données lourdes.** Un gabarit à copier va dans `assets/`, une donnée à lire va dans `references/`. Une action cite le fichier, ne l'inline pas (R6/R7).
 8. **Rédiger en français.** Tout le contenu en français, sauf les en-têtes d'anatomie. Si une source anglaise a servi, réécrire la prose en français (R10).
-9. **Emplacement.** Le skill vit dans `agent-config/skills/<nom>/`. Il est exposé automatiquement à Claude Code via le symlink de dossier `~/.claude/skills` → `agent-config/skills` — aucun lien par skill à créer.
+9. **Emplacement.** Le skill vit dans `agent-config/skills/<nom>/`. Chaque agent l'expose depuis ce dossier via son propre wrapper, qui pose aussi `$SKILLS_ROOT` — aucun lien par skill à créer. *Pourquoi cette variable :* un skill qui code en dur le chemin d'un agent ne tourne plus sous un autre, alors que le script visé est au même endroit relatif partout.
 
 ## Test
 

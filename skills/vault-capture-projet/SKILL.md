@@ -81,7 +81,7 @@ et **STOP**. N'écris **jamais** dans le repo courant (sinon note perdue).
 ## Test
 
 ```
-bash ~/.claude/skills/_shared/check-vault-bridge.sh vault-capture-projet
+bash "$SKILLS_ROOT/_shared/check-vault-bridge.sh" vault-capture-projet
 ```
 
 - `exit 0` : chaque cible canonique citée plus haut résout réellement, dont `conventions/notes.md` dont dépend l'étape 5.

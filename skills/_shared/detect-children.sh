@@ -6,8 +6,8 @@
 # porte). R6 : un fait, un seul home — trois copies de cette règle dériveraient.
 #
 # Usage :
-#   bash "$HOME/.claude/skills/_shared/detect-children.sh"          # liste les enfants
-#   bash "$HOME/.claude/skills/_shared/detect-children.sh --long"   # + attributs vcs/build
+#   bash "$SKILLS_ROOT/_shared/detect-children.sh"          # liste les enfants
+#   bash "$SKILLS_ROOT/_shared/detect-children.sh" --long   # + attributs vcs/build
 # S'exécute depuis le dossier parent (le CWD). Aucune écriture, aucun effet de bord.
 #
 # ── LA RÈGLE ────────────────────────────────────────────────────────────────

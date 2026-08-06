@@ -36,7 +36,7 @@ et **STOP**. N'écris **jamais** dans le repo courant (sinon capture perdue).
 ## Test
 
 ```
-bash ~/.claude/skills/_shared/check-vault-bridge.sh vault-capture
+bash "$SKILLS_ROOT/_shared/check-vault-bridge.sh" vault-capture
 ```
 
 - `exit 0` : chaque cible canonique citée plus haut résout réellement.
