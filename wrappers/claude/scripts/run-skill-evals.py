@@ -10,7 +10,10 @@ Deux verdicts par scénario, dont un seul coûte un appel LLM :
   dans la sortie ? Aucun appel `Skill` n'étant observable dans le flux (mesuré le
   2026-08-06, y compris sur une invocation forcée), la forme de la sortie est le seul
   signal disponible. Sans marqueur déclaré, le verdict est N/A, jamais un succès.
-- COMPORTEMENT — un juge LLM confronte la sortie aux `expected_behavior`.
+- COMPORTEMENT — un juge LLM confronte la sortie aux `expected_behavior`. Rendu `N/I`
+  quand le déclenchement a échoué : la sortie vient alors d'une session sans le skill,
+  et un critère raté n'y est pas imputable. Le scénario reste rouge par son
+  déclenchement — `N/I` ne blanchit rien, il empêche d'accuser le mauvais artefact.
 
 Échec fermé : tout ce qui empêche de conclure rend 2 (dépendance absente, racine
 douteuse, scénario illisible, fixture manquante, sortie vide, juge muet). Un défaut
@@ -409,19 +412,32 @@ def main() -> int:
             verdicts, judge_cost = judge(claude, criteria, output, args.judge_model)
             spent += judge_cost
             failed = [v for v in verdicts if not v["pass"]]
-            behavior = "OK" if not failed else f"FAIL {len(failed)}/{len(criteria)}"
+            # Déclenchement en échec : la sortie vient d'une session où le skill n'a
+            # jamais été chargé. Ce qui est mesuré est le comportement du modèle nu,
+            # pas celui du skill — l'imputer au skill ferait réécrire un artefact que
+            # la mesure n'a pas touché. On le déclare non interprétable.
+            interpretable = trigger != "FAIL"
+            if not interpretable:
+                behavior = "N/I"
+            else:
+                behavior = "OK" if not failed else f"FAIL {len(failed)}/{len(criteria)}"
 
             details = []
             if trigger == "FAIL":
                 details.append(f"déclenchement : {trigger_why}")
             if tools_state == "FAIL":
                 details.append(f"outils : {tools_why}")
-            for verdict in failed:
+            if not interpretable:
+                details.append(
+                    f"comportement non interprétable : le skill ne s'est pas chargé, "
+                    f"les {len(failed)} critère(s) en échec sur {len(criteria)} ne lui sont pas imputables"
+                )
+            for verdict in failed if interpretable else []:
                 index = verdict["criterion_index"]
                 criterion = criteria[index - 1] if 1 <= index <= len(criteria) else "?"
                 details.append(f"critère {index} « {criterion} » → {verdict['reason']}")
 
-            if "FAIL" in (trigger, tools_state) or failed:
+            if "FAIL" in (trigger, tools_state) or (interpretable and failed):
                 defects += 1
             rows.append(
                 {
