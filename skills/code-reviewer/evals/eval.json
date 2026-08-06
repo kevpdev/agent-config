@@ -1,7 +1,16 @@
 [
   {
-    "skills": ["code-reviewer"],
-    "files": ["fixtures/EmailValidator.java", "fixtures/EmailValidatorTest.java"],
+    "skills": [
+      "code-reviewer"
+    ],
+    "files": [
+      "fixtures/EmailValidator.java",
+      "fixtures/EmailValidatorTest.java"
+    ],
+    "trigger_markers": [
+      "Contexte assumé",
+      "Bloquants"
+    ],
     "query": "Relis EmailValidator.java et son test EmailValidatorTest.java.",
     "expected_behavior": [
       "La section Bloquants est explicitement vide, avec la mention qu'aucun bloquant n'a été trouvé",

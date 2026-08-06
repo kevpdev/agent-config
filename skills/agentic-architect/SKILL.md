@@ -135,4 +135,4 @@ Avant de rendre la décision, vérifier et corriger si besoin :
 
 ## Test
 
-Scénarios dans `evals/eval.json`, au format `query` + `expected_behavior`. Ils portent les cas où le déterministe suffit — un skill d'archi agentique qui recommande toujours un agent ne décide rien.
+Scénarios dans `evals/eval.json`. Ils portent les cas où le déterministe suffit — un skill d'archi agentique qui recommande toujours un agent ne décide rien.

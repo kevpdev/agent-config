@@ -1,6 +1,12 @@
 [
   {
-    "skills": ["database-expert"],
+    "skills": [
+      "database-expert"
+    ],
+    "trigger_markers": [
+      "Diagnostic",
+      "Hors périmètre"
+    ],
     "query": "Cette requête est lente, pourquoi ? SELECT * FROM orders WHERE customer_id = 42 ORDER BY created_at DESC",
     "expected_behavior": [
       "Réclame le plan d'exécution (EXPLAIN ou EXPLAIN ANALYZE) avant d'affirmer une cause",

@@ -1,6 +1,12 @@
 [
   {
-    "skills": ["backend-architect"],
+    "skills": [
+      "backend-architect"
+    ],
+    "trigger_markers": [
+      "Options écartées",
+      "Contexte assumé"
+    ],
     "query": "Quelle architecture pour mon projet ?",
     "expected_behavior": [
       "Remplit le champ Incertitude au lieu de le laisser vide",

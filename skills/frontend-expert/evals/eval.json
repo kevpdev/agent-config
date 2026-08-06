@@ -1,7 +1,15 @@
 [
   {
-    "skills": ["frontend-expert"],
-    "files": ["fixtures/renderBadge.js"],
+    "skills": [
+      "frontend-expert"
+    ],
+    "files": [
+      "fixtures/renderBadge.js"
+    ],
+    "trigger_markers": [
+      "Framework détecté",
+      "Bloquants"
+    ],
     "query": "Revois le composant de renderBadge.js.",
     "expected_behavior": [
       "Le champ Framework détecté indique non déterminable au lieu d'un framework deviné",

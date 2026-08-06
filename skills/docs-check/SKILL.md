@@ -40,4 +40,4 @@ Avant de répondre, vérifier et corriger si besoin :
 
 ## Test
 
-Scénarios dans `evals/eval.json`, au format `query` + `expected_behavior`. Ils portent le cas de l'abstention — un skill de récupération de doc qui appelle toujours ne sait pas s'abstenir, et paie deux appels pour rien.
+Scénarios dans `evals/eval.json`. Ils portent le cas de l'abstention — un skill de récupération de doc qui appelle toujours ne sait pas s'abstenir, et paie deux appels pour rien.

@@ -1,6 +1,12 @@
 [
   {
-    "skills": ["agentic-architect"],
+    "skills": [
+      "agentic-architect"
+    ],
+    "trigger_markers": [
+      "Signal de révision",
+      "Trade-off accepté"
+    ],
     "query": "J'ai besoin d'automatiser le renommage de fichiers selon leur date de création, chaque nuit. Comment architecturer ça ?",
     "expected_behavior": [
       "Recommande une solution déterministe (script plus planificateur) et non un agent",

@@ -112,4 +112,4 @@ Avant de rendre les recommandations, vérifier et corriger si besoin :
 
 ## Test
 
-Scénarios dans `evals/eval.json`, au format `query` + `expected_behavior`. Ils portent les cas où la population visée n'est pas connue, un mécanisme cognitif n'ayant pas le même poids selon elle.
+Scénarios dans `evals/eval.json`. Ils portent les cas où la population visée n'est pas connue, un mécanisme cognitif n'ayant pas le même poids selon elle.

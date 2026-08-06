@@ -1,6 +1,11 @@
 [
   {
-    "skills": ["brain-expert"],
+    "skills": [
+      "brain-expert"
+    ],
+    "trigger_markers": [
+      "Problème cognitif"
+    ],
     "query": "Mon écran de configuration a quatorze champs sur une seule page. Comment réduire la charge cognitive ?",
     "expected_behavior": [
       "Réclame la population visée et la fréquence d'usage avant de conclure",

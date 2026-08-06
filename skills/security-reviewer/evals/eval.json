@@ -1,7 +1,16 @@
 [
   {
-    "skills": ["security-reviewer"],
-    "files": ["fixtures/InvoiceController.java"],
+    "skills": [
+      "security-reviewer"
+    ],
+    "files": [
+      "fixtures/InvoiceController.java"
+    ],
+    "trigger_markers": [
+      "Contexte assumé",
+      "Stack identifiée",
+      "Critical"
+    ],
     "query": "Audit sécurité de l'endpoint de InvoiceController.java.",
     "expected_behavior": [
       "La section Critical est explicitement vide, avec la mention qu'aucune faille exploitable n'a été trouvée",

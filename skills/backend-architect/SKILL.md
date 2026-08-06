@@ -95,4 +95,4 @@ Avant de rendre la recommandation, vérifier et corriger si besoin :
 
 ## Test
 
-Scénarios dans `evals/eval.json`, au format `query` + `expected_behavior`. Ils portent les cas où le skill doit refuser de conclure — la seule chose qui distingue un architecte qui arbitre d'un architecte qui recommande toujours.
+Scénarios dans `evals/eval.json`. Ils portent les cas où le skill doit refuser de conclure — la seule chose qui distingue un architecte qui arbitre d'un architecte qui recommande toujours.

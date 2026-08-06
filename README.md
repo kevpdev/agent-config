@@ -74,6 +74,22 @@ bash wrappers/claude/scripts/sync-rules.sh --fix    # crée, répare, retire les
 
 À lancer après tout ajout, renommage ou suppression dans `rules/` ou `wrappers/claude/rules/`.
 
+### Jouer les évals des skills
+
+Un skill qui porte un `evals/eval.json` déclare des scénarios en données pures : une requête, le comportement attendu, et de quoi juger. L'exécuteur, lui, est spécifique à Claude Code — ouvrir une session neuve passe par `claude -p`.
+
+```bash
+python3 wrappers/claude/scripts/run-skill-evals.py --self-test        # calibre le juge, ne joue aucun scénario
+python3 wrappers/claude/scripts/run-skill-evals.py                    # joue tout, rend un tableau de verdicts
+python3 wrappers/claude/scripts/run-skill-evals.py --skill code-reviewer --force
+```
+
+Chaque scénario rend deux verdicts. Le **déclenchement** est déterministe : les `trigger_markers` du scénario apparaissent-ils dans la sortie ? Le **comportement** passe par un juge LLM confronté aux `expected_behavior`. `--force` préfixe la requête par `/<skill>` et isole donc le comportement du déclenchement.
+
+**Une passe coûte de l'argent** — environ 0,35 $ par scénario joué plus 0,07 $ de juge, soit 4 à 5 $ pour les dix. Ce n'est pas un lint qu'on lance à chaque commit.
+
+**Lancer `--self-test` avant de croire une passe.** Il confronte le juge à trois sorties fabriquées — conforme, vide, partielle — et exige les trois verdicts attendus. Sans lui, un juge aveugle qui répond toujours PASS est indiscernable d'un juge intact.
+
 ### `SKILLS_ROOT` — le contrat entre un skill et son agent
 
 Plusieurs skills appellent un script partagé de `skills/_shared/`. Ils le désignent par `$SKILLS_ROOT/_shared/<script>.sh`, jamais par le chemin d'un agent précis. À déclarer dans le bloc `env` de `~/.claude/settings.local.json`, à côté de `OBSIDIAN_VAULT_PRO` :

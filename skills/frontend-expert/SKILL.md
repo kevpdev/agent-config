@@ -103,4 +103,4 @@ Avant de rendre la review, vérifier et corriger si besoin :
 
 ## Test
 
-Scénarios dans `evals/eval.json`, au format `query` + `expected_behavior`. Ils portent les cas où le framework n'est pas déterminable — une review calée sur le mauvais framework donne des conseils faux avec assurance.
+Scénarios dans `evals/eval.json`. Ils portent les cas où le framework n'est pas déterminable — une review calée sur le mauvais framework donne des conseils faux avec assurance.

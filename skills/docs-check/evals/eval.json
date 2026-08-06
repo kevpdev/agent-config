@@ -1,6 +1,13 @@
 [
   {
-    "skills": ["docs-check"],
+    "skills": [
+      "docs-check"
+    ],
+    "forbidden_tools": [
+      "WebFetch",
+      "WebSearch",
+      "context7"
+    ],
     "query": "Quelle est la signature du hook useState de React ?",
     "expected_behavior": [
       "S'abstient d'appeler et répond directement de sa connaissance",

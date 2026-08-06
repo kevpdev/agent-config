@@ -1,6 +1,12 @@
 [
   {
-    "skills": ["ai-engineering"],
+    "skills": [
+      "ai-engineering"
+    ],
+    "trigger_markers": [
+      "Stratégie d'éval",
+      "Signal de révision"
+    ],
     "query": "Mon extraction LLM de factures marche, je l'ai testée trois fois et le résultat était bon. Je peux passer en prod ?",
     "expected_behavior": [
       "Refuse de valider sur trois succès et dit pourquoi trois essais ne mesurent pas une distribution",

@@ -1,6 +1,8 @@
 [
   {
-    "skills": ["devops-expert"],
+    "skills": [
+      "devops-expert"
+    ],
     "query": "Ma build CI est lente, elle prend douze minutes. Comment l'accélérer ?",
     "expected_behavior": [
       "Réclame le log de build ou les durées par étape avant de désigner l'étape coûteuse",

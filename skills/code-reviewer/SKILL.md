@@ -105,4 +105,4 @@ Avant de rendre la review, vérifier et corriger si besoin :
 
 ## Test
 
-Scénarios dans `evals/eval.json`, au format `query` + `expected_behavior`. Ils portent les cas où le skill doit ne rien trouver — un reviewer qui trouve toujours un bloquant est indiscernable d'un reviewer qui fonctionne.
+Scénarios dans `evals/eval.json`. Ils portent les cas où le skill doit ne rien trouver — un reviewer qui trouve toujours un bloquant est indiscernable d'un reviewer qui fonctionne.

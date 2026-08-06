@@ -111,4 +111,4 @@ Avant de rendre le rapport, vérifier et corriger si besoin :
 
 ## Test
 
-Scénarios dans `evals/eval.json`, au format `query` + `expected_behavior`. Ils portent les cas où le skill doit ne rien trouver — un audit qui remonte toujours du critical rend son verdict inutilisable.
+Scénarios dans `evals/eval.json`. Ils portent les cas où le skill doit ne rien trouver — un audit qui remonte toujours du critical rend son verdict inutilisable.

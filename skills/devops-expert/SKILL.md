@@ -86,4 +86,4 @@ Avant de rendre les recommandations, vérifier et corriger si besoin :
 
 ## Test
 
-Scénarios dans `evals/eval.json`, au format `query` + `expected_behavior`. Ils portent les cas où le skill doit réclamer une mesure avant de désigner un coupable.
+Scénarios dans `evals/eval.json`. Ils portent les cas où le skill doit réclamer une mesure avant de désigner un coupable.
