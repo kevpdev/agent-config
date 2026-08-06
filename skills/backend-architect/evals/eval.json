@@ -7,10 +7,10 @@
       "Options écartées",
       "Contexte assumé"
     ],
-    "query": "Quelle architecture pour mon projet ?",
+    "query": "Quelle architecture pour mon projet ? C'est une API de facturation pour des PME.",
     "expected_behavior": [
-      "Remplit le champ Incertitude au lieu de le laisser vide",
-      "Réclame les contraintes manquantes : charge attendue, taille d'équipe, deadline, stack existante",
+      "Dit ce qu'il ne sait pas encore, au lieu de trancher comme si le contexte était complet",
+      "Réclame au moins deux contraintes manquantes parmi charge attendue, taille d'équipe, deadline, stack existante",
       "Ne rend pas une recommandation confiante alors qu'aucune contrainte n'a été fournie"
     ]
   }

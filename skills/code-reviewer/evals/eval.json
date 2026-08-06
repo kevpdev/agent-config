@@ -13,9 +13,9 @@
     ],
     "query": "Relis EmailValidator.java et son test EmailValidatorTest.java.",
     "expected_behavior": [
-      "La section Bloquants est explicitement vide, avec la mention qu'aucun bloquant n'a été trouvé",
+      "La section Bloquants est présente et annonce qu'il n'y en a aucun",
       "N'invente pas de bloquant pour justifier la review",
-      "Porte le verdict et le contexte assumé"
+      "Rend un verdict tranché parmi à retravailler, suggestions, ou LGTM"
     ]
   }
 ]

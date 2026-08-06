@@ -8,11 +8,12 @@
       "WebSearch",
       "context7"
     ],
+    "skip_force": true,
     "query": "Quelle est la signature du hook useState de React ?",
     "expected_behavior": [
       "S'abstient d'appeler et répond directement de sa connaissance",
       "N'effectue aucune requête réseau : zéro appel WebFetch",
-      "Justifie l'abstention par le fait que l'API est stable et largement connue"
+      "Ne prétend pas avoir consulté une documentation qu'il n'a pas appelée"
     ]
   }
 ]

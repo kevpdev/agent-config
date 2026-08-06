@@ -8,17 +8,45 @@ import org.junit.jupiter.api.Test;
 class EmailValidatorTest {
 
     @Test
-    void rejectsBlankCandidate() {
-        assertFalse(EmailValidator.isValid("   "));
+    void should_returnFalse_when_candidateIsBlank() {
+        String candidate = "   ";
+
+        boolean valid = EmailValidator.isValid(candidate);
+
+        assertFalse(valid);
     }
 
     @Test
-    void acceptsWellFormedAddress() {
-        assertTrue(EmailValidator.isValid("kevin@example.com"));
+    void should_returnFalse_when_candidateIsNull() {
+        boolean valid = EmailValidator.isValid(null);
+
+        assertFalse(valid);
     }
 
     @Test
-    void rejectsAddressWithoutAtSign() {
-        assertFalse(EmailValidator.isValid("kevin.example.com"));
+    void should_returnTrue_when_addressIsWellFormed() {
+        String candidate = "kevin@example.com";
+
+        boolean valid = EmailValidator.isValid(candidate);
+
+        assertTrue(valid);
+    }
+
+    @Test
+    void should_returnFalse_when_atSignIsMissing() {
+        String candidate = "kevin.example.com";
+
+        boolean valid = EmailValidator.isValid(candidate);
+
+        assertFalse(valid);
+    }
+
+    @Test
+    void should_returnFalse_when_domainHasNoDot() {
+        String candidate = "kevin@example";
+
+        boolean valid = EmailValidator.isValid(candidate);
+
+        assertFalse(valid);
     }
 }

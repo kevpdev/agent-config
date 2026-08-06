@@ -55,7 +55,10 @@ JUDGE_SCHEMA = {
 JUDGE_PREAMBLE = (
     "Tu juges la sortie d'un skill contre des critères attendus.\n"
     "Pour chaque critère, dis s'il est satisfait par la sortie telle qu'elle est.\n"
-    "Sois strict : un critère non observable dans la sortie est un échec, pas un doute.\n"
+    "Juge le fond, jamais la formulation. Un critère satisfait avec d'autres mots est\n"
+    "satisfait : n'exige aucune tournure, aucun intitulé de section, aucun mot-clé.\n"
+    "En revanche, une exigence de fond absente de la sortie est un échec, pas un doute —\n"
+    "ne l'accorde pas au bénéfice de l'intention.\n"
     "Ne juge pas la qualité du code discuté, seulement la conformité de la sortie.\n"
 )
 
@@ -278,27 +281,29 @@ def tools_verdict(scenario: dict, tools: list[str]):
 # --- calibration -----------------------------------------------------------
 
 SELF_TEST_CRITERIA = [
-    "La sortie porte une section intitulée Verdict",
-    "La sortie cite au moins un emplacement de la forme fichier:ligne",
-    "La sortie déclare explicitement le contexte qu'elle assume",
+    "La sortie cite au moins un emplacement précis dans le code, fichier et ligne",
+    "La sortie déclare les hypothèses ou le contexte qu'elle assume",
+    "La sortie dit si le code peut être mergé",
 ]
 
+# Critères de fond, jamais de forme : le juge doit reconnaître un critère satisfait
+# avec d'autres mots. Les vecteurs attendus sont fixés avant lecture des réponses.
 SELF_TEST_CASES = [
     (
         "conforme",
-        "## Verdict\nLGTM.\n**Contexte assumé :** branche de dev, revue partielle.\n"
-        "Un point mineur en Foo.java:42.\n",
+        "Ça peut partir en merge. Je pars du principe qu'on est sur une branche de dev "
+        "et que la revue ne couvre que le diff. Un point mineur traîne en Foo.java:42.\n",
         [True, True, True],
     ),
     (
-        "vide",
-        "Ouais ça a l'air bien, franchement ça devrait passer.\n",
+        "muet",
+        "Je n'ai pas d'avis particulier sur ce code.\n",
         [False, False, False],
     ),
     (
         "partiel",
-        "## Verdict\nLGTM.\nUn point mineur en Foo.java:42.\n",
-        [True, True, False],
+        "Ça peut partir en merge. Un point mineur traîne en Foo.java:42.\n",
+        [True, False, True],
     ),
 ]
 
@@ -356,7 +361,7 @@ def report(rows: list[dict], out_dir: str, spent: float) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--skill", action="append", default=[], help="restreindre à ce skill (répétable)")
-    parser.add_argument("--model", default="sonnet", help="modèle de la session jouée (défaut: sonnet)")
+    parser.add_argument("--model", default="opus", help="modèle de la session jouée (défaut: opus — mesuré le 2026-08-06 : 7/8 déclenchements sur opus contre 0/8 sur sonnet, à skills et contexte identiques)")
     parser.add_argument("--judge-model", default="haiku", help="modèle du juge (défaut: haiku)")
     parser.add_argument("--force", action="store_true", help="préfixer la query par /<skill> pour isoler le comportement du déclenchement")
     parser.add_argument("--self-test", action="store_true", help="calibrer le juge et sortir, sans jouer aucun scénario")
@@ -373,9 +378,19 @@ def main() -> int:
         out_dir = args.out or tempfile.mkdtemp(prefix="skill-evals-")
         os.makedirs(out_dir, exist_ok=True)
 
+        if args.force:
+            # Un scénario qui teste l'abstention n'a pas de sens forcé : le forcer
+            # mesurerait l'inverse de ce qu'il affirme.
+            skipped = [s["_label"] for s in scenarios if s.get("skip_force")]
+            scenarios = [s for s in scenarios if not s.get("skip_force")]
+            if not scenarios:
+                raise CannotConclude("tous les scénarios retenus portent skip_force")
+
         print(f"{len(scenarios)} scénario(s) — session {args.model}, juge {args.judge_model}")
         if args.force:
             print("Mode forcé : le déclenchement n'est pas mesuré, seul le comportement l'est.")
+            if skipped:
+                print(f"Écarté(s) car testant l'abstention : {', '.join(skipped)}")
 
         rows, spent, defects = [], 0.0, 0
         for scenario in scenarios:

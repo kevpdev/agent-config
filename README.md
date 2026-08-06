@@ -86,7 +86,9 @@ python3 wrappers/claude/scripts/run-skill-evals.py --skill code-reviewer --force
 
 Chaque scénario rend deux verdicts. Le **déclenchement** est déterministe : les `trigger_markers` du scénario apparaissent-ils dans la sortie ? Le **comportement** passe par un juge LLM confronté aux `expected_behavior`. `--force` préfixe la requête par `/<skill>` et isole donc le comportement du déclenchement.
 
-**Une passe coûte de l'argent** — environ 0,35 $ par scénario joué plus 0,07 $ de juge, soit 4 à 5 $ pour les dix. Ce n'est pas un lint qu'on lance à chaque commit.
+**Le déclenchement dépend d'abord du modèle, pas du skill.** Mesuré le 2026-08-06 sur quatre skills en deux répétitions, à skills, requêtes et règles identiques : **7/8 sur `opus`, 0/8 sur `sonnet`**. Deux des quatre ne déclenchaient jamais sous Sonnet et déclenchent 2/2 sous Opus. D'où le `--model opus` par défaut : jouer les évals sur un modèle plus petit mesure un agent qu'on n'exécute pas, et fait passer pour un défaut de `description` ce qui n'en est pas un. Corollaire : un verdict de déclenchement rouge se réinterprète en changeant de modèle **avant** de réécrire quoi que ce soit.
+
+**Une passe coûte de l'argent** — environ 0,51 $ par scénario joué sur `opus` plus 0,07 $ de juge, soit 5 à 6 $ pour les dix. Ce n'est pas un lint qu'on lance à chaque commit.
 
 **Lancer `--self-test` avant de croire une passe.** Il confronte le juge à trois sorties fabriquées — conforme, vide, partielle — et exige les trois verdicts attendus. Sans lui, un juge aveugle qui répond toujours PASS est indiscernable d'un juge intact.
 

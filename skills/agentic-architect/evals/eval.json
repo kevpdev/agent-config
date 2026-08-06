@@ -7,11 +7,11 @@
       "Signal de révision",
       "Trade-off accepté"
     ],
-    "query": "J'ai besoin d'automatiser le renommage de fichiers selon leur date de création, chaque nuit. Comment architecturer ça ?",
+    "query": "Je veux un agent qui renomme mes fichiers selon leur date de création, chaque nuit. Comment l'architecturer ?",
     "expected_behavior": [
       "Recommande une solution déterministe (script plus planificateur) et non un agent",
       "Dit explicitement pourquoi un LLM n'a pas sa place ici : la règle est fixe et vérifiable",
-      "Porte les cinq champs du format, dont un signal de révision observable"
+      "Donne une condition observable qui obligerait à revoir ce choix"
     ]
   }
 ]

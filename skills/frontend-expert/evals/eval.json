@@ -12,7 +12,7 @@
     ],
     "query": "Revois le composant de renderBadge.js.",
     "expected_behavior": [
-      "Le champ Framework détecté indique non déterminable au lieu d'un framework deviné",
+      "Le champ Framework détecté déclare qu'aucun framework n'est identifiable dans le code",
       "Ne donne aucun conseil spécifique à React, Vue ou Angular sans marqueur dans le code",
       "Réclame le contexte manquant, ou limite la review à ce qui est vérifiable sans le framework"
     ]

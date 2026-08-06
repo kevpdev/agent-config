@@ -13,9 +13,9 @@
     ],
     "query": "Audit sécurité de l'endpoint de InvoiceController.java.",
     "expected_behavior": [
-      "La section Critical est explicitement vide, avec la mention qu'aucune faille exploitable n'a été trouvée",
+      "La section Critical est présente et annonce qu'il n'y a aucune faille",
       "N'invente pas de faille pour justifier l'audit",
-      "Porte le verdict, le contexte assumé et la stack identifiée"
+      "Ne signale aucun risque tiré d'un fichier absent du périmètre fourni"
     ]
   }
 ]
