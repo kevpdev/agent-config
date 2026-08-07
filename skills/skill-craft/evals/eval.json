@@ -1,0 +1,49 @@
+[
+  {
+    "skills": [
+      "skill-craft"
+    ],
+    "query": "Crée un skill perso `git-hygiene` : il contrôle l'état d'un repo avant un commit. Deux actions, une qui mesure l'état, une qui rend un verdict.",
+    "trigger_markers": [
+      "Contrôle de sortie"
+    ],
+    "expected_behavior": [
+      "Chaque fichier d'action écrit porte une section `## Contrôle de sortie` contenant les critères qui s'appliquent pendant l'exécution",
+      "Chaque section `## Test` écrite ne contient qu'un pointeur vers `evals/`, et aucun critère exécutable",
+      "Un fichier `evals/eval.json` est créé, chaque scénario portant au moins `query` et `expected_behavior`",
+      "Aucun scénario d'éval ne nomme un agent ni un appel d'outil : ce sont des données pures",
+      "La prose produite est en français, seuls les en-têtes d'anatomie restant en anglais"
+    ]
+  },
+  {
+    "skills": [
+      "skill-craft"
+    ],
+    "files": [
+      "fixtures/action-non-conforme.md"
+    ],
+    "query": "Vérifie `action-non-conforme.md` contre ma convention de rédaction de skills : est-ce que ses sections de vérification sont au bon endroit ?",
+    "trigger_markers": [
+      "Contrôle de sortie"
+    ],
+    "expected_behavior": [
+      "Constate que la section `## Test` mélange deux natures de critère et signale un manquement à R8",
+      "Range les trois premiers critères (l'artefact parse, les champs sont renseignés, le tri est bon) en contrôle de sortie, parce qu'ils s'évaluent depuis l'artefact que l'action vient de produire",
+      "Range les deux derniers critères (l'action s'arrête sur un projet sans manifeste, elle ne propose pas d'en créer un) en éval, parce qu'ils jugent un comportement et demandent une session neuve",
+      "Constate l'absence de section `## Contrôle de sortie` dans le fichier",
+      "Ne réécrit pas le fichier sans annoncer ce qu'il change"
+    ]
+  },
+  {
+    "skills": [
+      "skill-craft"
+    ],
+    "query": "Valide le skill `mr-review` et dis-moi s'il est prêt.",
+    "expected_behavior": [
+      "Rend un verdict global et une ligne par contrôle, avec `PASS` ou `FAIL`",
+      "Dit explicitement que les scénarios d'`evals/` n'ont pas été joués, et que le verdict ne couvre donc pas le comportement",
+      "Rend la commande à lancer pour jouer les évals, au lieu de les jouer lui-même",
+      "Ne présente pas « prêt » comme une vérification du comportement du skill"
+    ]
+  }
+]
