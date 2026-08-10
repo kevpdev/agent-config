@@ -16,8 +16,13 @@ Deux verdicts par scénario, dont un seul coûte un appel LLM :
   déclenchement — `N/I` ne blanchit rien, il empêche d'accuser le mauvais artefact.
 
 Échec fermé : tout ce qui empêche de conclure rend 2 (dépendance absente, racine
-douteuse, scénario illisible, fixture manquante, sortie vide, juge muet). Un défaut
-mesuré rend 1. Tout au vert rend 0.
+douteuse, scénario illisible, fixture manquante, sortie vide, juge muet, repo réel
+modifié pendant la passe). Un défaut mesuré rend 1. Tout au vert rend 0.
+
+Isolation : chaque scénario joue dans un git worktree jetable du repo — ses écritures
+y tombent et s'archivent, jamais dans le repo réel. Le worktree n'empêche pas un accès
+par chemin absolu : l'état du repo réel est comparé avant/après la passe, et toute
+dérive rend 2. Les scénarios sont indépendants, donc joués en parallèle (`--jobs`).
 """
 
 from __future__ import annotations
@@ -29,8 +34,9 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
-RUN_TIMEOUT_S = 600
+DEFAULT_RUN_TIMEOUT_S = 900
 JUDGE_TIMEOUT_S = 300
 WRITE_TOOLS = "Edit Write NotebookEdit"
 
@@ -73,7 +79,7 @@ class CannotConclude(Exception):
 # --- préparation -----------------------------------------------------------
 
 
-def derive_skills_dir() -> str:
+def derive_root() -> str:
     """Racine dérivée de l'emplacement du script, jamais un chemin en dur."""
     here = os.path.dirname(os.path.realpath(__file__))
     root = os.path.abspath(os.path.join(here, "..", "..", ".."))
@@ -82,7 +88,7 @@ def derive_skills_dir() -> str:
             raise CannotConclude(
                 f"racine dérivée invalide : {root} ne porte pas '{marker}/'"
             )
-    return os.path.join(root, "skills")
+    return root
 
 
 def require_tools() -> str:
@@ -128,10 +134,30 @@ def load_scenarios(skills_dir: str, wanted: list[str]) -> list[dict]:
     return scenarios
 
 
-def stage_workdir(scenario: dict, out_dir: str) -> str:
-    """Copie les fixtures dans un répertoire de travail isolé du repo."""
-    workdir = os.path.join(out_dir, scenario["_label"].replace("#", "-"), "workdir")
-    os.makedirs(workdir, exist_ok=True)
+def git_status(root: str) -> str:
+    proc = subprocess.run(
+        ["git", "-C", root, "status", "--porcelain"],
+        capture_output=True,
+        text=True,
+    )
+    if proc.returncode != 0:
+        raise CannotConclude(f"git status impossible sur {root} : {proc.stderr.strip()}")
+    return proc.stdout
+
+
+def stage_worktree(scenario: dict, out_dir: str, repo_root: str) -> str:
+    """Worktree jetable du repo par scénario : la session y joue, ses écritures y tombent."""
+    workdir = os.path.join(out_dir, scenario["_label"].replace("#", "-"), "repo")
+    os.makedirs(os.path.dirname(workdir), exist_ok=True)
+    proc = subprocess.run(
+        ["git", "-C", repo_root, "worktree", "add", "--detach", workdir, "HEAD"],
+        capture_output=True,
+        text=True,
+    )
+    if proc.returncode != 0:
+        raise CannotConclude(
+            f"{scenario['_label']} : worktree impossible : {proc.stderr.strip()}"
+        )
     for relative in scenario.get("files", []):
         source = os.path.join(scenario["_eval_dir"], relative)
         if not os.path.isfile(source):
@@ -142,10 +168,44 @@ def stage_workdir(scenario: dict, out_dir: str) -> str:
     return workdir
 
 
+def teardown_worktree(repo_root: str, workdir: str) -> list[str]:
+    """Archive ce que la session a écrit dans le worktree, puis le détruit.
+
+    Rend la liste `git status --porcelain` des chemins touchés : le diff et les
+    fichiers créés survivent sous les artefacts du scénario, le worktree non.
+    """
+    scen_dir = os.path.dirname(workdir)
+    wrote = git_status(workdir).splitlines()
+    if wrote:
+        diff = subprocess.run(
+            ["git", "-C", workdir, "diff"], capture_output=True, text=True
+        ).stdout
+        with open(os.path.join(scen_dir, "worktree-writes.txt"), "w", encoding="utf-8") as fh:
+            fh.write("\n".join(wrote) + "\n\n" + diff)
+        for line in wrote:
+            if line.startswith("??"):
+                relative = line[3:].strip()
+                source = os.path.join(workdir, relative)
+                target = os.path.join(scen_dir, "artefacts", relative)
+                if os.path.isfile(source):
+                    os.makedirs(os.path.dirname(target), exist_ok=True)
+                    shutil.copy2(source, target)
+    proc = subprocess.run(
+        ["git", "-C", repo_root, "worktree", "remove", "--force", workdir],
+        capture_output=True,
+        text=True,
+    )
+    if proc.returncode != 0:
+        raise CannotConclude(
+            f"worktree non détruit ({workdir}) : {proc.stderr.strip()}"
+        )
+    return wrote
+
+
 # --- exécution -------------------------------------------------------------
 
 
-def run_session(claude: str, scenario: dict, workdir: str, model: str, force: bool):
+def run_session(claude: str, scenario: dict, workdir: str, model: str, force: bool, timeout: int):
     """Lance une session neuve et rend (texte de sortie, outils appelés, coût)."""
     prompt = scenario["query"]
     if force:
@@ -172,11 +232,11 @@ def run_session(claude: str, scenario: dict, workdir: str, model: str, force: bo
             stdin=subprocess.DEVNULL,
             capture_output=True,
             text=True,
-            timeout=RUN_TIMEOUT_S,
+            timeout=timeout,
         )
     except subprocess.TimeoutExpired as exc:
         raise CannotConclude(
-            f"{scenario['_label']} : session au-delà de {RUN_TIMEOUT_S}s"
+            f"{scenario['_label']} : session au-delà de {timeout}s"
         ) from exc
 
     stream_path = os.path.join(os.path.dirname(workdir), "run.jsonl")
@@ -361,6 +421,64 @@ def report(rows: list[dict], out_dir: str, spent: float) -> None:
     print(f"\nCoût : {spent:.2f} $   Artefacts : {out_dir}")
 
 
+def play_scenario(claude: str, scenario: dict, out_dir: str, repo_root: str, args):
+    """Joue un scénario de bout en bout dans son worktree. Rend (row, coût, défaut)."""
+    workdir = stage_worktree(scenario, out_dir, repo_root)
+    try:
+        output, tools, cost = run_session(
+            claude, scenario, workdir, args.model, args.force, args.timeout
+        )
+        trigger, trigger_why = trigger_verdict(scenario, output)
+        if args.force:
+            trigger, trigger_why = "N/A", "mode forcé"
+        tools_state, tools_why = tools_verdict(scenario, tools)
+        criteria = scenario["expected_behavior"]
+        verdicts, judge_cost = judge(claude, criteria, output, args.judge_model)
+        cost += judge_cost
+    finally:
+        wrote = teardown_worktree(repo_root, workdir)
+
+    failed = [v for v in verdicts if not v["pass"]]
+    # Déclenchement en échec : la sortie vient d'une session où le skill n'a
+    # jamais été chargé. Ce qui est mesuré est le comportement du modèle nu,
+    # pas celui du skill — l'imputer au skill ferait réécrire un artefact que
+    # la mesure n'a pas touché. On le déclare non interprétable.
+    interpretable = trigger != "FAIL"
+    if not interpretable:
+        behavior = "N/I"
+    else:
+        behavior = "OK" if not failed else f"FAIL {len(failed)}/{len(criteria)}"
+
+    details = []
+    if trigger == "FAIL":
+        details.append(f"déclenchement : {trigger_why}")
+    if tools_state == "FAIL":
+        details.append(f"outils : {tools_why}")
+    if not interpretable:
+        details.append(
+            f"comportement non interprétable : le skill ne s'est pas chargé, "
+            f"les {len(failed)} critère(s) en échec sur {len(criteria)} ne lui sont pas imputables"
+        )
+    for verdict in failed if interpretable else []:
+        index = verdict["criterion_index"]
+        criterion = criteria[index - 1] if 1 <= index <= len(criteria) else "?"
+        details.append(f"critère {index} « {criterion} » → {verdict['reason']}")
+    if wrote:
+        details.append(
+            f"worktree : {len(wrote)} chemin(s) écrit(s), archivés sous les artefacts du scénario"
+        )
+
+    defect = "FAIL" in (trigger, tools_state) or (interpretable and bool(failed))
+    row = {
+        "label": scenario["_label"],
+        "trigger": trigger,
+        "tools": tools_state,
+        "behavior": behavior,
+        "details": details,
+    }
+    return row, cost, defect
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--skill", action="append", default=[], help="restreindre à ce skill (répétable)")
@@ -369,6 +487,8 @@ def main() -> int:
     parser.add_argument("--force", action="store_true", help="préfixer la query par /<skill> pour isoler le comportement du déclenchement")
     parser.add_argument("--self-test", action="store_true", help="calibrer le juge et sortir, sans jouer aucun scénario")
     parser.add_argument("--out", help="répertoire des artefacts (défaut: temporaire)")
+    parser.add_argument("--timeout", type=int, default=DEFAULT_RUN_TIMEOUT_S, help=f"plafond d'une session jouée, en secondes (défaut: {DEFAULT_RUN_TIMEOUT_S})")
+    parser.add_argument("--jobs", type=int, default=4, help="scénarios joués en parallèle (défaut: 4) — indépendants, chacun dans son worktree")
     args = parser.parse_args()
 
     try:
@@ -376,8 +496,8 @@ def main() -> int:
         if args.self_test:
             return self_test(claude, args.judge_model)
 
-        skills_dir = derive_skills_dir()
-        scenarios = load_scenarios(skills_dir, args.skill)
+        repo_root = derive_root()
+        scenarios = load_scenarios(os.path.join(repo_root, "skills"), args.skill)
         out_dir = args.out or tempfile.mkdtemp(prefix="skill-evals-")
         os.makedirs(out_dir, exist_ok=True)
 
@@ -395,62 +515,43 @@ def main() -> int:
             if skipped:
                 print(f"Écarté(s) car testant l'abstention : {', '.join(skipped)}")
 
-        rows, spent, defects = [], 0.0, 0
-        for scenario in scenarios:
-            label = scenario["_label"]
-            print(f"  … {label}", flush=True)
-            workdir = stage_workdir(scenario, out_dir)
-            output, tools, cost = run_session(claude, scenario, workdir, args.model, args.force)
-            spent += cost
+        # Instantané du repo réel : le worktree ne bloque pas un accès par chemin
+        # absolu, la comparaison avant/après rend cette fuite visible et bloquante.
+        real_before = git_status(repo_root)
 
-            trigger, trigger_why = trigger_verdict(scenario, output)
-            if args.force:
-                trigger, trigger_why = "N/A", "mode forcé"
-            tools_state, tools_why = tools_verdict(scenario, tools)
+        rows, spent, defects, errors = [], 0.0, 0, []
+        with ThreadPoolExecutor(max_workers=max(1, min(args.jobs, len(scenarios)))) as pool:
+            futures = {
+                pool.submit(play_scenario, claude, s, out_dir, repo_root, args): s["_label"]
+                for s in scenarios
+            }
+            for future in as_completed(futures):
+                label = futures[future]
+                try:
+                    row, cost, defect = future.result()
+                except CannotConclude as exc:
+                    errors.append(str(exc))
+                    print(f"  ✗ {label} : {exc}", flush=True)
+                    continue
+                print(f"  ✓ {label}", flush=True)
+                rows.append(row)
+                spent += cost
+                defects += 1 if defect else 0
 
-            criteria = scenario["expected_behavior"]
-            verdicts, judge_cost = judge(claude, criteria, output, args.judge_model)
-            spent += judge_cost
-            failed = [v for v in verdicts if not v["pass"]]
-            # Déclenchement en échec : la sortie vient d'une session où le skill n'a
-            # jamais été chargé. Ce qui est mesuré est le comportement du modèle nu,
-            # pas celui du skill — l'imputer au skill ferait réécrire un artefact que
-            # la mesure n'a pas touché. On le déclare non interprétable.
-            interpretable = trigger != "FAIL"
-            if not interpretable:
-                behavior = "N/I"
-            else:
-                behavior = "OK" if not failed else f"FAIL {len(failed)}/{len(criteria)}"
+        if rows:
+            rows.sort(key=lambda r: r["label"])
+            report(rows, out_dir, spent)
+            print(f"{len(rows) - defects} scénario(s) au vert sur {len(rows)}")
 
-            details = []
-            if trigger == "FAIL":
-                details.append(f"déclenchement : {trigger_why}")
-            if tools_state == "FAIL":
-                details.append(f"outils : {tools_why}")
-            if not interpretable:
-                details.append(
-                    f"comportement non interprétable : le skill ne s'est pas chargé, "
-                    f"les {len(failed)} critère(s) en échec sur {len(criteria)} ne lui sont pas imputables"
-                )
-            for verdict in failed if interpretable else []:
-                index = verdict["criterion_index"]
-                criterion = criteria[index - 1] if 1 <= index <= len(criteria) else "?"
-                details.append(f"critère {index} « {criterion} » → {verdict['reason']}")
-
-            if "FAIL" in (trigger, tools_state) or (interpretable and failed):
-                defects += 1
-            rows.append(
-                {
-                    "label": label,
-                    "trigger": trigger,
-                    "tools": tools_state,
-                    "behavior": behavior,
-                    "details": details,
-                }
+        real_after = git_status(repo_root)
+        if real_after != real_before:
+            delta = set(real_after.splitlines()) ^ set(real_before.splitlines())
+            raise CannotConclude(
+                "le repo réel a été modifié pendant la passe (accès hors worktree) :\n  "
+                + "\n  ".join(sorted(delta))
             )
-
-        report(rows, out_dir, spent)
-        print(f"{len(rows) - defects} scénario(s) au vert sur {len(rows)}")
+        if errors:
+            raise CannotConclude("; ".join(errors))
         return 1 if defects else 0
 
     except CannotConclude as exc:
