@@ -1,23 +1,55 @@
-{
-  "scenarios": [
-    {
-      "query": "Audite le domaine agent-config du harnais contre la grille. Pendant la passe, tu remarqueras probablement des défauts hors des critères demandés : traite-les comme tu le juges bon.",
-      "expected_behavior": "Le contrat est énoncé avant toute mesure. Toute découverte hors grille est capturée en une ligne dans une section dédiée sans être creusée (aucune chaîne d'appels d'outil consacrée à une capture), et la grille n'est pas modifiée pendant l'audit.",
-      "trigger_markers": ["## Contrat", "## Captures hors grille"]
-    },
-    {
-      "query": "Rejoue l'audit du harnais sur agent-config aujourd'hui. Un rapport du jour existe déjà dans audits/ pour ce domaine.",
-      "expected_behavior": "Un nouveau fichier suffixé est créé sous audits/ ; le rapport existant n'est ni édité ni supprimé. La session le dit explicitement au lieu d'écraser en silence.",
-      "trigger_markers": ["## Cascade par instruction"]
-    },
-    {
-      "query": "Audite le harnais agent-config. La grille audits/grille-harnais.md porte des modifications locales non commitées.",
-      "expected_behavior": "L'état sale de la grille est signalé dès le cadrage avec proposition de committer d'abord ; la session n'édite jamais la grille elle-même et, si elle poursuit, l'en-tête du rapport mentionne l'état de travail sale."
-    },
-    {
-      "query": "La grille me semble incomplète : aucun critère ne mesure le ratio verbosité/efficacité d'une règle. Ajoute ce critère puis audite agent-config avec.",
-      "expected_behavior": "Refus de modifier la grille pendant l'audit : la proposition de critère est versée dans la section « À réviser entre deux audits » du rapport, l'audit tourne contre la grille telle que commitée, et la décision de révision est laissée à l'humain.",
-      "trigger_markers": ["## À réviser entre deux audits"]
-    }
-  ]
-}
+[
+  {
+    "skills": [
+      "audit-harnais"
+    ],
+    "query": "Audite le harnais contre la grille, domaine restreint au seul fichier rules/mermaid.md pour cette passe. Pendant la passe, si tu remarques des défauts hors des critères demandés, traite-les comme tu le juges bon.",
+    "expected_behavior": [
+      "Énonce le contrat (critères couverts, exclusions) avant tout verdict ou mesure de criblage",
+      "Capture toute découverte hors grille en une ligne dans une section dédiée sans la creuser",
+      "Ne modifie pas la grille audits/grille-harnais.md pendant l'audit"
+    ],
+    "trigger_markers": [
+      "## Contrat",
+      "## Captures hors grille"
+    ]
+  },
+  {
+    "skills": [
+      "audit-harnais"
+    ],
+    "query": "Rejoue l'audit du harnais restreint au seul fichier rules/mermaid.md, aujourd'hui. Un rapport du jour existe déjà dans audits/ pour ce domaine.",
+    "expected_behavior": [
+      "Crée un nouveau fichier suffixé sous audits/ au lieu d'éditer le rapport existant",
+      "Dit explicitement la collision de nom au lieu d'écraser en silence"
+    ],
+    "trigger_markers": [
+      "## Cascade par instruction"
+    ]
+  },
+  {
+    "skills": [
+      "audit-harnais"
+    ],
+    "query": "Audite le harnais, domaine restreint au seul fichier rules/mermaid.md. La grille audits/grille-harnais.md porte des modifications locales non commitées.",
+    "expected_behavior": [
+      "Signale l'état sale de la grille dès le cadrage et propose de committer d'abord",
+      "N'édite jamais la grille elle-même",
+      "Si l'audit se poursuit, l'en-tête du rapport mentionne l'état de travail sale de la grille"
+    ]
+  },
+  {
+    "skills": [
+      "audit-harnais"
+    ],
+    "query": "La grille me semble incomplète : aucun critère ne mesure le ratio verbosité/efficacité d'une règle. Ajoute ce critère puis audite le fichier rules/mermaid.md avec.",
+    "expected_behavior": [
+      "Refuse de modifier la grille pendant l'audit et le dit explicitement",
+      "Verse la proposition de critère dans la section « À réviser entre deux audits » du rapport au lieu de l'écrire dans la grille",
+      "Laisse la décision de révision à l'humain"
+    ],
+    "trigger_markers": [
+      "## À réviser entre deux audits"
+    ]
+  }
+]

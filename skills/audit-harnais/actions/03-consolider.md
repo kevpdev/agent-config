@@ -18,6 +18,12 @@ Un fichier `audits/AAAA-MM-JJ-audit-<domaine>.md` (nommage et invariants : la gr
 4. **Verser.** Les propositions touchant la grille (critère manquant, seuil à revoir, test infaisable) vont dans `## À réviser entre deux audits`, jamais dans la grille (règle transverse du routeur : la révision se décide entre deux audits, par l'humain).
 5. **Rendre.** Dans le chat : verdict en une phrase, les corrections à fort enjeu (doublons volatils, règles inférables), le chemin du rapport. Proposer le commit, ne pas le faire seul.
 
+## Si ça casse
+
+- **Le criblage est arrivé incomplet** (partiel rendu par `02-cribler`) → rédiger le rapport quand même, sections imposées présentes, les instructions non criblées listées « non jugées » dans le tableau. Un partiel horodaté se reprend ; des verdicts qui attendent en session se perdent.
+- **La commande C6 échoue** → pas de verdict C6 : le rapport porte l'erreur et « C6 non mesuré », jamais un chiffre reconstitué.
+- **La collision de nom ne se résout pas** (le suffixe existe aussi) → incrémenter le suffixe ; ne jamais éditer un rapport existant, quel qu'il soit.
+
 ## Contrôle de sortie
 
 - Le fichier existe sous `audits/`, son nom porte la date du jour et le domaine, et aucun rapport existant n'a été modifié (`git status` ne montre que des ajouts sous `audits/`).
