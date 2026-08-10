@@ -12,14 +12,15 @@ Crible d'admission au contexte permanent : chaque instruction du harnais y passe
 
 - **Un audit = un domaine, contrat figé.** Les questions de l'audit sont les critères de cette grille, rien d'autre. Une découverte hors grille se capture en une ligne et ne se creuse pas. La grille se révise **entre** deux audits, jamais pendant.
 - **Ordre** : `agent-config` (socle) → vault pro → vault perso → projets (qui héritent du socle). Dans chaque domaine, par sous-domaine : `rules/`, `skills/`, `scripts`/hooks, `CLAUDE.md`/output-styles, `settings.json` (bindings, permissions), memory auto.
+- **Une passe = un sous-domaine.** Le scope concentre le contexte (les fichiers d'un même sous-domaine se comparent entre eux) et borne le coût d'une session d'audit ; un domaine entier se couvre en plusieurs passes, jamais en une. Un hook n'est pas un sous-domaine à part : c'est un script (critères d'échec fermé de `workflow.md`) plus une ligne de trigger dans `settings.json`, chacun audité dans sa passe.
 - **Horodatage** : un rapport d'audit est un instantané immuable, nommé `audits/AAAA-MM-JJ-audit-<domaine>.md` ; l'audit suivant du même domaine est un nouveau fichier, jamais un edit. La grille, elle, est vivante et non horodatée — git porte son historique (`git log --oneline -- audits/grille-harnais.md`), pas de champ `version:` manuel qui divergerait au premier edit oublié. Chaque rapport cite en en-tête le commit de la grille contre laquelle il a tourné.
 - **Traçabilité** : chaque constat du rapport cite sa mesure (commande + sortie) ou porte « supposé ». Un chiffre repris de la note d'inbox est un chiffre du 2026-08-10 : le remesurer avant de décider.
 
 ---
 
-## Le crible — cascade de 6 critères
+## Le crible — cascade de 8 critères
 
-Chaque instruction descend la cascade ; elle sort au premier critère qui la disqualifie.
+Chaque instruction descend la cascade ; elle sort au premier critère qui la disqualifie. **C1→C5 et C7 se jugent par instruction**, **C8 par fichier** (une fois ses instructions criblées), **C6 est le seul critère global** (un budget est une somme, une instruction seule ne le viole jamais). C7 ne disqualifie pas une instruction, il disqualifie sa formulation.
 
 ### C1 — Inférable ?
 
@@ -87,7 +88,63 @@ wc -w $(grep -L '^paths:' rules/*.md) wrappers/claude/rules/*.md \
 **État au 2026-08-10 (remesuré)** : 5 830 mots — 5 607 de règles (dont `memory-policy.md`, 207) + 223 d'output style. ~40 % retirables côté règles (surtout `ai-practices.md` et les cas vécus de `reasoning.md`/`workflow.md`).
 **Cible** : ≤ 3 500 mots hors output style — dérivée de la mesure « retirable », pas un dogme ; l'audit la révise.
 
+### C7 — Rentable ?
+
+*Critère **par instruction**, appliqué à chaque survivante de C5, dans la même passe que C1→C5. C6 reste le seul critère global.*
+
+L'instruction achète-t-elle son poids en mots ? C7 ne rejuge pas sa **présence** — C1→C5 l'ont tranchée — mais sa **formulation** : à couverture égale, combien de mots permanents elle coûte.
+
+Décomposer l'instruction en quatre parts — **grille de lecture pour l'audit, jamais gabarit d'écriture** : on analyse une instruction existante avec, on n'impose aucun formulaire à la rédaction. *Pourquoi : la doc pose « Default assumption: Claude is already very smart » — sur-spécifier la forme ferme le modèle au lieu de le guider, et aucune source ne porte de budget par part.*
+
+| Part | Statut |
+|---|---|
+| Impératif — le quoi, avec son alternative si c'est une négation | Porteur, irréductible |
+| Pourquoi — une ligne (méta-règle de `reasoning.md`) | Porteur |
+| Seuil / exception | Porteur **si mesurable** ; sinon c'est un défaut C3 déguisé en précision |
+| Preuve, cas vécu, méta-commentaire, relance anti-complaisance | **Compressible** — sort vers un fichier de références chargé à la demande |
+
+**Alerte** : ~60 mots par instruction — un déclencheur de test, pas un couperet. Le chiffre trie, le test tranche. *(Conventionnel : ~2× la médiane du harnais, 32 mots/bloc remesurée le 2026-08-10 sur 10 fichiers ; aucune source externe ne le porte, révisable entre deux audits.)*
+
+| Cas | Action |
+|---|---|
+| Sous l'alerte, quatrième part absente | **Garder tel quel** |
+| Dépassement porté par la quatrième part | **Extraire** la preuve vers les références ; l'instruction garde impératif + pourquoi + trigger |
+| Dépassement porté par l'impératif | **Découper** — ce sont plusieurs instructions empilées, chacune repasse en C1 |
+| Impératif plus court que pourquoi + preuve | **Red flag** — l'instruction argumente plus qu'elle ne prescrit ; réécrire avant de trancher |
+
+**Test** — comportemental, pas un comptage : retirer la part jugée compressible, donner à un contexte neuf une tâche qui déclenche l'instruction, comparer le comportement. S'il change, la part était porteuse : la remettre et le noter. **Échantillonné** comme le sondage C1 — un test coûte une session, le réserver aux instructions au-dessus de l'alerte ; les autres verdicts C7 se marquent « jugé sur pièce ».
+
+**Mesure** :
+
+```bash
+# Mots d'une instruction — plage de lignes issue du découpage du cadrage
+sed -n '<début>,<fin>p' <fichier> | wc -w
+
+# Médiane du harnais, pour recalibrer l'alerte
+for f in $(grep -L '^paths:' rules/*.md) wrappers/claude/rules/*.md; do
+  printf '%s\t%s\t' "$f" "$(grep -c '^\(- \|\*\*[A-ZÀ-Ü]\|#\+ \)' "$f")"; wc -w < "$f"
+done
+```
+
+*Le compteur de blocs est une approximation (puces, titres, amorces en gras) : il calibre l'alerte, il ne découpe pas — le découpage qui fait foi est manuel.*
+
 Les **cas vécus** sortent du permanent vers un fichier de références chargé à la demande ; la règle garde le trigger et le pourquoi en une ligne.
+
+**POURQUOI ce critère** : le budget de C6 se satisfait en supprimant des instructions entières, donc en perdant de la couverture. C7 récupère les mêmes mots sans rien perdre — il ne coupe que ce qui n'achète aucun comportement. Et sans lui, une instruction bien placée (survivante de C1→C5) est réputée bien écrite : rien ne mesure sa formulation.
+
+### C8 — Cohérent dans son fichier ?
+
+*Critère **par fichier**, rendu une fois toutes ses instructions criblées.*
+
+Les instructions survivantes d'un même fichier tiennent-elles ensemble ? Trois défauts que le verdict par instruction ne voit pas, parce qu'ils vivent **entre** les instructions :
+
+| Défaut | Action |
+|---|---|
+| Deux instructions se contredisent, ou leurs exceptions se recouvrent en s'opposant | Trancher — une seule survit, ou l'articulation devient explicite |
+| Redondance interne — deux instructions du fichier prescrivent la même chose autrement | Fusionner *(C4 ne l'attrape pas : son grep cherche ailleurs, pas entre voisines)* |
+| Instruction orpheline — sans rapport avec le propos du fichier | Déplacer vers son vrai foyer |
+
+**POURQUOI ce critère** : la cascade juge chaque instruction isolément ; un fichier peut être fait d'instructions toutes valides une à une et rester contradictoire — et c'est le fichier entier qu'une session charge, pas l'instruction.
 
 ---
 
@@ -114,6 +171,14 @@ Contre quoi juger la **conformité de construction** d'un artefact (format, fron
 | Scripts / checks | pas de doc — la norme est **ShellCheck** + contraintes `workflow.md` (échec fermé, calibrage) | — |
 | Index complet | <https://code.claude.com/docs/llms.txt> | 2026-08-10 |
 
+**Rédaction d'instructions** — contre quoi juger C1 et C7, pour que la grille ne se valide pas contre la doctrine qu'elle audite :
+
+| Sujet | Source | Vérifié |
+|---|---|---|
+| Rédaction de skills (« Does this paragraph justify its token cost? », degrees of freedom) | <https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices> | 2026-08-10, fetch |
+| Rédaction de prompts/règles (motivation derrière l'instruction, dire quoi faire plutôt que quoi éviter) | <https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-4-best-practices> | 2026-08-10, fetch |
+| CLAUDE.md (< 200 lignes, contexte = bien public) | <https://code.claude.com/docs/en/memory> | 2026-08-10, via agent doc |
+
 **Point tranché le 2026-08-10** (doc officielle, section AGENTS.md de la page memory) : Claude Code ne lit **pas** `AGENTS.md` nativement — seul `CLAUDE.md` est lu ; s'ils coexistent, `AGENTS.md` est ignoré. Deux ponts documentés : import `@AGENTS.md` en tête de `CLAUDE.md`, ou symlink. **Conséquence** : la couche standard reste possible — le contenu vit dans `AGENTS.md` (portable), `CLAUDE.md` se réduit à l'import. Même motif logique/binding que `checks/` + hook. **Portée** : ce pont ne vaut que pour les `CLAUDE.md` de projet ; les règles globales passent par les symlinks de `sync-rules.sh`, mécanisme distinct à auditer séparément.
 
 ---
@@ -130,8 +195,8 @@ ls checks/ 2>/dev/null; ls wrappers/claude/scripts/hooks/
 git config core.hooksPath   # sur chaque repo du domaine
 
 # Doublons inter-couches (par motif jugé, pas de regex unique)
-# Symlinks de règles à jour
-sh wrappers/claude/scripts/sync-rules.sh
+# Symlinks de règles à jour (bash obligatoire : shebang bash, `set -o pipefail` casse sous dash)
+bash wrappers/claude/scripts/sync-rules.sh
 ```
 
 ---
