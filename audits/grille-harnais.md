@@ -85,8 +85,8 @@ wc -w $(grep -L '^paths:' rules/*.md) wrappers/claude/rules/*.md \
 # + MEMORY.md de la memory auto du projet courant, variable par projet
 ```
 
-**État au 2026-08-10 (remesuré)** : 5 830 mots — 5 607 de règles (dont `memory-policy.md`, 207) + 223 d'output style. ~40 % retirables côté règles (surtout `ai-practices.md` et les cas vécus de `reasoning.md`/`workflow.md`).
-**Cible** : ≤ 3 500 mots hors output style — dérivée de la mesure « retirable », pas un dogme ; l'audit la révise.
+**État au 2026-08-10 (remesuré)** : 5 830 mots — 5 607 de règles (dont `memory-policy.md`, 207) + 223 d'output style. L'estimation initiale « ~40 % retirables » ne s'est pas confirmée : la passe `rules/` du 2026-08-10 mesure ~1 650 mots retirés par la cascade (~30 %).
+**Cible** : ~3 950 mots hors output style — plancher mesuré par la passe `rules/` du 2026-08-10 (rapport `2026-08-10-audit-agent-config-rules.md`), **pas un plafond obligatoire**. Décidé le 2026-08-10 : on ne supprime pas une instruction survivante pour tenir un chiffre ; le sort d'`ai-practices.md` se juge sur le fond, hors pression C6.
 
 ### C7 — Rentable ?
 
