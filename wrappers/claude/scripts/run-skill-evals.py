@@ -7,13 +7,21 @@ Les scénarios eux-mêmes restent portables — ce fichier est le seul à conna�
 Deux verdicts par scénario, dont un seul coûte un appel LLM :
 
 - DÉCLENCHEMENT — déterministe. Les `trigger_markers` du scénario apparaissent-ils
-  dans la sortie ? Aucun appel `Skill` n'étant observable dans le flux (mesuré le
-  2026-08-06, y compris sur une invocation forcée), la forme de la sortie est le seul
-  signal disponible. Sans marqueur déclaré, le verdict est N/A, jamais un succès.
-- COMPORTEMENT — un juge LLM confronte la sortie aux `expected_behavior`. Rendu `N/I`
-  quand le déclenchement a échoué : la sortie vient alors d'une session sans le skill,
-  et un critère raté n'y est pas imputable. Le scénario reste rouge par son
-  déclenchement — `N/I` ne blanchit rien, il empêche d'accuser le mauvais artefact.
+  dans le message final, le fil de la session ou les fichiers qu'elle a écrits ?
+  Chercher dans le message final seul rend des faux négatifs dès que le skill produit
+  un artefact : les marqueurs vivent dans le rapport, pas dans le chat (mesuré le
+  2026-08-10, 3 faux FAIL sur 4). Sans marqueur déclaré, le verdict est N/A.
+- COMPORTEMENT — un juge LLM confronte aux `expected_behavior` le message final PLUS
+  les fichiers écrits par la session (le livrable d'un skill à artefact est le
+  fichier). Rendu `N/I` quand le déclenchement a échoué : la sortie vient alors d'une
+  session sans le skill, et un critère raté n'y est pas imputable. Le scénario reste
+  rouge par son déclenchement — `N/I` ne blanchit rien, il empêche d'accuser le
+  mauvais artefact.
+
+Un scénario qui suppose un état du repo (grille salie, rapport déjà présent) le
+fabrique via son champ `setup` : des commandes shell jouées dans le worktree avant la
+session. Affirmer l'état dans la query sans le fabriquer teste le modèle face à une
+prémisse fausse, pas le skill.
 
 Échec fermé : tout ce qui empêche de conclure rend 2 (dépendance absente, racine
 douteuse, scénario illisible, fixture manquante, sortie vide, juge muet, repo réel
@@ -127,6 +135,11 @@ def load_scenarios(skills_dir: str, wanted: list[str]) -> list[dict]:
             for field in ("query", "expected_behavior"):
                 if not scenario.get(field):
                     raise CannotConclude(f"{path}[{index}] : champ '{field}' absent")
+            setup = scenario.get("setup", [])
+            if not isinstance(setup, list) or any(not isinstance(c, str) for c in setup):
+                raise CannotConclude(
+                    f"{path}[{index}] : 'setup' doit être une liste de commandes shell"
+                )
             scenario["_skill"] = name
             scenario["_eval_dir"] = os.path.dirname(path)
             scenario["_label"] = name if len(data) == 1 else f"{name}#{index}"
@@ -165,23 +178,51 @@ def stage_worktree(scenario: dict, out_dir: str, repo_root: str) -> str:
                 f"{scenario['_label']} : fixture absente → {source}"
             )
         shutil.copy2(source, os.path.join(workdir, os.path.basename(relative)))
+    for command in scenario.get("setup", []):
+        proc = subprocess.run(
+            ["bash", "-c", command], cwd=workdir, capture_output=True, text=True
+        )
+        if proc.returncode != 0:
+            raise CannotConclude(
+                f"{scenario['_label']} : setup en échec « {command} » : {proc.stderr.strip()}"
+            )
     return workdir
 
 
-def teardown_worktree(repo_root: str, workdir: str) -> list[str]:
-    """Archive ce que la session a écrit dans le worktree, puis le détruit.
+def git_diff(root: str) -> str:
+    return subprocess.run(
+        ["git", "-C", root, "diff"], capture_output=True, text=True
+    ).stdout
 
-    Rend la liste `git status --porcelain` des chemins touchés : le diff et les
-    fichiers créés survivent sous les artefacts du scénario, le worktree non.
+
+def teardown_worktree(
+    repo_root: str, workdir: str, staged: list[str], staged_diff: str
+) -> tuple[list[str], str]:
+    """Archive ce que la SESSION a écrit dans le worktree, puis le détruit.
+
+    `staged`/`staged_diff` sont l'état du worktree juste après fixtures et setup :
+    ce que le scénario a fabriqué ne s'impute pas à la session — sans cette
+    soustraction, le juge accuserait la session d'avoir sali ce que le setup a sali.
+    Rend (chemins écrits par la session, contenu écrit : diffs étiquetés + fichiers créés).
     """
     scen_dir = os.path.dirname(workdir)
-    wrote = git_status(workdir).splitlines()
-    if wrote:
-        diff = subprocess.run(
-            ["git", "-C", workdir, "diff"], capture_output=True, text=True
-        ).stdout
+    wrote_all = git_status(workdir).splitlines()
+    wrote = [line for line in wrote_all if line not in set(staged)]
+    written = []
+    if staged_diff.strip():
+        written.append(
+            "--- état fabriqué par le setup du scénario, déjà présent AVANT la session ---\n"
+            + staged_diff
+        )
+    if wrote_all:
+        diff = git_diff(workdir)
+        if diff.strip() and diff != staged_diff:
+            written.append(
+                "--- diff du worktree en fin de session (l'état setup ci-dessus inclus) ---\n"
+                + diff
+            )
         with open(os.path.join(scen_dir, "worktree-writes.txt"), "w", encoding="utf-8") as fh:
-            fh.write("\n".join(wrote) + "\n\n" + diff)
+            fh.write("\n".join(wrote_all) + "\n\n" + diff)
         for line in wrote:
             if line.startswith("??"):
                 relative = line[3:].strip()
@@ -190,6 +231,8 @@ def teardown_worktree(repo_root: str, workdir: str) -> list[str]:
                 if os.path.isfile(source):
                     os.makedirs(os.path.dirname(target), exist_ok=True)
                     shutil.copy2(source, target)
+                    with open(source, encoding="utf-8", errors="replace") as fh:
+                        written.append(f"--- fichier créé par la session : {relative} ---\n{fh.read()}")
     proc = subprocess.run(
         ["git", "-C", repo_root, "worktree", "remove", "--force", workdir],
         capture_output=True,
@@ -199,7 +242,7 @@ def teardown_worktree(repo_root: str, workdir: str) -> list[str]:
         raise CannotConclude(
             f"worktree non détruit ({workdir}) : {proc.stderr.strip()}"
         )
-    return wrote
+    return wrote, "\n\n".join(written)
 
 
 # --- exécution -------------------------------------------------------------
@@ -243,7 +286,7 @@ def run_session(claude: str, scenario: dict, workdir: str, model: str, force: bo
     with open(stream_path, "w", encoding="utf-8") as fh:
         fh.write(proc.stdout)
 
-    output, tools, cost = None, [], 0.0
+    output, transcript, tools, cost = None, [], [], 0.0
     for line in proc.stdout.splitlines():
         line = line.strip()
         if not line.startswith("{"):
@@ -256,6 +299,8 @@ def run_session(claude: str, scenario: dict, workdir: str, model: str, force: bo
             for block in event.get("message", {}).get("content", []):
                 if block.get("type") == "tool_use":
                     tools.append(block.get("name", "?"))
+                elif block.get("type") == "text":
+                    transcript.append(block.get("text", ""))
         elif event.get("type") == "result":
             output = event.get("result")
             cost = event.get("total_cost_usd") or 0.0
@@ -263,7 +308,7 @@ def run_session(claude: str, scenario: dict, workdir: str, model: str, force: bo
         raise CannotConclude(
             f"{scenario['_label']} : sortie vide (rc={proc.returncode}) → {stream_path}"
         )
-    return str(output), tools, cost
+    return str(output), "\n".join(transcript), tools, cost
 
 
 def judge(claude: str, criteria: list[str], output: str, model: str):
@@ -424,19 +469,28 @@ def report(rows: list[dict], out_dir: str, spent: float) -> None:
 def play_scenario(claude: str, scenario: dict, out_dir: str, repo_root: str, args):
     """Joue un scénario de bout en bout dans son worktree. Rend (row, coût, défaut)."""
     workdir = stage_worktree(scenario, out_dir, repo_root)
+    # Instantané post-setup : ce que le scénario a fabriqué ne s'impute pas à la session.
+    staged = git_status(workdir).splitlines()
+    staged_diff = git_diff(workdir)
     try:
-        output, tools, cost = run_session(
+        output, transcript, tools, cost = run_session(
             claude, scenario, workdir, args.model, args.force, args.timeout
         )
-        trigger, trigger_why = trigger_verdict(scenario, output)
-        if args.force:
-            trigger, trigger_why = "N/A", "mode forcé"
-        tools_state, tools_why = tools_verdict(scenario, tools)
-        criteria = scenario["expected_behavior"]
-        verdicts, judge_cost = judge(claude, criteria, output, args.judge_model)
-        cost += judge_cost
     finally:
-        wrote = teardown_worktree(repo_root, workdir)
+        wrote, written = teardown_worktree(repo_root, workdir, staged, staged_diff)
+
+    # Les marqueurs vivent où le skill s'exprime : chat final, fil de session, fichiers écrits.
+    haystack = "\n\n".join(filter(None, (output, transcript, written)))
+    trigger, trigger_why = trigger_verdict(scenario, haystack)
+    if args.force:
+        trigger, trigger_why = "N/A", "mode forcé"
+    tools_state, tools_why = tools_verdict(scenario, tools)
+    criteria = scenario["expected_behavior"]
+    judged = output
+    if written:
+        judged += f"\n\n=== FICHIERS ÉCRITS PAR LA SESSION ===\n{written}"
+    verdicts, judge_cost = judge(claude, criteria, judged, args.judge_model)
+    cost += judge_cost
 
     failed = [v for v in verdicts if not v["pass"]]
     # Déclenchement en échec : la sortie vient d'une session où le skill n'a
