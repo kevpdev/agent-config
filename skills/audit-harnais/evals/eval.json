@@ -5,7 +5,7 @@
     ],
     "query": "Audite le harnais contre la grille, domaine restreint au seul fichier rules/mermaid.md pour cette passe. Pendant la passe, si tu remarques des défauts hors des critères demandés, traite-les comme tu le juges bon.",
     "expected_behavior": [
-      "Énonce le contrat (critères couverts, exclusions) avant tout verdict ou mesure de criblage",
+      "Le rapport produit porte un contrat énonçant les critères couverts et les exclusions de la passe",
       "Capture toute découverte hors grille en une ligne dans une section dédiée sans la creuser",
       "Ne modifie pas la grille audits/grille-harnais.md pendant l'audit"
     ],
