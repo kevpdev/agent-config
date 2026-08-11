@@ -38,11 +38,12 @@
 - Aucun chemin absolu en dur : le dériver de l'emplacement du script (`$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)`), puis s'arrêter si la racine dérivée ne porte pas un marqueur attendu.
 - Ne pas conditionner le garde à l'artefact dont l'absence **est** le mode de défaillance : il ne surveillerait que les passes déjà bien conduites. Faire porter le contrôle sur ce que le défaut produit, jamais sur ce que produit la bonne pratique.
 - Calibrer sur un cas positif **fabriqué à la main** avant de déclarer le garde en place. Un garde sans cible vivante se comporte exactement pareil qu'il soit cassé ou intact.
+- **Déclarer le correctif tenu seulement après l'avoir exercé par son vrai chemin de déclenchement** — la commande réellement lancée, pas un payload injecté dans la batterie. Une batterie atteste la logique, jamais le câblage : trois correctifs d'affilée peuvent la passer au vert pendant que le cas réel continue de passer.
 - Puis le rejouer sur un **corpus de trafic réel** que personne n'a écrit pour lui (transcripts, historique, logs) et compter les **faux** positifs : sa propre batterie hérite des angles morts de qui l'a conçue. Un garde qui refuse du travail valide finit désactivé, même résultat qu'un échec ouvert.
 
 **POURQUOI** : un garde qui échoue ouvert est pire que pas de garde, parce qu'il inspire confiance — on cesse de surveiller la zone qu'il ne protège plus. Même famille de panne qu'une mesure aveugle (cf. `reasoning.md`), et l'échec ouvert est le défaut par nature : il faut l'écrire pour qu'il n'arrive pas.
 
-**Quatre cas mesurés** fondent ces cinq points, dont deux pannes silencieuses le même jour et un garde qui refusait des commits valides → `rules/references/ref-workflow.md`.
+**Cinq cas mesurés** fondent ces six points, dont deux pannes silencieuses le même jour, un garde qui refusait des commits valides, et trois correctifs verts sur un trou resté ouvert → `rules/references/ref-workflow.md`.
 
 ## Règle — Préserver le contexte parent (déléguer par défaut)
 
