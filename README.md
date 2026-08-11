@@ -74,6 +74,25 @@ bash wrappers/claude/scripts/sync-rules.sh --fix    # crée, répare, retire les
 
 À lancer après tout ajout, renommage ou suppression dans `rules/` ou `wrappers/claude/rules/`.
 
+### Les gardes déterministes
+
+Trois hooks `PreToolUse` refusent à l'appel ce qu'une règle de prose ne tenait pas. Chacun est la couche déterministe d'une règle qui, du coup, ne répète pas ses critères.
+
+| Garde | Refuse | Règle allégée | Batterie |
+|---|---|---|---|
+| `guard-bash-tooling.py` | `java`/`mvnw` hors `bash -lc 'sh ./mvnw …'`, heredoc imbriqué | `rules/tooling.md` | `tests/test-guard-bash-tooling.sh` |
+| `guard-no-claude-in-commit.sh` | mention d'IA, format Conventional Commits | `rules/commit-convention.md` | `tests/test-guard-no-claude-in-commit.sh` |
+| `guard-no-remote-write.py` | écritures de l'agent sur preprod/prod | — | *aucune* |
+
+```bash
+bash wrappers/claude/scripts/hooks/tests/test-guard-bash-tooling.sh
+bash wrappers/claude/scripts/hooks/tests/test-guard-no-claude-in-commit.sh
+```
+
+**Une batterie pèse autant que son garde.** Un garde sans cible vivante se comporte exactement pareil qu'il soit cassé ou intact ; et un garde qui refuse du travail valide finit désactivé, donc ne protège plus rien. Chaque batterie porte les deux : des cas positifs **fabriqués à la main**, et les formes légitimes qui doivent passer. Toute forme de commande nouvellement rencontrée s'y ajoute *avant* d'être corrigée dans le garde.
+
+**Calibrer sur du trafic réel, pas seulement sur ses propres cas.** `guard-bash-tooling.py` a été confronté aux 987 commandes du périmètre extraites des transcripts de sessions (`~/.claude/projects/*/*.jsonl`) : sa première conception, qui refusait tout ce qu'elle ne pouvait pas tokeniser, y produisait 5 faux positifs sur des `git commit` ordinaires. Une batterie écrite par l'auteur du garde ne les aurait jamais montrés.
+
 ### Jouer les évals des skills
 
 Un skill qui porte un `evals/eval.json` déclare des scénarios en données pures : une requête, le comportement attendu, et de quoi juger. L'exécuteur, lui, est spécifique à Claude Code — ouvrir une session neuve passe par `claude -p`.

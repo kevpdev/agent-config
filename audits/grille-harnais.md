@@ -205,9 +205,9 @@ bash wrappers/claude/scripts/sync-rules.sh
 
 D'après la note d'inbox du 2026-08-10 :
 
-- [ ] `tooling.md` (449 mots) → migrer en hook `checks/guard-bash-tooling.sh` (C2 : ses deux interdits sont des motifs de chaîne sur une action éphémère)
+- [x] `tooling.md` (449 mots) → migré le 2026-08-11 en `wrappers/claude/scripts/hooks/guard-bash-tooling.py` (**pas** `checks/`, cf. ligne ci-dessous), règle réduite à 120 mots. Câblé dans `settings.json`, batterie de 31 cas, calibré live et sur 987 commandes de transcripts.
 - [ ] `ai-practices.md` (1 110) → sortir du contexte permanent (C6 : banc d'essai non validé qui dilue le validé)
 - [ ] `reasoning.md` (1 100), `workflow.md` (1 055) → garder triggers et commandes, sortir les cas vécus (C3/C6)
 - [ ] `ai-principles.md` (558) → réduire aux titres + une ligne (exception C3) ; corriger l'en-tête « le vault est la source »
-- [ ] Gardes `guard-no-claude-in-commit.sh`, `guard-no-remote-write.py` → `git mv` vers `checks/` (séparation logique/binding)
+- [ ] Gardes `guard-no-claude-in-commit.sh`, `guard-no-remote-write.py` → `git mv` vers `checks/` (séparation logique/binding). **Non fait, et le nouveau garde ne l'a pas anticipé** : `wrappers/claude/scripts/` est symlinké vers `~/.claude/scripts/`, donc `settings.json` y désigne ses hooks par `~/.claude/scripts/hooks/…`. Un `checks/` à la racine sortirait de l'arbre du symlink et imposerait un chemin absolu dans `settings.json`. Le déplacement reste défendable, mais il déplace les trois gardes **et** leur binding d'un coup — arbitrage à part.
 - [ ] Couche 1 absente : 0 hook git sur 25 repos Winggy, 0 check CI de commits sur 19 (C2 : les deux gardes sont le seul filet)
