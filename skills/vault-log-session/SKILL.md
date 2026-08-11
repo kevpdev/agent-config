@@ -1,11 +1,11 @@
 ---
 name: vault-log-session
+disable-model-invocation: true
 description: >
   Journalise une session vault SANS commit, depuis une session HORS vault (CWD = repo de dev). Pont vers
   le skill canonique vault-log-session : régénère les fichiers auto-générés et rédige le recap, le tout à
-  la racine absolue du vault. Le commit est séparé (→ /vault-save). Utiliser quand : "log session",
-  "recap de session", "fin de session" depuis un repo, "/vault-log-session". NE PAS utiliser pour le
-  snapshot graphique d'un raisonnement de conversation (→ vault-recap-raisonnement).
+  la racine absolue du vault. Le commit est séparé (→ /vault-save). Invocation manuelle uniquement, par
+  `/vault-log-session` : le skill écrit dans le vault, il ne se déclenche pas au fil de la conversation.
 ---
 
 # Passerelle vault — log-session

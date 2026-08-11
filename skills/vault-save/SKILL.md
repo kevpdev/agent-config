@@ -1,10 +1,11 @@
 ---
 name: vault-save
+disable-model-invocation: true
 description: >
   Sauvegarde COMPLÈTE manuelle du vault depuis une session HORS vault (CWD = repo de dev). Pont vers le
   skill canonique vault-save : journalise (recap + dashboards) PUIS commit + push (add -A) à la racine
-  absolue du vault. À lancer délibérément (backup, urgence). Utiliser quand : "save", "sauvegarde
-  complète", "backup du vault" depuis un repo, "/vault-save".
+  absolue du vault. Invocation manuelle uniquement, par `/vault-save` : le skill ne se déclenche pas au
+  fil de la conversation, pour qu'un `git add -A` + push ne parte jamais sur une phrase ambiguë.
 ---
 
 # Passerelle vault — save
