@@ -20,16 +20,12 @@
 
 **CE QUE TUE UNE MESURE, UN ARGUMENT NE LE TUE PAS** : une heure d'analyse juste, posée sur une prémisse non testée, ne vaut rien. 14 affirmations fausses à un rejeu de ticket, 12 tombées sur une simple commande, 757 lignes à détruire → `rules/references/ref-reasoning.md`.
 
-**TRIGGER concret — échec CI / test / build** : ne pas énoncer la cause d'un échec avant de l'avoir **reproduite localement** ; une hypothèse non reproduite se présente comme « piste supposée », jamais comme diagnostic. Sinon on corrige le mauvais symptôme, le vrai défaut survit et le temps est perdu deux fois.
+**TRIGGER concret — un comptage qui rend « zéro »** : ne pas conclure à l'absence du défaut, pour deux causes qui se cumulent.
 
-**TRIGGER concret — un comptage qui rend « zéro »** : ne pas conclure à l'absence du défaut, pour deux raisons qui se cumulent.
+- **Corpus déjà corrigé** — il ne mesure que ce qui a survécu à la correction. **À LA PLACE** : un corpus témoin que personne ne relit.
+- **Instrument aveugle** — il rend le même « zéro » quand le défaut manque et quand il ne sait pas le voir. **À LA PLACE** : le calibrer sur un cas positif exhibé à la main.
 
-- Le corpus peut avoir été relu, corrigé ou nettoyé : il ne mesure alors que ce qui a survécu à la correction, jamais la propension qui l'a produit — et une correction faite en cours de rédaction ne laisse aucune trace dans git. **À LA PLACE** : prendre comme contrôle un corpus que personne ne relit, sinon marquer le chiffre « sur corpus corrigé ».
-- L'instrument peut être aveugle. **À LA PLACE** : le calibrer d'abord sur un cas positif connu, exhibé à la main. Un détecteur non calibré ne distingue pas l'absence du défaut de son incapacité à le voir, et il rend le même « zéro » dans les deux cas.
-
-Les deux à la fois, le même jour, sur le même fait : « zéro » annoncé sur six corpus, **1 019 occurrences** après calibrage → `rules/references/ref-reasoning.md`.
-
-**TRIGGER concret — un session log ou un récap de session** : il fige l'état du jour où il a été écrit, jamais l'état courant. Depuis, le code, une migration ou la décision elle-même ont pu bouger. **À LA PLACE de** le restituer comme vérité présente → le marquer « d'après la session du {date}, à vérifier » et le confronter à la source qui fait autorité (git, `aidd_docs/`, le code) avant toute affirmation dont dépend une décision.
+Six corpus, **1 019 occurrences** après calibrage → `rules/references/ref-reasoning.md`.
 
 ## Règle — Borner l'analyse : le contrat de questions est figé
 
