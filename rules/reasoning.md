@@ -37,9 +37,7 @@
 
 ## Méta-règle — le pourquoi quand il porte une information
 
-Une règle énonce sa raison **si cette raison apporte un fait indéduisible** : contrainte d'environnement, mesure, piège vécu. **À LA PLACE de** justifier ce qu'un modèle sait déjà, couper.
-
-**POURQUOI** : une raison indéduisible achète du transfert au cas non prévu. Une raison déduisible ne fait payer que des mots. Deux prescriptions de doc apparemment opposées → `rules/references/ref-reasoning.md`.
+Une règle énonce sa raison **si cette raison apporte un fait indéduisible** : contrainte d'environnement, mesure, piège vécu. **À LA PLACE de** justifier ce qu'un modèle sait déjà, couper. Deux prescriptions de doc apparemment opposées, et le critère qui les réconcilie → `rules/references/ref-reasoning.md`.
 
 **FORME** : préférer « négation + alternative » à l'interdit sec (« ne fais jamais X, à la place fais Y »).
 
