@@ -35,41 +35,77 @@ def load_runner():
 
 
 CASES_TRIGGER = [
-    # (nom, scénario, sortie de session, verdict attendu)
+    # (nom, scénario, sortie de session, registre des skills ouverts, verdict attendu)
     (
         "positif — marqueurs présents",
-        {"trigger_markers": ["Bloquants", "Contexte assumé"]},
+        {"_skill": "code-reviewer", "trigger_markers": ["Bloquants", "Contexte assumé"]},
         "## Contexte assumé\nprod\n## Bloquants\nAucun",
+        [],
         "OK",
     ),
     (
-        "positif — un marqueur manque",
-        {"trigger_markers": ["Bloquants", "Contexte assumé"]},
+        "positif — un marqueur manque et rien au registre",
+        {"_skill": "code-reviewer", "trigger_markers": ["Bloquants", "Contexte assumé"]},
         "## Bloquants\nAucun",
+        [],
         "FAIL",
     ),
     (
-        "négatif — le skill a cédé la main (succès)",
-        {"expect_trigger": False, "trigger_markers": ["Bloquants"]},
-        "Cette question porte sur la sécurité, va voir security-reviewer.",
+        # Le cas mesuré le 2026-08-11 sur brain-expert : chargé pour de bon, mais sa
+        # signature n'apparaît pas dans la sortie. Le seul marqueur rendait FAIL.
+        "positif — marqueur absent mais registre positif : faux négatif rattrapé",
+        {"_skill": "brain-expert", "trigger_markers": ["Problème cognitif"]},
+        "Voici comment alléger ce flux, étape par étape.",
+        ["brain-expert"],
         "OK",
     ),
     (
-        "négatif — le skill a pris la main (défaut)",
-        {"expect_trigger": False, "trigger_markers": ["Bloquants"]},
+        "positif — registre nommant un AUTRE skill ne vaut pas déclenchement",
+        {"_skill": "brain-expert", "trigger_markers": ["Problème cognitif"]},
+        "Voici comment alléger ce flux.",
+        ["frontend-expert"],
+        "FAIL",
+    ),
+    (
+        "négatif — le frère a pris la main (abstention réelle)",
+        {"_skill": "code-reviewer", "expect_trigger": False, "trigger_markers": ["Bloquants"]},
+        "Cette question porte sur la sécurité, va voir security-reviewer.",
+        ["security-reviewer"],
+        "OK",
+    ),
+    (
+        "négatif — rien ne s'est chargé : vert, mais rien n'a été mesuré",
+        {"_skill": "code-reviewer", "expect_trigger": False, "trigger_markers": ["Bloquants"]},
+        "Voici mon avis sur la sécurité de ce endpoint.",
+        [],
+        "OK",
+    ),
+    (
+        "négatif — le skill a pris la main, vu au registre malgré une sortie muette",
+        {"_skill": "code-reviewer", "expect_trigger": False, "trigger_markers": ["Bloquants"]},
+        "Rien qui ressemble à mon gabarit.",
+        ["code-reviewer"],
+        "FAIL",
+    ),
+    (
+        "négatif — le skill a pris la main (marqueur, sans registre)",
+        {"_skill": "code-reviewer", "expect_trigger": False, "trigger_markers": ["Bloquants"]},
         "## Bloquants\n- rien à signaler",
+        [],
         "FAIL",
     ),
     (
         "négatif — un seul marqueur sur deux suffit à trahir le déclenchement",
-        {"expect_trigger": False, "trigger_markers": ["Bloquants", "Suggestions"]},
+        {"_skill": "code-reviewer", "expect_trigger": False, "trigger_markers": ["Bloquants", "Suggestions"]},
         "## Suggestions\n- extraire la méthode",
+        [],
         "FAIL",
     ),
     (
-        "sans marqueur — non mesurable, jamais un succès",
-        {},
+        "sans marqueur ni registre — non mesurable, jamais un succès",
+        {"_skill": "code-reviewer"},
         "n'importe quoi",
+        [],
         "N/A",
     ),
 ]
@@ -114,8 +150,8 @@ def main() -> int:
     failures = 0
 
     print("Verdicts de déclenchement")
-    for name, scenario, output, expected in CASES_TRIGGER:
-        got, why = runner.trigger_verdict(scenario, output)
+    for name, scenario, output, loaded, expected in CASES_TRIGGER:
+        got, why = runner.trigger_verdict(scenario, output, loaded)
         ok = got == expected
         failures += not ok
         print(f"  {'OK  ' if ok else 'FAIL'} {name} : attendu {expected}, obtenu {got} — {why}")

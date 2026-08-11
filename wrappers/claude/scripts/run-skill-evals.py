@@ -6,7 +6,9 @@ Les scénarios eux-mêmes restent portables — ce fichier est le seul à conna�
 
 Deux verdicts par scénario, dont un seul coûte un appel LLM :
 
-- DÉCLENCHEMENT — déterministe. Les `trigger_markers` du scénario apparaissent-ils
+- DÉCLENCHEMENT — déterministe, sur deux signaux. Le **registre** d'abord : un appel
+  à l'outil Skill nomme le skill ouvert, c'est une preuve directe. Les `trigger_markers`
+  ensuite, qui ne sont qu'une déduction depuis la forme de la sortie — apparaissent-ils
   dans le message final, le fil de la session ou les fichiers qu'elle a écrits ?
   Chercher dans le message final seul rend des faux négatifs dès que le skill produit
   un artefact : les marqueurs vivent dans le rapport, pas dans le chat (mesuré le
@@ -305,7 +307,7 @@ def run_session(claude: str, scenario: dict, workdir: str, model: str, force: bo
     with open(stream_path, "w", encoding="utf-8") as fh:
         fh.write(proc.stdout)
 
-    output, transcript, tools, cost = None, [], [], 0.0
+    output, transcript, tools, loaded, cost = None, [], [], [], 0.0
     for line in proc.stdout.splitlines():
         line = line.strip()
         if not line.startswith("{"):
@@ -318,6 +320,13 @@ def run_session(claude: str, scenario: dict, workdir: str, model: str, force: bo
             for block in event.get("message", {}).get("content", []):
                 if block.get("type") == "tool_use":
                     tools.append(block.get("name", "?"))
+                    # Le registre de chargement : un appel à l'outil Skill nomme le
+                    # skill ouvert. Signal direct, là où un marqueur n'est qu'une
+                    # déduction depuis la forme de la sortie.
+                    if block.get("name") == "Skill":
+                        name = block.get("input", {}).get("skill")
+                        if name:
+                            loaded.append(str(name))
                 elif block.get("type") == "text":
                     transcript.append(block.get("text", ""))
         elif event.get("type") == "result":
@@ -327,7 +336,7 @@ def run_session(claude: str, scenario: dict, workdir: str, model: str, force: bo
         raise CannotConclude(
             f"{scenario['_label']} : sortie vide (rc={proc.returncode}) → {stream_path}"
         )
-    return str(output), "\n".join(transcript), tools, cost
+    return str(output), "\n".join(transcript), tools, loaded, cost
 
 
 def judge(claude: str, criteria: list[str], output: str, model: str):
@@ -384,24 +393,53 @@ def judge(claude: str, criteria: list[str], output: str, model: str):
 # --- verdicts déterministes ------------------------------------------------
 
 
-def trigger_verdict(scenario: dict, output: str):
+def trigger_verdict(scenario: dict, output: str, loaded: list[str] | None = None):
+    """Deux signaux, jamais un seul.
+
+    Le **registre** (`loaded`) est l'appel à l'outil Skill : preuve directe qu'un skill
+    a été ouvert. Les **marqueurs** sont une déduction depuis la forme de la sortie.
+
+    Le registre s'ajoute aux marqueurs, il ne les remplace pas : il n'a jamais de droit
+    de veto sur un positif. Mesuré le 2026-08-11 sur 9 scénarios — les deux signaux
+    s'accordent 8 fois, et la 9ᵉ est un skill chargé dont la signature n'apparaissait
+    pas dans la sortie (`brain-expert`), soit un faux négatif que le registre rattrape.
+    L'inverse — un skill chargé sans trace au registre — n'a pas été observé, mais
+    n'a pas non plus été réfuté sur n=9 : faire du registre un veto remplacerait un
+    faux négatif par un autre, ce qui n'est pas un progrès.
+    """
+    loaded = loaded or []
+    skill = scenario.get("_skill")
+    in_registry = any(skill == name for name in loaded) if skill else False
     markers = scenario.get("trigger_markers") or []
-    if not markers:
-        return "N/A", "aucun marqueur déclaré — non mesurable"
     haystack = output.casefold()
     present = [m for m in markers if m.casefold() in haystack]
     missing = [m for m in markers if m.casefold() not in haystack]
+
     if not scenario.get("expect_trigger", True):
-        # Scénario négatif : le succès est l'absence. Un seul marqueur présent
-        # suffit à prouver que le skill a pris la main au lieu de la céder.
+        # Scénario négatif : le succès est l'abstention. Le registre tranche en premier
+        # — s'il nomme le skill testé, il a pris la main, quoi que dise la sortie.
+        if in_registry:
+            return "FAIL", "déclenchement non voulu — registre : skill ouvert"
         if present:
             return "FAIL", (
                 "déclenchement non voulu — marqueur présent : " + ", ".join(present)
             )
-        return "OK", f"aucun des {len(markers)} marqueur(s) — le skill a cédé la main"
+        if not markers:
+            return "N/A", "aucun marqueur déclaré — non mesurable"
+        others = [n for n in loaded if n != skill]
+        # Distinguer l'abstention réelle du « rien ne s'est chargé » : sans cette
+        # mention, un scénario vert ne dit pas s'il a mesuré quoi que ce soit.
+        if others:
+            return "OK", "a cédé la main — registre : " + ", ".join(sorted(set(others)))
+        return "OK", "n'a pas pris la main, mais aucun skill ouvert — rien n'a été mesuré"
+
+    if in_registry:
+        return "OK", "registre : skill ouvert"
+    if not markers:
+        return "N/A", "aucun marqueur déclaré et rien au registre — non mesurable"
     if missing:
-        return "FAIL", "marqueur absent : " + ", ".join(missing)
-    return "OK", f"{len(markers)} marqueur(s) présent(s)"
+        return "FAIL", "rien au registre, marqueur absent : " + ", ".join(missing)
+    return "OK", f"{len(markers)} marqueur(s) présent(s), rien au registre"
 
 
 def tools_verdict(scenario: dict, tools: list[str]):
@@ -501,7 +539,7 @@ def play_scenario(claude: str, scenario: dict, out_dir: str, repo_root: str, arg
     staged = git_status(workdir).splitlines()
     staged_diff = git_diff(workdir)
     try:
-        output, transcript, tools, cost = run_session(
+        output, transcript, tools, loaded, cost = run_session(
             claude, scenario, workdir, args.model, args.force, args.timeout
         )
     finally:
@@ -509,7 +547,7 @@ def play_scenario(claude: str, scenario: dict, out_dir: str, repo_root: str, arg
 
     # Les marqueurs vivent où le skill s'exprime : chat final, fil de session, fichiers écrits.
     haystack = "\n\n".join(filter(None, (output, transcript, written)))
-    trigger, trigger_why = trigger_verdict(scenario, haystack)
+    trigger, trigger_why = trigger_verdict(scenario, haystack, loaded)
     if args.force:
         trigger, trigger_why = "N/A", "mode forcé"
     tools_state, tools_why = tools_verdict(scenario, tools)
@@ -535,7 +573,9 @@ def play_scenario(claude: str, scenario: dict, out_dir: str, repo_root: str, arg
         behavior = "OK" if not failed else f"FAIL {len(failed)}/{len(criteria)}"
 
     details = []
-    if trigger == "FAIL":
+    if trigger == "FAIL" or negative:
+        # Sur un négatif, la raison compte même au vert : elle dit si le scénario a
+        # mesuré une abstention réelle ou seulement l'absence de tout chargement.
         details.append(f"déclenchement : {trigger_why}")
     if tools_state == "FAIL":
         details.append(f"outils : {tools_why}")
