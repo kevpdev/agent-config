@@ -4,8 +4,9 @@ description: >
   Snapshot graphique jetable du raisonnement d'une conversation Claude à l'instant T, depuis
   une session HORS vault (CWD = repo de dev). Pont vers le skill canonique recap-raisonnement,
   avec résolution des chemins contre la racine absolue du vault.
-  Utiliser quand : "recap", "recap raisonnement", "fais un snapshot" depuis un repo,
-  "/vault-recap-raisonnement".
+  Utiliser quand : "recap raisonnement", "fais un snapshot" depuis un repo,
+  "/vault-recap-raisonnement". NE PAS utiliser pour journaliser une session de travail
+  (→ vault-log-session).
   Utiliser AUSSI, proactivement, quand une explication repose sur un schéma (mermaid,
   flowchart, diagramme) qu'un terminal CLI ne rend pas : produire le recap visuel
   dans Obsidian plutôt que dumper un diagramme illisible en texte brut.

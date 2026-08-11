@@ -1,6 +1,15 @@
 ---
 name: skill-craft
-description: Fabrique et vérifie mes skills perso en français, selon la convention de rédaction (`references/skill-authoring-fr.md`). Prend une intention de skill (nom, domaine, but, actions pressenties) et produit un skill au format routeur AIDD — SKILL.md pur + actions à l'anatomie + références. Vérifie aussi un skill existant : relance les `## Contrôle de sortie` de chaque action et lint les dérives R1/R6/R4/R8 que rien d'autre n'attrape. Autonome, sans dépendance au framework AIDD, sortie 100 % française. Utiliser quand l'utilisateur dit "crée un skill perso", "refonds ce skill", "valide ce skill", "lint ce skill", ou "/skill-craft". NE PAS utiliser pour un skill d'équipe destiné au partage anglophone (→ aidd-context:04-skill-generate), ni pour piloter un workflow de dev (→ aidd-pilot).
+description: >-
+  Fabrique et vérifie les skills perso en français, selon la convention de rédaction
+  (`references/skill-authoring-fr.md`). Prend une intention de skill (nom, domaine, but, actions
+  pressenties) et produit un skill au format routeur AIDD — SKILL.md pur + actions à l'anatomie +
+  références. Vérifie aussi un skill existant : relance les `## Contrôle de sortie` de chaque action et
+  lint les dérives R1/R6/R4/R8 que rien d'autre n'attrape. Autonome, sans dépendance au framework AIDD,
+  sortie 100 % française. Utiliser quand l'utilisateur dit "crée un skill perso", "refonds ce skill",
+  "valide ce skill", "lint ce skill", ou "/skill-craft". NE PAS utiliser pour un skill d'équipe destiné
+  au partage anglophone (→ aidd-context:04-skill-generate), ni pour piloter un workflow de dev
+  (→ aidd-pilot).
 ---
 
 # skill-craft

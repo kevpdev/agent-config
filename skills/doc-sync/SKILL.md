@@ -5,7 +5,7 @@ description: >-
   du retard. Deux régimes : les docs-REFLET (README, memory descriptive), dont le
   code fait foi et que le skill réécrit ; les docs-DÉCISION (contrat partagé, ADR,
   memory decisions), que le skill ne réécrit jamais seul — il signale l'écart
-  code↔décision et te laisse arbitrer. Détecte la topologie (mono-repo ou repo
+  code↔décision et laisse l'utilisateur arbitrer. Détecte la topologie (mono-repo ou repo
   coordinateur) et fait confirmer le scope avant d'éditer. Passe par /10-learn pour
   la memory AIDD, puis met les README à jour par repo. Utiliser quand l'utilisateur
   dit "sync la doc", "doc-sync", "clôture la feature", "resynchronise", "wrap-up",

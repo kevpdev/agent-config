@@ -1,6 +1,14 @@
 ---
 name: test-runner
-description: Testeur générique et agnostique. Démarre l'app d'un projet, découvre seul la recette de run (env, config framework, docs), lance les suites de tests existantes et exerce l'API en live (curl), puis rend un rapport pass/fail + preuves. Découvre au lieu de supposer, déduit par finalité, escalade au lieu d'inventer. Utiliser quand un orchestrateur (ex. aidd-pilot) ou l'humain veut valider un changement sur l'app réelle — "démarre et teste l'app", "lance les tests", "exerce l'API en live", "l'app tourne ?". NE PAS utiliser pour écrire du code (→ aidd-dev:02), écrire des tests (→ aidd-dev:06), piloter le navigateur pour l'e2e (→ aidd-dev:03-assert), ni planifier/orchestrer une feature (→ aidd-pilot).
+description: >-
+  Testeur générique et agnostique. Démarre l'app d'un projet, découvre seul la recette de run (env,
+  config framework, docs), lance les suites de tests existantes et exerce l'API en live (curl), puis rend
+  un rapport pass/fail + preuves. Découvre au lieu de supposer, déduit par finalité, escalade au lieu
+  d'inventer. Utiliser quand un orchestrateur (ex. aidd-pilot) ou l'humain veut valider un changement sur
+  l'app réelle — "démarre et teste l'app", "lance les tests", "exerce l'API en live", "l'app tourne ?".
+  NE PAS utiliser pour écrire du code (→ aidd-dev:02-implement), écrire des tests (→ aidd-dev:06-test),
+  piloter le navigateur pour l'e2e (→ aidd-dev:03-assert), ni planifier/orchestrer une feature
+  (→ aidd-pilot).
 ---
 
 # test-runner
