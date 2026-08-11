@@ -71,5 +71,5 @@ Deux instructions écrites pour instrumenter le banc lui-même, trois contextes 
 Décision du harnais, consignée ici : ces quatre pratiques ne sont **pas chargées**. Critère commun — une pratique qu'une règle ne peut pas exercer dilue les autres sans rien gagner. Le vault peut les porter comme matière de réflexion ; ça ne les remet pas au banc.
 
 - **Spécialiser le modèle par fonction** et **cross-review inter-modèles** → décisions d'orchestration humaine, l'agent ne les prend pas. La forme utile de la seconde est un skill de vérification déléguée, pas une règle.
-- **Chaîne spec → plan → décomposition** → déjà couverte par `workflow.md` et les skills AIDD ; la recharger créerait un doublon, donc une dérive.
+- **Chaîne spec → plan → décomposition** → écartée le 2026-07-30 comme doublon de `workflow.md` et des skills AIDD. **Motif périmé depuis** : `workflow.md` a été supprimé le 2026-08-11. Le doublon ne subsiste que côté skills AIDD — à revérifier avant de la reprendre au banc, plutôt que de la traiter comme tranchée.
 - **Reconstruire le contexte plutôt que rattraper une dérive** → déclencheur non fiable : il exige de repérer soi-même sa propre dérive. À retenter si un signal observable émerge.
