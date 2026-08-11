@@ -1,15 +1,15 @@
 ---
 name: aidd-pilot
+disable-model-invocation: true
 description: >-
   Orchestrateur autonome du workflow AIDD calé sur l'usage de Kevin. Prend une expression de besoin
   (story, note de cadrage, texte brut) ou un plan AIDD déjà rédigé, et déroule le tunnel
   besoin→analyse→plan→implémentation+test→review→commit→doc en semi-auto (ne sollicite l'humain que sur
   un arbitrage lourd). Pilote directement les skills aidd-dev (plan rédigé inline, executor pour le code,
-  checker pour la review), test-runner pour la validation live/e2e, et doc-sync pour la doc. Utiliser
-  quand l'utilisateur dit "automatise cette feature", "déroule le tunnel", "fais cette feature en
-  autonome", "pilote AIDD", ou "/aidd-pilot". NE PAS utiliser pour un simple commit
-  (→ aidd-vcs:01-commit), une review isolée (→ aidd-dev:05-review), ou lancer/tester une instance sans
-  développer (→ test-runner).
+  checker pour la review), test-runner pour la validation live/e2e, et doc-sync pour la doc. Invocation
+  manuelle uniquement, par `/aidd-pilot` : le skill committe par phase, il ne se déclenche pas au fil de
+  la conversation. NE PAS utiliser pour un simple commit (→ aidd-vcs:01-commit), une review isolée
+  (→ aidd-dev:05-review), ou lancer/tester une instance sans développer (→ test-runner).
 ---
 
 # aidd-pilot

@@ -1,5 +1,6 @@
 ---
 name: doc-sync
+disable-model-invocation: true
 description: >-
   Synchronise la doc avec l'état VALIDÉ du code (commité/mergé) quand elle a pris
   du retard. Deux régimes : les docs-REFLET (README, memory descriptive), dont le
@@ -7,12 +8,10 @@ description: >-
   memory decisions), que le skill ne réécrit jamais seul — il signale l'écart
   code↔décision et laisse l'utilisateur arbitrer. Détecte la topologie (mono-repo ou repo
   coordinateur) et fait confirmer le scope avant d'éditer. Passe par /10-learn pour
-  la memory AIDD, puis met les README à jour par repo. Utiliser quand l'utilisateur
-  dit "sync la doc", "doc-sync", "clôture la feature", "resynchronise", "wrap-up",
-  "/doc-sync", ou après une implémentation qui a touché
-  entities/migrations/controllers/archi. NE PAS utiliser pour un fix sans impact
-  doc, pour committer seul (→ aidd-vcs:01-commit), ni pour documenter du code non
-  validé.
+  la memory AIDD, puis met les README à jour par repo. Invocation manuelle uniquement, par `/doc-sync` :
+  le skill réécrit des fichiers versionnés, il ne se déclenche pas au fil de la conversation.
+  NE PAS utiliser pour un fix sans impact doc, pour committer seul (→ aidd-vcs:01-commit), ni pour
+  documenter du code non validé.
 ---
 
 # doc-sync — synchroniser la doc avec le code validé
