@@ -108,10 +108,23 @@ L'instruction vaut-elle partout, ou pour un sous-ensemble de repos/chemins ?
 |---|---|
 | Domaine limité, identifiable par un chemin | frontmatter `paths:` (modèle : `back-spring.md`, `front-react.md`) |
 | **Global par nature — scoper nuirait** | **Garder global, et le dire.** Le verdict est « survit C5 », pas « non applicable » |
+| **Déclencheur rare, non identifiable par un chemin** | **Ni `paths:`, ni le permanent en entier.** Garder au permanent l'alerte minimale qui suffit à charger le reste, descendre le détail dans un corps de skill ou une référence non chargée |
 
 Une règle globale qui ne sert qu'un domaine fait payer son poids à toutes les sessions. Mais l'inverse existe et coûte plus cher : `paths:` **conditionne l'activation à un fichier ouvert**, donc l'appliquer à une instruction qui se déclenche sur une intention et non sur un fichier la rend inerte la plupart du temps.
 
 **Le cas mesuré** (2026-08-11, passe `skills/` A) : `paths:` existe bien pour un skill — « Claude loads the skill automatically only when working with files matching the patterns », doc vérifiée. Aucune des 26 descriptions n'y gagne : les ponts vault se déclenchent sur une phrase, les 9 experts répondent à des questions posées sans fichier courant. Poser `paths:` y **réduirait** l'activation au lieu de la cadrer. *Pourquoi cette case existe désormais : sans elle, 26 verdicts ont dû être rendus hors table, et la passe suivante les aurait re-tranchés.*
+
+**Le test qui sépare la troisième ligne des deux premières** : le déclencheur est-il un fichier ou un événement ? Un fichier se nomme dans `paths:`. Un événement n'a aucun chemin, donc l'instruction qui l'attend se fait facturer à chaque session pour servir quelques fois par mois. Exemples d'événements rencontrés : un comptage qui rend « zéro », un diagramme à dessiner, un échec de build, une analyse dont la conclusion appellera des edits.
+
+**Trois cas tranchés hors table faute de cette ligne, tous le 2026-08-11** :
+
+- **`workflow.md`** : quatre de ses six règles étaient justes mais rares. Une seule a été relocalisée (`plan-mode.md`), les trois autres supprimées faute d'un troisième terme entre `paths:` et le permanent.
+- **`reasoning.md`** : les triggers #9, #11 et #10 pesaient 298 mots au permanent pour des événements. #9 et #11 supprimés, #10 comprimé de 166 à 97.
+- **`ponctuation.md`**, le cas inverse et le plus coûteux : son ancien `paths:` ne listait que des dossiers du vault, donc la règle était inerte en session de code. C'est précisément là que le défaut était le pire, avec 7,04 points-virgules pour 1 000 mots dans le corpus qui portait les règles du harnais, contre une cible de 1,09. Six jours sans mouvement, et une réécriture complète de la couche n'y avait rien changé.
+
+**Le modèle de découpage existe déjà dans le harnais** : `mermaid.md` garde deux critères au permanent et renvoie le craft au skill `mermaid-craft`, chargé au moment de dessiner. `ponctuation.md` fait de même avec `ref-ponctuation.md`. La part permanente doit suffire à savoir qu'il faut charger le reste, jamais à faire le travail.
+
+*Pourquoi cette ligne existe désormais* : deux passes consécutives ont dû rendre leur verdict principal hors table, et une troisième l'a rendu sur l'axe opposé. Un critère qui envoie trois fois de suite ses verdicts hors de sa propre table ne mesure pas ce qu'il prétend mesurer.
 
 ### C6 — Dans le budget ?
 
