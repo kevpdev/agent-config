@@ -1,5 +1,7 @@
 # Template — Décision d'architecture
 
+> Toute section de ce gabarit est obligatoire. Une section sans contenu se déclare vide (« Aucun »), elle ne se supprime pas — une section absente se lit comme un oubli, pas comme un constat d'absence.
+
 > L'ordre compte : la recommandation ouvre le rapport, les options la justifient ensuite. Un lecteur qui s'arrête après trois lignes doit déjà connaître la décision — cf. `rules/style.md`, « verdict d'abord ». Ne pas restaurer un catalogue en tête sous prétexte d'exposer le raisonnement.
 
 ```markdown

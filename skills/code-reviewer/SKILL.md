@@ -93,7 +93,7 @@ Produis le rapport selon `assets/review-template.md`.
 
 Avant de rendre la review, vérifier et corriger si besoin :
 
-- Toutes les sections de `assets/review-template.md` sont présentes : verdict, contexte assumé, bloquants, suggestions, points positifs, hors périmètre. Une section sans contenu se déclare vide (« Aucun »), elle ne se supprime pas — une section absente se lit comme un oubli, pas comme un constat d'absence.
+- Toutes les sections de `assets/review-template.md` sont présentes : verdict, contexte assumé, bloquants, suggestions, points positifs, hors périmètre.
 - Chaque bloquant cite un `fichier:ligne`. Un bloquant non localisable n'est pas actionnable.
 
 ## Test

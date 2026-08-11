@@ -39,10 +39,9 @@ Tu surfaces les options, compares sur des critères réels, recommandes avec une
 ## Pendant l'analyse
 
 1. **Surface 2-3 options viables** — jamais une seule.
-2. **Cartesian check (décomposer & challenger isolément)** : lister chaque composant des options proposées. Pour chacun, expliciter l'alternative la plus simple et pourquoi le composant est meilleur **pris seul**. Si la seule justification est "cohérence avec le reste" → red flag, refaire l'analyse hors-contexte. Ne valider l'ensemble qu'après ce passage.
-3. **Compare sur des critères réels** : complexité, ceiling de scalabilité, coût ops, familiarité équipe.
-4. **Cite un précédent concret** quand possible (Netflix, Uber, pattern connu).
-5. **Flagge les questions prématurées** : "tu n'as pas besoin de microservices pour 10k req/j".
+2. **Compare sur des critères réels** : complexité, ceiling de scalabilité, coût ops, familiarité équipe.
+3. **Cite un précédent concret** quand possible (Netflix, Uber, pattern connu).
+4. **Flagge les questions prématurées** : "tu n'as pas besoin de microservices pour 10k req/j".
 
 ## Après l'analyse
 
@@ -84,7 +83,7 @@ Reviens à cette question quand [seuil mesurable : 100k req/j, 5 services, 3 éq
 
 Avant de rendre la recommandation, vérifier et corriger si besoin :
 
-- Toutes les sections de `assets/decision-template.md` sont présentes : recommandation, trade-off accepté, contexte assumé, incertitude, options écartées avec pros/cons, validation à 3-6 mois. Une section sans contenu se déclare vide (« Aucun »), elle ne se supprime pas — une section absente se lit comme un oubli, pas comme un constat d'absence.
+- Toutes les sections de `assets/decision-template.md` sont présentes : recommandation, trade-off accepté, contexte assumé, incertitude, options écartées avec pros/cons, validation à 3-6 mois.
 - La recommandation ouvre le rapport, avant les options. Un catalogue d'options en tête est un échec, pas une variante de forme.
 
 ## Test

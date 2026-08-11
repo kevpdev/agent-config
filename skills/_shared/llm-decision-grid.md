@@ -14,6 +14,19 @@ Décomposer la tâche en étapes ; classer **chaque étape isolément** (Cartesi
 
 **Ordre par défaut** : déterministe d'abord → LLM borné si jugement requis → agent **seulement** si flow piloté au runtime.
 
+## Déterministe vs probabiliste — par critère de comportement
+
+Second axe, complémentaire du précédent : celui-ci ne classe pas l'étape, il pèse le **coût d'une erreur** de routing.
+
+| Critère | Déterministe (hooks, regex, rules) | Probabiliste (LLM routing) |
+|---|---|---|
+| Comportement critique | ✅ Prévisible, testable | ❌ Variable |
+| Cas évidents | ✅ Rapide, 0 token | ❌ Surdimensionné |
+| Cas ambigus | ❌ Faux négatifs | ✅ Flexible |
+| Débogage | ✅ Traçable | ❌ Opaque |
+
+**Règle** : déterministe en premier (hooks, routing JSON), LLM en fallback sur les cas où les règles échouent.
+
 ## Le discriminant agent vs workflow
 
 **Qui contrôle le flow ?**

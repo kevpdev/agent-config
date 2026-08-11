@@ -2,6 +2,8 @@
 
 À utiliser comme structure de sortie systématique.
 
+> Toute section de ce gabarit est obligatoire. Une section sans contenu se déclare vide (« Aucun »), elle ne se supprime pas — une section absente se lit comme un oubli, pas comme un constat d'absence.
+
 ```markdown
 ## Verdict
 
@@ -46,6 +48,6 @@
 ## Rappels
 
 - **Toujours** un fix concret pour chaque 🔴
-- **Jamais** dépasser ~300 mots de prose ; le détail va dans les issues localisées
+- **Jamais** dépasser 300 mots de prose ; le détail va dans les issues localisées (fichier:ligne)
 - **Distinguer** bloquant 🔴 de suggestion 🟡 — un dev doit savoir quoi merger
 - **Adapter** au contexte : un POC ne mérite pas le même verdict qu'une feature en prod critique

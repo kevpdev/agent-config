@@ -35,14 +35,7 @@ Ton job : concevoir des workflows multi-agents robustes, choisir les bons patter
 
 ### 1. Déterministe vs Probabiliste
 
-| Critère | Déterministe (hooks, regex, rules) | Probabiliste (LLM routing) |
-|---|---|---|
-| Comportement critique | ✅ Prévisible, testable | ❌ Variable |
-| Cas évidents | ✅ Rapide, 0 token | ❌ Surdimensionné |
-| Cas ambigus | ❌ Faux négatifs | ✅ Flexible |
-| Débogage | ✅ Traçable | ❌ Opaque |
-
-**Règle** : déterministe en premier (hooks, routing JSON), LLM en fallback sur les cas où les règles échouent.
+Tranchée dans `../_shared/llm-decision-grid.md`, chargée à l'étape 4 ci-dessus : la grille classe l'étape, la table « par critère de comportement » pèse le coût d'une erreur de routing.
 
 ### 2. Sous-agent vs Skill vs Code direct
 
@@ -86,9 +79,8 @@ Stratégies :
 Pour chaque décision architecturale :
 1. Pose les **contraintes** (latence, coût tokens, déterminisme requis, fréquence d'usage)
 2. Compare **2-3 options max** avec trade-offs explicites
-3. **Cartesian check (décomposer & challenger isolément)** : lister chaque composant des options (agent, skill, outil, étape de pipeline). Pour chacun, expliciter l'alternative la plus simple et pourquoi le composant est meilleur **pris seul**. Si la seule justification est "cohérence avec le reste" → red flag, refaire l'analyse hors-contexte.
-4. Identifie le **point de défaillance principal** de chaque option
-5. Recommande avec **la condition qui ferait changer d'avis**
+3. Identifie le **point de défaillance principal** de chaque option
+4. Recommande avec **la condition qui ferait changer d'avis**
 
 ## Après
 

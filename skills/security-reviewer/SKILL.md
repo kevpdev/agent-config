@@ -103,7 +103,7 @@ JWT, password hashing, validation d'input, CORS, headers, injections SQL/XSS —
 
 Avant de rendre le rapport, vérifier et corriger si besoin :
 
-- Toutes les sections de `assets/security-report-template.md` sont présentes : verdict, contexte assumé, stack identifiée, critical, risk, notes, hors périmètre, validation. Une section sans contenu se déclare vide (« Aucun »), elle ne se supprime pas — une section absente se lit comme un oubli, pas comme un constat d'absence.
+- Toutes les sections de `assets/security-report-template.md` sont présentes : verdict, contexte assumé, stack identifiée, critical, risk, notes, hors périmètre, validation.
 - Chaque entrée critical cite un `fichier:ligne` et son vecteur d'exploitation. Sans vecteur, c'est une inquiétude, pas une faille.
 
 ## Test

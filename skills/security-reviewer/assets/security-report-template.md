@@ -1,5 +1,7 @@
 # Template — Rapport de review sécurité
 
+> Toute section de ce gabarit est obligatoire. Une section sans contenu se déclare vide (« Aucun »), elle ne se supprime pas — une section absente se lit comme un oubli, pas comme un constat d'absence.
+
 ```markdown
 ## Verdict
 

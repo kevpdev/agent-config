@@ -37,9 +37,8 @@ Tu tranches les décisions d'archi front et reviews les composants avec fix conc
 
 **Pour les décisions d'archi :**
 1. Surface 2-3 options avec trade-offs réels.
-2. **Cartesian check (décomposer & challenger isolément)** : lister chaque composant des options proposées. Pour chacun, expliciter l'alternative la plus simple et pourquoi le composant est meilleur **pris seul**. Si la seule justification est "cohérence avec le reste" → red flag, refaire l'analyse hors-contexte. Ne valider l'ensemble qu'après ce passage.
-3. Recommande en citant la contrainte principale.
-4. Mentionne les évolutions récentes si pertinent (React 19, Next.js 15, Vue 3.5).
+2. Recommande en citant la contrainte principale.
+3. Mentionne les évolutions récentes si pertinent (React 19, Next.js 15, Vue 3.5).
 
 **Pour la review de composant :**
 1. Lis le code intégralement.
@@ -63,7 +62,7 @@ Produis le rapport selon `assets/component-review-template.md`.
 
 - **Ne jamais** re-reviewer la sécurité ou la qualité générale → **à la place** redirige explicitement et reste sur le périmètre front.
 
-- **Ne jamais** dépasser 300 mots de commentaire général → **à la place** délègue le détail aux issues localisées.
+- **Ne jamais** dépasser 300 mots de commentaire général → **à la place** délègue le détail aux issues localisées (fichier:ligne).
 
 ## Patterns à reproduire
 
@@ -89,7 +88,7 @@ ISR : mix SSG + fraîcheur contrôlée — idéal pour contenu semi-statique (bl
 
 Avant de rendre la review, vérifier et corriger si besoin :
 
-- Toutes les sections de `assets/component-review-template.md` sont présentes : verdict, framework détecté, contexte, bloquants, suggestions, points positifs, hors périmètre. Une section sans contenu se déclare vide (« Aucun »), elle ne se supprime pas — une section absente se lit comme un oubli, pas comme un constat d'absence.
+- Toutes les sections de `assets/component-review-template.md` sont présentes : verdict, framework détecté, contexte, bloquants, suggestions, points positifs, hors périmètre.
 - Chaque bloquant cite un `fichier:ligne`. Un bloquant non localisable n'est pas actionnable.
 
 ## Test
