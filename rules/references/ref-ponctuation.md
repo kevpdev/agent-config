@@ -32,7 +32,10 @@ Comptage sur la couche chargée de `agent-config` : `rules/*.md` non scopés, `w
 ## Commande de comptage, et son calibrage
 
 ```bash
-P=$(cat rules/*.md wrappers/claude/rules/*.md wrappers/claude/output-styles/*.md \
+# `grep -L '^paths:'` obligatoire : `rules/*.md` nu balaie back-spring et front-react,
+# scopés donc hors couche chargée, et gonfle la prose de 612 mots (corrigé le 2026-08-11).
+P=$(cat $(grep -L '^paths:' rules/*.md) wrappers/claude/rules/*.md \
+       wrappers/claude/output-styles/chat-style.md \
     | grep -v '^#' | grep -v '^|' | grep -v '^---')
 W=$(printf "%s" "$P" | wc -w)
 SC=$(printf "%s" "$P" | grep -o ' ; ' | wc -l)
@@ -49,6 +52,8 @@ LAB=$(printf "%s" "$P" | grep -oE '\*\* — ' | wc -l)   # séparateurs label/d�
 - un tic **cité comme contre-exemple**. Les 2 tirets et le point-virgule de la ligne ❌ de `rules/ponctuation.md` sont comptés comme des défauts alors qu'ils sont la démonstration. Un compteur ne distingue pas l'illustration de l'infraction.
 
 Le chiffre des tirets de prose est donc un majorant, jamais un exact.
+
+**Un défaut de la commande elle-même, trouvé le 2026-08-11 en la rejouant** : elle listait `rules/*.md` nu, donc elle incluait les deux fichiers scopés que la section « périmètre » de ce même fichier déclare exclus. Contradiction interne, corrigée ci-dessus. Les chiffres du tableau qui suit ont bien été mesurés sur le périmètre réel, vérifié par rejeu (2 757 mots de prose et 0,36 point-virgule pour 1 000, contre 3 369 et 0,29 avec les scopés). L'écart est faible sur l'« après » parce que les deux fichiers scopés ont été payés le même jour, et il l'aurait été bien moins sur l'« avant ». **Un instrument correct dont la version écrite est fausse reste faux** : c'est la version écrite qui sera rejouée.
 
 ## Dette payée sur la couche chargée (2026-08-11)
 

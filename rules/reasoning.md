@@ -19,12 +19,9 @@
 
 **CE QUE TUE UNE MESURE, UN ARGUMENT NE LE TUE PAS** : une heure d'analyse juste, posée sur une prémisse non testée, ne vaut rien. 14 affirmations fausses à un rejeu de ticket, 12 tombées sur une simple commande, 757 lignes à détruire → `rules/references/ref-reasoning.md`.
 
-**TRIGGER concret — un comptage qui rend « zéro »** : ne pas conclure à l'absence du défaut, pour deux causes qui se cumulent.
+**TRIGGER concret — avant tout comptage** : calibrer l'instrument en l'exhibant sur un cas positif écrit à la main. Non calibré, il rend le même « zéro » quand le défaut manque et quand il ne sait pas le voir.
 
-- **Corpus déjà corrigé** — il ne mesure que ce qui a survécu à la correction. **À LA PLACE** : un corpus témoin que personne ne relit.
-- **Instrument aveugle** — il rend le même « zéro » quand le défaut manque et quand il ne sait pas le voir. **À LA PLACE** : le calibrer sur un cas positif exhibé à la main.
-
-Six corpus, **1 019 occurrences** après calibrage → `rules/references/ref-reasoning.md`.
+**TRIGGER concret — un comptage qui rend « zéro »** : ne pas conclure à l'absence du défaut. Un corpus déjà corrigé ne mesure que ce qui a survécu à la correction. **À LA PLACE** : recompter sur un corpus témoin que personne ne relit. Six corpus, **1 019 occurrences** après calibrage → `rules/references/ref-reasoning.md`.
 
 ## Règle — Borner l'analyse : le contrat de questions est figé
 
