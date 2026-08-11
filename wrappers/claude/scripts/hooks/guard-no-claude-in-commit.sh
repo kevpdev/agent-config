@@ -3,6 +3,12 @@
 # Blocks git commit commands that:
 #   1. include "Claude" or co-authorship mentions
 #   2. do not follow Conventional Commits EN format
+#
+# SCOPE: this is a Claude Code hook, NOT a git hook. No repo carries a commit-msg
+# hook and core.hooksPath is unset (measured 2026-08-05), so a commit typed by
+# hand in a terminal passes unchecked. Deterministic for the agent, advisory for
+# the human. What it does NOT check, and what therefore stays on judgment, is in
+# rules/commit-convention.md — the only place that list lives.
 set -euo pipefail
 
 payload=$(cat)
