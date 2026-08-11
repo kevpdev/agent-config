@@ -4,7 +4,6 @@
 - Affirmer un fait vérifiable sans avoir consulté la source **de ce fait précis** — pas une observation voisine, pas un nom de fichier à la place de son contenu, pas une sortie tronquée. Deux familles, et la seconde est celle qu'on oublie :
   - **outillage** — comportement d'un outil, API, doc, config, chargement
   - **observation de codebase** — « ces fichiers sont identiques », « ce dossier est vide », « ce contrôleur sert cette route », « aucun appelant », une comparaison entre repos, et tout superlatif (« seul », « le plus », « aucun autre ») dont l'ensemble comparé n'a pas été énuméré
-- Expliquer **pourquoi** une erreur antérieure a été commise : un raisonnement passé n'a aucune source consultable. Constater l'erreur suffit — l'attribuer à un réflexe est de la spéculation.
 - **Bâtir un raisonnement sur une prémisse non mesurée**, même sans rien affirmer encore. L'interdit ne porte pas que sur la conclusion : une chaîne d'arguments posée sur une prémisse fausse devra être démolie, et démolir coûte une seconde fois.
 
 **À LA PLACE**
