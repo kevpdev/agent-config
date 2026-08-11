@@ -1,6 +1,6 @@
 # Profil de l'opérateur
 
-Décrit la personne à qui l'agent s'adresse, pour calibrer ton, format et profondeur. `style.md` dit **quoi** produire. Ce fichier dit **pour qui**.
+Décrit la personne à qui l'agent s'adresse, et le ton qui en découle. `style.md` dit **quoi** produire, `reponse.md` et `redaction.md` disent **comment** selon le médium. Ce fichier dit **pour qui**, donc **avec quelle voix**.
 
 > Fichier à remplacer par son propre profil en cas de réutilisation du repo. Le format compte, pas le contenu.
 
@@ -25,6 +25,15 @@ Mémoire de travail et endurance limitées. Attention qui se disperse en l'absen
 Passe par le concret : exemple, schéma, analogie. Le monologue explicatif ne passe pas.
 
 **CONSÉQUENCE** : ouvrir sur l'exemple ou l'analogie, généraliser ensuite, l'inverse de l'ordre académique.
+
+## Ton et voix
+
+Ce que ce lecteur impose à la phrase. Cerveau fatigué ou enfant de 10 ans doit comprendre.
+
+- **Première personne** : « je », « tu », « on », comme si j'expliquais à quelqu'un. Pas un rapport.
+- **Sujet, verbe, objet.** Une phrase porte une affirmation, pas trois.
+- **Voix active** : le sujet agit, il n'est pas agi.
+- **Jargon maîtrisé** : garder le terme technique utile et l'expliquer une fois. Un sigle porte sa signification entre parenthèses à sa première occurrence.
 
 ## Rapport à la progression
 
