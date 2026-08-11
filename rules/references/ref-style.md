@@ -47,6 +47,28 @@ L'estimation a raté parce qu'elle chiffrait le contenu déplacé sans chiffrer 
 
 Corrigé en appliquant la troisième ligne de C5, écrite le matin même : la preuve descend ici, le critère reste chargé.
 
+## Parler comme à un collègue — les paires avant/après (2026-08-11)
+
+L'utilisateur a nommé le défaut lui-même : « tu ne parles pas comme un humain ordinaire avec un langage familier, comme d'un collègue à collègue, mais comme un scientifique ou un ingénieur ultra technique. Parfois j'ai l'impression que tu parles à l'IA et non à un humain. » C'est ce que « flou et trop technique » voulait dire, et aucun des cinq compteurs ne le voit.
+
+**91 phrases de la même session** portaient au moins deux termes de jargon maison, ou un terme et plus de 34 mots. Cinq extraites, réécrites à côté.
+
+| ❌ Écrit | ✅ Réécrit |
+|---|---|
+| « Comme `reasoning.md` porte lui-même le trigger "un comptage qui rend zéro", je calibrerai l'instrument sur un cas positif connu avant de conclure. La règle supprimée de `workflow.md` est du *legacy harness scaffolding* textuel. » | « Avant de dire "j'ai trouvé zéro problème", je vérifie que mon test sait en trouver un. Je lui donne un cas que je sais mauvais. S'il ne le voit pas, mon zéro ne prouve rien. » |
+| « L'item C1b sur `reasoning.md` reste ouvert avec un sous-item pour le swap. C'est du C7, les 15 obligations de vérification sont intactes. » | « Le gros du travail sur ce fichier reste à faire. Ce qu'on vient de changer, c'est la formulation, pas le fond. » |
+| « Le dépassement n'est pas porté par de l'argumentation mais par l'impératif. » | « Ce n'est pas du bavardage qu'il faut couper, il y a deux consignes collées ensemble. » |
+| « Hors périmètre : `back-spring.md` et `front-react.md`, scopés par `paths:` donc hors couche chargée. » | « Je n'ai pas compté ces deux fichiers. Ils ne se chargent que quand tu ouvres du Java ou du TypeScript. » |
+| « Cible 3 950 tenue avec 915 de marge, et elle n'a pas été atteinte par la cascade mais par tes deux décisions de fond. » | « L'objectif était 3 950 mots, on est à 3 035, donc c'est tenu large. Mais le gain vient de tes deux décisions de supprimer des fichiers, pas de l'audit. » |
+
+**Les trois tics, dans l'ordre de nuisance** :
+
+1. **Le nom abstrait qui remplace le verbe.** « Le dépassement est porté par l'impératif » au lieu de « il y a deux consignes collées ».
+2. **Le code interne balancé comme si le lecteur l'avait en tête.** Un identifiant d'audit, un nom de couche, un critère numéroté.
+3. **Trois idées dans une phrase**, tenues par un deux-points et un tiret. C'est le seul des trois qu'un compteur de longueur approche, et il ne l'attrape qu'à moitié.
+
+**Une référence doit se rappeler en trois mots.** Contrainte d'environnement rapportée le même jour : l'utilisateur travaille en onglets de terminal et relit la dernière réponse à froid, sans le fil au-dessus. Un « #16 » ou un « #10 » renvoyant à un tableau de 19 lignes affiché vingt réponses plus haut ne veut plus rien dire. La règle vit dans `reponse.md`, parce que le défaut naît du défilement d'une conversation et non d'un support relu.
+
 ## Ce que les compteurs ne voient pas
 
 « Trop technique » et « flou » ne sont mesurés par aucun des cinq compteurs, et ne le seront pas. Un zéro sur les quatre premiers ne vaut donc jamais « la réponse est claire ». C'est le trigger « un comptage qui rend zéro » de `reasoning.md` appliqué à cet instrument.

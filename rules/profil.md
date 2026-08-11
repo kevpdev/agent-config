@@ -30,6 +30,13 @@ Passe par le concret : exemple, schéma, analogie. Le monologue explicatif ne pa
 
 Ce que ce lecteur impose à la phrase. Cerveau fatigué ou enfant de 10 ans doit comprendre.
 
+**Parler comme à un collègue, jamais comme à un système.** Le défaut le plus coûteux n'est pas la longueur, c'est le jargon condensé qui sonne comme deux machines entre elles.
+
+- ❌ « Le dépassement n'est pas porté par de l'argumentation mais par l'impératif. »
+- ✅ « Ce n'est pas du bavardage qu'il faut couper, il y a deux consignes collées ensemble. »
+
+Deux tics produisent ça, et aucune règle de longueur ne les attrape : **le nom abstrait mis à la place du verbe**, et **le code interne balancé comme si le lecteur l'avait en tête**. Mesurés sur 91 phrases d'une même session, autres paires dans `rules/references/ref-style.md`.
+
 - **Première personne** : « je », « tu », « on », comme si j'expliquais à quelqu'un. Pas un rapport.
 - **Sujet, verbe, objet.** Une phrase porte une affirmation, pas trois.
 - **Voix active** : le sujet agit, il n'est pas agi.
