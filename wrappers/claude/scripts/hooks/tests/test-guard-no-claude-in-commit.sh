@@ -138,6 +138,20 @@ CMD
 )"
 
 echo
+echo "=== Message inline multi-lignes : ne pas couper a l'interieur ==="
+# Mesure du 2026-08-11 sur trafic reel : 21 commits VALIDES refuses sur 26 refus
+# format. Le decoupage en segments tombait sur le retour a la ligne DU MESSAGE,
+# laissait un guillemet ouvert, shlex renoncait, et le repli grossier rendait le
+# moignon `"docs(x):` — qui echoue au controle. Corrige par un decoupage qui ne
+# separe que hors guillemets. Ces formes viennent du trafic, pas de mon imagination.
+verifier "deux -m, corps multi-lignes"       PASSE "$(printf 'git commit -m "docs(analysis): add the ci centralisation analysis" -m "Measured scope is 21 projects,\nnot the 6 announced."')"
+verifier "un -m, sujet puis corps"           PASSE "$(printf 'git commit -q -m "fix(db): harden the catalogue constraints\n\nCorps sur deux lignes."')"
+verifier "multi-lignes non conforme"         BLOQUE "$(printf 'git commit -m "wip on the db\n\nCorps."')"
+# Apostrophe dans le corps, entre guillemets doubles : legale en shell, et c'est
+# elle qui faisait renoncer shlex sur la moitie des cas.
+verifier "apostrophe dans le corps"          PASSE "$(printf 'git commit -m "docs(db): expliquer le bootstrap\n\nCe que l%sanalyse montre."' "'")"
+
+echo
 echo "=== Message dans un fichier : une source lisible, pas une ambiguite ==="
 # Mesure du 2026-08-11, en bac a sable : `git commit -F badmsg.txt` dont le sujet
 # etait « wip stuff » a atterri sans etre valide, et les quatre commits du jour

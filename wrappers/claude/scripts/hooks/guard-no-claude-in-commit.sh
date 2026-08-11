@@ -169,8 +169,51 @@ def commit_args(tokens):
             return tokens[j + 1:]
     return None
 
+def split_top_level(text):
+    """Split on shell separators, but never inside a quoted string.
+
+    Splitting on a bare regex cut inline multi-line messages in half: the message
+    of `git commit -m "subject … body"` legitimately holds newlines, so the segment
+    ended on an unterminated quote, shlex gave up, and the naive fallback below
+    yielded `"docs(x):` — a stump that fails the format check.
+
+    Measured 2026-08-11 on real traffic: 46 commit segments were unsplittable and
+    21 VALID commits were refused out of 26 format refusals. A guard that refuses
+    valid work gets switched off, so this is the same failure family as an open
+    failure. Segment isolation itself stays — it was introduced because a
+    neighbouring `git tag -m` had its message judged as the commit's.
+    """
+    segs, buf, quote, i = [], [], None, 0
+    while i < len(text):
+        ch = text[i]
+        if quote:
+            buf.append(ch)
+            if ch == quote:
+                quote = None
+            elif ch == "\\" and quote == '"' and i + 1 < len(text):
+                i += 1
+                buf.append(text[i])
+            i += 1
+            continue
+        if ch in "\"'":
+            quote = ch
+            buf.append(ch)
+            i += 1
+            continue
+        if text.startswith("&&", i) or text.startswith("||", i):
+            segs.append("".join(buf)); buf = []; i += 2
+            continue
+        if ch in ";|\n":
+            segs.append("".join(buf)); buf = []; i += 1
+            continue
+        buf.append(ch)
+        i += 1
+    segs.append("".join(buf))
+    return segs
+
+
 args = None
-for segment in re.split(r"&&|\|\||;|\||\n", flat):
+for segment in split_top_level(flat):
     try:
         tokens = shlex.split(segment)
     except ValueError:
@@ -218,9 +261,16 @@ while k < len(args):
 # With exactly one heredoc, its body IS the message; with several, which one feeds
 # the commit is a guess — renounce, as everywhere else in this extractor.
 #
-# The test is an UNTERMINATED substitution, not the mere presence of `$(`: a closed
-# `$(pwd)` inside a subject is a subject, and must keep being validated.
-if subject.count("$(") > subject.count(")"):
+# Not the mere presence of `$(`: a closed `$(pwd)` INSIDE a subject is a subject,
+# and must keep being validated. Two shapes say "this argument is a substitution,
+# not a message" — it is unterminated, or the argument BEGINS with it, which no
+# real subject ever does.
+#
+# The second test was added the day the quote-aware splitter landed: keeping the
+# quoted argument whole made shlex succeed, so the substitution came back balanced
+# and the unterminated test stopped firing. The battery caught it immediately —
+# which is what a battery is for, once the wiring is proven elsewhere.
+if subject.count("$(") > subject.count(")") or subject.strip().startswith("$("):
     subject = next(iter(heredocs.values())) if len(heredocs) == 1 else ""
 
 # A commit reading stdin takes the heredoc — but only when there is exactly one.
