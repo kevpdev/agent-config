@@ -11,6 +11,13 @@ Deux verdicts par scénario, dont un seul coûte un appel LLM :
   Chercher dans le message final seul rend des faux négatifs dès que le skill produit
   un artefact : les marqueurs vivent dans le rapport, pas dans le chat (mesuré le
   2026-08-10, 3 faux FAIL sur 4). Sans marqueur déclaré, le verdict est N/A.
+
+  Un scénario **négatif** porte `expect_trigger: false` : il vérifie que le skill NE
+  part PAS sur une requête destinée à un frère, et le verdict s'inverse — marqueurs
+  absents = OK, présents = FAIL. Pourquoi ce champ existe : sans lui, un scénario qui
+  réussit sort rouge, et un test qu'on apprend à ignorer ne protège plus rien. Il exige
+  `trigger_markers` (l'absence de marqueur ne se distingue pas de l'absence de mesure)
+  et il est incompatible avec `--force`, qui garantit le chargement qu'on teste.
 - COMPORTEMENT — un juge LLM confronte aux `expected_behavior` le message final PLUS
   les fichiers écrits par la session (le livrable d'un skill à artefact est le
   fichier). Rendu `N/I` quand le déclenchement a échoué : la sortie vient alors d'une
@@ -139,6 +146,18 @@ def load_scenarios(skills_dir: str, wanted: list[str]) -> list[dict]:
             if not isinstance(setup, list) or any(not isinstance(c, str) for c in setup):
                 raise CannotConclude(
                     f"{path}[{index}] : 'setup' doit être une liste de commandes shell"
+                )
+            expect = scenario.get("expect_trigger", True)
+            if not isinstance(expect, bool):
+                raise CannotConclude(
+                    f"{path}[{index}] : 'expect_trigger' doit être un booléen"
+                )
+            # Échec fermé : sans marqueur, « absent » ne se distingue pas de « non
+            # mesuré », et le scénario rendrait OK sans avoir rien vérifié.
+            if not expect and not scenario.get("trigger_markers"):
+                raise CannotConclude(
+                    f"{path}[{index}] : 'expect_trigger: false' exige 'trigger_markers' — "
+                    "sans marqueur, l'absence de déclenchement n'est pas mesurable"
                 )
             scenario["_skill"] = name
             scenario["_eval_dir"] = os.path.dirname(path)
@@ -370,7 +389,16 @@ def trigger_verdict(scenario: dict, output: str):
     if not markers:
         return "N/A", "aucun marqueur déclaré — non mesurable"
     haystack = output.casefold()
+    present = [m for m in markers if m.casefold() in haystack]
     missing = [m for m in markers if m.casefold() not in haystack]
+    if not scenario.get("expect_trigger", True):
+        # Scénario négatif : le succès est l'absence. Un seul marqueur présent
+        # suffit à prouver que le skill a pris la main au lieu de la céder.
+        if present:
+            return "FAIL", (
+                "déclenchement non voulu — marqueur présent : " + ", ".join(present)
+            )
+        return "OK", f"aucun des {len(markers)} marqueur(s) — le skill a cédé la main"
     if missing:
         return "FAIL", "marqueur absent : " + ", ".join(missing)
     return "OK", f"{len(markers)} marqueur(s) présent(s)"
@@ -493,11 +521,14 @@ def play_scenario(claude: str, scenario: dict, out_dir: str, repo_root: str, arg
     cost += judge_cost
 
     failed = [v for v in verdicts if not v["pass"]]
-    # Déclenchement en échec : la sortie vient d'une session où le skill n'a
-    # jamais été chargé. Ce qui est mesuré est le comportement du modèle nu,
-    # pas celui du skill — l'imputer au skill ferait réécrire un artefact que
-    # la mesure n'a pas touché. On le déclare non interprétable.
-    interpretable = trigger != "FAIL"
+    # Déclenchement en échec sur un scénario POSITIF : la sortie vient d'une session
+    # où le skill n'a jamais été chargé. Ce qui est mesuré est le comportement du
+    # modèle nu, pas celui du skill — l'imputer au skill ferait réécrire un artefact
+    # que la mesure n'a pas touché. On le déclare non interprétable.
+    # Sur un scénario NÉGATIF, l'inverse : un déclenchement en échec veut dire que le
+    # skill s'est bien chargé, donc ce qu'il a produit lui est imputable et se juge.
+    negative = not scenario.get("expect_trigger", True)
+    interpretable = trigger != "FAIL" or negative
     if not interpretable:
         behavior = "N/I"
     else:
@@ -557,11 +588,18 @@ def main() -> int:
 
         if args.force:
             # Un scénario qui teste l'abstention n'a pas de sens forcé : le forcer
-            # mesurerait l'inverse de ce qu'il affirme.
-            skipped = [s["_label"] for s in scenarios if s.get("skip_force")]
-            scenarios = [s for s in scenarios if not s.get("skip_force")]
+            # mesurerait l'inverse de ce qu'il affirme. `expect_trigger: false` est
+            # une abstention par définition — le déduire, plutôt que d'exiger aussi
+            # `skip_force` : deux champs pour un même fait divergent au premier edit.
+            def tests_abstention(s: dict) -> bool:
+                return bool(s.get("skip_force")) or not s.get("expect_trigger", True)
+
+            skipped = [s["_label"] for s in scenarios if tests_abstention(s)]
+            scenarios = [s for s in scenarios if not tests_abstention(s)]
             if not scenarios:
-                raise CannotConclude("tous les scénarios retenus portent skip_force")
+                raise CannotConclude(
+                    "tous les scénarios retenus testent l'abstention — rien à jouer en mode forcé"
+                )
 
         print(f"{len(scenarios)} scénario(s) — session {args.model}, juge {args.judge_model}")
         if args.force:
