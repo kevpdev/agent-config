@@ -16,6 +16,10 @@ Compagnon vivant de `grille-harnais.md`, comme elle non horodaté : git porte so
 
 **Ce qui rend une observation concluante : un bras de contrôle.** Deux contextes neufs, la même tâche, un seul tenu à la pratique. Sans lui on ne compare qu'à une intuition, et le nombre d'observations n'y change rien — c'est le défaut du test du 2026-08-11, qui n'a pas pu départager « l'agent a désobéi » de « le déclencheur est trop large ». Protocole : le test de C7 dans `grille-harnais.md`, et la branche **C1b** pour juger si la pratique est déjà portée nativement.
 
+**Une pratique ne se valide pas en usage courant** — c'est la règle de méthode de la grille, et elle a une conséquence directe ici : **aucune date de mise au banc ne vaut preuve**. Rien ne s'accumule entre le jour où une pratique entre au banc et le premier run borné. D'où `AU BANC DEPUIS` et non « en test depuis » : la date situe, elle ne mesure pas.
+
+**Mais l'asymétrie compte, sinon on jette de l'information utile.** Une observation d'usage courant ne peut pas **confirmer** — un succès n'a pas de contrefactuel, on ne sait pas ce que la même tâche aurait donné sans la pratique. Elle peut en revanche **réfuter** : si la pratique était chargée et n'a pas joué, il n'y a rien à comparer, le fait est établi. Conséquence pratique : les seuils de **suppression** peuvent se franchir en usage courant ; les seuils de **promotion**, jamais.
+
 ---
 
 ## 1. Livrer par incréments vérifiés
@@ -26,7 +30,9 @@ Compagnon vivant de `grille-harnais.md`, comme elle non horodaté : git porte so
 
 **POURQUOI** : la relecture en bloc invite à rationaliser ce qui est déjà écrit, pas à le vérifier. Et le coût de correction croît avec le volume déjà produit — à la fin, corriger une ligne demande de relire l'artefact entier.
 
-**STATUT** — en test depuis 2026-07-30. Confirmée par un échec, n=1 sans contrefactuel : 400 lignes écrites et validées en bloc → **7 affirmations non vérifiées, dont 2 fausses**. On ne sait pas ce qu'aurait donné la même passe découpée. La pratique tient sur un mécanisme plausible, pas sur une comparaison.
+**AU BANC DEPUIS** 2026-07-30 — **jamais éprouvée sous protocole borné.**
+
+**OBSERVATION** (usage courant, ne peut pas confirmer) : 400 lignes écrites et validées en bloc → **7 affirmations non vérifiées, dont 2 fausses**. Ce qui est réfuté, c'est la relecture en bloc ; que le découpage fasse mieux reste non mesuré. La pratique tient sur un mécanisme plausible, pas sur une comparaison.
 
 **SEUIL DE SORTIE** — une seule observation suffit si elle porte son bras de contrôle : la même tâche à deux contextes neufs, un tenu au découpage, l'autre libre, et une différence **mesurée** sur les défauts qui survivent. Sans ce bras, aucun nombre d'observations ne tranche.
 
@@ -42,7 +48,9 @@ Compagnon vivant de `grille-harnais.md`, comme elle non horodaté : git porte so
 
 **Ce que « testé » veut dire** : l'artefact porte un critère qu'on peut faire passer ou échouer. Pour une fiche descriptive, le test minimal est la **traçabilité** — chaque affirmation cite sa source ou porte son marqueur (`supposé`, `à confirmer`). Pour une règle ou un skill, le test est **comportemental** : donner à un contexte neuf une tâche qui devrait la déclencher, **fixer les critères de réussite avant de lire la réponse**, puis juger. Compter les lignes ou vérifier qu'un bloc est présent ne teste rien du comportement — la seule chose que la règle prétend produire.
 
-**STATUT** — en test depuis 2026-07-30. Appliquée une fois, concluante : le test ajouté a attrapé **7 défauts réels le jour même**.
+**AU BANC DEPUIS** 2026-07-30 — **jamais éprouvée sous protocole borné.**
+
+**OBSERVATION** (usage courant, ne peut pas confirmer) : le test ajouté a attrapé **7 défauts réels le jour même**. Favorable, mais sans contrefactuel — on ne sait pas combien la même fiche sans critère en aurait laissé passer.
 
 **SEUIL DE SORTIE** — une observation où l'artefact **avec** son critère testable et le même **sans** divergent : un défaut attrapé d'un côté, passé de l'autre. Supprimer si écrire le critère coûte plus que le défaut qu'il attrape — mesuré, pas estimé.
 
@@ -56,7 +64,9 @@ Compagnon vivant de `grille-harnais.md`, comme elle non horodaté : git porte so
 
 **Le bon foyer se choisit par la portée** : un fait sur un repo → mémoire du projet ; une manière de travailler → règle ; une procédure à rejouer → skill.
 
-**STATUT** — en test depuis 2026-07-30. Appliquée une fois, tenue, **aucun chiffre relevé** : c'est la plus faiblement étayée des cinq, et celle dont la promotion demandera une observation neuve.
+**AU BANC DEPUIS** 2026-07-30 — **jamais éprouvée sous protocole borné.**
+
+**OBSERVATION** (usage courant, ne peut pas confirmer) : appliquée une fois, tenue, **aucun chiffre relevé**. La plus faiblement étayée des cinq — il n'y a même pas d'observation chiffrée à opposer au run à monter.
 
 **SEUIL DE SORTIE** — la preuve ne peut pas venir de la session qui capitalise, seulement d'une session **ultérieure** : un artefact produit ici, rechargé et utilisé plus tard. Une seule occurrence tranche, et le bras de contrôle est gratuit — il suffit que la session ultérieure n'ait pas été amorcée pour le chercher. Supprimer si les artefacts ne sont jamais rechargés : ce serait de l'archivage, pas de la capitalisation.
 
@@ -68,7 +78,9 @@ Compagnon vivant de `grille-harnais.md`, comme elle non horodaté : git porte so
 
 **POURQUOI** : une note de préséance documente le risque de dérive au lieu de le retirer — deux copies ne divergent qu'au premier edit, et rien n'empêche cet edit. Pire, une couche résiduelle qui a l'air complète *supprime* le chargement de l'autre.
 
-**STATUT** — en test depuis 2026-07-31. n=1, deux défauts du même jour :
+**AU BANC DEPUIS** 2026-07-31 — **jamais éprouvée sous protocole borné.**
+
+**OBSERVATION** (usage courant ; ici elle **réfute**, donc elle porte) — deux défauts du même jour, tous deux produits par le découpage dupliqué lui-même :
 
 - Un sous-agent a **sauté un skill** au motif que la règle résiduelle suffisait — la couche partielle qui a l'air complète supprime le chargement de l'autre.
 - Un **conflit d'ordre** entre une règle et le template d'un skill n'est apparu qu'à l'exécution, invisible à la relecture des deux fichiers séparément.
@@ -89,7 +101,9 @@ Le second cas est le plus instructif : relire les deux copies ne révèle pas la
 
 **POURQUOI** : une réponse tirée de la mémoire de session a l'air complète, donc rien ne déclenche la vérification.
 
-**STATUT** — en test depuis 2026-08-05, et c'est un **échec**. À la question « où en sommes-nous sur la config agentique », réponse rendue : aucune trace d'audit n'existe. Elle était dans le log du **31 juillet**. La règle existait déjà sous une autre forme et n'a pas suffi — c'est la raison de sa présence au banc plutôt que dans `rules/`.
+**AU BANC DEPUIS** 2026-08-05 — **jamais éprouvée sous protocole borné, et c'est la seule des cinq qui n'en a pas besoin pour bouger.**
+
+**OBSERVATION** (usage courant ; elle **réfute**, donc elle tranche) : à la question « où en sommes-nous sur la config agentique », réponse rendue — aucune trace d'audit n'existe. Elle était dans le log du **31 juillet**. La pratique était chargée et n'a pas joué : rien à comparer, le fait est établi. Une formulation antérieure de la même règle avait déjà échoué, d'où sa présence au banc plutôt que dans `rules/`.
 
 **SEUIL DE SORTIE, différent des autres** — un **second échec la supprime**, sans attendre de preuve positive : deux formulations successives restées sans effet montrent que le défaut n'est pas adressable par une règle de prose, et il faut alors un mécanisme déterministe ou rien. Pour la promouvoir : une question sur le passé où le journal est chargé avant la réponse, dans une session **qui n'a pas été amorcée pour ça** — c'est là le bras de contrôle.
 

@@ -15,6 +15,9 @@ Crible d'admission au contexte permanent : chaque instruction du harnais y passe
 - **Une passe = un sous-domaine.** Le scope concentre le contexte (les fichiers d'un même sous-domaine se comparent entre eux) et borne le coût d'une session d'audit ; un domaine entier se couvre en plusieurs passes, jamais en une. Un hook n'est pas un sous-domaine à part : c'est un script (critères d'échec fermé de **C2**) plus une ligne de trigger dans `settings.json`, chacun audité dans sa passe.
 - **Horodatage** : un rapport d'audit est un instantané immuable, nommé `audits/AAAA-MM-JJ-audit-<domaine>.md` ; l'audit suivant du même domaine est un nouveau fichier, jamais un edit. La grille, elle, est vivante et non horodatée — git porte son historique (`git log --oneline -- audits/grille-harnais.md`), pas de champ `version:` manuel qui divergerait au premier edit oublié. Chaque rapport cite en en-tête le commit de la grille contre laquelle il a tourné.
 - **Traçabilité** : chaque constat du rapport cite sa mesure (commande + sortie) ou porte « supposé ». Un chiffre repris de la note d'inbox est un chiffre du 2026-08-10 : le remesurer avant de décider.
+- **Une règle ne se valide pas en usage courant.** Une observation tirée du travail normal n'a pas de bras de contrôle : on ne sait pas ce que la même tâche aurait donné sans la règle, et l'usage courant ne produit jamais ce contrefactuel. Éprouver une règle demande donc une **session de runs bornée** — périmètre fixé, deux bras, critères de réussite écrits **avant** de lire les réponses. Hors de ce cadre, une observation se consigne comme **observation**, jamais comme preuve, et ne promeut ni ne supprime rien. *Ce point gouverne l'A/B de C1b et le test comportemental de C7, qui le supposaient tous deux sans le dire.*
+
+  **POURQUOI** : l'usage courant ne rend que des anecdotes favorables — celui qui a écrit la règle est celui qui remarque qu'elle a joué. Et une date de mise en test donne l'illusion que la preuve s'accumule, alors que rien ne s'accumule entre cette date et le premier run borné. *Mesuré le 2026-08-11 : cinq pratiques « en test depuis » fin juillet, **zéro observation concluante** — douze jours d'usage courant n'avaient produit aucune preuve, et le label laissait croire le contraire.*
 
 ---
 
@@ -207,17 +210,20 @@ Les **cas vécus** sortent du permanent vers un fichier de références chargé 
 
 ### C8 — Cohérent dans son fichier ?
 
-*Critère **par fichier**, rendu une fois toutes ses instructions criblées.*
+*Critère **par fichier**, rendu une fois toutes ses instructions criblées — et **par couple** dès que le fichier déclare une annexe (référence, compagnon, « le détail vit dans X »). Cette annexe entre dans le périmètre du verdict, même si elle n'est jamais chargée.*
 
-Les instructions survivantes d'un même fichier tiennent-elles ensemble ? Trois défauts que le verdict par instruction ne voit pas, parce qu'ils vivent **entre** les instructions :
+Les instructions survivantes d'un même fichier tiennent-elles ensemble ? Quatre défauts que le verdict par instruction ne voit pas, parce qu'ils vivent **entre** les instructions :
 
 | Défaut | Action |
 |---|---|
 | Deux instructions se contredisent, ou leurs exceptions se recouvrent en s'opposant | Trancher — une seule survit, ou l'articulation devient explicite |
+| Une annexe contredit la **justification** de sa règle | Trancher, en partant du principe que l'annexe est la plus récente — c'est donc la règle qui a vieilli |
 | Redondance interne — deux instructions du fichier prescrivent la même chose autrement | Fusionner *(C4 ne l'attrape pas : son grep cherche ailleurs, pas entre voisines)* |
 | Instruction orpheline — sans rapport avec le propos du fichier | Déplacer vers son vrai foyer |
 
 **POURQUOI ce critère** : la cascade juge chaque instruction isolément ; un fichier peut être fait d'instructions toutes valides une à une et rester contradictoire — et c'est le fichier entier qu'une session charge, pas l'instruction.
+
+**POURQUOI le couple, et pas seulement le fichier** : la justification d'une règle est souvent écrite ailleurs que la règle, et c'est elle qui périme en premier. *Mesuré le 2026-08-11 sur `ai-practices.md`, qui a traversé deux passes d'audit en affirmant que son chargement conditionnait sa validation, alors que son annexe avait déjà déplacé la validation vers une expérience montée exprès. Aucune des deux affirmations n'était fausse isolément — c'est pour ça qu'aucun critère par instruction ne pouvait la voir.* **Ce que ça ne couvre pas** : une prémisse qui meurt sans qu'aucune annexe ne le dise — décision prise dans le vault, ou en conversation. Rien ne l'attrape, et aucun mécanisme n'est proposé faute de cas mesuré.
 
 ---
 
