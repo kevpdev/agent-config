@@ -4,7 +4,7 @@ Crible d'admission au contexte permanent : chaque instruction du harnais y passe
 
 **Source de vérité** : le harnais lui-même (ce repo). Le vault alimente et optimise, il ne fait pas foi. *(Décidé le 2026-08-10 — inverse l'en-tête actuel d'`ai-principles.md`, à corriger.)*
 
-**Sources consolidées** : `0_INBOX/2026-08-10-refonte-harnais-agent-config.md` (vault pro), `rules/ai-principles.md`, `rules/ai-practices.md`, `rules/reasoning.md` (contrat de questions), `rules/workflow.md` (échec fermé).
+**Sources consolidées** : `0_INBOX/2026-08-10-refonte-harnais-agent-config.md` (vault pro), `rules/ai-principles.md`, `rules/ai-practices.md`, `rules/reasoning.md` (contrat de questions), et `rules/workflow.md` (échec fermé) — ce dernier supprimé le 2026-08-11, ses contraintes reprises en C2.
 
 ---
 
@@ -12,7 +12,7 @@ Crible d'admission au contexte permanent : chaque instruction du harnais y passe
 
 - **Un audit = un domaine, contrat figé.** Les questions de l'audit sont les critères de cette grille, rien d'autre. Une découverte hors grille se capture en une ligne et ne se creuse pas. La grille se révise **entre** deux audits, jamais pendant.
 - **Ordre** : `agent-config` (socle) → vault pro → vault perso → projets (qui héritent du socle). Dans chaque domaine, par sous-domaine : `rules/`, `skills/`, `agents/`, `scripts`/hooks, `CLAUDE.md`/output-styles, `settings.json` (bindings, permissions), memory auto. Un sous-agent passe le même crible qu'un skill, pas celui d'un script : il porte de la prose normative et hérite du contexte permanent.
-- **Une passe = un sous-domaine.** Le scope concentre le contexte (les fichiers d'un même sous-domaine se comparent entre eux) et borne le coût d'une session d'audit ; un domaine entier se couvre en plusieurs passes, jamais en une. Un hook n'est pas un sous-domaine à part : c'est un script (critères d'échec fermé de `workflow.md`) plus une ligne de trigger dans `settings.json`, chacun audité dans sa passe.
+- **Une passe = un sous-domaine.** Le scope concentre le contexte (les fichiers d'un même sous-domaine se comparent entre eux) et borne le coût d'une session d'audit ; un domaine entier se couvre en plusieurs passes, jamais en une. Un hook n'est pas un sous-domaine à part : c'est un script (critères d'échec fermé de **C2**) plus une ligne de trigger dans `settings.json`, chacun audité dans sa passe.
 - **Horodatage** : un rapport d'audit est un instantané immuable, nommé `audits/AAAA-MM-JJ-audit-<domaine>.md` ; l'audit suivant du même domaine est un nouveau fichier, jamais un edit. La grille, elle, est vivante et non horodatée — git porte son historique (`git log --oneline -- audits/grille-harnais.md`), pas de champ `version:` manuel qui divergerait au premier edit oublié. Chaque rapport cite en en-tête le commit de la grille contre laquelle il a tourné.
 - **Traçabilité** : chaque constat du rapport cite sa mesure (commande + sortie) ou porte « supposé ». Un chiffre repris de la note d'inbox est un chiffre du 2026-08-10 : le remesurer avant de décider.
 
@@ -24,7 +24,11 @@ Chaque instruction descend la cascade ; elle sort au premier critère qui la dis
 
 ### C1 — Inférable ?
 
-Un modèle sans cette instruction retrouverait-il l'information (dans le code, la config, la doc du repo) ?
+**Trier d'abord par nature** — les deux natures n'ont ni la même question ni le même test. Une instruction de **fait** transmet une information (une commande, un port, une convention) ; une instruction de **comportement** demande une manière d'agir (vérifier, déléguer, demander avant d'agir, borner une analyse). Le tri tient à une question : *retirer l'instruction laisse-t-elle un trou d'information, ou un trou de conduite ?*
+
+#### C1a — Fait : l'information est-elle retrouvable ?
+
+Un modèle sans cette instruction la retrouverait-il dans le code, la config ou la doc du repo ?
 
 | Cas | Action |
 |---|---|
@@ -34,6 +38,22 @@ Un modèle sans cette instruction retrouverait-il l'information (dans le code, l
 | Non-inférable (décision, contrainte d'env, piège) | Garder → C2 |
 
 **Test** : demander à un contexte neuf (sous-agent sans la règle) de retrouver l'info. S'il y arrive en < 3 appels d'outil, c'est inférable à coût faible *(seuil conventionnel, aucune source ne le porte — révisable entre deux audits)*.
+
+#### C1b — Comportement : le modèle le fait-il déjà sans qu'on le dise ?
+
+| Cas | Action |
+|---|---|
+| Déjà porté nativement — par le modèle ou par le system prompt du harnais | **Supprimer.** Le coût n'est pas que des mots : une instruction redondante avec le comportement natif produit du **sur**-comportement |
+| Fait parfois, jamais de façon fiable | Garder → C2, et viser le déterministe — c'est le cas type d'un hook. **Mais lire le piège ci-dessous avant de conclure** |
+| Contredit un défaut du modèle ou de l'outil | Garder → C2. C'est le cœur non-inférable |
+
+**Commencer par lire la page de prompting du modèle courant** (table des sources ci-dessous) : elle tranche gratuitement une partie des cas, en nommant les comportements natifs et en désignant les instructions à retirer — « *Claude Opus 5 verifies its own work without being told to. If your prompt contains explicit verification instructions […] remove them* » (vérifié le 2026-08-11).
+
+**Test, pour ce que la doc ne tranche pas — A/B à bras de contrôle**, jamais une relecture : la même tâche donnée à deux contextes neufs, l'un tenu à l'instruction, l'autre sans, et une différence **mesurée** sur les défauts qui survivent. Sans le bras sans-instruction, on ne mesure que la présence de l'instruction, jamais son effet.
+
+**LE PIÈGE — un suivi irrégulier n'est pas une preuve que l'instruction est nécessaire.** C'est aussi le symptôme documenté d'une couche trop longue : « *If Claude keeps doing something you don't want **despite having a rule against it**, the file is probably too long and the rule is getting lost* » (vérifié le 2026-08-11). Les deux hypothèses prédisent la même observation, et l'intuition va spontanément vers la mauvaise : constater l'oubli pousse à renforcer l'instruction, ce qui allonge la couche et aggrave la cause. **À LA PLACE de** renforcer → l'A/B les sépare, parce que le bras sans-instruction tourne sur une couche plus courte. Si le comportement y est **meilleur** sans la règle, la règle était une victime de la longueur, pas son remède.
+
+**POURQUOI cette branche existe** : C1 ne posait que la question du fait — « retrouverait-il l'**information** », « en < 3 **appels d'outil** ». Une instruction de comportement ne porte aucune information à retrouver, donc elle traversait C1 sans jamais pouvoir être disqualifiée, et la cascade entière s'ouvrait à elle. Mesuré le 2026-08-11 : la passe `rules/` du 2026-08-10 a laissé passer « déléguer par défaut » et « lancer la suite complète après édition d'un fichier de build », alors que la page Opus 5 prescrit l'inverse des deux.
 
 ### C2 — Déterminisable ?
 
@@ -45,7 +65,7 @@ Un mécanisme sans LLM (hook, CI, linter, script) peut-il porter l'invariant ?
 | Une action éphémère de l'agent (commande tapée, écriture réseau) | hook harnais (`PreToolUse`) — **seul mécanisme possible** | Idem |
 | Un raisonnement (pas d'appel d'outil observable) | Aucune — le hook ne voit que les tool calls | La prose reste, → C3 |
 
-**Contraintes du mécanisme** (de `workflow.md`, non renégociables) : échoue fermé, aucun chemin absolu en dur, calibré sur un cas positif fabriqué à la main. **Séparation logique/binding** : la logique vit dans un script autonome testable hors agent (`checks/`), le binding propriétaire fait ≤ 10 lignes.
+**Contraintes du mécanisme, non renégociables** — cette grille en est le seul propriétaire depuis la suppression de `workflow.md` le 2026-08-11 : échoue fermé, aucun chemin absolu en dur, calibré sur un cas positif fabriqué à la main. *Les cinq cas mesurés qui les fondent : vault, `3_KNOWLEDGE/Patterns/deterministic-guards-failure-modes.md`.* **Séparation logique/binding** : la logique vit dans un script autonome testable hors agent (`checks/`), le binding propriétaire fait ≤ 10 lignes.
 
 ### C3 — Falsifiable ?
 
@@ -72,6 +92,10 @@ L'instruction existe-t-elle ailleurs (autre règle, skill, `CLAUDE.md`, memory) 
 Une instruction dupliquée s'**élimine**, elle ne se hiérarchise pas : une seule occurrence, et la couche permanente se déclare délibérément partielle (modèle : `mermaid.md` → skill `mermaid-craft`). Un doublon statique est bénin ; un doublon volatil diverge au premier edit.
 
 **Test** : grep du motif central de l'instruction sur `rules/`, `skills/`, les `CLAUDE.md` du domaine.
+
+**Le doublon par conséquence, invisible au grep.** Deux instructions peuvent prescrire le même comportement sans partager un seul mot : elles ne partagent pas un **motif**, elles partagent un **effet**. C4 les rate parce qu'il grep un motif, C8 les rate parce qu'il ne regarde qu'à l'intérieur d'un fichier. **À LA PLACE de** chercher des formulations voisines → énumérer, pour l'instruction jugée, les autres instructions du harnais qui produisent le même geste ; s'il y en a, une seule survit. *Mesuré le 2026-08-11* : **cinq** instructions dans trois fichiers supprimaient chacune, indépendamment, le filtre « vérifier seulement en cas de doute » — `reasoning.md` (la mesure préalable, `PAS DE SECOND RANG`, le trigger « zéro »), `workflow.md` (le pré-vol) et `ai-practices.md` (l'incrément vérifié). Deux d'entre elles étaient un doublon **quasi textuel** que le grep aurait pu voir ; les trois autres, non. Effet cumulé : la vérification devient systématique et plus rien ne hiérarchise laquelle vaut son coût.
+
+**Le périmètre du grep n'est pas le périmètre du doublon.** La couche la plus lourde du contexte permanent — le system prompt du harnais — n'est dans aucun fichier du repo, donc aucun grep ne l'atteint. Pour cette moitié, le test est celui de **C1b** : un contexte neuf sans la règle porte-t-il déjà l'instruction ? *Mesuré le 2026-08-11* : `workflow.md` prescrit « **DÉLÉGUER** par défaut » pendant que Claude Code injecte « *Do not call the AgentTool unless the user requested it* » — deux instructions contradictoires chargées dans la même session. Le grep du repo et de `~/.claude` ne rend rien sur `AgentTool` : la seconde est native, invisible à C4 par construction.
 
 ### C5 — Scopée ?
 
@@ -108,7 +132,11 @@ print(sum(len(yaml.safe_load(re.match(r'---\n(.*?)\n---\n',open(f,encoding='utf-
 # + MEMORY.md de la memory auto du projet courant, variable par projet
 ```
 
-**État au 2026-08-11, fin de journée** : **7 075 mots** de permanent réel — 4 869 de règles + output style, **+ 2 206 de descriptions de skills** sur 26. Les descriptions n'avaient jamais été comptées avant la passe `skills/` A : elles pèsent **31 %** du permanent.
+**État au 2026-08-11, après suppression de `workflow.md`** : **6 229 mots** de permanent réel — **4 023** de règles + output style, **+ 2 206 de descriptions de skills** sur 26. Les descriptions n'avaient jamais été comptées avant la passe `skills/` A : elles pèsent désormais **35 %** du permanent, et cette part monte à chaque coupe faite ailleurs.
+
+*Trajectoire des règles dans la journée : 4 869 → 4 929 (sixième point d'échec fermé ajouté à `workflow.md`) → 4 023 (suppression du même fichier, +99 pour `plan-mode.md`). Une couche auditée grossit pendant l'audit — remesurer en ouverture de passe, ne jamais reprendre le chiffre du rapport précédent.*
+
+**Cible de 3 950 : dépassée de 73 mots, et on s'arrête là.** Aucune instruction survivante ne se supprime pour tenir un chiffre (décidé le 2026-08-10). Le levier restant est `ai-practices.md` (988), qui se juge sur le fond.
 
 **Cible, re-posée le 2026-08-11** : les ~3 950 mots ci-dessous ont été établis sur les **règles seules**. Ils ne sont donc pas un plafond global et ne doivent pas se lire comme tel. Deux plafonds distincts, chacun sur le périmètre qui le concerne :
 
@@ -213,16 +241,20 @@ Contre quoi juger la **conformité de construction** d'un artefact (format, fron
 | Output styles | <https://code.claude.com/docs/en/output-styles> | 2026-08-10, fetch |
 | CLAUDE.md / memory | <https://code.claude.com/docs/en/memory> | 2026-08-10, via agent doc |
 | Subagents | <https://code.claude.com/docs/en/sub-agents> | slug confirmé par liens |
-| Scripts / checks | pas de doc — la norme est **ShellCheck** + contraintes `workflow.md` (échec fermé, calibrage) | — |
+| Scripts / checks | pas de doc — la norme est **ShellCheck** + les contraintes de **C2** (échec fermé, calibrage) | — |
 | Index complet | <https://code.claude.com/docs/llms.txt> | 2026-08-10 |
 
-**Rédaction d'instructions** — contre quoi juger C1 et C7, pour que la grille ne se valide pas contre la doctrine qu'elle audite :
+**Rédaction d'instructions** — contre quoi juger C1a, C1b et C7, pour que la grille ne se valide pas contre la doctrine qu'elle audite :
 
 | Sujet | Source | Vérifié |
 |---|---|---|
 | Rédaction de skills (« Does this paragraph justify its token cost? », degrees of freedom) | <https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices> | 2026-08-10, fetch |
-| Rédaction de prompts/règles (motivation derrière l'instruction, dire quoi faire plutôt que quoi éviter) | <https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-4-best-practices> | 2026-08-10, fetch |
+| Rédaction de prompts/règles (motivation derrière l'instruction, dire quoi faire plutôt que quoi éviter) | <https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-4-best-practices> — l'URL sert désormais la page courante **toutes générations** | 2026-08-11, fetch |
+| **Comportements natifs du modèle courant, et instructions à retirer — l'autorité de C1b** | <https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5> — une page par modèle (`prompting-claude-<modèle>`) | 2026-08-11, fetch |
+| **Élagage du contexte permanent** (« *Would removing this cause Claude to make mistakes?* », « *If Claude already does something correctly without the instruction, delete it or convert it to a hook* ») | <https://code.claude.com/docs/en/best-practices> | 2026-08-11, fetch |
 | CLAUDE.md (< 200 lignes, contexte = bien public) | <https://code.claude.com/docs/en/memory> | 2026-08-10, via agent doc |
+
+**La page par modèle est datée par construction, et c'est le point** : ses prescriptions s'inversent d'une génération à l'autre — ce qu'il fallait dire à un modèle devient ce qu'il faut retirer au suivant. Une passe qui juge C1b contre la page d'une génération précédente valide des instructions que le modèle courant subit. **Relire cette page en ouverture de chaque passe**, et noter dans le rapport contre quel modèle la passe a tourné : c'est ce qui datera ses verdicts quand le modèle changera.
 
 **Point tranché le 2026-08-10** (doc officielle, section AGENTS.md de la page memory) : Claude Code ne lit **pas** `AGENTS.md` nativement — seul `CLAUDE.md` est lu ; s'ils coexistent, `AGENTS.md` est ignoré. Deux ponts documentés : import `@AGENTS.md` en tête de `CLAUDE.md`, ou symlink. **Conséquence** : la couche standard reste possible — le contenu vit dans `AGENTS.md` (portable), `CLAUDE.md` se réduit à l'import. Même motif logique/binding que `checks/` + hook. **Portée** : ce pont ne vaut que pour les `CLAUDE.md` de projet ; les règles globales passent par les symlinks de `sync-rules.sh`, mécanisme distinct à auditer séparément.
 
@@ -252,7 +284,9 @@ D'après la note d'inbox du 2026-08-10 :
 
 - [x] `tooling.md` (449 mots) → migré le 2026-08-11 en `wrappers/claude/scripts/hooks/guard-bash-tooling.py` (**pas** `checks/`, cf. ligne ci-dessous), règle réduite à 120 mots. Câblé dans `settings.json`, batterie de 31 cas, calibré live et sur 987 commandes de transcripts.
 - [ ] `ai-practices.md` (1 110) → sortir du contexte permanent (C6 : banc d'essai non validé qui dilue le validé)
-- [x] `reasoning.md` (1 100 → 1 051), `workflow.md` (1 055 → 945) → cas vécus descendus le 2026-08-11 dans `rules/references/ref-reasoning.md` et `ref-workflow.md`, triggers et commandes gardés. Gain réel 58 % de la projection : une part du dépassement de longueur était de l'instruction, pas de l'anecdote.
+- [x] `reasoning.md` (1 100 → 1 051), `workflow.md` (1 055 → 945, puis 1 005 avec le sixième point d'échec fermé) → cas vécus descendus le 2026-08-11 dans `rules/references/ref-reasoning.md` et `ref-workflow.md`, triggers et commandes gardés. Gain réel 58 % de la projection : une part du dépassement de longueur était de l'instruction, pas de l'anecdote.
+- [x] **`workflow.md` supprimé le 2026-08-11** (1 005 mots), sans relocalisation de ses six règles. Motif de la décision, prise par l'humain : une règle douteuse — surtout instaurée à chaud après un incident — se supprime plutôt que se teste, parce que tester chaque règle douteuse coûte plus que la re-découvrir si elle manquait vraiment. Deux règles étaient des rustines que la page Opus 5 contredit (« déléguer par défaut », inversée ; la vérification séparée après édition de build). Les quatre autres étaient justes mais **facturées à chaque session pour servir quelques fois par mois** — le défaut était C5, pas C1b. Seule survivante, reformulée et déplacée : la sortie d'analyse → `wrappers/claude/rules/plan-mode.md` (99 mots), sous le wrapper parce qu'elle nomme un mécanisme propriétaire. `ref-workflow.md` supprimé, ses cinq cas mesurés versés au vault (`3_KNOWLEDGE/Patterns/deterministic-guards-failure-modes.md`).
+- [ ] **Rejouer C1b sur `reasoning.md`** (1 051 mots, 26 % de la couche). La passe du 2026-08-10 a tourné contre une grille sans C1b et contre la page de prompting de la génération précédente : son verdict sur ce fichier ne vaut pas. Cible déjà identifiée, la doc suffisant à trancher : `PAS DE SECOND RANG` supprime tout triage, et Opus 5 l'applique littéralement à chaque détail — remplacement proposé, non appliqué, par un seuil au **coût** de la mesure et non à l'**enjeu**. **Ne concerne pas** `tooling.md` ni `commit-convention.md` : ils portent du fait, pas du comportement, donc C1a s'y applique et leurs verdicts tiennent.
 - [x] `ai-principles.md` (558 → 474) → réduit aux titres + une ligne portant le pourquoi le 2026-08-11 ; en-tête inversé (le repo fait foi). Reste ouvert, non tranché : AP3 et AP4 se recouvrent, candidats à fusion.
 - [ ] Gardes `guard-no-claude-in-commit.sh`, `guard-no-remote-write.py` → `git mv` vers `checks/` (séparation logique/binding). **Non fait, et le nouveau garde ne l'a pas anticipé** : `wrappers/claude/scripts/` est symlinké vers `~/.claude/scripts/`, donc `settings.json` y désigne ses hooks par `~/.claude/scripts/hooks/…`. Un `checks/` à la racine sortirait de l'arbre du symlink et imposerait un chemin absolu dans `settings.json`. Le déplacement reste défendable, mais il déplace les trois gardes **et** leur binding d'un coup — arbitrage à part.
 - [ ] Couche 1 absente : 0 hook git sur 25 repos Winggy, 0 check CI de commits sur 19 (C2 : les deux gardes sont le seul filet)

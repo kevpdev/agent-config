@@ -1,6 +1,6 @@
 # Références — `rules/ai-practices.md`
 
-Les cas mesurés qui fondent chaque « EN TEST DEPUIS », et le registre des pratiques écartées du banc d'essai. Même contrat que `ref-workflow.md` : jamais chargé automatiquement, l'instruction et son pourquoi restent dans la règle, seule la preuve chiffrée descend ici.
+Les cas mesurés qui fondent chaque « EN TEST DEPUIS », et le registre des pratiques écartées du banc d'essai. Jamais chargé automatiquement : l'instruction et son pourquoi restent dans la règle, seule la preuve chiffrée descend ici.
 
 **Statut particulier de ce fichier** : sur un banc d'essai, la preuve n'est pas qu'une justification — c'est le dossier d'instruction de la promotion. La règle garde donc le **statut** (date, n=, réussite ou échec), qui change la façon de traiter la pratique ; ici vivent le détail et le **seuil de sortie**.
 

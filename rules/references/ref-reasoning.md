@@ -1,6 +1,6 @@
 # Références — `rules/reasoning.md`
 
-Les cas mesurés qui fondent les règles de `reasoning.md`. Même contrat que `ref-workflow.md` : jamais chargé automatiquement, l'instruction et son pourquoi restent dans la règle, seule l'anecdote chiffrée descend ici.
+Les cas mesurés qui fondent les règles de `reasoning.md`. Jamais chargé automatiquement : l'instruction et son pourquoi restent dans la règle, seule l'anecdote chiffrée descend ici.
 
 ---
 
