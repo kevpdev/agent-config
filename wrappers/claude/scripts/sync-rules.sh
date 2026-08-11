@@ -93,10 +93,32 @@ for lien in "$CIBLE"/*.md; do
     fi
 done
 
+# 3. Rien d'autre ne doit vivre dans le dossier chargé. Tout ce qui s'y trouve
+#    est injecté à chaque session, et les deux boucles ci-dessus laissaient deux
+#    trous : l'une ne regarde que les fichiers source, l'autre exige `-L` et
+#    ignore donc un vrai fichier déposé à la main. Un sous-dossier échappait aux
+#    deux — c'est précisément ce que `rules/references/` ne doit jamais devenir.
+#
+#    Ne supprime rien, même en --fix : effacer un fichier que l'humain a déposé
+#    est destructif, et le signaler suffit à rendre la dérive visible.
+for entree in "$CIBLE"/*; do
+    [ -e "$entree" ] || [ -L "$entree" ] || continue
+    nom="$(basename "$entree")"
+    if [ -L "$entree" ] && [ -n "${source_de[$nom]:-}" ]; then
+        continue
+    fi
+    if [ -d "$entree" ]; then
+        echo "  INTRUS     $nom/ est un dossier dans le dossier chargé" >&2
+    else
+        echo "  INTRUS     $nom n'est pas un lien vers une source de ce repo" >&2
+    fi
+    ecarts=$((ecarts + 1))
+done
+
 if [ "$ecarts" -eq 0 ]; then
     echo "✓ ${#source_de[@]} règles, ${#source_de[@]} liens, aucun écart."
     exit 0
 fi
 
-echo "✗ $ecarts écart(s). Relancer avec --fix pour réparer." >&2
+echo "✗ $ecarts écart(s). Relancer avec --fix répare les liens ; un INTRUS se retire à la main." >&2
 exit 1
