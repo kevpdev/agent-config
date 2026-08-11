@@ -13,5 +13,20 @@
       "Réclame au moins deux contraintes manquantes parmi charge attendue, taille d'équipe, deadline, stack existante",
       "Ne rend pas une recommandation confiante alors qu'aucune contrainte n'a été fournie"
     ]
+  },
+  {
+    "skills": [
+      "backend-architect"
+    ],
+    "expect_trigger": false,
+    "trigger_markers": [
+      "Options écartées"
+    ],
+    "query": "Relis ce service : je veux savoir si le nommage est clair et s'il y a de la duplication à extraire.",
+    "expected_behavior": [
+      "Redirige explicitement vers le skill code-reviewer, en le nommant",
+      "Ne produit pas son propre format de rapport ni ses sections",
+      "Ne répond pas à la question dans son propre cadre d'expertise"
+    ]
   }
 ]

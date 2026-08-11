@@ -13,5 +13,20 @@
       "Ne présente pas comme un diagnostic une cause déduite du seul texte SQL",
       "Marque toute piste avancée comme hypothèse et non comme diagnostic"
     ]
+  },
+  {
+    "skills": [
+      "database-expert"
+    ],
+    "expect_trigger": false,
+    "trigger_markers": [
+      "## Trade-offs"
+    ],
+    "query": "Ma classe de repository Java viole SOLID et son nommage est incohérent. Comment la restructurer proprement ? Je peux te coller le code.",
+    "expected_behavior": [
+      "Redirige explicitement vers le skill code-reviewer, en le nommant",
+      "Ne produit pas son propre format de rapport ni ses sections",
+      "Ne répond pas à la question dans son propre cadre d'expertise"
+    ]
   }
 ]

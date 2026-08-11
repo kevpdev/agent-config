@@ -17,5 +17,23 @@
       "N'invente pas de faille pour justifier l'audit",
       "Ne signale aucun risque tiré d'un fichier absent du périmètre fourni"
     ]
+  },
+  {
+    "skills": [
+      "security-reviewer"
+    ],
+    "expect_trigger": false,
+    "trigger_markers": [
+      "Stack identifiée"
+    ],
+    "query": "Est-ce que InvoiceController.java respecte SOLID ? Le nommage et le découpage des méthodes me paraissent douteux.",
+    "expected_behavior": [
+      "Redirige explicitement vers le skill code-reviewer, en le nommant",
+      "Ne produit pas son propre format de rapport ni ses sections",
+      "Ne répond pas à la question dans son propre cadre d'expertise"
+    ],
+    "files": [
+      "fixtures/InvoiceController.java"
+    ]
   }
 ]

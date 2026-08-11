@@ -16,5 +16,20 @@
       "Ne donne aucun conseil spécifique à React, Vue ou Angular sans marqueur dans le code",
       "Réclame le contexte manquant, ou limite la review à ce qui est vérifiable sans le framework"
     ]
+  },
+  {
+    "skills": [
+      "frontend-expert"
+    ],
+    "expect_trigger": false,
+    "trigger_markers": [
+      "Framework détecté"
+    ],
+    "query": "Je dois exposer une API pour ce produit. REST, GraphQL ou gRPC ?",
+    "expected_behavior": [
+      "Redirige explicitement vers le skill backend-architect, en le nommant",
+      "Ne produit pas son propre format de rapport ni ses sections",
+      "Ne répond pas à la question dans son propre cadre d'expertise"
+    ]
   }
 ]

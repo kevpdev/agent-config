@@ -13,5 +13,20 @@
       "Dit explicitement pourquoi un LLM n'a pas sa place ici : la règle est fixe et vérifiable",
       "Donne une condition observable qui obligerait à revoir ce choix"
     ]
+  },
+  {
+    "skills": [
+      "agentic-architect"
+    ],
+    "expect_trigger": false,
+    "trigger_markers": [
+      "Trade-off accepté"
+    ],
+    "query": "Comment savoir si mon extraction LLM est fiable ? Je pense qu'il me faut un golden set et un seuil.",
+    "expected_behavior": [
+      "Redirige explicitement vers le skill ai-engineering, en le nommant",
+      "Ne produit pas son propre format de rapport ni ses sections",
+      "Ne répond pas à la question dans son propre cadre d'expertise"
+    ]
   }
 ]

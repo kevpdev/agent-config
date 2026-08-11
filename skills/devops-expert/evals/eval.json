@@ -13,5 +13,20 @@
       "Ne désigne pas cache ou parallélisation comme le correctif avant la mesure ; les citer comme pistes à vérifier reste acceptable",
       "Si une piste est avancée, elle est marquée comme hypothèse à confirmer par la mesure"
     ]
+  },
+  {
+    "skills": [
+      "devops-expert"
+    ],
+    "expect_trigger": false,
+    "trigger_markers": [
+      "**Priorité**"
+    ],
+    "query": "Cet endpoint concatène un paramètre de requête dans du SQL. Est-il vulnérable à une injection ?",
+    "expected_behavior": [
+      "Redirige explicitement vers le skill security-reviewer, en le nommant",
+      "Ne produit pas son propre format de rapport ni ses sections",
+      "Ne répond pas à la question dans son propre cadre d'expertise"
+    ]
   }
 ]

@@ -13,5 +13,20 @@
       "Exige un golden set de cas réels et un seuil chiffré avant la mise en production",
       "Nomme une métrique mesurable, pas seulement le principe d'évaluer"
     ]
+  },
+  {
+    "skills": [
+      "ai-engineering"
+    ],
+    "expect_trigger": false,
+    "trigger_markers": [
+      "Comportement métier visé"
+    ],
+    "query": "Mon endpoint qui appelle l'API du fournisseur LLM expose-t-il ma clé ? Je crains une fuite de secret.",
+    "expected_behavior": [
+      "Redirige explicitement vers le skill security-reviewer, en le nommant",
+      "Ne produit pas son propre format de rapport ni ses sections",
+      "Ne répond pas à la question dans son propre cadre d'expertise"
+    ]
   }
 ]

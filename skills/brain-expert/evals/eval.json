@@ -12,5 +12,20 @@
       "Ne généralise pas une recommandation à une population non précisée",
       "Distingue le cas de l'utilisateur expert récurrent de celui du novice occasionnel"
     ]
+  },
+  {
+    "skills": [
+      "brain-expert"
+    ],
+    "expect_trigger": false,
+    "trigger_markers": [
+      "Problème cognitif"
+    ],
+    "query": "Ce composant React est-il accessible au lecteur d'écran ? Je m'interroge sur les attributs aria et la gestion du focus.",
+    "expected_behavior": [
+      "Redirige explicitement vers le skill frontend-expert, en le nommant",
+      "Ne produit pas son propre format de rapport ni ses sections",
+      "Ne répond pas à la question dans son propre cadre d'expertise"
+    ]
   }
 ]
