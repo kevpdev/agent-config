@@ -14,7 +14,9 @@
 
 **POURQUOI** : une affirmation fausse non signalée propage une décision sur une base erronée — le coût du raté est différé et invisible, donc plus dangereux qu'une erreur visible.
 
-**PAS DE SECOND RANG** : la dépendance à une décision augmente le **coût** du raté, jamais le **seuil** de l'obligation. Le détail dont rien ne semble dépendre est même le cas le plus dangereux — rien ne déclenche la vigilance.
+**SEUIL AU COÛT, PAS À L'ENJEU** : vérification en un appel d'outil → la faire sans arbitrer, délibérer coûte plus cher que mesurer. Plus cher que ça → marquer « supposé » et continuer.
+
+**POURQUOI** : juger l'enjeu d'abord suppose de savoir ce qu'on ignore encore ; un seuil au coût ne demande aucun jugement, donc ne se trompe pas.
 
 **CE QUE TUE UNE MESURE, UN ARGUMENT NE LE TUE PAS** : une heure d'analyse juste, posée sur une prémisse non testée, ne vaut rien. 14 affirmations fausses à un rejeu de ticket, 12 tombées sur une simple commande, 757 lignes à détruire → `rules/references/ref-reasoning.md`.
 
