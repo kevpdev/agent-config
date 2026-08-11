@@ -18,7 +18,7 @@ Deux règles (R1, R6) ne sont vérifiées par aucun outil, même côté AIDD. C'
 - **R2. Un skill = un domaine.** Domaine-outil, un nom singulier (`slack`). Domaine-activité, un verbe (`review`). Voir Nommage.
 - **R3. Références à un seul niveau.** Une référence n'en appelle jamais une autre.
 - **R4. SKILL.md sous 500 lignes.** Au-delà, découper en références.
-- **R5. `description` = quoi + quand.** 3e personne, sous 1024 caractères, pas de XML.
+- **R5. `description` = quoi + quand.** 3e personne, sous 1536 caractères (plafond du listing Claude Code, doc vérifiée le 2026-08-11 ; 1024 est la limite de la spec API, plus basse), pas de XML.
   - Tout le « quand » vit ici, pas dans le corps.
   - Triggers explicites et un peu insistants. Le modèle sous-déclenche, donc sur-liste.
   - **Sauf en invocation manuelle (R13)** : pas de liste de phrases, la description dit par quoi le skill s'appelle. Une phrase déclencheuse sur un skill manuel promet un comportement qui n'existe plus.
@@ -39,11 +39,11 @@ Deux règles (R1, R6) ne sont vérifiées par aucun outil, même côté AIDD. C'
 - **R11. Une idée par phrase.** Je coupe une phrase qui dépasse la ligne. Exceptions : la `description` mono-ligne et les cellules de tableau.
 - **R12. Toujours le pourquoi.** Une règle énonce sa raison, pas seulement l'ordre.
   - Pourquoi : un LLM suit mieux une raison qu'un ordre sec. Sans le pourquoi, il viole plus souvent la règle et ne sait pas la transposer à un cas non prévu.
+  - Le pourquoi tient en une ligne. Ce n'est pas une permission de rallonger, R11 tient toujours.
 - **R13. Mode d'invocation déclaré.** Un skill à effet de bord porte `disable-model-invocation: true` et s'appelle par `/<nom>`. Sans effet de bord, le champ est omis et le skill reste auto-déclenchable.
   - Pourquoi : le déclenchement par phrase est probabiliste, donc il se trompera. Sur une action réversible ça coûte un paragraphe inutile ; sur un `git push` ça coûte un commit non voulu.
   - Compte comme effet de bord : écrire un fichier versionné, committer, pousser, supprimer, déplacer, envoyer sur le réseau. Lire, analyser et conseiller n'en sont pas.
   - Le champ est le seul mécanisme déterministe disponible. Une `description` mieux rédigée ne fait que déplacer la probabilité, elle ne la supprime pas.
-  - Le pourquoi tient en une ligne. Ce n'est pas une permission de rallonger, R11 tient toujours.
 
 ## Anatomie d'une action
 
