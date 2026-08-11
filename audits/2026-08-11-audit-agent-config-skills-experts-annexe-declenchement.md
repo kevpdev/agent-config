@@ -77,6 +77,29 @@ Par la règle figée d'avance : **ce n'est pas la preuve que ces skills sont inu
 
 ---
 
+## Question 3 — les listes de frères, ou pourquoi le verdict M3 de la passe B est faux
+
+*Section ajoutée après le commit initial de cette annexe, le même soir, sur mesure nouvelle. Le contrat n'est pas rouvert : c'est la même question 2 appliquée à une instruction précise, avec le même montage.*
+
+**Le verdict contesté** : la passe B (M3) juge la liste `## Ne pas s'activer pour` du corps comme un doublon C4 de la clause `NE PAS` du frontmatter, et prescrit « une seule copie, la clause du frontmatter est la surface qui route ».
+
+**Pourquoi les 9 scénarios négatifs ne pouvaient pas trancher** : dans les 9, le skill visé ne s'est **jamais chargé** (registre vide ou nommant le frère). Son corps n'entrait donc jamais en contexte, et sa liste n'avait aucune occasion d'agir. Mesurer la coupe avec ces scénarios en déclenchement libre aurait rendu « aucun changement » quel que soit le contenu du corps.
+
+**Le montage qui tranche** : les 9 négatifs joués en **mode forcé**, qui charge le corps et isole le comportement du déclenchement. Calibré sur `security-reviewer` — 3 marqueurs sur 3 en forcé, 0 sur 3 dans le bras nu, donc le forçage charge bien le corps.
+
+| Bras | Listes de frères | Redirections correctes |
+|---|---|---|
+| 1 | en place | **7 / 9** |
+| 2 | retirées (547 mots) | **5 / 9** |
+
+Règle de décision annoncée **avant** de voir le bras 2 : si le taux tombe, la coupe est abandonnée et les listes restaurées. Il est tombé, elles sont restaurées.
+
+**Ce que les deux régressions disent.** `frontend-expert` et `security-reviewer` **nomment toujours** le bon frère — la clause du frontmatter continue de router. Ce qu'ils perdent est ailleurs : ils répondent d'abord dans leur propre cadre. `security-reviewer` rend un verdict sécurité complet avant de renvoyer, `frontend-expert` tranche « gRPC est éliminé d'office » au lieu de passer la question intacte.
+
+**Conséquence** : la clause du frontmatter **route**, la liste du corps **retient**. Deux fonctions distinctes qui se ressemblent à la lecture, pas deux copies d'une même instruction. Le verdict C4 de M3 est **mesuré faux** et ne doit pas descendre dans les chantiers de refonte.
+
+**Limite déclarée** : une session par bras. Deux bascules sur neuf peuvent être du bruit — c'est exactement le piège de la question 1. La restauration reste néanmoins le côté prudent, puisqu'elle conserve un frein dont la question 2 a montré la valeur.
+
 ## Captures hors grille
 
 - **Faux positif prouvé de l'instrument à marqueurs.** `database-expert` a été jugé « déclenché » dans le bras nu : ses deux `trigger_markers` étaient dans la sortie alors qu'aucun skill n'avait pu s'ouvrir. Combiné au faux négatif de `brain-expert` (chargé, marqueurs absents — mesuré le 2026-08-11), **un marqueur ment dans les deux sens**. Le registre est le seul signal direct.
@@ -96,7 +119,8 @@ Par la règle figée d'avance : **ce n'est pas la preuve que ces skills sont inu
 - **Chantier évals** : réécrire les évals d'`agentic-architect`, `database-expert`, `devops-expert` autour d'un critère discriminant ; ajouter le bras nu au lanceur.
 - **Chantier corps d'experts** : le dédoublonnage prescrit par la passe B reste valide et **s'oriente** — couper d'abord dans les blocs de savoir, garder les freins. Aucun frein n'est retiré sans mesure.
 - **Sans objet** : la piste « réécrire les descriptions qui ne déclenchent pas ». Aucune n'est à 0/3.
+- **Retiré** : « ramener les deux listes de frères à une seule copie » (M3). Mesuré faux, cf. question 3. Les 4 autres items de dédoublonnage sont livrés (`41b4afd`).
 
 ## Traçabilité
 
-Sessions jouées : 20 (contrôle, 2 lots de 10) + 9 (bras nu) + 18 re-jugements. Coût mesuré : 5,69 $ + 5,32 $ + 3,41 $ + 0,38 $ = **14,80 $**. Artefacts (transcripts `run.jsonl`, pré-enregistrements, script de comparaison) dans le scratchpad de la session — **volatils**, non versionnés : les chiffres ci-dessus sont à remesurer, pas à reprendre.
+Sessions jouées : 20 (contrôle, 2 lots de 10) + 9 (bras nu) + 18 re-jugements + 1 (calibration du forçage) + 18 (les deux bras de la question 3). Coût mesuré : 5,69 $ + 5,32 $ + 3,41 $ + 0,38 $ + 0,46 $ + 3,21 $ + 3,27 $ = **21,74 $**. Artefacts (transcripts `run.jsonl`, pré-enregistrements, script de comparaison) dans le scratchpad de la session — **volatils**, non versionnés : les chiffres ci-dessus sont à remesurer, pas à reprendre.
