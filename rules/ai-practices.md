@@ -1,8 +1,10 @@
 # Pratiques en test — strate 2 du manifeste IA
 
-**Banc d'essai, pas doctrine.** Pratiques **non validées**, chargées exprès — une pratique jamais chargée n'est jamais exercée, donc jamais validable. La promotion en strate 1 se décide au MOC (`$OBSIDIAN_VAULT_PERSO/3 GARDEN/MOC/MOC - Manifeste IA.md`), jamais ici.
+**Banc d'essai, pas doctrine.** Pratiques **non validées**, chargées exprès — une pratique jamais chargée n'est jamais exercée, donc jamais validable. **La promotion vers `ai-principles.md`, comme la suppression, se décide dans ce repo à la passe `/audit-harnais`** ; le vault alimente le banc, il ne le juge pas.
 
 **POURQUOI ce fichier** : `ai-principles.md` porte la strate 1, abstraite par construction — elle ne porte que le *pourquoi*, donc ne se déclenche pas. Les pratiques ci-dessous portent le *quoi faire*.
+
+Chaque « EN TEST DEPUIS » ne garde ici que son **statut** (date, n=, réussite ou échec) ; le cas mesuré qui le fonde et le **seuil de sortie du banc** vivent dans `rules/references/ref-ai-practices.md`, avec le registre des pratiques écartées.
 
 ---
 
@@ -14,7 +16,7 @@
 
 **POURQUOI** : la relecture en bloc invite à rationaliser ce qui est déjà écrit, pas à le vérifier. Et le coût de correction croît avec le volume déjà produit — à la fin, corriger une ligne demande de relire l'artefact entier.
 
-**EN TEST DEPUIS** 2026-07-30 — confirmée par un échec (400 lignes écrites et validées en bloc → 7 affirmations non vérifiées, dont 2 fausses), n=1 sans contrefactuel.
+**EN TEST DEPUIS** 2026-07-30 — confirmée par un échec, n=1 sans contrefactuel.
 
 ---
 
@@ -28,9 +30,9 @@
 
 **Ce que « testé » veut dire ici** : l'artefact porte un critère qu'on peut faire passer ou échouer. Pour une fiche descriptive, le test minimal est la **traçabilité** — chaque affirmation cite sa source ou porte son marqueur (`supposé`, `à confirmer`).
 
-**Pour une règle ou un skill, le test est comportemental** : donner à un contexte neuf (un sous-agent en lit les règles à son démarrage) une tâche qui devrait la déclencher, **fixer les critères de réussite avant de lire la réponse**, puis juger. Compter les lignes ou vérifier qu'un bloc est toujours présent ne teste rien du comportement — et le comportement est la seule chose que la règle prétend produire.
+**Pour une règle ou un skill, le test est comportemental** : donner à un contexte neuf (un sous-agent en lit les règles à son démarrage) une tâche qui devrait la déclencher, **fixer les critères de réussite avant de lire la réponse**, puis juger. Compter les lignes ou vérifier qu'un bloc est présent ne teste rien du comportement — la seule chose que la règle prétend produire.
 
-**EN TEST DEPUIS** 2026-07-30 — appliquée une fois : le test ajouté a attrapé 7 défauts réels le jour même.
+**EN TEST DEPUIS** 2026-07-30 — appliquée une fois, concluante.
 
 ---
 
@@ -56,7 +58,7 @@
 
 **POURQUOI** : une note de préséance documente le risque de dérive au lieu de le retirer — deux copies ne divergent qu'au premier edit, et rien n'empêche cet edit. Pire, une couche résiduelle qui a l'air complète *supprime* le chargement de l'autre.
 
-**EN TEST DEPUIS** 2026-07-31 — n=1 : un sous-agent a sauté un skill au motif que la règle résiduelle suffisait, et un conflit d'ordre entre une règle et le template d'un skill n'est apparu qu'à l'exécution, invisible à la relecture des deux fichiers.
+**EN TEST DEPUIS** 2026-07-31 — n=1, deux défauts invisibles à la relecture.
 
 ---
 
@@ -70,18 +72,14 @@
 
 **POURQUOI** : une réponse tirée de la mémoire de session a l'air complète, donc rien ne déclenche la vérification.
 
-**EN TEST DEPUIS** 2026-08-05 — n=1, et c'est un **échec** : à la question « où en sommes-nous sur la config agentique », j'ai répondu qu'aucune trace d'audit n'existait. Elle était dans le log du 31 juillet. La règle existait déjà sous une autre forme et n'a pas suffi, ce qui est la raison de sa présence ici plutôt que dans `rules/`.
+**EN TEST DEPUIS** 2026-08-05 — n=1, et c'est un **échec**. La règle existait déjà sous une autre forme et n'a pas suffi, ce qui est la raison de sa présence ici plutôt que dans `rules/`.
 
-## Écartées du banc d'essai
+---
 
-Une pratique qu'une règle ne peut pas exercer dilue les autres sans rien gagner :
-
-- **Spécialiser le modèle par fonction**, **cross-review inter-modèles** → décisions d'orchestration humaine, l'agent ne les prend pas. La forme utile de la seconde est un skill de vérification déléguée, pas une règle.
-- **Chaîne spec → plan → décomposition** → déjà couverte par `workflow.md` et les skills AIDD ; la recharger créerait un doublon, donc une dérive.
-- **Reconstruire le contexte plutôt que rattraper une dérive** → déclencheur non fiable, il exige de repérer soi-même sa propre dérive. À retenter si un signal observable émerge.
+**Quatre pratiques ont été écartées du banc** — la décision et ses raisons sont consignées dans le fichier de références.
 
 ## Budget — 150 lignes
 
-Un banc d'essai accumule par nature. Au-delà, arbitrer dans cet ordre : **supprimer** ce qui a été tranché (validé → MOC en strate 1, démenti → disparaît), **scoper** par frontmatter `paths:`, **redécouper** par domaine en dernier recours.
+Un banc d'essai accumule par nature. Au-delà, arbitrer dans cet ordre : **supprimer** ce qui a été tranché (validé → `ai-principles.md` en strate 1, démenti → disparaît), **scoper** par frontmatter `paths:`, **redécouper** par domaine en dernier recours.
 
 **POURQUOI ce plafond** : un fichier de règles gonflé fait ignorer les instructions qu'il contient — et ici, il diluerait les règles **validées** au profit de pratiques qui ne le sont pas encore. Le coût du dépassement tombe sur les autres fichiers, pas sur celui-ci.

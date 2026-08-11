@@ -20,7 +20,7 @@
 - Reprendre une valeur mécanique (port, route, signature, version, chemin) depuis un wiki ou un plan voisin sans l'avoir retrouvée dans le code ou la config
 - **À LA PLACE** : ouvrir le fichier, et citer `fichier:ligne` dans le document produit. Une valeur non traçable se marque « supposé ».
 
-**POURQUOI** : quelques appels d'outil contre des cycles de correction qui relisent un artefact entier pour une ligne fausse. Cas vécu — trois valeurs fausses dans un même plan (clone 16 commits en retard, route lue dans le wiki, port recopié d'un plan frère), cause unique : une source adjacente consultée à la place de la source d'autorité.
+**POURQUOI** : quelques appels d'outil contre des cycles de correction qui relisent un artefact entier pour une ligne fausse. Trois valeurs fausses dans un même plan, cause unique : une source adjacente consultée à la place de la source d'autorité → `rules/references/ref-workflow.md`.
 
 ## Règle — Vérifier après édition d'un fichier de build
 
@@ -42,9 +42,7 @@
 
 **POURQUOI** : un garde qui échoue ouvert est pire que pas de garde, parce qu'il inspire confiance — on cesse de surveiller la zone qu'il ne protège plus. Même famille de panne qu'une mesure aveugle (cf. `reasoning.md`), et l'échec ouvert est le défaut par nature : il faut l'écrire pour qu'il n'arrive pas.
 
-Cas vécu, le 2026-08-05, deux fois le même jour. `jq` absent du poste rendait une chaîne vide, que le hook prenait pour « outil sans chemin de fichier » : le `PreToolUse` du Garden autorisait toute écriture depuis son installation. Et un `VAULT_ROOT` pointant l'ancien poste faisait rendre `0` à douze scripts de comptage — un vault vide, parfaitement plausible.
-
-**Cas vécu du troisième point** : un garde écrit puis supprimé le même jour refusait d'écrire une recommandation tant que la note d'analyse du ticket restait incomplète, mais il ne se déclenchait qu'**en présence** de cette note. Or celui qui ne mesure pas est précisément celui qui ne l'a pas ouverte. Le verrou ne pouvait donc attraper qu'une passe déjà à moitié conduite, et jamais celle qui sautait le processus entier. La règle de prose, elle, a bien déclenché trois mesures ce jour-là. Quand le défaut vit dans le raisonnement et non dans un artefact, aucun hook ne l'atteint : le hook ne voit que les appels d'outil.
+**Quatre cas mesurés** fondent ces cinq points, dont deux pannes silencieuses le même jour et un garde qui refusait des commits valides → `rules/references/ref-workflow.md`.
 
 ## Règle — Préserver le contexte parent (déléguer par défaut)
 
