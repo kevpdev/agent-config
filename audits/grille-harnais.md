@@ -57,6 +57,12 @@ La règle gardée en prose porte-t-elle une condition de violation observable �
 3. Impératif court non ambigu — suivi probabiliste
 4. Prose vague ou de style — inutile même pour un bon modèle → **supprimer ou reformuler en 2/3**
 
+**Sur un contrat de routage, la commande de vérification est un scénario d'éval.** Le niveau 2 s'y lit : un `evals/eval.json` existe, et il porte des `trigger_markers` pour le comportement jugé. Sans lui, l'instruction retombe au niveau 3 — et le verdict est mécanique, pas interprétatif : `ls <skill>/evals/`.
+
+**Deux angles morts de cet instrument, à dire dans le verdict plutôt qu'à ignorer** :
+- Un scénario qui vérifie que le skill **part** ne vérifie pas qu'il **ne part pas** à tort. Un corpus d'évals sans scénario négatif ne falsifie qu'une moitié du contrat, et c'est l'autre moitié que mesurent les collisions de déclencheurs.
+- Un marqueur absent avec un comportement entièrement vert est un faux négatif de l'instrument, pas un non-déclenchement (mesuré le 2026-08-06 sur `devops-expert`).
+
 **Exception assumée** : `ai-principles.md` ne prescrit rien donc n'est pas falsifiable, mais il est le repli quand une règle concrète est muette. Il se **réduit** (titres + une ligne de pourquoi), il ne se supprime pas.
 
 ### C4 — Unique ?
@@ -71,7 +77,14 @@ Une instruction dupliquée s'**élimine**, elle ne se hiérarchise pas : une seu
 
 L'instruction vaut-elle partout, ou pour un sous-ensemble de repos/chemins ?
 
-Domaine limité → frontmatter `paths:` (modèle : `back-spring.md`, `front-react.md`). Une règle globale qui ne sert qu'un domaine fait payer son poids à toutes les sessions.
+| Cas | Action |
+|---|---|
+| Domaine limité, identifiable par un chemin | frontmatter `paths:` (modèle : `back-spring.md`, `front-react.md`) |
+| **Global par nature — scoper nuirait** | **Garder global, et le dire.** Le verdict est « survit C5 », pas « non applicable » |
+
+Une règle globale qui ne sert qu'un domaine fait payer son poids à toutes les sessions. Mais l'inverse existe et coûte plus cher : `paths:` **conditionne l'activation à un fichier ouvert**, donc l'appliquer à une instruction qui se déclenche sur une intention et non sur un fichier la rend inerte la plupart du temps.
+
+**Le cas mesuré** (2026-08-11, passe `skills/` A) : `paths:` existe bien pour un skill — « Claude loads the skill automatically only when working with files matching the patterns », doc vérifiée. Aucune des 26 descriptions n'y gagne : les ponts vault se déclenchent sur une phrase, les 9 experts répondent à des questions posées sans fichier courant. Poser `paths:` y **réduirait** l'activation au lieu de la cadrer. *Pourquoi cette case existe désormais : sans elle, 26 verdicts ont dû être rendus hors table, et la passe suivante les aurait re-tranchés.*
 
 ### C6 — Dans le budget ?
 
@@ -86,18 +99,25 @@ wc -w $(grep -L '^paths:' rules/*.md) wrappers/claude/rules/*.md \
       wrappers/claude/output-styles/chat-style.md
 
 # + les blocs `description` des skills montés (~/.claude/skills → skills/)
+# Parseur YAML obligatoire, pas de regex : elle avale le marqueur de bloc `>-`
+# et l'indentation, et surcompte de ~1 % (mesuré le 2026-08-11).
 python3 -c "
-import re,glob
-t=0
-for f in glob.glob('skills/*/SKILL.md'):
-    fm=re.match(r'---\n(.*?)\n---\n',open(f).read(),re.S).group(1)
-    t+=len(re.search(r'^description:\s*(.*?)(?=\n[a-z_-]+:|\Z)',fm,re.S|re.M).group(1).split())
-print(t)"
+import re,glob,yaml
+print(sum(len(yaml.safe_load(re.match(r'---\n(.*?)\n---\n',open(f,encoding='utf-8').read(),re.S).group(1))['description'].strip().split()) for f in glob.glob('skills/*/SKILL.md')))"
 
 # + MEMORY.md de la memory auto du projet courant, variable par projet
 ```
 
-**État au 2026-08-11** : **7 358 mots** de permanent réel — 5 161 de règles + output style (la commande `wc -w` ci-dessus, en cours de baisse sous l'effet de la passe `rules/`) **+ 2 197 de descriptions de skills**, sur 26 skills `agent-config`. Cette seconde moitié n'avait jamais été comptée : elle pèse 30 % du permanent et aucune passe ne l'avait ouverte avant le cadrage `skills/` A.
+**État au 2026-08-11, fin de journée** : **7 075 mots** de permanent réel — 4 869 de règles + output style, **+ 2 206 de descriptions de skills** sur 26. Les descriptions n'avaient jamais été comptées avant la passe `skills/` A : elles pèsent **31 %** du permanent.
+
+**Cible, re-posée le 2026-08-11** : les ~3 950 mots ci-dessous ont été établis sur les **règles seules**. Ils ne sont donc pas un plafond global et ne doivent pas se lire comme tel. Deux plafonds distincts, chacun sur le périmètre qui le concerne :
+
+| Couche | Mesure | Cible | Qui la fait bouger |
+|---|---|---|---|
+| Règles + output style | `wc -w` ci-dessus | ~3 950 | la cascade sur `rules/` |
+| Descriptions de skills | script YAML ci-dessus | **pas de cible avant la passe 9** | le nombre de skills, pas leur rédaction |
+
+*Pourquoi pas de cible sur les descriptions* : leur poids est d'abord une fonction du **nombre** de skills installés, pas de leur formulation. Fixer un plafond en mots reviendrait à interdire un 27e skill pour une raison de budget, alors que la vraie question est « ce skill mérite-t-il d'exister ». Le plafond dur qui existe déjà est ailleurs et il est mécanique : 1 536 caractères par entrée, et un budget de listing à 1 % de la fenêtre de contexte au-delà duquel Claude Code **supprime** les descriptions des skills les moins invoqués (doc vérifiée le 2026-08-11). C'est ce seuil-là qu'une passe doit surveiller, pas une somme de mots.
 
 **État au 2026-08-10 (remesuré)** : 5 830 mots — 5 607 de règles (dont `memory-policy.md`, 207) + 223 d'output style. L'estimation initiale « ~40 % retirables » ne s'est pas confirmée : la passe `rules/` du 2026-08-10 mesure ~1 650 mots retirés par la cascade (~30 %).
 **Cible** : ~3 950 mots hors output style — plancher mesuré par la passe `rules/` du 2026-08-10 (rapport `2026-08-10-audit-agent-config-rules.md`), **pas un plafond obligatoire**. Décidé le 2026-08-10 : on ne supprime pas une instruction survivante pour tenir un chiffre ; le sort d'`ai-practices.md` se juge sur le fond, hors pression C6.
@@ -117,7 +137,18 @@ Décomposer l'instruction en quatre parts — **grille de lecture pour l'audit, 
 | Seuil / exception | Porteur **si mesurable** ; sinon c'est un défaut C3 déguisé en précision |
 | Preuve, cas vécu, méta-commentaire, relance anti-complaisance | **Compressible** — sort vers un fichier de références chargé à la demande |
 
-**Alerte** : ~60 mots par instruction — un déclencheur de test, pas un couperet. Le chiffre trie, le test tranche. *(Conventionnel : ~2× la médiane du harnais, 32 mots/bloc remesurée le 2026-08-10 sur 10 fichiers ; aucune source externe ne le porte, révisable entre deux audits.)*
+**Alerte, par nature d'instruction** — un déclencheur de test, pas un couperet. Le chiffre trie, le test tranche.
+
+| Nature | Alerte | Calibrage |
+|---|---|---|
+| **Instruction rédigée** (règle, prose normative) | ~60 mots | ~2× la médiane du harnais, 32 mots/bloc remesurée le 2026-08-10 sur 10 fichiers |
+| **Contrat de routage** (`description` de skill) | **~130 mots** | ~1,5× la médiane mesurée le 2026-08-11 sur 26 descriptions, soit 86 mots |
+
+**Pourquoi deux seuils et non un** : les deux natures ne paient pas leurs mots pour la même chose. Dans une instruction rédigée, les mots en trop sont de l'argumentation — la quatrième part, compressible. Dans un contrat de routage, les mots en trop sont des **termes déclencheurs**, et ils achètent directement du déclenchement : la doc Anthropic prescrit d'en ajouter, pas d'en retirer, quand un skill sous-déclenche. Appliqué à `skills/` A le 2026-08-11, le seuil unique de 60 mots a marqué **19 dépassements sur 26** sans jamais désigner de part compressible — un instrument qui alerte sur 73 % du corpus ne trie plus rien.
+
+**Calibrage du nouveau seuil, et sa limite** : rejoué sur les mêmes 26 descriptions, 130 mots marque **1 instruction** contre 19 pour l'ancien seuil — l'alerte redevient un pointeur au lieu d'un bruit de fond. Mais elle est dérivée de la médiane du corpus qu'elle juge, donc elle ne se transporte pas : les passes 7 et 9 (skills de vault, autre corpus) **remesurent leur médiane avant d'appliquer l'alerte**, elles n'héritent pas de ce 130.
+
+**Sur un contrat de routage, la quatrième part n'existe pas.** Les trois autres se relisent ainsi : l'impératif est le « quoi », le seuil est la liste de termes déclencheurs, l'exception est la clause « NE PAS utiliser pour → frère ». **Un terme déclencheur est un seuil au sens du tableau ci-dessus : porteur s'il est mesurable, donc s'il est couvert par un scénario d'éval.** Sans éval, il n'est pas une précision mais une assertion non testée — un défaut C3 déguisé, et c'est lui qui est compressible.
 
 | Cas | Action |
 |---|---|
@@ -221,7 +252,8 @@ D'après la note d'inbox du 2026-08-10 :
 
 - [x] `tooling.md` (449 mots) → migré le 2026-08-11 en `wrappers/claude/scripts/hooks/guard-bash-tooling.py` (**pas** `checks/`, cf. ligne ci-dessous), règle réduite à 120 mots. Câblé dans `settings.json`, batterie de 31 cas, calibré live et sur 987 commandes de transcripts.
 - [ ] `ai-practices.md` (1 110) → sortir du contexte permanent (C6 : banc d'essai non validé qui dilue le validé)
-- [ ] `reasoning.md` (1 100), `workflow.md` (1 055) → garder triggers et commandes, sortir les cas vécus (C3/C6)
-- [ ] `ai-principles.md` (558) → réduire aux titres + une ligne (exception C3) ; corriger l'en-tête « le vault est la source »
+- [x] `reasoning.md` (1 100 → 1 051), `workflow.md` (1 055 → 945) → cas vécus descendus le 2026-08-11 dans `rules/references/ref-reasoning.md` et `ref-workflow.md`, triggers et commandes gardés. Gain réel 58 % de la projection : une part du dépassement de longueur était de l'instruction, pas de l'anecdote.
+- [x] `ai-principles.md` (558 → 474) → réduit aux titres + une ligne portant le pourquoi le 2026-08-11 ; en-tête inversé (le repo fait foi). Reste ouvert, non tranché : AP3 et AP4 se recouvrent, candidats à fusion.
 - [ ] Gardes `guard-no-claude-in-commit.sh`, `guard-no-remote-write.py` → `git mv` vers `checks/` (séparation logique/binding). **Non fait, et le nouveau garde ne l'a pas anticipé** : `wrappers/claude/scripts/` est symlinké vers `~/.claude/scripts/`, donc `settings.json` y désigne ses hooks par `~/.claude/scripts/hooks/…`. Un `checks/` à la racine sortirait de l'arbre du symlink et imposerait un chemin absolu dans `settings.json`. Le déplacement reste défendable, mais il déplace les trois gardes **et** leur binding d'un coup — arbitrage à part.
 - [ ] Couche 1 absente : 0 hook git sur 25 repos Winggy, 0 check CI de commits sur 19 (C2 : les deux gardes sont le seul filet)
+- [ ] **PARKÉ le 2026-08-11 — le test de C7 en skill déclenché à la main.** Motif du parking : l'audit `skills/` est en cours, on n'ouvre pas un skill neuf pendant. Ce qui est établi : le protocole marche (trois verdicts nets rendus le 2026-08-11), mais **aucune prose ne le déclenche** — deux tentatives, trois contextes neufs, 0/3. Une instruction qui demande de lancer une expérience séparée avant de finir la tâche perd contre « finir la tâche », que son déclencheur soit de premier ordre ou non. Preuves : `rules/references/ref-ai-practices.md`. À reprendre après l'audit `skills/`, en skill invoqué par l'humain — jamais en règle.
