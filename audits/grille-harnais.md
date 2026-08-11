@@ -11,7 +11,7 @@ Crible d'admission au contexte permanent : chaque instruction du harnais y passe
 ## Méthode — un audit à la fois
 
 - **Un audit = un domaine, contrat figé.** Les questions de l'audit sont les critères de cette grille, rien d'autre. Une découverte hors grille se capture en une ligne et ne se creuse pas. La grille se révise **entre** deux audits, jamais pendant.
-- **Ordre** : `agent-config` (socle) → vault pro → vault perso → projets (qui héritent du socle). Dans chaque domaine, par sous-domaine : `rules/`, `skills/`, `scripts`/hooks, `CLAUDE.md`/output-styles, `settings.json` (bindings, permissions), memory auto.
+- **Ordre** : `agent-config` (socle) → vault pro → vault perso → projets (qui héritent du socle). Dans chaque domaine, par sous-domaine : `rules/`, `skills/`, `agents/`, `scripts`/hooks, `CLAUDE.md`/output-styles, `settings.json` (bindings, permissions), memory auto. Un sous-agent passe le même crible qu'un skill, pas celui d'un script : il porte de la prose normative et hérite du contexte permanent.
 - **Une passe = un sous-domaine.** Le scope concentre le contexte (les fichiers d'un même sous-domaine se comparent entre eux) et borne le coût d'une session d'audit ; un domaine entier se couvre en plusieurs passes, jamais en une. Un hook n'est pas un sous-domaine à part : c'est un script (critères d'échec fermé de `workflow.md`) plus une ligne de trigger dans `settings.json`, chacun audité dans sa passe.
 - **Horodatage** : un rapport d'audit est un instantané immuable, nommé `audits/AAAA-MM-JJ-audit-<domaine>.md` ; l'audit suivant du même domaine est un nouveau fichier, jamais un edit. La grille, elle, est vivante et non horodatée — git porte son historique (`git log --oneline -- audits/grille-harnais.md`), pas de champ `version:` manuel qui divergerait au premier edit oublié. Chaque rapport cite en en-tête le commit de la grille contre laquelle il a tourné.
 - **Traçabilité** : chaque constat du rapport cite sa mesure (commande + sortie) ou porte « supposé ». Un chiffre repris de la note d'inbox est un chiffre du 2026-08-10 : le remesurer avant de décider.
@@ -75,15 +75,29 @@ Domaine limité → frontmatter `paths:` (modèle : `back-spring.md`, `front-rea
 
 ### C6 — Dans le budget ?
 
-Le contexte permanent global tient-il sous le plafond ? Le périmètre est **tout ce qui entre dans chaque session** : les règles non scopées (`rules/` + `wrappers/claude/rules/`), l'output style actif, et l'index de memory auto du projet courant.
+Le contexte permanent global tient-il sous le plafond ? Le périmètre est **tout ce qui entre dans chaque session** : les règles non scopées (`rules/` + `wrappers/claude/rules/`), l'output style actif, les blocs `description` des skills montés, et l'index de memory auto du projet courant.
+
+**Le corps d'un skill n'entre pas dans C6** — il ne se charge qu'à l'invocation. Il ne se juge donc que sur C1→C5, C7 et C8, dans sa propre passe. *Pourquoi le borner ici : sans ça, chaque passe de corps rejuge si le budget la concerne, et deux passes répondront différemment.*
 
 **Mesure** :
 
 ```bash
 wc -w $(grep -L '^paths:' rules/*.md) wrappers/claude/rules/*.md \
       wrappers/claude/output-styles/chat-style.md
+
+# + les blocs `description` des skills montés (~/.claude/skills → skills/)
+python3 -c "
+import re,glob
+t=0
+for f in glob.glob('skills/*/SKILL.md'):
+    fm=re.match(r'---\n(.*?)\n---\n',open(f).read(),re.S).group(1)
+    t+=len(re.search(r'^description:\s*(.*?)(?=\n[a-z_-]+:|\Z)',fm,re.S|re.M).group(1).split())
+print(t)"
+
 # + MEMORY.md de la memory auto du projet courant, variable par projet
 ```
+
+**État au 2026-08-11** : **7 358 mots** de permanent réel — 5 161 de règles + output style (la commande `wc -w` ci-dessus, en cours de baisse sous l'effet de la passe `rules/`) **+ 2 197 de descriptions de skills**, sur 26 skills `agent-config`. Cette seconde moitié n'avait jamais été comptée : elle pèse 30 % du permanent et aucune passe ne l'avait ouverte avant le cadrage `skills/` A.
 
 **État au 2026-08-10 (remesuré)** : 5 830 mots — 5 607 de règles (dont `memory-policy.md`, 207) + 223 d'output style. L'estimation initiale « ~40 % retirables » ne s'est pas confirmée : la passe `rules/` du 2026-08-10 mesure ~1 650 mots retirés par la cascade (~30 %).
 **Cible** : ~3 950 mots hors output style — plancher mesuré par la passe `rules/` du 2026-08-10 (rapport `2026-08-10-audit-agent-config-rules.md`), **pas un plafond obligatoire**. Décidé le 2026-08-10 : on ne supprime pas une instruction survivante pour tenir un chiffre ; le sort d'`ai-practices.md` se juge sur le fond, hors pression C6.
