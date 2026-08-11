@@ -21,6 +21,7 @@ Deux règles (R1, R6) ne sont vérifiées par aucun outil, même côté AIDD. C'
 - **R5. `description` = quoi + quand.** 3e personne, sous 1024 caractères, pas de XML.
   - Tout le « quand » vit ici, pas dans le corps.
   - Triggers explicites et un peu insistants. Le modèle sous-déclenche, donc sur-liste.
+  - **Sauf en invocation manuelle (R13)** : pas de liste de phrases, la description dit par quoi le skill s'appelle. Une phrase déclencheuse sur un skill manuel promet un comportement qui n'existe plus.
   - Le nom de l'artefact en tête. Une parenthèse pour définir, pas un tiret.
   - Clause « NE PAS utiliser pour X (→ frère) » seulement si un skill voisin peut se déclencher à tort.
 - **R6. Zéro doublon.** Un fait, un seul home. Les gabarits vivent dans `assets/`, les actions les citent.
@@ -38,6 +39,10 @@ Deux règles (R1, R6) ne sont vérifiées par aucun outil, même côté AIDD. C'
 - **R11. Une idée par phrase.** Je coupe une phrase qui dépasse la ligne. Exceptions : la `description` mono-ligne et les cellules de tableau.
 - **R12. Toujours le pourquoi.** Une règle énonce sa raison, pas seulement l'ordre.
   - Pourquoi : un LLM suit mieux une raison qu'un ordre sec. Sans le pourquoi, il viole plus souvent la règle et ne sait pas la transposer à un cas non prévu.
+- **R13. Mode d'invocation déclaré.** Un skill à effet de bord porte `disable-model-invocation: true` et s'appelle par `/<nom>`. Sans effet de bord, le champ est omis et le skill reste auto-déclenchable.
+  - Pourquoi : le déclenchement par phrase est probabiliste, donc il se trompera. Sur une action réversible ça coûte un paragraphe inutile ; sur un `git push` ça coûte un commit non voulu.
+  - Compte comme effet de bord : écrire un fichier versionné, committer, pousser, supprimer, déplacer, envoyer sur le réseau. Lire, analyser et conseiller n'en sont pas.
+  - Le champ est le seul mécanisme déterministe disponible. Une `description` mieux rédigée ne fait que déplacer la probabilité, elle ne la supprime pas.
   - Le pourquoi tient en une ligne. Ce n'est pas une permission de rallonger, R11 tient toujours.
 
 ## Anatomie d'une action
@@ -62,7 +67,8 @@ Les en-têtes `Input` / `Output` / `Process` / `Test` restent en anglais. Pourqu
 Frontmatter YAML + corps markdown.
 
 - `name` en kebab-case, sous 64 caractères, **égal au nom du dossier**. Pas de deux-points, slash, point, préfixe de plugin. Mots réservés interdits : `anthropic`, `claude`. Regex `^[a-z0-9]+(-[a-z0-9]+)*$`.
-- `description` : selon R5, forme FR « <quoi>. Utiliser quand <triggers>. NE PAS utiliser pour <X> (→ frère). »
+- `description` : selon R5, forme FR « <quoi>. Utiliser quand <triggers>. NE PAS utiliser pour <X> (→ frère). » En invocation manuelle (R13), « Utiliser quand <triggers> » devient « Invocation manuelle uniquement, par `/<nom>` : <raison en une ligne> ».
+- `disable-model-invocation: true` : présent si et seulement si le skill a un effet de bord (R13). Absent sinon — un champ posé par défaut rendrait tous les skills manuels.
 - Corps = routeur pur. La table d'actions mappe chaque numéro et slug à un rôle et un input. J'énonce le flux, soit une chaîne séquentielle, soit une carte trigger → action. Les auto-skips sont dits explicitement.
 
 `name` n'est pas le token d'invocation. L'adresse se construit à partir du plugin et du dossier. Un deux-points ou un préfixe dans `name` casse le chargement.
