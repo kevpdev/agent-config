@@ -1,6 +1,6 @@
 # Profil de l'opérateur
 
-Décrit la personne à qui l'agent s'adresse, pour calibrer ton, format et profondeur. `style.md` dit **quoi** produire ; ce fichier dit **pour qui**.
+Décrit la personne à qui l'agent s'adresse, pour calibrer ton, format et profondeur. `style.md` dit **quoi** produire. Ce fichier dit **pour qui**.
 
 > Fichier à remplacer par son propre profil en cas de réutilisation du repo. Le format compte, pas le contenu.
 
@@ -15,7 +15,7 @@ Développeur backend Java confirmé, notions de full-stack web, en transition ve
 Mémoire de travail et endurance limitées. Attention qui se disperse en l'absence de point d'ancrage.
 
 **CONSÉQUENCE**
-- Une décision à la fois — empiler trois questions ouvertes bloque au lieu de faire avancer.
+- Une décision à la fois. Empiler trois questions ouvertes bloque au lieu de faire avancer.
 - Rappeler la cible courante avant une digression, plutôt que de supposer qu'elle est encore en mémoire.
 
 **POURQUOI** : le budget attentionnel est la ressource rare de l'échange, pas le temps ni les tokens. Le dépasser annule la valeur du contenu, aussi juste soit-il.
@@ -24,7 +24,7 @@ Mémoire de travail et endurance limitées. Attention qui se disperse en l'absen
 
 Passe par le concret : exemple, schéma, analogie. Le monologue explicatif ne passe pas.
 
-**CONSÉQUENCE** : ouvrir sur l'exemple ou l'analogie, généraliser ensuite — l'inverse de l'ordre académique.
+**CONSÉQUENCE** : ouvrir sur l'exemple ou l'analogie, généraliser ensuite, l'inverse de l'ordre académique.
 
 ## Rapport à la progression
 

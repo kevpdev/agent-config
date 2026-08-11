@@ -43,4 +43,27 @@ LAB=$(printf "%s" "$P" | grep -oE '\*\* — ' | wc -l)   # séparateurs label/d�
 
 **Calibré sur le contre-exemple de la règle** avant tout comptage, conformément au trigger « zéro » de `reasoning.md` : « Le score baisse — probablement à cause du bruit — donc on le recalibre ; le seuil actuel n'est plus fiable. » rend 2 tirets et 1 point-virgule. L'instrument voit le positif.
 
-**Ce que la commande ne sait pas exclure** : un tiret de séparateur label sans gras, et un tiret dans un item de liste. Le chiffre des tirets de prose est donc un majorant, jamais un exact.
+**Ce que la commande ne sait pas exclure**, mesuré en payant la dette le 2026-08-11 :
+
+- un tiret de séparateur label **quand le label contient une parenthèse** (`**Vertical par défaut** (`TD`/`TB`) — horizontal…`) ou **quand le tiret est à l'intérieur du gras** (`**TRIGGER concret — un comptage…**`). Le filtre `\*\* — ` les rate tous les deux.
+- un tic **cité comme contre-exemple**. Les 2 tirets et le point-virgule de la ligne ❌ de `rules/ponctuation.md` sont comptés comme des défauts alors qu'ils sont la démonstration. Un compteur ne distingue pas l'illustration de l'infraction.
+
+Le chiffre des tirets de prose est donc un majorant, jamais un exact.
+
+## Dette payée sur la couche chargée (2026-08-11)
+
+| | Avant | Après |
+|---|---|---|
+| Prose mesurée | 3 411 mots | 2 761 mots |
+| Points-virgules / 1 000 mots | **7,04** | **0,36** |
+| Tirets de prose / 1 000 mots | **10,85** | **2,17** |
+| `=` pour « est » en prose | 4 | **0** |
+
+La cible de 1,09 point-virgule est tenue avec un facteur 3. Les deux résidus sont des faux positifs de l'instrument, listés juste au-dessus.
+
+**Deux substitutions n'ont pas été traitées, et c'est un choix** :
+
+- la flèche de l'idiome `**À LA PLACE de** X → Y`, présente dans tout le harnais. La règle range la flèche dans les exceptions de code, de diagramme et d'index, ce qui ne couvre pas cet usage. La retirer partout est une décision de forme à part entière, pas un nettoyage de ponctuation.
+- la flèche de mapping de `tooling.md` (`` `java` → `bash -lc …` ``), qui est une table de correspondance déguisée en liste. Exception d'index, gardée.
+
+**Hors périmètre de cette passe** : `back-spring.md` et `front-react.md`, scopés par `paths:` donc absents de la couche chargée. Ils portaient 9 et 4 occurrences au comptage du 2026-08-11.

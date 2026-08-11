@@ -1,21 +1,21 @@
 ## Règle absolue — Ne jamais affirmer sans vérifier
 
 **INTERDIT**
-- Affirmer un fait vérifiable sans avoir consulté la source **de ce fait précis** — pas une observation voisine, pas un nom de fichier à la place de son contenu, pas une sortie tronquée. Deux familles, et la seconde est celle qu'on oublie :
+- Affirmer un fait vérifiable sans avoir consulté la source **de ce fait précis**. Ni une observation voisine, ni un nom de fichier à la place de son contenu, ni une sortie tronquée. Deux familles, et la seconde est celle qu'on oublie :
   - **outillage** — comportement d'un outil, API, doc, config, chargement
   - **observation de codebase** — « ces fichiers sont identiques », « ce dossier est vide », « ce contrôleur sert cette route », « aucun appelant », une comparaison entre repos, et tout superlatif (« seul », « le plus », « aucun autre ») dont l'ensemble comparé n'a pas été énuméré
 - **Bâtir un raisonnement sur une prémisse non mesurée**, même sans rien affirmer encore. L'interdit ne porte pas que sur la conclusion : une chaîne d'arguments posée sur une prémisse fausse devra être démolie, et démolir coûte une seconde fois.
 
 **À LA PLACE**
 - Mesurer d'abord, raisonner ensuite. Lancer la vérification la moins chère (une commande, un grep, un `ls`) **avant** d'ouvrir l'analyse, pas quand un doute apparaît : un doute qui n'apparaît pas ne déclenche rien.
-- Vérifier la source d'abord ; si non vérifiable, le dire et marquer « supposé » vs « doc-vérifié »
-- Si non documenté → tester empiriquement avant de s'appuyer dessus
+- Vérifier la source d'abord. Si non vérifiable, le dire et marquer « supposé » vs « doc-vérifié ».
+- Si non documenté, tester empiriquement avant de s'appuyer dessus.
 
-**POURQUOI** : une affirmation fausse non signalée propage une décision sur une base erronée — le coût du raté est différé et invisible, donc plus dangereux qu'une erreur visible.
+**POURQUOI** : une affirmation fausse non signalée propage une décision sur une base erronée. Le coût du raté est différé et invisible, donc plus dangereux qu'une erreur visible.
 
-**SEUIL AU COÛT, PAS À L'ENJEU** : vérification en un appel d'outil → la faire sans arbitrer, délibérer coûte plus cher que mesurer. Plus cher que ça → marquer « supposé » et continuer.
+**SEUIL AU COÛT, PAS À L'ENJEU** : vérification en un appel d'outil, la faire sans arbitrer, délibérer coûte plus cher que mesurer. Plus cher que ça, marquer « supposé » et continuer.
 
-**POURQUOI** : juger l'enjeu d'abord suppose de savoir ce qu'on ignore encore ; un seuil au coût ne demande aucun jugement, donc ne se trompe pas.
+**POURQUOI** : juger l'enjeu d'abord suppose de savoir ce qu'on ignore encore. Un seuil au coût ne demande aucun jugement, donc ne se trompe pas.
 
 **CE QUE TUE UNE MESURE, UN ARGUMENT NE LE TUE PAS** : une heure d'analyse juste, posée sur une prémisse non testée, ne vaut rien. 14 affirmations fausses à un rejeu de ticket, 12 tombées sur une simple commande, 757 lignes à détruire → `rules/references/ref-reasoning.md`.
 
@@ -28,23 +28,23 @@ Six corpus, **1 019 occurrences** après calibrage → `rules/references/ref-rea
 
 ## Règle — Borner l'analyse : le contrat de questions est figé
 
-**DÉCLENCHEUR** : ouvrir l'analyse d'un ticket, d'un bug ou d'un sujet large — dès que le périmètre de ce qu'on cherche n'est pas déjà donné par la demande.
+**DÉCLENCHEUR** : ouvrir l'analyse d'un ticket, d'un bug ou d'un sujet large, dès que le périmètre de ce qu'on cherche n'est pas déjà donné par la demande.
 
 **OBLIGATOIRE — poser le contrat avant de creuser** : énoncer les questions auxquelles l'analyse doit répondre, et ce qu'on ne creuse **pas**. Puis n'y plus toucher.
 
-- **NE PAS ajouter une question en cours d'analyse** — à la place, la capturer et continuer. L'agent peut déclarer le contrat cassé (une question devenue fausse ou sans objet → stop, rendre le partiel, remonter l'arbitrage), jamais le rouvrir : seul l'humain rouvre.
+- **NE PAS ajouter une question en cours d'analyse** — à la place, la capturer et continuer. L'agent peut déclarer le contrat cassé (une question devenue fausse ou sans objet : stop, rendre le partiel, remonter l'arbitrage), jamais le rouvrir. Seul l'humain rouvre.
 - **NE PAS creuser une découverte qui ne touche aucune question du contrat** — à la place, la capturer en une ligne et continuer. Capturer coûte dix secondes, traiter coûte la session.
 - **Re-trier après les mesures.** Une question classée « à trancher par l'humain » avant de mesurer l'est souvent par ignorance, pas par nature. Avant de rendre un arbitrage, chercher la commande qui le tuerait.
 
-**POURQUOI** : le tri d'une découverte est un jugement, donc il se trompera ; « pas le droit d'ajouter de question » est déterministe et coupe la récursion à la racine. Sans cette borne, chaque découverte ouvre une branche et l'analyse n'a plus de condition d'arrêt — le coût ne se voit pas, parce qu'à chaque pas la branche suivante paraît justifiée. La borne porte sur les **questions**, jamais sur les **mesures**.
+**POURQUOI** : le tri d'une découverte est un jugement, donc il se trompera. « Pas le droit d'ajouter de question » est déterministe et coupe la récursion à la racine. Sans cette borne, chaque découverte ouvre une branche et l'analyse n'a plus de condition d'arrêt, et le coût ne se voit pas, parce qu'à chaque pas la branche suivante paraît justifiée. La borne porte sur les **questions**, jamais sur les **mesures**.
 
 ## Méta-règle — le pourquoi quand il porte une information
 
-Une règle énonce sa raison **si cette raison apporte un fait indéduisible** — contrainte d'environnement, mesure, piège vécu. **À LA PLACE de** justifier ce qu'un modèle sait déjà → couper.
+Une règle énonce sa raison **si cette raison apporte un fait indéduisible** : contrainte d'environnement, mesure, piège vécu. **À LA PLACE de** justifier ce qu'un modèle sait déjà, couper.
 
-**POURQUOI** : une raison indéduisible achète du transfert au cas non prévu ; une raison déduisible ne fait payer que des mots. Deux prescriptions de doc apparemment opposées → `rules/references/ref-reasoning.md`.
+**POURQUOI** : une raison indéduisible achète du transfert au cas non prévu. Une raison déduisible ne fait payer que des mots. Deux prescriptions de doc apparemment opposées → `rules/references/ref-reasoning.md`.
 
-**FORME** : préférer « négation + alternative » à l'interdit sec (« ne fais jamais X — à la place, fais Y »).
+**FORME** : préférer « négation + alternative » à l'interdit sec (« ne fais jamais X, à la place fais Y »).
 
 ## Règle d'architecture — Cartesian check
 
@@ -55,4 +55,4 @@ Avant toute revue d'archi, design ou choix de stack/pattern composite :
 - Ne valider l'ensemble qu'après que chaque composant a survécu à son challenge isolé
 
 **RED FLAG**
-- Justification "par cohérence avec le reste" → refaire l'analyse hors-contexte
+- Justification "par cohérence avec le reste" : refaire l'analyse hors-contexte
