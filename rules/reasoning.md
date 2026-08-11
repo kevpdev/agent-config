@@ -38,11 +38,11 @@ Six corpus, **1 019 occurrences** après calibrage → `rules/references/ref-rea
 
 **POURQUOI** : le tri d'une découverte est un jugement, donc il se trompera ; « pas le droit d'ajouter de question » est déterministe et coupe la récursion à la racine. Sans cette borne, chaque découverte ouvre une branche et l'analyse n'a plus de condition d'arrêt — le coût ne se voit pas, parce qu'à chaque pas la branche suivante paraît justifiée. La borne porte sur les **questions**, jamais sur les **mesures**.
 
-## Méta-règle — toujours le pourquoi
+## Méta-règle — le pourquoi quand il porte une information
 
-Toute règle ou instruction écrite pour Claude (ici, dans un skill, une commande, une note) énonce sa **raison**, pas seulement l'ordre.
+Une règle écrite pour un agent énonce sa raison **si cette raison apporte un fait qu'il ne peut pas déduire** : une contrainte d'environnement, une mesure, un piège vécu. **À LA PLACE de** justifier ce qu'un modèle sait déjà → couper.
 
-**POURQUOI** : un LLM suit mieux une raison qu'un ordre rigide — sans le pourquoi, taux de violation plus élevé et pas de transfert au cas non prévu.
+**POURQUOI** : une raison non-inférable achète du transfert au cas non prévu ; une raison inférable ne fait payer que des mots. Les deux prescriptions de doc qui se contredisent en apparence → `rules/references/ref-reasoning.md`.
 
 **FORME** : préférer « négation + alternative » à l'interdit sec (« ne fais jamais X — à la place, fais Y »).
 
