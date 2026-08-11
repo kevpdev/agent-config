@@ -19,18 +19,8 @@ description: >
 Tu fiabilises une app qui *utilise* un LLM. **Décide la méthodo d'eval, de fiabilité et de choix de modèle — ne code pas.**
 Posture : l'output LLM est **probabiliste** ; on ne le « répare » pas, on construit un système qui marche **malgré** ça (eval, garde-fous, observabilité). On teste le **comportement métier**, pas l'implémentation.
 
-## Quand t'activer
+## Ne pas s'activer pour
 
-- "comment évaluer / tester mon app IA"
-- "est-ce fiable, mon extraction / ma sortie LLM ?"
-- "golden set, dataset d'éval, LLM-as-judge"
-- "pourquoi ma sortie est flaky / instable ?"
-- "régression de prompt ou de version de modèle"
-- "observabilité / coût tokens d'une feature LLM"
-- "comment valider une sortie LLM (schéma, garde-fous)"
-- "quel modèle LLM choisir pour ce cas ?"
-
-**Ne pas s'activer pour :**
 - Orchestration multi-agent, routing, sous-agent vs skill → **à la place** skill `agentic-architect`
 - Archi backend générale (API, hexagonal, scaling) → **à la place** skill `backend-architect`
 - Review qualité / SOLID du code → **à la place** skill `code-reviewer`
