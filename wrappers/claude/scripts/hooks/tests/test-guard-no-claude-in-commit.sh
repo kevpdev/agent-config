@@ -138,6 +138,59 @@ CMD
 )"
 
 echo
+echo "=== Message dans un fichier : une source lisible, pas une ambiguite ==="
+# Mesure du 2026-08-11, en bac a sable : `git commit -F badmsg.txt` dont le sujet
+# etait « wip stuff » a atterri sans etre valide, et les quatre commits du jour
+# avaient tous pris ce chemin. Le garde ne reconnaissait `-F` que suivi de `-`.
+#
+# Ces cas ecrivent des fichiers temporaires, contrairement aux precedents : le
+# garde ouvre desormais le chemin, donc le fichier doit exister. Aucun depot n'est
+# touche pour autant.
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
+printf 'wip stuff\n'                          > "$TMP/mauvais.txt"
+printf 'docs(db): explain the bootstrap\n\nCorps.\n' > "$TMP/bon.txt"
+
+verifier "-F fichier, sujet non conforme"    BLOQUE "git commit -F $TMP/mauvais.txt"
+verifier "-F fichier, sujet conforme"        PASSE  "git commit -F $TMP/bon.txt"
+verifier "--file=fichier non conforme"       BLOQUE "git commit --file=$TMP/mauvais.txt"
+verifier "--file=fichier conforme"           PASSE  "git commit --file=$TMP/bon.txt"
+# Fichier absent : le garde ne peut pas lire, donc il renonce — meme fail-open que
+# partout ailleurs dans cet extracteur, et un chemin faux fera de toute facon
+# echouer le `git commit` lui-meme.
+verifier "-F fichier absent"                 PASSE  "git commit -F $TMP/jamais-ecrit.txt"
+
+# CHEMIN RELATIF — le cas que cette batterie ne savait pas voir. Les quatre cas
+# ci-dessus utilisent un chemin absolu, ils passaient donc au vert alors que le
+# commit reel, lui, n'etait toujours pas controle : le trafic ecrit `-F msg.txt`
+# apres un `cd`, et le hook ne tourne pas depuis ce dossier. Le payload fabrique
+# ici porte cwd=/tmp, comme la fonction `verifier` ci-dessus, donc un chemin
+# relatif au dossier temporaire s'y resout.
+REL="$(basename "$TMP")"
+verifier "-F chemin relatif non conforme"    BLOQUE "git commit -F $REL/mauvais.txt"
+verifier "-F chemin relatif conforme"        PASSE  "git commit -F $REL/bon.txt"
+# Avec un `cd` en tete, c'est ce `cd` qui fixe le dossier, pas le cwd du payload.
+verifier "cd puis -F relatif non conforme"   BLOQUE "cd $TMP && git commit -F mauvais.txt"
+verifier "cd puis -F relatif conforme"       PASSE  "cd $TMP && git commit -F bon.txt"
+
+# CHEMIN VIA VARIABLE SHELL — echoue FERME, et c'est le seul cas de ce fichier.
+# Le shell resout la variable, le garde non (il n'evalue jamais son entree), donc
+# laisser passer signifie un commit non controle. Deux correctifs successifs sont
+# passes au vert sur cette batterie pendant que le commit reel atterrissait, les
+# deux fois parce que la commande portait `-F "$VAR/msg.txt"`. Le message conforme
+# est refuse AUSSI : le garde ne peut pas savoir qu'il l'est.
+verifier "-F via variable shell"             BLOQUE 'S=/tmp/x && git commit -F "$S/msg.txt"'
+verifier "-F via variable, sujet conforme"   BLOQUE 'S=/tmp/x && git commit -F "$S/bon.txt"'
+# Substitution de commande : meme raisonnement, meme refus.
+verifier "-F via substitution"               BLOQUE 'git commit -F "$(pwd)/msg.txt"'
+# LA FORME REELLE, celle qui a survecu a trois correctifs : l'argument est un chemin
+# relatif propre, sans variable — c'est le DOSSIER CIBLE qui vient d'un `cd "$VAR"`.
+# Un correctif qui n'inspecte que l'argument passe ici au vert et laisse le trou.
+verifier "cd via variable puis -F relatif"   BLOQUE 'G=/tmp/x && cd "$G" && git commit -q -F badmsg.txt'
+# Meme forme, mais le dossier est litteral : la resolution aboutit, donc on juge.
+verifier "cd litteral puis -F relatif"       BLOQUE "cd $TMP && git commit -q -F mauvais.txt"
+
+echo
 if [ "$ECHECS" -eq 0 ]; then
   echo "TOUS LES CAS PASSENT"
 else

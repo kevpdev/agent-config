@@ -122,7 +122,7 @@ fi
 # and read only that invocation's own arguments. Every ambiguity resolves to "no
 # subject extracted" — fail-open, matching the intent stated below: this validates
 # what it can read, it is not a gate that must have the last word.
-msg=$(CMD="$cmd" python3 - <<'PY' 2>/dev/null || echo ""
+msg=$(CMD="$cmd" TARGET="$target" python3 - <<'PY' 2>/dev/null || echo ""
 import os, re, shlex
 
 cmd = os.environ.get("CMD", "")
@@ -185,7 +185,7 @@ if args is None:
     raise SystemExit(0)
 
 # 3. Read the message from those arguments only.
-subject, reads_stdin, k = "", False, 0
+subject, reads_stdin, file_path, k = "", False, "", 0
 while k < len(args):
     a = args[k]
     if a in ("-m", "--message"):
@@ -199,10 +199,15 @@ while k < len(args):
     if re.fullmatch(r"-[A-Za-z]*m", a):
         subject = args[k + 1] if k + 1 < len(args) else ""
         break
-    if a in ("-F", "--file") and k + 1 < len(args) and args[k + 1] == "-":
-        reads_stdin = True
+    if a in ("-F", "--file") and k + 1 < len(args):
+        if args[k + 1] == "-":
+            reads_stdin = True
+        else:
+            file_path = args[k + 1]
     if a == "--file=-":
         reads_stdin = True
+    elif a.startswith("--file="):
+        file_path = a.split("=", 1)[1]
     k += 1
 
 # `-m "$(cat <<'EOF' … EOF)"` — the argument is a command substitution, not a
@@ -224,10 +229,73 @@ if subject.count("$(") > subject.count(")"):
 if not subject and reads_stdin and len(heredocs) == 1:
     subject = next(iter(heredocs.values()))
 
+# `-F <path>` / `--file=<path>` — the message lives in a file, so the command
+# carries only its name and the extractor saw nothing. Measured 2026-08-11 in a
+# sandbox: `git commit -F badmsg.txt` whose subject was "wip stuff" landed
+# unvalidated, and the four commits of that same day had all taken this path.
+#
+# This is NOT an ambiguity to renounce on, unlike the heredoc cases above: the
+# source is single, named and readable. Opening it turns an unknown into a known,
+# so no valid work can be refused by it. Any read error falls back to "" — the
+# same fail-open as everywhere else in this extractor.
+#
+# The path is almost always RELATIVE, and the hook does not run from the commit's
+# directory. Measured the same day: the first version of this read opened the path
+# as given, the battery passed on absolute paths, and the live commit went through
+# untouched. So resolve against `target` — the directory the commit actually runs
+# in, already computed above from `git -C`, a leading `cd`, or the payload cwd.
+#
+# A path built from a shell variable — `-F "$S/msg.txt"` — is the one form that
+# CANNOT be resolved here: expanding it would mean evaluating untrusted input, which
+# this guard never does. And it is the dangerous form, because the shell resolves it
+# perfectly well, so the commit succeeds while the guard saw nothing. Measured
+# 2026-08-11: two successive fixes went green on the battery and the live commit
+# still landed, both times because the real command carried `-F "$G/badmsg.txt"`.
+#
+# So discriminate on the consequence, not on the shape:
+#   - unresolvable (holds `$` or a backtick) → git WILL commit → renounce is a
+#     silent hole → refuse, and say which forms are readable.
+#   - plain path that simply does not exist → `git commit` fails on it too, so no
+#     unvalidated commit can land → fail-open, harmless.
+#
+# Test the RESOLVED path, not the argument: the variable is as often in the target
+# directory (`cd "$G" && git commit -F msg.txt`) as in the argument itself. The
+# third failed fix of that day checked only the argument, which was a clean
+# relative path, and let the bogus target through.
+if not subject and file_path:
+    if not os.path.isabs(file_path):
+        file_path = os.path.join(os.environ.get("TARGET", ""), file_path)
+    if "$" in file_path or "`" in file_path:
+        print("__GUARD_UNREADABLE_MESSAGE_FILE__")
+        raise SystemExit(0)
+    try:
+        with open(file_path, encoding="utf-8", errors="replace") as fh:
+            subject = fh.read(4096)
+    except OSError:
+        subject = ""
+
 first = subject.strip().splitlines()
 print(first[0].strip() if first else "")
 PY
 )
+
+# A message file the guard cannot read is the one case that fails CLOSED: the shell
+# would have resolved it, so letting it through means an unchecked commit lands.
+if [ "$msg" = "__GUARD_UNREADABLE_MESSAGE_FILE__" ]; then
+  python3 -c "
+import json
+print(json.dumps({
+    'decision': 'block',
+    'reason': 'Commit message file passed through a shell variable, which this guard cannot resolve without evaluating untrusted input — so the message would go unchecked. Use a literal path (git commit -F /abs/path/msg.txt), a heredoc (git commit -F - <<EOF), or -m.',
+    'hookSpecificOutput': {
+        'hookEventName': 'PreToolUse',
+        'permissionDecision': 'deny',
+        'permissionDecisionReason': 'Commit message file passed through a shell variable, which this guard cannot resolve without evaluating untrusted input — so the message would go unchecked. Use a literal path (git commit -F /abs/path/msg.txt), a heredoc (git commit -F - <<EOF), or -m.',
+    },
+}))
+"
+  exit 0
+fi
 
 # Validate Conventional Commits EN format when extractable (fail-open if not).
 # Applies to every repo, vault included: a vault commit is `<type>(<date>): <subject>`
