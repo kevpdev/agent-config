@@ -40,9 +40,9 @@ Six corpus, **1 019 occurrences** après calibrage → `rules/references/ref-rea
 
 ## Méta-règle — le pourquoi quand il porte une information
 
-Une règle écrite pour un agent énonce sa raison **si cette raison apporte un fait qu'il ne peut pas déduire** : une contrainte d'environnement, une mesure, un piège vécu. **À LA PLACE de** justifier ce qu'un modèle sait déjà → couper.
+Une règle énonce sa raison **si cette raison apporte un fait indéduisible** — contrainte d'environnement, mesure, piège vécu. **À LA PLACE de** justifier ce qu'un modèle sait déjà → couper.
 
-**POURQUOI** : une raison non-inférable achète du transfert au cas non prévu ; une raison inférable ne fait payer que des mots. Les deux prescriptions de doc qui se contredisent en apparence → `rules/references/ref-reasoning.md`.
+**POURQUOI** : une raison indéduisible achète du transfert au cas non prévu ; une raison déduisible ne fait payer que des mots. Deux prescriptions de doc apparemment opposées → `rules/references/ref-reasoning.md`.
 
 **FORME** : préférer « négation + alternative » à l'interdit sec (« ne fais jamais X — à la place, fais Y »).
 
