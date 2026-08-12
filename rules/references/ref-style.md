@@ -71,6 +71,98 @@ L'utilisateur a nommé le défaut lui-même : « tu ne parles pas comme un humai
 
 ## Ce que les compteurs ne voient pas
 
-« Trop technique » et « flou » ne sont mesurés par aucun des cinq compteurs, et ne le seront pas. Un zéro sur les quatre premiers ne vaut donc jamais « la réponse est claire ». C'est le trigger « un comptage qui rend zéro » de `reasoning.md` appliqué à cet instrument.
+« Flou » n'est mesuré par aucun des sept compteurs et ne le sera pas. Un zéro ne vaut donc jamais « la réponse est claire ». C'est le trigger « un comptage qui rend zéro » de `reasoning.md` appliqué à cet instrument. Le sixième, la longueur, ne fait pas exception : 150 mots creux restent creux.
 
-**Le test qui tranche** se joue sur les sessions suivantes : rejouer `mesure-reponses.py` et comparer aux cinq lignes de baseline. Si les demandes de reformulation ne baissent pas, le défaut n'était pas dans le découpage, et il faut chercher côté hook bloquant. Un hook qui **rappelle** est déjà réfuté, puisque `style.md` était chargé pendant les 269 réponses mesurées.
+**Corrigé le 2026-08-12** : cette section affirmait aussi que « trop technique » ne serait jamais mesuré. C'était faux d'un de ses trois tics. L'ouverture-étiquette a une forme, donc elle se compte, et le septième compteur la compte. Les deux autres tics restent invisibles.
+
+**Le test qui tranche** se joue sur les sessions suivantes : rejouer `mesure-reponses.py` et comparer aux six lignes de baseline. Si les demandes de reformulation ne baissent pas, le défaut n'était pas dans le découpage, et il faut chercher côté hook bloquant. Un hook qui **rappelle** est déjà réfuté, puisque `style.md` était chargé pendant les 269 réponses mesurées.
+
+## Le seul axe de style sans compteur était le seul à ne pas bouger (2026-08-12)
+
+Session Winggy-v3, ticket VW3-3219 puis VW3-3233. La consigne en vigueur disait « couches progressives : la couche 1 donne la reco et une ligne de pourquoi, les détails sur demande ». Rejeu de `mesure-reponses.py`, plus un comptage de longueur qu'il ne savait pas faire :
+
+| | Session VW3-3233 | Session `18cd7832`, même projet | Baseline 2026-08-11 |
+|---|---|---|---|
+| Réponses de fond | 12 | 11 | 258 |
+| **Médiane** | **289 mots** | 109 mots | non mesurée |
+| Moyenne | 265 | 164 | non mesurée |
+| Max | 425 | 550 | non mesurée |
+| Au-delà de 200 mots | **10 sur 12** | ~4 sur 11 | non mesurée |
+| Tirets cadratins | 4,09 / 1 000 | — | 13,93 |
+| Ouvertures abstraites | 5 sur 12 | — | 39 sur 112 |
+
+Distribution complète : `[79, 124, 207, 251, 266, 277, 289, 297, 310, 317, 340, 425]`.
+
+**Le défaut n'est pas la réponse trop longue, c'est l'absence de réponses courtes.** Deux sur douze passent sous 200 mots. La session de comparaison en a une majorité, avec un maximum pourtant plus haut (550). Une règle qui viserait la moyenne ou le pic raterait les deux fois.
+
+**Cause, établie en lisant l'instrument** : `mesure-reponses.py` calculait `mots` comme un total, l'affichait en en-tête et ne le divisait jamais par le nombre de réponses. Des axes de style que le harnais surveille, les couches progressives étaient le **seul sans compteur**, alors que ce même fichier écrit que le test qui tranche est « rejouer `mesure-reponses.py` et comparer aux baselines ». Un axe non mesuré ne se corrige pas, exactement comme la ponctuation avant 2026-08-11.
+
+**Cause seconde, un conflit d'autorité** : `aidd-dev/01-plan/actions/04-plan.md:19` ordonne « Show the complete plan and its phases with a confidence score (0 to 10, ✓ reasons and ✗ risks) ». Cet impératif concret a produit la réponse de 425 mots. Un impératif de skill bat une préférence de dosage, et il continuera de le faire tant que la règle n'écrit pas l'exception. D'où l'exception nommée dans `reponse.md` : le contenu prescrit par un skill va dans l'artefact, le chat garde la couche 1 et l'offre.
+
+## Un auto-diagnostic non mesuré a sur-accusé deux règles sur trois (2026-08-12)
+
+Interrogé sur ce qui avait failli, l'agent a désigné `reponse.md:10-12`, trois lignes. La mesure n'en retient qu'une.
+
+| Ligne | Accusée | Verdict après mesure |
+|---|---|---|
+| `:10` « Une ancre visuelle par bloc » | oui | **à tort.** Les quatre paragraphes en gras portaient chacun **une** ancre. Le défaut était le nombre de blocs, pas les ancres par bloc |
+| `:11` « Tableau dès qu'on compare 2 options ou plus » | oui | **à tort.** Elle porte déjà son déclencheur. Enfreinte une fois (4 variantes de script comparées en prose) : défaut d'application, pas de rédaction |
+| `:12` « Couches progressives » | oui | **à raison.** Aucun déclencheur, aucun geste, aucun seuil, aucun compteur |
+
+**Ce que ça coûte quand on ne mesure pas** : réécrire `:10` et `:11` aurait ajouté du texte à la couche permanente pour corriger des défauts inexistants, et aurait fait perdre à `:11` un déclencheur qu'elle avait déjà. L'auto-diagnostic d'un agent sur son propre tour est une hypothèse, au même titre qu'une prémisse de codebase non vérifiée.
+
+**Ce qui reste vrai de l'auto-diagnostic** : les deux tirets cadratins comptés à la main dans la réponse fautive. La règle de ponctuation, elle, est bien formée — tableau de substitutions, ❌/✅, section TEST — et a été enfreinte quand même. Une bonne formulation réduit le taux de faute, elle ne l'annule pas.
+
+## Le mode rapport a une forme, et elle se compte (2026-08-12)
+
+Deuxième signalement du même défaut en deux jours. Le 2026-08-11 : « tu parles comme un scientifique ou un ingénieur ultra technique ». Le 2026-08-12 : « tu as tendance à parler en mode rapport pour décrire ta conclusion après une tâche, alors que je veux que tu parles comme un humain avec un langage familier et simple ».
+
+Entre les deux, le travail avait porté sur la **longueur** des réponses. Le ton n'avait pas bougé, et c'est logique : la seule prescription qui le couvrait, la section « Ton et voix » de `profil.md`, ne disait pas **quand** elle s'applique. Une règle sans déclencheur se lit comme un conseil d'ambiance.
+
+**Ce que la formulation du jour apporte de neuf** : le moment. Le mode rapport revient au compte rendu de fin de tâche, pas n'importe où dans la conversation.
+
+### L'ouverture-étiquette
+
+Le tic a une forme repérable : un nom sans verbe, suivi de deux-points. Extraits de la session Winggy-v3 `f6734970`, tous authentiques :
+
+> « Mesure décisive : … », « Piège de nommage repéré : … », « Commité : … », « Plan écrit : … », « Ordre proposé dans la note, inchangé : … », « Hors contrat, capturé sans creuser : … », « Ce que l'analyse a tranché : … »
+
+Aucune n'a de sujet qui fait quelque chose. C'est du libellé de rapport posé à la place d'une phrase parlée.
+
+### La mesure
+
+Regex calibrée avant comptage, sur un positif et un négatif écrits à la main. Positif : « Coût : reponse.md passe à 591 mots ». Négatif : « Ouais, tu as raison. Regarde ma réponse d'il y a deux minutes : ». Le calibrage est embarqué dans le script et se rejoue à chaque exécution.
+
+| Session | Réponses de fond | Ouvertures-étiquettes | Pour 1 000 mots |
+|---|---|---|---|
+| Winggy-v3 `f6734970` | 20 | 31 | 6,6 |
+| Winggy-v3 `18cd7832` | 11 | 17 | **9,4** |
+| Winggy-v3 `7abd0441` | 2 | 1 | 2,1 |
+| agent-config `83cc4366` | 119 | **223** | 6,1 |
+| agent-config `c15637e6` | 56 | 77 | **5,3** |
+| agent-config `5ce2b1c0` | 43 | 69 | 6,4 |
+| agent-config `01b10955` | 3 | 5 | 5,7 |
+
+**423 occurrences.** Hors les deux sessions de moins de cinq réponses, le taux tient entre 5,3 et 9,4 dans les deux projets. Ce n'est pas un accident de session, c'est le régime permanent. Dans la session du jour, **18 réponses de fond sur 20** en portent au moins une.
+
+### Ce que ça règle en plus, sans règle supplémentaire
+
+Le même signalement portait une seconde contrainte : l'utilisateur change d'onglet et relit une réponse à froid, sans le fil au-dessus, et il ne doit pas avoir à faire défiler pour comprendre. L'ouverture-étiquette est précisément ce qui casse ça. « Mesure décisive : » n'apprend rien à qui n'a pas le contexte, alors que « ce qui a tranché sur le placement du curl, c'est… » se lit seul. Le geste sujet-verbe répare les deux défauts d'un coup.
+
+**Ce qui n'a donc pas été touché** : `reponse.md:8-9`, « toute référence se rappelle en trois mots », qui porte déjà l'exemple de l'identifiant renvoyant à un tableau plus haut et déjà le POURQUOI des onglets de terminal. Elle est bien écrite et mal appliquée. La réécrire aurait ajouté du texte sans corriger quoi que ce soit, l'erreur exacte mesurée le matin même sur deux règles accusées à tort.
+
+### Le remboursement
+
+Le bloc « Couper à la reco » écrit la veille pesait **273 mots sur les 614** de `reponse.md`, soit 44 % du fichier pour une seule puce. Deux de ses cinq sous-lignes ne faisaient que raconter le ratage du jour, et les deux étaient déjà écrites plus haut dans ce fichier-ci. Coupées, remplacées par un renvoi d'une ligne.
+
+| | Avant | Estimé au plan | Mesuré |
+|---|---|---|---|
+| `reponse.md` | 614 mots | ~430 | **546** |
+| `profil.md` | 445 mots | ~535 | **663** |
+| Net | | **−94** | **+150** |
+
+**L'estimation s'est trompée de signe, et pour la deuxième fois de la même manière.** La section « Coût du redécoupage » plus haut dans ce fichier documente déjà le même ratage, d'un facteur 3,4 le 2026-08-11, avec sa cause : une estimation posée sur du contenu à déplacer ignore le contenu à écrire, qui n'existe pas au moment où on estime. Ici, le déplacement était nul (le contenu descendu existait déjà en double) et tout le poids venait de l'écriture neuve. La leçon avait été écrite et n'a pas été appliquée le lendemain.
+
+**Ce qui justifie de payer quand même** : le ton est le défaut signalé deux jours de suite, et c'était le dernier axe sans déclencheur ni compteur. La règle de ponctuation avait établi la forme qui marche, un tableau « à la place de / écrire », qui fait bouger un chiffre là où un dosage ne fait rien.
+
+**Ce qui reste non tenu par un instrument** : aucun des trois hooks branchés ne peut aider. `guard-bash-tooling`, `guard-no-claude-in-commit` et `guard-no-remote-write` sont des `PreToolUse` sur Bash, ils ne voient jamais un texte de réponse. Le test est donc différé, au rejeu du compteur dans deux ou trois sessions.

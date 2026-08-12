@@ -18,13 +18,28 @@ Baseline pré-enregistrée (2026-08-11 18h, session agent-config, 258 réponses)
     ouvertures abstraites  39 sur 112
     demandes de reformulation  12 sur 110 prompts
 
+Sixième compteur ajouté le 2026-08-12, longueur des réponses. Il manquait, et son
+absence rendait « couches progressives » invérifiable : c'était le seul des axes de
+style sans instrument. Baseline du jour (session Winggy-v3, 12 réponses de fond) :
+    médiane 289 mots, max 425, 10 sur 12 au-dessus de 200
+Une session du même projet tenait une médiane de 109 : le seuil sépare deux régimes
+réels, il n'attrape pas tout.
+
+Septième compteur ajouté le 2026-08-12, les ouvertures-étiquettes. C'est la forme
+que prend le « mode rapport » signalé deux jours de suite : un nom sans verbe suivi
+de deux-points, « Mesure décisive : », « Commité : ». Compté sur les 8 derniers
+transcripts de deux projets, 423 occurrences, entre 5,3 et 9,4 pour 1 000 mots
+et jamais moins. Le régime est constant, ce n'est pas un accident de session.
+
 Cible : la ponctuation s'aligne sur ponctuation.md (1,09 point-virgule). Les trois
 autres n'ont pas de cible chiffrée, elles servent de comparaison avant/après.
 
 LIMITE DE L'INSTRUMENT, à lire avant de conclure. Il compte des formes, pas du sens.
-« Trop technique » et « flou » ne sont pas mesurés ici et ne le seront pas : aucun
-comptage ne les distingue. Un zéro sur les quatre compteurs ne vaut donc pas
-« la réponse est claire ». Cf. le trigger « un comptage qui rend zéro » de reasoning.md.
+« Flou » n'est pas mesuré ici et ne le sera pas : aucun comptage ne le distingue.
+De « trop technique », le septième compteur n'attrape qu'un tic sur trois, celui qui
+a une forme. Les deux autres, le nom abstrait à la place du verbe et le code interne
+supposé connu, restent invisibles. Un zéro sur les sept ne vaut donc jamais « la
+réponse est claire ». Cf. le trigger « un comptage qui rend zéro » de reasoning.md.
 """
 import json
 import re
@@ -35,9 +50,20 @@ import unicodedata
 
 SEUIL_FOND = 60      # une réponse de fond, par opposition à la narration d'un tool call
 SEUIL_PHRASE = 30    # au-delà, la phrase demande une relecture
+SEUIL_REPONSE = 200  # au-delà, la couche 2 aurait dû être proposée et non livrée.
+                     # Même nombre que le déclencheur écrit dans rules/reponse.md :
+                     # deux copies d'un seuil divergent au premier edit.
 
 # Une ouverture concrète porte un chiffre, un chemin, une citation ou du code inline.
 CONCRET = re.compile(r"\d|`|/|\.md|«|\"")
+
+# L'ouverture-étiquette : un nom sans verbe suivi de deux-points, en début de ligne.
+# « Mesure décisive : », « Commité : », « Piège de nommage repéré : ». C'est la forme
+# que prend le mode rapport, et le seul sous-tic de « trop technique » qui se compte.
+# Calibré ci-dessous sur un cas positif et un cas négatif écrits à la main.
+ETIQUETTE = re.compile(r"^\*{0,2}[A-ZÉÈÀ][^:\n]{0,40}\*{0,2}\s:\s+\S", re.M)
+ETIQUETTE_POS = "Coût : reponse.md passe à 591 mots de prose, contre 531 tout à l'heure."
+ETIQUETTE_NEG = "Ouais, tu as raison. Regarde ma réponse d'il y a deux minutes :"
 
 # Formulations par lesquelles l'utilisateur redemande la même chose plus simplement.
 # Les accents sont retirés des deux côtés avant de matcher : l'utilisateur tape
@@ -120,11 +146,16 @@ def main():
         sys.exit("aucune réponse de fond (>= %d mots)" % SEUIL_FOND)
 
     mots = sum(len(r.split()) for r in fond)
+    longueurs = sorted(len(r.split()) for r in fond)
+    mediane = longueurs[len(longueurs) // 2]
+    au_dessus = sum(1 for n in longueurs if n > SEUIL_REPONSE)
     em = sum(r.count(" — ") for r in fond)
     sc = sum(r.count(" ; ") for r in fond)
     sents = sorted(n for r in fond for n in phrases(r))
     longues = sum(1 for n in sents if n > SEUIL_PHRASE)
     abstraites = sum(1 for r in fond if not CONCRET.search(premiere_ligne(r)))
+    etiq = sum(len(ETIQUETTE.findall(r)) for r in fond)
+    etiq_rep = sum(1 for r in fond if ETIQUETTE.search(r))
     reform = sum(1 for p in prompts
                  if len(p) < 200 and REFORMULATION.search(sans_accent(p)))
 
@@ -141,8 +172,20 @@ def main():
           % (abstraites, len(fond)))
     print("demandes de reformul.   %4d sur %d prompts  (baseline 12 sur 110)"
           % (reform, len(prompts)))
+    print("longueur des réponses   médiane %d, max %d, %d sur %d au-dessus de %d mots"
+          % (mediane, longueurs[-1], au_dessus, len(fond), SEUIL_REPONSE))
+    print("                        (baseline 2026-08-12 : médiane 289, 10 sur 12)")
+    print("ouvertures-étiquettes %6.2f / 1 000   (baseline 5,3 à 9,4 selon la session)"
+          % (etiq * 1000 / mots))
+    print("                        %d au total, dans %d réponses sur %d"
+          % (etiq, etiq_rep, len(fond)))
     print()
-    print("Rappel : ces cinq compteurs ne voient pas « trop technique » ni « flou ».")
+    if not (ETIQUETTE.search(ETIQUETTE_POS) and not ETIQUETTE.search(ETIQUETTE_NEG)):
+        print("!! ETIQUETTE ne calibre plus, son comptage ne vaut rien tant que ce n'est pas réparé")
+        print()
+    print("Rappel : ces sept compteurs ne voient pas « flou », et ne voient de")
+    print("« trop technique » que l'ouverture-étiquette, un seul de ses trois tics.")
+    print("La longueur ne dit rien de la densité : 150 mots creux restent creux.")
 
 
 if __name__ == "__main__":
