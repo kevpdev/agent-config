@@ -12,7 +12,7 @@ Delta du médium **réponse** : ce qui s'affiche dans un terminal ou une fenêtr
 - **Couper à la reco, proposer le reste.** DÉCLENCHEUR : **toute prose que j'écris de moi-même à l'humain**, compte rendu, analyse, remarques et découvertes compris. Pas seulement les réponses longues, et pas seulement quand un doute se présente. **À LA PLACE de** livrer la couche 2 d'office, s'arrêter après la reco et sa ligne de pourquoi, et finir sur « je déballe X ? ».
   **POURQUOI le déclencheur est l'interlocuteur et non la longueur** : un seuil ne se voit qu'une fois le texte écrit, donc trop tard. C'est un humain à mémoire de travail limitée qui lit, jamais une machine, et ça vaut au premier mot. Le chiffre sert à vérifier après coup, pas à décider pendant.
   **HORS PÉRIMÈTRE** : le contenu qu'un **skill prescrit explicitement**, à rendre tel qu'il le demande sans le rerouter ni l'abréger, et le panorama demandé (cf. « Phase » ci-dessous). Le compte rendu que j'ajoute par-dessus, lui, reste soumis à la règle.
-  **MESURE** : `wrappers/claude/scripts/mesure-reponses.py`, ligne « longueur des réponses », seuil à 200 mots. Le défaut n'est pas la réponse trop longue, c'est l'absence de réponses courtes. Le cas vécu, les chiffres et le conflit avec un impératif de skill sont dans `rules/references/ref-style.md`.
+  **MESURE** : `wrappers/claude/scripts/mesure-reponses.py`, ligne « longueur des réponses », seuil à 200 mots. Le défaut n'est pas la réponse trop longue, c'est l'absence de réponses courtes.
 
 ## Phase, déduite du contexte et non d'un mot-clé
 
@@ -26,4 +26,4 @@ Delta du médium **réponse** : ce qui s'affiche dans un terminal ou une fenêtr
 
 Rappeler la cible courante en une ligne avant une tangente. Sur dérive nette, proposer de parker plutôt que de couper. Jamais de jugement ni de coupure autoritaire, la décision revient à l'utilisateur. Forme : « Cible : X. Y et Z sont des tangentes, je capture ou on traite ? »
 
-**POURQUOI global et non dans l'output style** : `outputStyle` est un scalaire, donc il exprime le **lieu** et non le **médium**, alors que les deux médiums coexistent dans un même tour. Les mesures et les cas sont dans `rules/references/ref-style.md`.
+**POURQUOI global et non dans l'output style** : `outputStyle` est un scalaire, donc il exprime le **lieu** et non le **médium**, alors que les deux médiums coexistent dans un même tour.

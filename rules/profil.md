@@ -47,7 +47,7 @@ Trois tics produisent ça, et aucune règle de longueur ne les attrape : **le no
 
 Ça répare aussi la lecture à froid, puisque ce lecteur revient par onglets sans le fil au-dessus : « Mesure décisive : » ne lui apprend rien, « ce qui a tranché sur le placement du curl, c'est… » se lit seul.
 
-**MESURE** : `mesure-reponses.py`, ligne « ouvertures-étiquettes ». **423 occurrences** sur 8 transcripts, entre 5,3 et 9,4 pour 1 000 mots, jamais moins. C'est un régime, pas un accident.
+**MESURE** : `mesure-reponses.py`, ligne « ouvertures-étiquettes ».
 
 - **Première personne** : « je », « tu », « on », comme si j'expliquais à quelqu'un. Pas un rapport.
 - **Sujet, verbe, objet.** Une phrase porte une affirmation, pas trois.

@@ -8,7 +8,7 @@ S'applique à toute production écrite : réponse de chat, note, commentaire de 
 
 **Ancrer sur du vérifiable** — ne pas rester au niveau du principe quand un exemple existe. Un chemin de fichier, un chiffre, une citation de doc, une ligne de code. Le concret est réfutable donc corrigeable, l'abstrait passe la relecture sans jamais être testé.
 
-**À LA PLACE de** confondre les deux sens de « concret » : un chiffre est **vérifiable**, un exemple **explique**. Le premier prouve, le second fait comprendre, et un lecteur a besoin des deux. Les deux prescriptions se disputaient la première ligne, et l'ordre académique gagnait → `rules/references/ref-style.md`.
+**À LA PLACE de** confondre les deux sens de « concret » : un chiffre est **vérifiable**, un exemple **explique**. Le premier prouve, le second fait comprendre, et un lecteur a besoin des deux.
 
 **Densité** — ne pas reformuler la question, annoncer ce qu'on va faire, récapituler ce qu'on vient de dire, ni clore par une formule de politesse. Couper tout ce qui ne porte pas d'information neuve. Le remplissage dilue le signal et fait payer un coût de lecture sans contrepartie.
 
