@@ -2,9 +2,10 @@
 name: vault-log-session
 disable-model-invocation: true
 description: >
-  Journalise une session vault SANS commit, depuis une session HORS vault (CWD = repo de dev). Pont vers
-  le skill canonique vault-log-session : régénère les fichiers auto-générés et rédige le recap, le tout à
-  la racine absolue du vault. Le commit est séparé (→ /vault-save). Invocation manuelle uniquement, par
+  Journalise une session vault depuis une session HORS vault (CWD = repo de dev). Pont vers le skill
+  canonique vault-log-session : régénère les fichiers auto-générés, rédige le recap, puis commit en local
+  ce seul périmètre — sans push. Le tout à la racine absolue du vault. Le push est séparé (→ /vault-save).
+  Invocation manuelle uniquement, par
   `/vault-log-session` : le skill écrit dans le vault, il ne se déclenche pas au fil de la conversation.
 ---
 
@@ -40,7 +41,11 @@ et **STOP**.
    Date : `bash -lc 'date +%F'`.
 4. Nuance recap : la session porte sur un **repo externe**. Source le travail depuis ce repo
    (git log/diff, fichiers touchés), mais écris le recap **dans le vault**.
-5. **Pas de commit** : le skill canonique log-session ne commit pas. Pour sauvegarder le vault, lance `/vault-save`.
+5. **Le commit se lance depuis la racine du vault**, comme les autres scripts :
+   ```
+   bash -lc 'cd "$OBSIDIAN_VAULT_PRO" && bash scripts/commit-log-session.sh "docs(<date>): <recap>"'
+   ```
+   Il ne prend que le périmètre de log-session et ne pousse pas. Pour sauvegarder le vault hors machine, lance `/vault-save`.
 
 ## Test
 
