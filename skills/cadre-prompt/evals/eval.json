@@ -1,57 +1,81 @@
-{
-  "skill": "cadre-prompt",
-  "scenarios": [
-    {
-      "name": "analyse-brouillon-sans-borne",
-      "query": "Voilà mon brouillon de prompt, aide-moi à le formuler correctement : « Je veux comprendre comment sont organisés les templates CI de mes repos et savoir quoi refactoriser. »",
-      "expected_behavior": "Détecte le type analyse. Rend un prompt en bloc de code portant un contrat de questions numérotées et fermées, un hors-périmètre non vide, et le livrable nommé. Comble les manques par des hypothèses préfixées '⚠️ supposé :' regroupées dans une section finale, au lieu de poser des questions. Pose au maximum une question à l'utilisateur, ou aucune. N'écrit aucun fichier.",
-      "trigger_markers": ["## Contrat de questions", "## Ce qui est supposé", "⚠️ supposé :"]
-    },
-    {
-      "name": "exploration-questions-empilees",
-      "query": "Je me demande si je devrais pas tout centraliser autrement. Est-ce qu'un template par stack serait mieux ? Comment on gère les jobs spécifiques ? Et est-ce que ça vaut le coup de versionner les templates ?",
-      "expected_behavior": "Détecte le type exploration, parce que la demande empile des questions ouvertes sans dire ce qu'on fera du résultat. Rend un prompt portant une condition d'arrêt explicite et une consigne de ne pas conclure. Ne produit ni recommandation, ni découpage en tickets, ni plan d'exécution dans sa réponse.",
-      "trigger_markers": ["## Condition d'arrêt", "## Ce que je ne veux pas encore"]
-    },
-    {
-      "name": "execution-sans-criteres",
-      "query": "Cadre-moi cette demande : « supprime les fichiers de settings dupliqués dans les repos backend et fais pointer les jobs sur le template centralisé ».",
-      "expected_behavior": "Détecte le type exécution. Rend un prompt portant des critères d'acceptation vérifiables, chacun adossé à une commande ou un artefact observable, plus une section listant ce qu'on ne touche pas. N'invente pas de critère non vérifiable du type 'le code est propre'.",
-      "trigger_markers": ["## Critères d'acceptation", "## Ce qu'on ne touche pas"]
-    },
-    {
-      "name": "passation-fin-de-session-riche",
-      "query": "La conversation est trop longue, prépare le prompt pour repartir dans une nouvelle conversation sur ce sujet.",
-      "expected_behavior": "Rend un prompt portant une section de faits mesurés, chacun accompagné de la commande ou de la source qui l'a produit, et une section de prémisses fausses à ne pas hériter incluant les erreurs commises par l'agent lui-même. Ne transporte AUCUNE conclusion, recommandation, arbitrage ni découpage en tickets issus de la session en cours. C'est le cas qui échoue ouvert : une sortie qui embarque les conclusions reste parfaitement plausible et doit être comptée en échec.",
-      "trigger_markers": ["## Faits déjà mesurés", "## Prémisses fausses à ne pas hériter"]
-    },
-    {
-      "name": "negatif-demande-ordinaire-mal-formulee",
-      "query": "Faut que je centralise le ci-settings sur tous les repos, tu peux regarder comment c'est fait aujourd'hui ?",
-      "expected_behavior": "Ne se déclenche pas. La demande est une demande ordinaire, même imprécise, et l'utilisateur ne l'a pas soumise comme ébauche à cadrer. La session doit y répondre ou l'exécuter, jamais la reformuler en prompt.",
-      "expect_trigger": false,
-      "trigger_markers": ["## Ce qui est supposé"]
-    },
-    {
-      "name": "negatif-vers-aidd-pilot",
-      "query": "Prends ma note de cadrage et déroule le développement jusqu'au commit.",
-      "expected_behavior": "Ne se déclenche pas, cède la main à aidd-pilot. La demande porte sur l'exécution d'un workflow de développement, pas sur la mise en forme d'une demande.",
-      "expect_trigger": false,
-      "trigger_markers": ["## Ce qui est supposé"]
-    },
-    {
-      "name": "negatif-vers-ai-engineering",
-      "query": "Ma sortie LLM est instable d'un prompt à l'autre, comment je mets en place une régression de prompt sur mon app ?",
-      "expected_behavior": "Ne se déclenche pas, cède la main à ai-engineering. Le sujet est la fiabilité d'une application qui appelle un LLM, pas la formulation d'une demande adressée à un agent.",
-      "expect_trigger": false,
-      "trigger_markers": ["## Ce qui est supposé"]
-    },
-    {
-      "name": "negatif-vers-recap-raisonnement",
-      "query": "Je perds le fil de notre échange, fais-moi un snapshot visuel de où on en est.",
-      "expected_behavior": "Ne se déclenche pas, cède la main à vault-recap-raisonnement. Le livrable attendu est un diagramme destiné à l'humain, pas un prompt destiné à un agent.",
-      "expect_trigger": false,
-      "trigger_markers": ["## Ce qui est supposé"]
-    }
-  ]
-}
+[
+  {
+    "name": "analyse-brouillon-sans-borne",
+    "query": "Voilà mon brouillon de prompt, aide-moi à le formuler correctement : « Je veux comprendre comment sont organisés les templates CI de mes repos et savoir quoi refactoriser. »",
+    "expected_behavior": [
+      "Détecte le type analyse.",
+      "Rend un prompt en bloc de code portant un contrat de questions numérotées et fermées, un hors-périmètre non vide, et le livrable nommé.",
+      "Comble les manques par des hypothèses préfixées '⚠️ supposé :' regroupées dans une section finale, au lieu de poser des questions.",
+      "Pose au maximum une question à l'utilisateur, ou aucune.",
+      "N'écrit aucun fichier."
+    ],
+    "trigger_markers": ["## Contrat de questions", "## Ce qui est supposé", "⚠️ supposé :"]
+  },
+  {
+    "name": "exploration-questions-empilees",
+    "query": "Je me demande si je devrais pas tout centraliser autrement. Est-ce qu'un template par stack serait mieux ? Comment on gère les jobs spécifiques ? Et est-ce que ça vaut le coup de versionner les templates ?",
+    "expected_behavior": [
+      "Détecte le type exploration, parce que la demande empile des questions ouvertes sans dire ce qu'on fera du résultat.",
+      "Rend un prompt portant une condition d'arrêt explicite et une consigne de ne pas conclure.",
+      "Ne produit ni recommandation, ni découpage en tickets, ni plan d'exécution dans sa réponse."
+    ],
+    "trigger_markers": ["## Condition d'arrêt", "## Ce que je ne veux pas encore"]
+  },
+  {
+    "name": "execution-sans-criteres",
+    "query": "Cadre-moi cette demande : « supprime les fichiers de settings dupliqués dans les repos backend et fais pointer les jobs sur le template centralisé ».",
+    "expected_behavior": [
+      "Détecte le type exécution.",
+      "Rend un prompt portant des critères d'acceptation vérifiables, chacun adossé à une commande ou un artefact observable.",
+      "Le prompt porte une section listant ce qu'on ne touche pas.",
+      "N'invente pas de critère non vérifiable du type 'le code est propre'."
+    ],
+    "trigger_markers": ["## Critères d'acceptation", "## Ce qu'on ne touche pas"]
+  },
+  {
+    "name": "passation-fin-de-session-riche",
+    "query": "La conversation est trop longue, prépare le prompt pour repartir dans une nouvelle conversation sur ce sujet. Voilà où on en est : on cherche pourquoi le job `sonarqube-check` de `calculator` est bien plus lent que son `test-code`. Ce qu'on a mesuré : `test-code` tient en 32 s et `sonarqube-check` en 88 s (traces des jobs du pipeline 21008, lues par l'API) ; le `cache:` de `.cache-maven` est écrasé parce que `.sonar-check` arrive en dernier dans l'`extends:` du job (lu dans `devops/pipelines/.sonar-check.yml`). En début de session tu affirmais que le runner était partagé entre les deux jobs, c'était faux, chaque job a son runner dédié (vu dans l'UI GitLab). Ma conclusion c'est qu'il faut réordonner l'`extends:` et pousser le fix directement sur `main` sans MR vu que c'est trivial.",
+    "expected_behavior": [
+      "Rend un prompt en bloc de code portant une section de faits mesurés, reprenant les mesures fournies (32 s, 88 s, l'écrasement du cache par l'ordre d'extends), chacune accompagnée de sa source.",
+      "Rend une section de prémisses fausses à ne pas hériter, portant l'erreur du runner partagé commise par l'agent lui-même.",
+      "Ne transporte NI la conclusion de réordonner l'extends, NI l'arbitrage de pousser sur main sans MR, ni comme fait, ni comme consigne, ni reformulés. C'est le cas qui échoue ouvert : un prompt qui embarque ces conclusions reste parfaitement plausible et doit être compté en échec."
+    ],
+    "trigger_markers": ["## Faits déjà mesurés", "## Prémisses fausses à ne pas hériter"]
+  },
+  {
+    "name": "negatif-demande-ordinaire-mal-formulee",
+    "query": "Faut que je centralise le ci-settings sur tous les repos, tu peux regarder comment c'est fait aujourd'hui ?",
+    "expected_behavior": [
+      "Ne se déclenche pas. La demande est une demande ordinaire, même imprécise, et l'utilisateur ne l'a pas soumise comme ébauche à cadrer. La session doit y répondre ou l'exécuter, jamais la reformuler en prompt."
+    ],
+    "expect_trigger": false,
+    "trigger_markers": ["## Ce qui est supposé"]
+  },
+  {
+    "name": "negatif-vers-aidd-pilot",
+    "query": "Prends ma note de cadrage et déroule le développement jusqu'au commit.",
+    "expected_behavior": [
+      "Ne se déclenche pas, cède la main à aidd-pilot. La demande porte sur l'exécution d'un workflow de développement, pas sur la mise en forme d'une demande."
+    ],
+    "expect_trigger": false,
+    "trigger_markers": ["## Ce qui est supposé"]
+  },
+  {
+    "name": "negatif-vers-ai-engineering",
+    "query": "Ma sortie LLM est instable d'un prompt à l'autre, comment je mets en place une régression de prompt sur mon app ?",
+    "expected_behavior": [
+      "Ne se déclenche pas, cède la main à ai-engineering. Le sujet est la fiabilité d'une application qui appelle un LLM, pas la formulation d'une demande adressée à un agent."
+    ],
+    "expect_trigger": false,
+    "trigger_markers": ["## Ce qui est supposé"]
+  },
+  {
+    "name": "negatif-vers-recap-raisonnement",
+    "query": "Je perds le fil de notre échange, fais-moi un snapshot visuel de où on en est.",
+    "expected_behavior": [
+      "Ne se déclenche pas, cède la main à vault-recap-raisonnement. Le livrable attendu est un diagramme destiné à l'humain, pas un prompt destiné à un agent."
+    ],
+    "expect_trigger": false,
+    "trigger_markers": ["## Ce qui est supposé"]
+  }
+]
