@@ -17,11 +17,11 @@ Une classification par fichier : `chemin → impact → régime → cible doc`. 
    | Pattern de chemin | Impact | Régime | Cible doc |
    |---|---|---|---|
    | `migration/`, `*Entity*`, `*Repository*`, `.sql` | schéma DB | reflet | memory `database.md` + README (section DB/archi) |
-   | `*Controller*`, `*Dto*`, `*Request*`, `*Response*` | contrat API | reflet côté repo, **décision** côté contrat partagé | memory `api-docs.md` + README (section API) + **signaler** l'écart au contrat partagé (→ action 05) |
+   | `*Controller*`, `*Dto*`, `*Request*`, `*Response*` | contrat API | reflet côté repo, **décision** côté contrat partagé | memory `api-docs.md` + README (section API) + **signaler** l'écart au contrat partagé (→ action 07) |
    | `*Service*`, `*Config*`, `*Orchestrator*` | archi/comportement | reflet | memory `codebase-map.md` + README (section archi/pipeline) |
 
-2. **Cibler.** Les **noms de sections README ne sont pas figés** : viser « la section qui couvre X ». La structure réelle du README (lue au préalable, cf. action 04) fait foi.
-3. **Router par régime.** Les cibles reflet partent vers les actions 03 (memory) puis 04 (README). Les cibles décision partent vers l'action 05 (signaler, ne pas écraser). Lire la table des régimes du `SKILL.md` pour savoir laquelle est laquelle — ne pas travailler de mémoire sur une liste recopiée ici. *Pourquoi : une énumération dupliquée finit par omettre une surface ajoutée depuis, et cette surface se fait réécrire au lieu d'être signalée.* En coordinateur, la classification vaut par repo : chaque enfant contre son propre code, le contrat partagé au parent.
+2. **Cibler.** Les **noms de sections README ne sont pas figés** : viser « la section qui couvre X ». La structure réelle du README (lue au préalable, cf. action 06) fait foi.
+3. **Router par régime.** Les cibles reflet memory partent vers le triptyque 03 → 04 → 05, puis les cibles reflet README vers l'action 06. Les cibles décision partent vers l'action 07 (signaler, ne pas écraser). Lire la table des régimes du `SKILL.md` pour savoir laquelle est laquelle — ne pas travailler de mémoire sur une liste recopiée ici. *Pourquoi : une énumération dupliquée finit par omettre une surface ajoutée depuis, et cette surface se fait réécrire au lieu d'être signalée.* En coordinateur, la classification vaut par repo : chaque enfant contre son propre code, le contrat partagé au parent.
 4. **Arrêter si vide.** Si rien d'impactant (fix pur, test, refacto interne sans surface publique) → **le dire et s'arrêter**. Ne pas inventer de mises à jour pour justifier le run.
 
 ## Test

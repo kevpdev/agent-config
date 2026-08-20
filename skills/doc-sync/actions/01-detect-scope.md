@@ -37,9 +37,9 @@ Détecte où vit le code et la doc, propose un scope de commits, et le fait conf
    |---|---|
    | Branche feature ≠ main | `git diff --name-only $(git merge-base main HEAD)...HEAD` (commits only) |
    | Dev direct sur main, commité | depuis le dernier commit doc : `base=$(git log -1 --format=%H -- README.md aidd_docs/memory/)` puis `git diff --name-only $base...HEAD` |
-   | Features mergées, doc oubliée | mode `--reconcile` (→ action 05), l'ancre git est non fiable |
+   | Features mergées, doc oubliée | mode `--reconcile` (→ action 07), l'ancre git est non fiable |
    | WIP figé non commité (opt-in averti) | `git diff --name-only HEAD` + avertir que c'est du non-validé |
-   | **Contrat partagé (coordinateur)** | **toujours `--reconcile`** (→ action 05) : le contrat est une décision, on le compare au code des enfants à HEAD |
+   | **Contrat partagé (coordinateur)** | **toujours `--reconcile`** (→ action 07) : le contrat est une décision, on le compare au code des enfants à HEAD |
 
 4. **Confirmer.** Lister **commits + fichiers** du scope retenu, par repo (`git log --oneline $base...HEAD`), et demander de **confirmer ou élaguer** (par commit, ou filtre de chemin) — surtout sur main où des commits de plusieurs tâches se mélangent. N'avancer qu'avec le scope validé.
 

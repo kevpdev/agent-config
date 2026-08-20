@@ -4,7 +4,7 @@ Met à jour les README de régime reflet par repo, après la memory, en édition
 
 ## Input
 
-Les cibles de régime **reflet** classées en action 02 qui touchent un README, et le scope validé. La memory est déjà synchronisée (action 03).
+Les cibles de régime **reflet** classées en action 02 qui touchent un README, et le scope validé. La memory est déjà cadrée, écrite et contrôlée (actions 03 à 05).
 
 ## Output
 

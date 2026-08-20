@@ -22,7 +22,7 @@ Une liste de dérives : pour chaque affirmation factuelle, ce que la doc affirme
      | Endpoints, schéma DB, réponses/DTO API | **backend** |
      | Routes UI, comportement front, ce qui est consommé | **front** |
 
-   - Immunisé à la contamination (ignore qui a changé quoi). Limite assumée : capture la **dérive descriptive**, pas les décisions/intentions d'une feature — pour ça, le diff + `/10-learn` (actions 02/03) reste meilleur.
+   - Immunisé à la contamination (ignore qui a changé quoi). Limite assumée : capture la **dérive descriptive**, pas les décisions/intentions d'une feature — pour ça, le diff + `/10-learn` (actions 02 à 04) reste meilleur.
 2. **Signaler.** Pour chaque écart relevé sur une doc-décision, présenter **décision affirme X / code fait Y** de façon précise.
    - Pourquoi ne pas écraser : quand le code s'écarte d'une décision (ex. le backend ajoute un champ `category` non prévu au contrat), le skill ne peut pas savoir si c'est une bonne découverte à entériner ou une bavure à corriger. Réécrire la décision seul graverait peut-être un bug dans la loi.
 3. **Arbitrer.** Proposer les deux issues — entériner la découverte (via `/10-learn`) ou corriger le code — et **attendre l'arbitrage**. Aucune édition automatique du contrat/décision.
