@@ -16,6 +16,10 @@ claude plugin update <plugin>@aidd-framework   # pour chacun
 # puis redémarrer la session : les skills et agents ne sont pas rechargés à chaud
 ```
 
+Ne pas lancer ces commandes à l'aveugle : `/aidd-updates` lit d'abord les changelogs des versions
+sautées, en déduit les patchs à faire dans ce repo, et propose l'entrée à ajouter ici. La mécanique
+est décrite dans [`README.md`](README.md#la-veille-des-plugins-aidd).
+
 ---
 
 ## 1.x → 2.x

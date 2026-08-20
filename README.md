@@ -93,6 +93,48 @@ bash wrappers/claude/scripts/hooks/tests/test-guard-no-claude-in-commit.sh
 
 **Calibrer sur du trafic réel, pas seulement sur ses propres cas.** `guard-bash-tooling.py` a été confronté aux 987 commandes du périmètre extraites des transcripts de sessions (`~/.claude/projects/*/*.jsonl`) : sa première conception, qui refusait tout ce qu'elle ne pouvait pas tokeniser, y produisait 5 faux positifs sur des `git commit` ordinaires. Une batterie écrite par l'auteur du garde ne les aurait jamais montrés.
 
+### La veille des plugins AIDD
+
+Claude Code sait appliquer une mise à jour de plugin, pas dire ce qu'elle va casser. Son auto-update
+par marketplace applique dans les dix minutes qui suivent le démarrage, donc la casse arrive
+décorrélée de sa cause. Or elle est **ici** : 16 noms de skills AIDD sont cités dans ce repo, et la
+montée 1.x → 2.x en avait déjà renommé trois (cf. [`CHANGELOG-aidd.md`](CHANGELOG-aidd.md)). D'où
+l'auto-update laissé désactivé pour `aidd-framework`, et ces quatre pièces.
+
+| Pièce | Rôle |
+|---|---|
+| `wrappers/claude/scripts/aidd-updates.py` | compare les versions installées aux tags upstream, garde l'état |
+| bloc `SessionStart` de `settings.json` | affiche une ligne au démarrage, une fois par jour au plus |
+| `skills/aidd-updates/` | lit les changelogs, rédige le plan d'adaptation, l'applique sur accord |
+| `wrappers/claude/scripts/tests/test-aidd-updates.sh` | la batterie du détecteur |
+
+L'état vit **hors du repo**, dans `${XDG_STATE_HOME:-$HOME/.local/state}/aidd-updates/plan.md` : un
+front-matter YAML pour la machine, le plan en markdown pour l'humain. C'est un état de machine, et
+l'avertissement en tête de `CHANGELOG-aidd.md` interdit d'écrire ça dans le repo. Ce fichier est aussi
+l'**interface** entre le wrapper qui produit et le skill qui consomme, ce qui garde le skill neutre :
+changer de runtime ne réécrirait que le détecteur.
+
+```bash
+bash wrappers/claude/scripts/tests/test-aidd-updates.sh          # 28 cas, hors réseau
+python3 wrappers/claude/scripts/aidd-updates.py --refresh        # force une vérification
+python3 wrappers/claude/scripts/aidd-updates.py --etat           # ce que le skill lit
+```
+
+**Le chemin chaud ne touche jamais le réseau.** `--notify` lit le cache et détache un `--refresh`
+quand celui-ci a plus de 24 h. Mesuré à 36 ms, contre 470 ms pour un `ls-remote`. Le découpage est
+repris de la CLI AIDD elle-même, dont le commentaire dit « Hot path: print the update notice from
+cached value only — fresh OR stale, never network ». Un `SessionStart` qui attend le réseau retarde
+**chaque** ouverture de session, pour un service qui n'est que du confort.
+
+**Écart assumé à l'échoue-fermé.** Ce script sort toujours en 0, contrairement aux gardes ci-dessus.
+Un garde refuse une action, celui-ci ne fait qu'informer : échouer bruyamment polluerait chaque
+session, et une machine hors réseau n'a rien fait de mal. À la place du code de sortie, toute panne
+s'écrit dans `derniere_erreur`, que `/aidd-updates` affiche avant tout le reste. Rien n'est silencieux
+pour de bon, rien ne bloque. C'est aussi pourquoi la batterie compte : le code de sortie ne disant
+rien, un détecteur cassé se tait exactement comme un détecteur qui n'a rien trouvé. Son premier cas
+est donc un retard **fabriqué à la main**, et elle s'arrête là s'il échoue plutôt que de rendre un vert
+trompeur sur des silences.
+
 ### Jouer les évals des skills
 
 Un skill qui porte un `evals/eval.json` déclare des scénarios en données pures : une requête, le comportement attendu, et de quoi juger. L'exécuteur, lui, est spécifique à Claude Code — ouvrir une session neuve passe par `claude -p`.
