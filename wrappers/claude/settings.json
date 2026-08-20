@@ -1,6 +1,4 @@
 {
-  "outputStyle": "chat-style",
-  "effortLevel": "high",
   "hooks": {
     "PreToolUse": [
       {
@@ -20,6 +18,17 @@
           }
         ]
       }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/scripts/aidd-updates.py --notify"
+          }
+        ]
+      }
     ]
   },
   "statusLine": {
@@ -31,7 +40,8 @@
     "aidd-refine@aidd-framework": true,
     "aidd-dev@aidd-framework": true,
     "aidd-vcs@aidd-framework": true,
-    "aidd-pm@aidd-framework": true
+    "aidd-pm@aidd-framework": true,
+    "aidd-orchestrator@aidd-framework": true
   },
   "extraKnownMarketplaces": {
     "aidd-framework": {
@@ -40,5 +50,7 @@
         "repo": "ai-driven-dev/framework"
       }
     }
-  }
+  },
+  "outputStyle": "chat-style",
+  "effortLevel": "high"
 }
