@@ -49,6 +49,23 @@ Un modèle sans cette instruction la retrouverait-il dans le code, la config ou 
 | Déjà porté nativement — par le modèle ou par le system prompt du harnais | **Supprimer.** Le coût n'est pas que des mots : une instruction redondante avec le comportement natif produit du **sur**-comportement |
 | Fait parfois, jamais de façon fiable | Garder → C2, et viser le déterministe — c'est le cas type d'un hook. **Mais lire le piège ci-dessous avant de conclure** |
 | Contredit un défaut du modèle ou de l'outil | Garder → C2. C'est le cœur non-inférable |
+| Re-dérivable, mais à un coût que la session repaie chaque fois | Garder → C2, **au dosage ci-dessous**. Sans cette ligne, un invariant que le modèle sait reconstruire en dix appels d'outil n'a nulle part où survivre |
+
+#### Le dosage du « coût élevé » — il vaut pour C1a et pour C1b
+
+**« Trop coûteux à inférer » ne se juge pas seul.** Une règle se paie en mots à **chaque** session. La re-dérivation, elle, ne se paie que quand son déclencheur tombe. Un coût sans sa fréquence ne dit donc rien, et c'est là que le critère devenait vague.
+
+Les deux instruments existent déjà dans cette grille, dans deux critères séparés : **C1a** compte les appels d'outil qu'un contexte neuf demande, **C5** tranche si le déclencheur est un fichier ou un événement rare. Le dosage est leur produit.
+
+| Appels pour re-dériver | Fréquence du déclencheur | Sort |
+|---|---|---|
+| < 3 | quelle qu'elle soit | **Laisser inférer** |
+| ≥ 3 | à chaque session, ou presque | **Garder au permanent** |
+| ≥ 3 | événement rare | **Ni l'un ni l'autre** : alerte minimale au permanent, détail en référence ou en corps de skill. C'est la troisième ligne de C5, jusqu'ici jamais reliée à l'axe du coût |
+
+**POURQUOI ce bloc existe** : C1a portait bien un axe de coût (« inférable, coût élevé, info stable → synthèse courte ») mais aucun axe de fréquence, et C1b ne portait aucun des deux. Ses trois premiers cas ne demandent que « le modèle le fait-il », jamais « à quel prix ». Un invariant re-dérivable mais cher traversait donc C1b sans case, exactement comme une instruction de comportement traversait C1 avant que la branche C1b existe.
+
+**Le seuil de 3 appels reste conventionnel**, il est repris de C1a et aucune source ne le porte. Ce qui change, c'est qu'il ne décide plus seul.
 
 **Commencer par lire la page de prompting du modèle courant** (table des sources ci-dessous) : elle tranche gratuitement une partie des cas, en nommant les comportements natifs et en désignant les instructions à retirer — « *Claude Opus 5 verifies its own work without being told to. If your prompt contains explicit verification instructions […] remove them* » (vérifié le 2026-08-11).
 
@@ -115,6 +132,8 @@ Une règle globale qui ne sert qu'un domaine fait payer son poids à toutes les 
 **Le cas mesuré** (2026-08-11, passe `skills/` A) : `paths:` existe bien pour un skill — « Claude loads the skill automatically only when working with files matching the patterns », doc vérifiée. Aucune des 26 descriptions n'y gagne : les ponts vault se déclenchent sur une phrase, les 9 experts répondent à des questions posées sans fichier courant. Poser `paths:` y **réduirait** l'activation au lieu de la cadrer. *Pourquoi cette case existe désormais : sans elle, 26 verdicts ont dû être rendus hors table, et la passe suivante les aurait re-tranchés.*
 
 **Le test qui sépare la troisième ligne des deux premières** : le déclencheur est-il un fichier ou un événement ? Un fichier se nomme dans `paths:`. Un événement n'a aucun chemin, donc l'instruction qui l'attend se fait facturer à chaque session pour servir quelques fois par mois. Exemples d'événements rencontrés : un comptage qui rend « zéro », un diagramme à dessiner, un échec de build, une analyse dont la conclusion appellera des edits.
+
+**C'est aussi la sortie du dosage de C1** (« Le dosage du "coût élevé" »), pour un invariant cher à re-dériver mais rarement déclenché. Les deux critères désignent la même case, chacun par son axe : C1 par le coût, C5 par la fréquence.
 
 **Trois cas tranchés hors table faute de cette ligne, tous le 2026-08-11** :
 
