@@ -38,15 +38,29 @@ le verdict (**garder** / **pointeur vers `<chemin>`** / **sortir**), et la réco
    stabilité.
    - **Nommer le fichier, ne pas l'estimer.** Un candidat dont le fichier source n'a pas été ouvert
      n'est pas mesuré, il est supposé — et il se marque comme tel.
-4. **Trancher.** Appliquer le verdict en trois issues du critère. Les deux conditions de l'exception
+4. **Regrouper par cause avant de trancher.** Deux candidats que la **même mesure** réparerait
+   partagent une cause. Le geste est mécanique : pour chaque candidat, grep le fait dans le home. Plus
+   d'un fichier touché → c'est un symptôme, chercher le fichier qui **produit** le fait.
+   - Le lot groupé reçoit **un** verdict « garder » chez la cause et **N** « sortir » chez les
+     symptômes, jamais N annotations. Le critère du piège porte les deux tables qui tranchent où le
+     fait vit et s'il mérite un piège.
+   - *Pourquoi mécanique et non au jugement : « ces deux-là partagent-ils une cause ? » se trompe en
+     silence, parce que deux pièges qui se ressemblent passent pour deux faits distincts. Un grep ne
+     juge pas.*
+   - **Ne pas chercher de cause commune à un candidat qui n'a qu'un symptôme.** Ça invente une
+     généralité, et un superlatif non énuméré est précisément ce que le contrôle attrape ensuite.
+5. **Trancher.** Appliquer le verdict en trois issues du critère. Les deux conditions de l'exception
    (coût élevé **et** dérive faible) sont conjointes : une seule remplie donne un pointeur, pas un
    « garder ».
-5. **Réconcilier.** Classer chaque verdict dans la taxonomie de `10-learn` — `new`, `covered`,
+6. **Réconcilier.** Classer chaque verdict dans la taxonomie de `10-learn` — `new`, `covered`,
    `updates`, `supersedes`, `retracts`. Un candidat `covered` ne descend pas en action 04.
-6. **Afficher le coût.** Compter les mots de la racine du banc (`wc -w`) et rendre le chiffre tel quel,
+7. **Afficher le coût, en deux nombres.** Compter les mots de la racine du banc (`wc -w`) et rendre le chiffre tel quel,
    sans le comparer à une cible — il n'y en a pas. Un plan qui fait **grossir** cet ensemble nomme ce
    qu'il ajoute et pourquoi le critère le retient ; un plan qui le réduit n'a rien à justifier.
-7. **Rendre le plan.** Le montrer avant de descendre en action 04. Un verdict « sortir » ou
+   - **Rendre aussi le nombre de symptômes supprimés**, issu de l'étape 4. *Pourquoi deux nombres : le
+     delta de mots ne distingue pas une passe qui a réduit d'une passe qui a déplacé. Le compte des
+     symptômes le dit, et c'est la seule unité qui monte quand la duplication baisse.*
+8. **Rendre le plan.** Le montrer avant de descendre en action 04. Un verdict « sortir » ou
    « pointeur » sur un fait que l'humain a écrit à la main se **soumet**, il ne s'applique pas seul.
    - *Pourquoi cette asymétrie : décrire ce que le code fait est un constat, retirer une phrase qu'un
      humain a jugée utile est une décision.*
@@ -59,6 +73,11 @@ le verdict (**garder** / **pointeur vers `<chemin>`** / **sortir**), et la réco
 - Un candidat inférable, à coût de ré-inférence faible **ou** à dérive forte, ne ressort jamais en
   « garder » : il ressort en pointeur ou en sortie.
 - Un candidat qui ne fait que recopier un fichier du disque ressort en pointeur, jamais en « garder ».
+- **Tout groupement de candidats cite la commande qui l'a établi.** Un lot groupé sans grep est une
+  appréciation, il ne passe pas.
+- **Chaque piège retenu nomme de quel côté du test d'existence il tombe**, et son home est la cause
+  quand plusieurs cibles la partagent.
+- Le plan rend **deux** nombres : le décompte de mots et le nombre de symptômes supprimés.
 - Le plan cite le décompte de mots de la racine. S'il la fait grossir, il nomme ce qui l'a fait grossir.
 - Aucun candidat n'est sorti pour atteindre un chiffre : chaque sortie cite le volet du critère qui la
   motive.

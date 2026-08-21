@@ -53,6 +53,50 @@ Le home est là où le fait est **produit**, pas là où il est pratique de le l
 L'autre côté porte un chemin. **Signaler un doublon nomme les deux chemins et lequel garde le fait** —
 le gabarit est la table « Duplicated facts » de `02-project-memory/assets/report.md`.
 
+## Le piège — deux tests avant de l'écrire
+
+Un piège coûte plus de mots que le fait qu'il corrige, parce qu'il doit nommer la source et la mauvaise
+conclusion. C'est pour ça qu'une passe de correction fait grossir ce qu'elle corrige, et les deux tests
+ci-dessous sont ce qui l'en empêche. Aucun ne demande de jugement.
+
+**Test d'existence — d'où part le lecteur quand il se trompe ?**
+
+| Il part de | Verdict |
+| --- | --- |
+| le **code** : un fichier absent, une valeur contre-intuitive, un comportement qui contredit son nom | le piège se justifie |
+| une **copie fausse de la mémoire** | **supprimer la copie**, et n'écrire aucun piège |
+
+*Pourquoi ce test : dans le second cas, la copie supprimée emporte la mauvaise conclusion avec elle, et
+le piège ne documenterait plus qu'une ancienne erreur de la mémoire. Mesuré le 2026-08-21 sur deux
+cycles d'audit : c'est ce second cas qui a produit l'essentiel d'un +28 % sur le fichier le plus lourd
+du banc.*
+
+**Test du home — combien de cibles partagent la cause ?**
+
+| Cibles | Où le piège vit |
+| --- | --- |
+| une | chez elle |
+| plusieurs | chez la **cause**, une seule fois. Les symptômes se **suppriment**, ils ne s'annotent pas |
+| la cause n'a pas de fiche | la créer. C'est le signal qu'un producteur n'est pas documenté |
+
+*Pourquoi supprimer et non annoter : mesuré le 2026-08-21, trois causes uniques portaient 54, 52 et 11
+mentions dans le banc. Annotées une par une, elles coûtent autant de fois les mots et laissent autant
+d'endroits où diverger. C'est le « un fait, un home » de la section au-dessus, appliqué à la cause au
+lieu du fait — et la cause la plus dupliquée du banc mesuré n'avait aucune fiche.*
+
+**Le renvoi va du symptôme vers la cause**, de fiche à fiche. `memory-bootstrap` n'interdit que le
+renvoi d'une fiche vers l'**index**, et pour une raison qui ne s'applique pas ici : une back-référence
+est un doublon à maintenir, quand un pointeur vers la cause est ce qui **remplace** un doublon.
+
+**Trois calibrages**, à rejouer si ces tests sont réécrits. Un critère qui ne rend pas ces trois verdicts
+est mal écrit.
+
+| Cas | Verdict attendu |
+| --- | --- |
+| `mvnw` commité sans le bit `x`, donc `./mvnw` seul rend « Permission non accordée » | le lecteur part du code, **piège légitime**. Plusieurs cibles, donc home unique chez la cause |
+| une fiche affirmait un fichier « présent » alors qu'il est absent du repo | le lecteur partait d'une copie fausse, **suppression, aucun piège** |
+| un service dont on cherche le `Dockerfile` et qui n'en a pas, parce qu'un dépôt tiers porte l'image partagée | le lecteur part du code, **piège légitime**, home chez le dépôt qui porte l'image |
+
 ## Verbosité — mesurer le coût, sans fixer de cible
 
 **Aucun plafond chiffré.** *Pourquoi, mesuré le 2026-08-20 : une passe menée sous un plafond de 6 000
@@ -67,7 +111,8 @@ compte.*
   celle que le bloc `<aidd_project_memory>` charge à chaque session. Le chiffre se rend, il ne se
   compare à rien.
 - **Justifier une hausse, jamais une valeur.** Une passe qui fait grossir l'ensemble @-importé nomme
-  ce qu'elle ajoute et pourquoi le critère le retient. Une passe qui le réduit n'a rien à justifier.
+  ce qu'elle ajoute et pourquoi le critère le retient. **Pour chaque piège écrit, elle nomme de quel
+  côté du test d'existence il tombe** : un piège du second type est une régression, pas une correction. Une passe qui le réduit n'a rien à justifier.
   *Pourquoi cette asymétrie : le sens de variation est un fait, un niveau est un jugement.*
   - **Le cas nommé — une passe de pointeur monte, et c'est normal.** Remplacer une copie par un
     pointeur coûte **plus** de mots que la copie dès que celle-ci est un jeton court, un numéro de
