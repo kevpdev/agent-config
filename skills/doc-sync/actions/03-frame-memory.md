@@ -7,7 +7,7 @@ Décide ce qui mérite d'exister en mémoire avant d'écrire une ligne : garder,
 - Les cibles de régime **reflet** classées en action 02 qui touchent la memory (`aidd_docs/memory/*`).
 - L'état du banc au home résolu par l'action 01 : `<enfant>/aidd_docs/memory/` (distribué) ou
   `aidd_docs/memory/<enfant>/` au parent (centralisé).
-- Le scope validé, qui donne les candidats issus du diff.
+- Le scope validé, qui donne les candidats issus du diff. En `--audit` il n'y a pas de diff : les candidats sont **chaque fait porté par les fichiers du scope**, et la seconde source de l'étape 2 devient la source unique.
 
 ## Output
 
@@ -25,6 +25,10 @@ le verdict (**garder** / **pointeur vers `<chemin>`** / **sortir**), et la réco
    pas seulement un fait à ajouter, c'est aussi un fait en place dont la présence se rejuge.
    - *Pourquoi rejuger l'existant : une passe qui n'examine que le neuf laisse grossir le banc à chaque
      run, et le critère ne mord jamais sur ce qui est déjà là.*
+   - **En `--audit`, la première source est vide et la seconde s'élargit.** Aucun fait neuf n'arrive,
+     et « les fichiers que la passe va toucher » sont **tous** ceux du scope. Le mécanisme ne change
+     pas, seul l'ensemble grandit. *Pourquoi le noter : sans cette ligne, l'étape cherche un diff
+     qu'elle ne trouve pas et rend zéro candidat sur un banc qu'elle n'a pas lu.*
    - **Sur un retour de l'action 05, ne pas relister.** Le périmètre est alors les seuls constats
      routés, pas le banc entier. *Pourquoi : relister rouvre des candidats déjà tranchés, ce qui fait
      grossir le lot au lieu de le réduire — et c'est exactement le signal que l'action 05 lit pour

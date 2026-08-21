@@ -8,6 +8,12 @@ vers l'étape qui le répare.
 Les fichiers de mémoire touchés par l'action 04, le plan cadré de l'action 03, et le home résolu par
 l'action 01.
 
+**En `--audit`, le checker juge le scope d'audit entier**, pas seulement ce que l'action 04 a réécrit.
+*Pourquoi c'est le seul contrat d'input qui doit s'élargir : une entrée que l'action 03 a gardée **à
+tort** ne produit aucune édition, donc l'action 04 ne la touche pas, donc le checker ne la voit jamais.
+Cas mesuré le 2026-08-21 : l'encadré « trois couches » d'un `architecture.md` a été gardé à la main
+avec sa paire de ports codée en dur. En entrée par diff, rien ne conteste ce jugement.*
+
 ## Output
 
 Un rapport rempli depuis le gabarit `02-project-memory/assets/report.md` du framework, écrit sous
@@ -74,6 +80,14 @@ Aucune édition de mémoire.
    | un constat **déjà déclaré réparé** revient | **arrêt immédiat**, sans attendre le compteur — c'est la signature du cercle vicieux |
    | le lot de constats ne **rétrécit** pas d'une passe à l'autre | arrêt, la réparation ne converge pas |
 
+   **Les constats routés vers l'action 07 ne comptent pas dans ce lot.** Ils quittent le cycle dès leur
+   première apparition, partent à l'arbitrage humain et n'y reviennent pas. Le rapport les rend dans
+   une section à part, dont l'intitulé dit qu'ils sortent du cycle.
+   - *Pourquoi : l'action 07 signale et n'écrase jamais, donc un constat de régime décision ne peut pas
+     être réparé par une passe suivante. Compté dans le lot, il le rend structurellement non
+     décroissant et déclenche l'arrêt sur un signal qui ne mesure plus rien. Mesuré le 2026-08-21 sur
+     une passe 1 : 4 constats sur 31, soit un lot qui ne pouvait pas descendre sous 4.*
+
 7. **Échouer fermé.** À toute sortie non nominale : ne **jamais** déclarer le banc à jour, ne rien
    réparer de plus, et ne rien annuler tout seul. Le rapport nomme la passe atteinte, les constats non
    réparés, et joint `git diff --stat -- aidd_docs/memory/` pour que l'humain voie l'état intermédiaire
@@ -95,9 +109,14 @@ Aucune édition de mémoire.
   ce numéro rend le cycle non bornable : il ne passe pas.
 - **Aucune quatrième passe n'existe.** Un rapport à `Passe 4` est un défaut de l'action, pas un
   résultat.
+- **Le lot compté à la passe `n` exclut les constats d'action 07.** Le rapport donne les deux nombres,
+  le lot du cycle et le résidu sorti. Un rapport qui n'en donne qu'un rend le signal de décroissance
+  illisible.
 - Un constat déjà déclaré réparé qui revient produit un **arrêt immédiat**, avant même la borne.
 - À toute sortie non nominale, le rapport nomme les constats non réparés et joint le `git diff --stat`.
   Le banc n'est jamais déclaré à jour dans ce cas, et aucune réparation n'a été annulée.
 - Le rapport rend le décompte de mots de la racine, sans le confronter à une cible.
+- **En `--audit`, le rapport couvre chaque fichier du scope**, y compris ceux que l'action 04 n'a pas
+  touchés. Un rapport qui ne parle que des fichiers modifiés a tourné en entrée par diff.
 - Aucun fichier sous `aidd_docs/memory/` n'a changé pendant cette action :
   `git status --porcelain aidd_docs/memory/` rend la même sortie avant et après.

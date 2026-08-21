@@ -1,4 +1,4 @@
-# 05 - Réconcilier et signaler les docs-décision
+# 07 - Réconcilier et signaler les docs-décision
 
 Compare doc-vs-code à HEAD quand l'ancre git est non fiable, et signale les écarts sur les docs-décision sans jamais les écraser.
 

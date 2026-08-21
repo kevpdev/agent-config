@@ -49,7 +49,24 @@ d'abord car c'est la source relue par `/plan`.
    **existe au home destinataire** avant de retirer la copie. Si le home ne le porte pas encore, l'y
    écrire d'abord.
    - *Pourquoi cet ordre : l'inverse perd le fait entre les deux edits, et rien ne le signale.*
-5. **Différer les décisions.** Les docs-décision (memory `decisions`, contrat partagé) ne s'éditent
+5. **Rejouer ce qui descendait de la prémisse.** Quand une correction change un fait dont d'autres
+   affirmations dépendent, relancer les **mesures** qui les fondaient — pas seulement réécrire la phrase
+   qui les énonçait. Le geste est mécanique : grep le fait corrigé dans le home, et pour chaque
+   occurrence trouvée, rejouer la commande qui l'avait établie.
+   - *Pourquoi mécanique et non au jugement : décider « celle-là dépend-elle de ma correction ? » est un
+     jugement, donc il se trompe, et il se trompe **en silence** — la phrase réécrite a l'air juste. Un
+     grep sur le fait corrigé ne demande aucun jugement.*
+   - **NE PAS remplacer un décompte par une explication qu'on n'a pas mesurée.** Un verdict « pointeur »
+     s'écrit comme un chemin, jamais comme un résumé de ce qui s'y trouve. *Pourquoi le redire ici alors
+     que l'étape 3 le porte déjà : une reformulation contourne la règle sans la contredire. Elle ne
+     recopie rien, donc le refus dur ne mord pas, et elle affirme quand même.*
+   - **Mesuré le 2026-08-21**, trois cas d'une même passe : une correction a écrit partout que les
+     bibliothèques internes étaient désormais clonées, en laissant debout les deux affirmations que ce
+     clone rendait fausses (« aucun `pom.xml` ne déclare de starter AMQP », et un comptage scopé sur
+     deux dépôts écrit comme un « **que** dans celui-ci »). Une autre a remplacé un décompte par une
+     explication inventée, fausse dans ses deux moitiés. Trois des treize faits faux du contrôle, et
+     deux étaient des régressions créées par la passe elle-même.
+6. **Différer les décisions.** Les docs-décision (memory `decisions`, contrat partagé) ne s'éditent
    **pas** ici en autonomie → régime décision, action 07.
    - **Exception cadrée, la prose de détail d'un index de portes.** Sur une surface classée décision
      parce qu'elle **prescrit** (l'index `coding-assertions`), le critère de la coupe est : *si
@@ -69,6 +86,10 @@ d'abord car c'est la source relue par `/plan`.
 - Une memory **centralisée** (`aidd_docs/memory/<enfant>/`) est éditée en direct (cas B), jamais
   déléguée à `10-learn` (qui écrirait à plat au top-level parent).
 - Un fait déporté est retrouvable au home destinataire **avant** que la copie soit retirée.
+- **Toute affirmation qui citait un fait corrigé a été rejouée**, ou porte la mention « supposé ». Une
+  phrase réécrite sans que sa mesure soit relancée est une régression, pas une correction.
+- **Aucun décompte retiré n'a été remplacé par une explication.** Si le chiffre sort, ce qui le remplace
+  est un chemin.
 - Aucune édition sur une memory de régime décision (`decisions`) ni sur le contrat partagé. Sur un
   index de portes, aucune commande ni prérequis modifié — seule la prose de détail a bougé.
 - En édition directe (cas B), la structure existante du fichier a été lue avant toute modification, et

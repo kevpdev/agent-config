@@ -9,7 +9,10 @@ description: >-
   code↔décision et laisse l'utilisateur arbitrer. Détecte la topologie (mono-repo ou repo
   coordinateur) et fait confirmer le scope avant d'éditer. Côté memory, enchaîne
   cadrage (ce qui mérite d'exister), livraison via /10-learn, puis contrôle par un checker
-  indépendant ; met ensuite les README à jour par repo. Invocation manuelle uniquement, par `/doc-sync` :
+  indépendant ; met ensuite les README à jour par repo. Deux entrées : par **diff de commits**
+  (le défaut, la doc a pris du retard) ou par **`--audit`**, qui prend le banc de mémoire lui-même
+  pour scope et le juge contre le critère d'inclusion — à utiliser quand la demande est de réviser la
+  mémoire existante et non de refléter un changement. Invocation manuelle uniquement, par `/doc-sync` :
   le skill réécrit des fichiers versionnés, il ne se déclenche pas au fil de la conversation.
   NE PAS utiliser pour un fix sans impact doc, pour committer seul (→ aidd-vcs:01-commit), ni pour
   documenter du code non validé.
@@ -21,6 +24,10 @@ Après un dev qui change l'archi ou le schéma DB, la memory AIDD (`aidd_docs/me
 
 ## Flux
 
+**Deux entrées, un seul flux.** Par défaut le scope vient d'un **diff de commits** : la doc a pris du retard sur le code. En **`--audit`**, le scope est le **banc de mémoire** lui-même et il n'y a pas d'ancre git. Les deux entrées traversent ensuite les mêmes actions, et c'est le point : l'audit ne duplique aucun mécanisme, il élargit le scope de l'action `01`. *Pourquoi un mode et non une action à part : la détection de topologie et la confirmation du contrat servent à l'identique, et l'action `01` interdit nommément de réimplémenter la détection ailleurs.*
+
+**Comment l'entrée se choisit**, avant toute autre chose. `--audit` sur la ligne d'invocation la tranche. Sans flag, elle se déduit de la demande : « la doc a pris du retard sur ce qu'on vient de livrer » est une entrée par diff, « relis la mémoire, elle a dérivé » est un audit. **Si les deux lectures tiennent, demander — ne pas choisir.** *Pourquoi ne pas deviner : prendre l'entrée par diff sur une intention d'audit fait rendre « aucune surface doc touchée » à l'action `02`, et le skill s'arrête en annonçant que tout va bien. L'erreur est silencieuse et ressemble à un succès.*
+
 `01-detect-scope` → `02-classify-impact` → puis, selon le régime de chaque cible :
 - **reflet** (le code fait foi) → `03-frame-memory` → `04-deliver-memory` → `05-check-memory` → `06-sync-readme`
 - **décision** (la décision fait foi) → `07-reconcile` (signaler, ne jamais écraser)
@@ -29,13 +36,13 @@ Le triptyque memory reprend les mots de `aidd-orchestrator:01-sdlc` — **frame*
 
 **Le cycle est borné à deux retours**, donc trois contrôles au plus, et il s'arrête plus tôt si un constat déjà déclaré réparé revient ou si le lot ne rétrécit pas. À la borne, le skill **échoue fermé** : il ne déclare pas le banc à jour, il rend l'état intermédiaire à l'humain. *Pourquoi une borne et non la convergence : au-delà de quelques passes, un modèle dégrade sa propre pertinence et se met à réparer ce qu'il vient d'écrire. Sans compteur, le cercle vicieux n'a pas de condition d'arrêt, et il coûte d'autant plus qu'il a l'air productif.*
 
-En coordinateur, le flux vaut **par repo** : chaque enfant traité comme un mono-repo (Boulot 1), plus le contrat partagé au parent traité en régime décision (Boulot 2, → `07`). Le home memory de l'enfant se résout à l'action `01` : **distribué** (memory chez l'enfant) ou **centralisé** (memory namespacée dans le parent `aidd_docs/memory/<enfant>/` — l'enfant reste code + README). Si `02` ne trouve aucune surface impactée, s'arrêter là.
+En coordinateur, le flux vaut **par repo** : chaque enfant traité comme un mono-repo (Boulot 1), plus le contrat partagé au parent traité en régime décision (Boulot 2, → `07`). Le home memory de l'enfant se résout à l'action `01` : **distribué** (memory chez l'enfant) ou **centralisé** (memory namespacée dans le parent `aidd_docs/memory/<enfant>/` — l'enfant reste code + README). Si `02` ne trouve aucune surface impactée, s'arrêter là — sauf en `--audit`, où le scope **est** la surface et où cet arrêt n'existe pas.
 
 ## Actions
 
 | # | Slug | Rôle | Input |
 |---|---|---|---|
-| 01 | `detect-scope` | Détecte topologie (mono/coordinateur) + propose et fait confirmer le scope de commits | CWD, opt-in WIP éventuel |
+| 01 | `detect-scope` | Détecte topologie (mono/coordinateur) + propose et fait confirmer le scope : range de commits, ou le banc en `--audit` | CWD, opt-in WIP éventuel, mode `--audit` éventuel |
 | 02 | `classify-impact` | Classe chaque fichier du scope en régime (reflet/décision) + cible doc | scope validé de 01 |
 | 03 | `frame-memory` | Décide ce qui mérite d'exister : garder / pointeur / sortir, sans rien écrire | cibles reflet memory de 02 + état du banc |
 | 04 | `deliver-memory` | Écrit le plan cadré, via `/10-learn` ou édition directe | plan de 03 |

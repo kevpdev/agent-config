@@ -1,4 +1,4 @@
-# 04 - Synchroniser les README
+# 06 - Synchroniser les README
 
 Met à jour les README de régime reflet par repo, après la memory, en édition ciblée, puis propose un commit doc par repo.
 
