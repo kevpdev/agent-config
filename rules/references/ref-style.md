@@ -24,7 +24,14 @@ Ce qu'aucun compteur ne remplace, et ce qui empêche de lire un chiffre de trave
 2. **Le code interne balancé comme si le lecteur l'avait en tête.** Un identifiant d'audit, un nom de couche, un critère numéroté.
 3. **Trois idées dans une phrase**, tenues par un deux-points et un tiret. Seul un compteur de longueur l'approche, et à moitié.
 
-Le quatrième, **l'ouverture-étiquette**, se compte et vit donc dans l'instrument, pas ici.
+Le quatrième, **l'ouverture-étiquette**, se compte et vit donc dans l'instrument. Ses paires descendues de `profil.md` le 2026-08-21, la règle n'en gardant qu'une :
+
+| ❌ Écrit | ✅ Réécrit |
+|---|---|
+| « Commité : `acea30b`, +100/−47. » | « J'ai commité, c'est `acea30b`. » |
+| « Piège de nommage repéré : `.update-ci-files` est pris. » | « Attention, `.update-ci-files` est déjà pris ailleurs. » |
+
+**Ce que l'étiquette coûte au lecteur qui revient à froid** : « Mesure décisive : » ne lui apprend rien, quand « ce qui a tranché sur le placement du curl, c'est… » se lit seul. C'est le même fait que la règle de rappel en trois mots de `reponse.md`, vu depuis le registre au lieu de la référence.
 
 ## « Concret » fait deux métiers, et c'est ce qui rend le conflit invisible
 

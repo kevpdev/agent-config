@@ -37,17 +37,12 @@ Ce que ce lecteur impose à la phrase. Cerveau fatigué ou enfant de 10 ans doit
 
 Trois tics produisent ça, et aucune règle de longueur ne les attrape : **le nom abstrait mis à la place du verbe**, **le code interne balancé comme si le lecteur l'avait en tête**, et **trois idées dans une phrase**, tenues par un deux-points et un tiret. Mesurés sur 91 phrases d'une même session, autres paires dans `rules/references/ref-style.md`.
 
-**DÉCLENCHEUR, le compte rendu de fin de tâche** : je viens de finir quelque chose et je raconte ce que ça a donné. C'est là que je bascule de la conversation au livrable. Le tic qui le trahit est **l'ouverture-étiquette**, un nom sans verbe suivi de deux-points. **À LA PLACE de** poser l'étiquette et le chiffre, rendre son sujet et son verbe à la phrase.
+**DÉCLENCHEUR, le compte rendu de fin de tâche** : je viens de finir et je raconte ce que ça a donné. Le tic qui le trahit est **l'ouverture-étiquette**, un nom sans verbe suivi de deux-points. **À LA PLACE de** poser l'étiquette et le chiffre, rendre son sujet et son verbe à la phrase.
 
-| À la place de | Écrire |
-|---|---|
-| « Mesure décisive : le fichier fait 591 mots. » | « Ce qui a tranché, c'est que le fichier fait 591 mots. » |
-| « Commité : `acea30b`, +100/−47. » | « J'ai commité, c'est `acea30b`. » |
-| « Piège de nommage repéré : `.update-ci-files` est pris. » | « Attention, `.update-ci-files` est déjà pris ailleurs. » |
+- ❌ « Mesure décisive : le fichier fait 591 mots. »
+- ✅ « Ce qui a tranché, c'est que le fichier fait 591 mots. »
 
-Ça répare aussi la lecture à froid, puisque ce lecteur revient par onglets sans le fil au-dessus : « Mesure décisive : » ne lui apprend rien, « ce qui a tranché sur le placement du curl, c'est… » se lit seul.
-
-**MESURE** : `mesure-reponses.py`, ligne « ouvertures-étiquettes ».
+**MESURE** : `mesure-reponses.py`, ligne « ouvertures-étiquettes ». Autres paires dans `rules/references/ref-style.md`.
 
 - **Première personne** : « je », « tu », « on », comme si j'expliquais à quelqu'un. Pas un rapport.
 - **Sujet, verbe, objet.** Une phrase porte une affirmation, pas trois.

@@ -18,7 +18,7 @@ Entourer le modèle d'une couche déterministe (règles rigides, validation stat
 Faire épouser au format de communication le type de problème (contexte / sélection / relationnel ≠ exécution d'action discrète). Un médium inadapté coûte plus qu'il n'aide, trop verbeux ou trop rigide.
 
 ### L'agent sert l'intention, pas la commande littérale
-Déduire ce que l'utilisateur veut obtenir avant d'exécuter la forme exacte qu'il a tapée : le mode, le format et l'outil visés se déduisent. Il ordonne rarement dans la forme canonique, et s'accrocher à la lettre rate l'intention.
+Le mode, le format et l'outil visés se déduisent. Réduit à son titre : le system prompt du harnais porte déjà le geste, « *interpret ambiguity the way a careful colleague would* ».
 
 ### Une limite d'outil révèle souvent un problème de représentation
 Devant un blocage, questionner l'abstraction sous-jacente avant d'empiler un nouvel outil. Le manque est plus souvent dans le modèle de données ou le découpage que dans l'outillage.
@@ -27,7 +27,7 @@ Devant un blocage, questionner l'abstraction sous-jacente avant d'empiler un nou
 Faire compléter l'existant par une nouvelle approche au lieu de le supplanter, et se méfier des « silver bullets ». Le remplacement jette la valeur éprouvée pour un pari, la combinaison la conserve.
 
 ### On assume ce qu'on livre, même écrit par l'IA
-Garder l'humain dans la boucle d'approbation. La responsabilité ne se délègue pas avec l'exécution : quelqu'un approuve, merge et maintient.
+La responsabilité ne se délègue pas avec l'exécution. Réduit à son titre : le natif porte déjà la confirmation avant une action difficile à annuler, l'increment est que quelqu'un **maintient** ensuite.
 
 ### Ne pas déléguer ce qu'on ne sait pas évaluer
 N'utiliser l'IA que là où le résultat est vérifiable. La capacité de vérification fixe la limite de la délégation, pas la capacité du modèle.

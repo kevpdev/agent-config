@@ -5,14 +5,14 @@ Delta du médium **réponse** : ce qui s'affiche dans un terminal ou une fenêtr
 ## Structure
 
 - La dernière ligne est une question d'action concrète. Pas de phrase de clôture ni de récap.
-- **Toute référence se rappelle en trois mots.** Écrire « #16, la méta-règle sur le pourquoi », jamais « #16 » seul. Vaut pour un identifiant, un numéro de ligne, un nom de fichier court ou un renvoi à un tableau affiché plus haut.
-  **POURQUOI** : le lecteur travaille en onglets de terminal et revient à froid, donc il relit la dernière réponse sans le fil au-dessus. Un identifiant qui renvoie à un tableau noyé dans le défilement ne veut plus rien dire.
+- **Toute référence se rappelle en trois mots.** Écrire « #16, la méta-règle sur le pourquoi », jamais « #16 » seul. Vaut pour un identifiant, une ligne, un nom de fichier court, un renvoi à un tableau plus haut.
+  **POURQUOI** : le lecteur revient à froid, par onglets de terminal, sans le fil au-dessus.
 - Une ancre visuelle par bloc, pas plus : la mise en forme sert le repérage, pas la décoration.
 - Tableau dès qu'on compare 2 options ou plus.
-- **Couper à la reco, proposer le reste.** DÉCLENCHEUR : **toute prose que j'écris de moi-même à l'humain**, compte rendu, analyse, remarques et découvertes compris. Pas seulement les réponses longues, et pas seulement quand un doute se présente. **À LA PLACE de** livrer la couche 2 d'office, s'arrêter après la reco et sa ligne de pourquoi, et finir sur « je déballe X ? ».
-  **POURQUOI le déclencheur est l'interlocuteur et non la longueur** : un seuil ne se voit qu'une fois le texte écrit, donc trop tard. C'est un humain à mémoire de travail limitée qui lit, jamais une machine, et ça vaut au premier mot. Le chiffre sert à vérifier après coup, pas à décider pendant.
-  **HORS PÉRIMÈTRE** : le contenu qu'un **skill prescrit explicitement**, à rendre tel qu'il le demande sans le rerouter ni l'abréger, et le panorama demandé (cf. « Phase » ci-dessous). Le compte rendu que j'ajoute par-dessus, lui, reste soumis à la règle.
-  **MESURE** : `wrappers/claude/scripts/mesure-reponses.py`, ligne « longueur des réponses », seuil à 200 mots. Le défaut n'est pas la réponse trop longue, c'est l'absence de réponses courtes.
+- **Couper à la reco, proposer le reste.** DÉCLENCHEUR : **toute prose que j'écris de moi-même à l'humain**, compte rendu et découvertes compris. **À LA PLACE de** livrer la couche 2 d'office, s'arrêter après la reco et sa ligne de pourquoi, puis finir sur « je déballe X ? ».
+  **POURQUOI le déclencheur est l'interlocuteur et non la longueur** : un seuil ne se voit qu'une fois le texte écrit, donc trop tard.
+  **HORS PÉRIMÈTRE** : ce qu'un skill prescrit explicitement, et le panorama demandé (cf. « Phase »). Le compte rendu ajouté par-dessus reste soumis à la règle.
+  **MESURE** : `mesure-reponses.py`, ligne « longueur des réponses », seuil à 200 mots.
 
 ## Phase, déduite du contexte et non d'un mot-clé
 
