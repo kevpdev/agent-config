@@ -127,6 +127,18 @@ compte.*
     *Pourquoi ce cas est indispensable : sans lui, l'asymétrie ci-dessus récompense la passe qui
     garde la copie, puisque la copie est moins chère en mots que son pointeur. C'est l'incitation
     exactement inverse du refus dur.*
+  - **Le second cas nommé — une consolidation monte, et le mot n'est pas son unité.** Ramener un fait
+    dupliqué à un seul home coûte **plus** de mots que ses copies, parce qu'une copie allude et qu'un
+    home documente. Une telle passe rend le **nombre de homes du fait**, avant et après. Elle ne
+    justifie rien en mots.
+    *Mesuré le 2026-08-21 : le fait « les Dockerfile vivent dans `backend/devops/docker/` » vivait en
+    48 mentions réparties sur 17 fiches. Après consolidation dans une fiche `devops` neuve, il en
+    reste un home plus quatre mentions légitimes, et le banc passe de 47 630 à 48 037 mots, soit
+    **+407**. La passe a fait exactement ce que le test du home prescrit, et le décompte de mots l'a
+    notée en régression.*
+    **NE PAS lire ce cas comme une dispense.** Il ne couvre que la passe qui **supprime** les
+    symptômes. Une passe qui les annote monte aussi, et elle n'a rien consolidé — c'est le décompte
+    de homes, pas celui de mots, qui sépare les deux.
 - **Relire ce qui dépasse ses pairs**, sans obligation de le réduire : au-delà de **2× la médiane** de
   son home, un fichier se relit contre le critère. C'est un déclencheur de lecture, pas une cible de
   coupe — un fichier peut passer la relecture et rester au-dessus.
