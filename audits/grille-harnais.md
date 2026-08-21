@@ -179,15 +179,25 @@ print(sum(len(yaml.safe_load(re.match(r'---\n(.*?)\n---\n',open(f,encoding='utf-
 
 **Cible, re-posée le 2026-08-11** : les ~3 950 mots ci-dessous ont été établis sur les **règles seules**. Ils ne sont donc pas un plafond global et ne doivent pas se lire comme tel. Deux plafonds distincts, chacun sur le périmètre qui le concerne :
 
-| Couche | Mesure | Cible | Qui la fait bouger |
+**LE CHIFFRE N'EST PLUS UN SEUIL, décidé par l'humain le 2026-08-21.** C6 mesure et publie le poids, il ne le compare plus à une cible pour rendre un verdict de dépassement.
+
+**À LA PLACE de** demander « la couche tient-elle sous N mots », demander **« qu'est-ce que la couche a acheté avec sa croissance »**. Une couche qui grossit de 400 mots de fait indéduisible est saine. Une couche qui grossit de 400 mots de quatrième part est en dette, au même poids.
+
+**POURQUOI le seuil sort** : un plafond chiffré fabrique un dilemme que rien ne tranche. Il met en concurrence une instruction survivante et un nombre, alors que la grille interdit par ailleurs de couper l'une pour tenir l'autre — donc il ne pouvait produire qu'une contrainte négative sans issue. Et la doc va dans le même sens, « *find the smallest possible set of high-signal tokens* » est une intention, pas un compte. C'est C1 et C7 qui décident, par instruction ; C6 ne fait que rendre la somme visible et nommer ses contributeurs.
+
+**Ce que C6 rend désormais** : la somme, sa trajectoire depuis la passe précédente, et le `wc -w` par fichier trié. Plus, pour chaque fichier qui a grossi, la nature de ce qui l'a fait grossir. Aucun verdict de « dépassement ».
+
+**Les chiffres ci-dessous restent, comme repères historiques et non comme cibles.**
+
+| Couche | Mesure | Repère | Qui la fait bouger |
 |---|---|---|---|
-| Règles + output style | `wc -w` ci-dessus | ~3 950 | la cascade sur `rules/` |
+| Règles + output style | `wc -w` ci-dessus | ~3 950 au 2026-08-11, **repère et non cible** | la cascade sur `rules/` |
 | Descriptions de skills | script YAML ci-dessus | **pas de cible avant la passe 9** | le nombre de skills, pas leur rédaction |
 
 *Pourquoi pas de cible sur les descriptions* : leur poids est d'abord une fonction du **nombre** de skills installés, pas de leur formulation. Fixer un plafond en mots reviendrait à interdire un 27e skill pour une raison de budget, alors que la vraie question est « ce skill mérite-t-il d'exister ». Le plafond dur qui existe déjà est ailleurs et il est mécanique : 1 536 caractères par entrée, et un budget de listing à 1 % de la fenêtre de contexte au-delà duquel Claude Code **supprime** les descriptions des skills les moins invoqués (doc vérifiée le 2026-08-11). C'est ce seuil-là qu'une passe doit surveiller, pas une somme de mots.
 
 **État au 2026-08-10 (remesuré)** : 5 830 mots — 5 607 de règles (dont `memory-policy.md`, 207) + 223 d'output style. L'estimation initiale « ~40 % retirables » ne s'est pas confirmée : la passe `rules/` du 2026-08-10 mesure ~1 650 mots retirés par la cascade (~30 %).
-**Cible** : ~3 950 mots hors output style — plancher mesuré par la passe `rules/` du 2026-08-10 (rapport `2026-08-10-audit-agent-config-rules.md`), **pas un plafond obligatoire**. Décidé le 2026-08-10 : on ne supprime pas une instruction survivante pour tenir un chiffre. *L'arbitrage `ai-practices.md` qui pendait à cette phrase a été rendu le 2026-08-11 — sur le fond, et non sous pression C6 : son argument d'être chargé était mort.*
+**Repère** : ~3 950 mots hors output style — plancher mesuré par la passe `rules/` du 2026-08-10 (rapport `2026-08-10-audit-agent-config-rules.md`). Ce n'était déjà **pas un plafond obligatoire** au 2026-08-10, et ce n'est plus une cible du tout depuis le 2026-08-21 : on ne supprime pas une instruction survivante pour tenir un chiffre, donc le chiffre ne doit pas être posé comme un objectif à tenir. *L'arbitrage `ai-practices.md` qui pendait à cette phrase a été rendu le 2026-08-11 — sur le fond, et non sous pression C6 : son argument d'être chargé était mort.*
 
 ### C7 — Rentable ?
 
