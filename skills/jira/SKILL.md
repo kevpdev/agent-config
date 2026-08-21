@@ -36,8 +36,9 @@ besoin ou brouillon → 01-brouillon → 02-publier → ticket + clé rattachée
 ## Règles transverses
 
 - **La mémoire du dépôt fait autorité sur tout ce qui est propre au projet.** Le site Jira, les clés
-  de projet autorisées, la convention de scope, le banc d'essai : lus dans la mémoire, jamais codés
-  ici. *Pourquoi : ce skill est partagé publiquement, donc aucune donnée d'un client n'y entre. Et
+  de projet autorisées, la convention de scope, le banc d'essai, le chemin des gabarits de
+  description : lus dans la mémoire, jamais codés ici. Les gabarits d'`assets/` sont le défaut neutre
+  qui s'applique quand le dépôt n'en déclare aucun. *Pourquoi : ce skill est partagé publiquement, donc aucune donnée d'un client n'y entre. Et
   c'est le mécanisme prévu par le framework, dont `01-ticket-info/references/tool-detection.md` place
   l'outil de ticketing dans la mémoire projet.*
 - **Rien ne part vers Jira sans une demande explicite à l'humain**, nommant le ticket visé et ce que
