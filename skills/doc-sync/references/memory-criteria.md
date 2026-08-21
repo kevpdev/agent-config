@@ -69,6 +69,19 @@ compte.*
 - **Justifier une hausse, jamais une valeur.** Une passe qui fait grossir l'ensemble @-importé nomme
   ce qu'elle ajoute et pourquoi le critère le retient. Une passe qui le réduit n'a rien à justifier.
   *Pourquoi cette asymétrie : le sens de variation est un fait, un niveau est un jugement.*
+  - **Le cas nommé — une passe de pointeur monte, et c'est normal.** Remplacer une copie par un
+    pointeur coûte **plus** de mots que la copie dès que celle-ci est un jeton court, un numéro de
+    port ou une version : nommer `backend/docky/docker-compose.yml` prend plus de place que `3002`.
+    Une telle passe justifie sa hausse en nommant **les copies retirées et le fichier qui les porte
+    désormais**, jamais en commentant le delta.
+    *Mesuré le 2026-08-21 sur un `architecture.md` : 3 438 → 3 557 mots, cinq copies de config
+    retirées, deux affirmations fausses corrigées, dont +48 mots pour un piège qui manquait.*
+    **NE PAS en déduire** qu'une hausse due à un pointeur n'a rien à justifier : n'importe quelle
+    hausse se raconte comme un pointeur, et cette porte ne se referme plus. Le geste reste de
+    justifier, seule l'**unité** change — des copies nommées, pas un nombre de mots.
+    *Pourquoi ce cas est indispensable : sans lui, l'asymétrie ci-dessus récompense la passe qui
+    garde la copie, puisque la copie est moins chère en mots que son pointeur. C'est l'incitation
+    exactement inverse du refus dur.*
 - **Relire ce qui dépasse ses pairs**, sans obligation de le réduire : au-delà de **2× la médiane** de
   son home, un fichier se relit contre le critère. C'est un déclencheur de lecture, pas une cible de
   coupe — un fichier peut passer la relecture et rester au-dessus.

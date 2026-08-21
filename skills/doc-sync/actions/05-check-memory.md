@@ -46,8 +46,14 @@ Aucune édition de mémoire.
    | manquement au critère d'inclusion, doublon, copie d'un fichier du disque | action 03, le verdict était faux |
    | fait faux, périmé, chemin ou commande qui n'existe pas | action 04, l'écriture était fausse |
    | écart sur une surface de régime décision | action 07, il se signale et s'arbitre |
-   | hausse de l'ensemble @-importé non justifiée | action 03, qui nomme l'ajout ou le retire |
+   | hausse de l'ensemble @-importé non justifiée | action 03, qui nomme l'ajout |
    | entrée sortie pour faire du chiffre, sans volet du critère cité | action 03, la sortie était fausse |
+
+   **La ligne de la hausse ne se déclenche pas sur une passe de pointeur.** Quand chaque mot ajouté
+   est un chemin qui remplace une copie, ou un fait neuf que la passe nomme, la hausse **est** la
+   justification et il n'y a aucun constat. Le cas et sa mesure sont dans
+   [`../references/memory-criteria.md`](../references/memory-criteria.md), § Verbosité. *Pourquoi le
+   dire ici : le checker est dispatché en contexte neuf, il ne voit qu'un décompte qui monte.*
 
 6. **Compter la passe, et s'arrêter.** Le retour vers 03 ou 04 rouvre un cycle, donc il lui faut une
    sortie qui ne dépend pas du jugement du modèle. **Le compteur vit dans le rapport, pas dans le
