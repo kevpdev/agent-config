@@ -7,7 +7,7 @@ Comment j'écris un skill perso pour qu'il reste propre et lisible. À relire av
 C'est un fork français des règles de l'AIDD (`aidd-context:04-skill-generate`, fichier `references/skill-authoring.md`). Je garde le jeu de règles, qui a fait ses preuves. J'y change deux choses, et c'est tout :
 
 - **R10** passe de « anglais imposé » à **français**. Mes skills perso sont pour moi, pas pour du partage d'équipe.
-- **R12** ajoute « toujours le pourquoi », qui manque à l'AIDD trop sobre.
+- **R12** ajoute le pourquoi **quand il porte une information**, que l'AIDD trop sobre ne demande jamais.
 
 Deux règles (R1, R6) ne sont vérifiées par aucun outil, même côté AIDD. C'est par là qu'un skill dérive. Le lint de `../actions/02-validate.md` les couvre ; à surveiller à la main hors de ce skill.
 
@@ -41,9 +41,11 @@ Deux règles (R1, R6) ne sont vérifiées par aucun outil, même côté AIDD. C'
 - **R9. Pas de section vide.** J'omets une section optionnelle sans contenu. Jamais de placeholder « ## X → Aucun ».
 - **R10. Contenu en français** (frontmatter, corps, actions, références). Seuls les en-têtes d'anatomie restent en anglais (voir plus bas, ce sont des mots-clés de structure).
 - **R11. Une idée par phrase.** Je coupe une phrase qui dépasse la ligne. Exceptions : la `description` mono-ligne et les cellules de tableau.
-- **R12. Toujours le pourquoi.** Une règle énonce sa raison, pas seulement l'ordre.
-  - Pourquoi : un LLM suit mieux une raison qu'un ordre sec. Sans le pourquoi, il viole plus souvent la règle et ne sait pas la transposer à un cas non prévu.
+- **R12. Le pourquoi quand il porte une information.** Une règle énonce sa raison **si cette raison apporte un fait indéduisible** : contrainte d'environnement, mesure, piège vécu. **À LA PLACE de** justifier ce qu'un modèle sait déjà, couper.
+  - Le critère est le contenu, jamais la présence. Une raison qui transmet un fait de mon environnement se donne, une raison qui explique au modèle ce qu'il sait déjà se paie en contexte pour rien.
+  - Une valeur arbitraire (seuil, constante, délai) se justifie toujours : sans sa raison, personne ne sait comment la recalculer.
   - Le pourquoi tient en une ligne. Ce n'est pas une permission de rallonger, R11 tient toujours.
+  - `rules/reasoning.md`, section « Méta-règle », fait foi. Les deux pages de doc qui tranchent sont citées dans `rules/references/ref-reasoning.md`.
 - **R13. Mode d'invocation déclaré.** Un skill à effet de bord porte `disable-model-invocation: true` et s'appelle par `/<nom>`. Sans effet de bord, le champ est omis et le skill reste auto-déclenchable.
   - Pourquoi : le déclenchement par phrase est probabiliste, donc il se trompera. Sur une action réversible ça coûte un paragraphe inutile ; sur un `git push` ça coûte un commit non voulu.
   - Compte comme effet de bord : écrire un fichier versionné, committer, pousser, supprimer, déplacer, envoyer sur le réseau. Lire, analyser et conseiller n'en sont pas.

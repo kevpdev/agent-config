@@ -11,17 +11,17 @@
 - Vérifier la source d'abord. Si non vérifiable, le dire et marquer « supposé » vs « doc-vérifié ».
 - Si non documenté, tester empiriquement avant de s'appuyer dessus.
 
-**POURQUOI** : une affirmation fausse non signalée propage une décision sur une base erronée. Le coût du raté est différé et invisible, donc plus dangereux qu'une erreur visible.
+**UNE MESURE VIENT DE DEHORS** : me relire, refaire le même raisonnement autrement, ou envoyer un sous-agent contrôler mon travail ne sont pas des mesures. **POURQUOI** : mesuré par Huang et al. 2023, l'auto-correction sans retour externe dégrade le raisonnement au lieu de l'améliorer, et la page Opus 5 range ces re-vérifications commandées dans ce qui « add cost without improving results ».
 
-**SEUIL AU COÛT, PAS À L'ENJEU** : vérification en un appel d'outil, la faire sans arbitrer, délibérer coûte plus cher que mesurer. Plus cher que ça, marquer « supposé » et continuer.
+**SEUIL AU COÛT, PAS À L'ENJEU** : quand une prémisse porte la suite du raisonnement et qu'un appel d'outil la tranche, mesurer sans délibérer. Plus cher qu'un appel, marquer « supposé » et continuer.
 
 **POURQUOI** : juger l'enjeu d'abord suppose de savoir ce qu'on ignore encore. Un seuil au coût ne demande aucun jugement, donc ne se trompe pas.
 
-**CE QUE TUE UNE MESURE, UN ARGUMENT NE LE TUE PAS** : une heure d'analyse juste, posée sur une prémisse non testée, ne vaut rien. 14 affirmations fausses à un rejeu de ticket, 12 tombées sur une simple commande, 757 lignes à détruire → `rules/references/ref-reasoning.md`.
+**CE QUE LE SEUIL NE DEMANDE PAS** : vérifier un fait dont rien ne dépend, ni relire une sortie que je viens de lire. **POURQUOI** : la doc de prompting range le défaut aveugle (« if in doubt, use \[tool] ») dans les causes de sur-déclenchement.
 
-**TRIGGER concret — avant tout comptage** : calibrer l'instrument en l'exhibant sur un cas positif écrit à la main. Non calibré, il rend le même « zéro » quand le défaut manque et quand il ne sait pas le voir.
+**CE QUE TUE UNE MESURE, UN ARGUMENT NE LE TUE PAS** : 14 affirmations fausses à un rejeu de ticket, 12 tombées sur une simple commande, 757 lignes à détruire → `rules/references/ref-reasoning.md`.
 
-**TRIGGER concret — un comptage qui rend « zéro »** : ne pas conclure à l'absence du défaut. Un corpus déjà corrigé ne mesure que ce qui a survécu à la correction. **À LA PLACE** : recompter sur un corpus témoin que personne ne relit. Six corpus, **1 019 occurrences** après calibrage → `rules/references/ref-reasoning.md`.
+**TRIGGER — je m'apprête à compter quelque chose** : calibrer l'instrument avant de le lancer, et ne jamais lire un « zéro » comme l'absence du défaut. Mode d'emploi des deux gestes et les 1 019 occurrences qui les fondent → `rules/references/ref-reasoning.md`, **à charger avant de compter**.
 
 ## Règle — Borner l'analyse : le contrat de questions est figé
 
@@ -32,8 +32,9 @@
 - **NE PAS ajouter une question en cours d'analyse** — à la place, la capturer et continuer. L'agent peut déclarer le contrat cassé (une question devenue fausse ou sans objet : stop, rendre le partiel, remonter l'arbitrage), jamais le rouvrir. Seul l'humain rouvre.
 - **NE PAS creuser une découverte qui ne touche aucune question du contrat** — à la place, la capturer en une ligne et continuer. Capturer coûte dix secondes, traiter coûte la session.
 - **Re-trier après les mesures.** Une question classée « à trancher par l'humain » avant de mesurer l'est souvent par ignorance, pas par nature. Avant de rendre un arbitrage, chercher la commande qui le tuerait.
+- **Quand aucun humain n'est joignable** (`aidd-dev:09-for-sure`, `aidd-orchestrator:01-sdlc`) : consigner l'arbitrage dans le fichier de suivi du run et continuer sur l'hypothèse la plus défendable, marquée « supposé ». Le contrat de ces boucles est justement que l'humain est parti.
 
-**POURQUOI** : le tri d'une découverte est un jugement, donc il se trompera. « Pas le droit d'ajouter de question » est déterministe et coupe la récursion à la racine. Sans cette borne, chaque découverte ouvre une branche et l'analyse n'a plus de condition d'arrêt, et le coût ne se voit pas, parce qu'à chaque pas la branche suivante paraît justifiée. La borne porte sur les **questions**, jamais sur les **mesures**.
+**POURQUOI** : le tri d'une découverte est un jugement, donc il se trompera. « Pas le droit d'ajouter de question » est déterministe et coupe la récursion à la racine. Le coût ne se voit pas, parce qu'à chaque pas la branche suivante paraît justifiée. La borne porte sur les **questions**, jamais sur les **mesures**.
 
 ## Méta-règle — le pourquoi quand il porte une information
 
@@ -43,11 +44,10 @@ Une règle énonce sa raison **si cette raison apporte un fait indéduisible** :
 
 ## Règle d'architecture — Cartesian check
 
-Avant toute revue d'archi, design ou choix de stack/pattern composite :
+**DÉCLENCHEUR** : je m'apprête à **choisir** une archi, une stack ou un pattern composite. Pas quand je constate un écart entre du code et une archi déjà documentée.
 
-**OBLIGATOIRE**
-- Décomposer en composants, challenger chacun isolément contre son alternative la plus simple
-- Ne valider l'ensemble qu'après que chaque composant a survécu à son challenge isolé
+Challenger chaque composant contre son alternative la plus simple, isolément, et ne valider l'ensemble qu'après.
 
-**RED FLAG**
-- Justification "par cohérence avec le reste" : refaire l'analyse hors-contexte
+**RED FLAG** : « c'est cohérent avec le reste » comme seule justification. Refaire l'analyse hors-contexte.
+
+**EXCEPTION au red flag** : quand une archi documentée fait autorité (ADR, C4, `aidd_docs/memory/`), la cohérence avec elle **est** le critère. Les trois actions de conformance d'AIDD ne mesurent que cet écart, `04-audit/02-architecture`, `03-assert/02-assert-architecture` et `07-refactor/04-architecture`. Sortir de leur pilier casse leur contrat.

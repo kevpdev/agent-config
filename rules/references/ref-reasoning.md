@@ -2,6 +2,8 @@
 
 Les cas mesurés qui fondent les règles de `reasoning.md`. Jamais chargé automatiquement : l'instruction et son pourquoi restent dans la règle, seule l'anecdote chiffrée descend ici.
 
+**Une exception, les deux gestes du comptage** (section « les 1 019 points-virgules »). Ils portent leur mode d'emploi complet ici, parce que compter un corpus n'arrive que dans ce repo et que 106 mots de contexte permanent ne se paient pas pour ça. La règle n'en garde que l'alerte, et renvoie ici avant tout comptage.
+
 ---
 
 ## Ne jamais affirmer sans vérifier — le rejeu de VW3-3256 (2026-08-04)
@@ -26,7 +28,15 @@ Zéro point-virgule fautif annoncé sur six corpus. Faux deux fois, le même jou
 
 **Comptage réel après calibrage : 1 019 occurrences.**
 
-**La leçon** : un détecteur non calibré ne distingue pas l'absence du défaut de son incapacité à le voir, et il rend le même « zéro » dans les deux cas. D'où les deux gestes de la règle — un corpus témoin que personne ne relit, et un calibrage sur un cas positif exhibé à la main.
+**La leçon** : un détecteur non calibré ne distingue pas l'absence du défaut de son incapacité à le voir, et il rend le même « zéro » dans les deux cas.
+
+### Les deux gestes, en entier
+
+**GESTE 1 — avant de lancer le comptage, calibrer l'instrument** en l'exhibant sur un cas positif écrit à la main. Non calibré, il rend le même « zéro » quand le défaut manque et quand il ne sait pas le voir. Le calibrage se montre dans la sortie, il ne se raconte pas.
+
+**GESTE 2 — un comptage qui rend « zéro » ne prouve pas l'absence du défaut.** **À LA PLACE de** conclure, recompter sur un **corpus témoin que personne ne relit**. Un corpus déjà corrigé ne mesure que ce qui a survécu à la correction, jamais la propension qui l'a produit, et une correction faite en cours de rédaction ne laisse aucune trace dans git.
+
+**Où ça s'applique** : les comptages de ce repo, ceux de `mesure-reponses.py`, la commande de `ref-ponctuation.md`, les mesures C4 et C7 du skill `audit-harnais`. Autrement dit chaque fois qu'un chiffre de style ou de conformité sert de verdict.
 
 ## Le pourquoi quand il porte une information — deux prescriptions de doc en apparence opposées (2026-08-11)
 
