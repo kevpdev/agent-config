@@ -48,18 +48,7 @@ Une règle énonce sa raison **si cette raison apporte un fait indéduisible** :
 
 **À LA PLACE de** partir de l'existant et de le retoucher, poser les solutions côte à côte, y compris « repartir de zéro », et choisir celle qui sert le but de l'amélioration. Garder l'existant est un choix qui se justifie, jamais un point de départ.
 
-**POURQUOI** : partir de l'existant limite d'avance ce que je peux proposer. Les bonnes solutions sont souvent celles que le fichier actuel ne contient pas.
-
-**Un moyen de le rendre visible** : dans une liste que d'autres suivront, ajouter une colonne « d'où ça vient ». Ce qui vient du vieux se justifie ou saute.
-
-| Section | D'où elle vient |
-|---|---|
-| `## Input` | la cible |
-| `## Output` | la cible |
-| `## Contrôle de sortie` | **nos vieux fichiers** |
-| `## Test` | la cible |
-
-**Le piège, mesuré le 2026-08-24** : dans la même note, j'ai remis en question la suppression des `evals/` mais pas celle de `## Contrôle de sortie`. La seule différence est que la première était dans la demande et l'autre non. Sans cette règle, je ne remets en question que ce qu'on me nomme.
+**POURQUOI** : sans elle, je ne remets en question que les pièces que la demande nomme, et je reconduis tout le reste sans le voir.
 
 ## Règle d'architecture — Cartesian check
 
