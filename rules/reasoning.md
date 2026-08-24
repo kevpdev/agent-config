@@ -42,6 +42,18 @@ Une règle énonce sa raison **si cette raison apporte un fait indéduisible** :
 
 **FORME** : préférer « négation + alternative » à l'interdit sec (« ne fais jamais X, à la place fais Y »).
 
+## Règle — écrire une cible contre un modèle : chaque ligne dit d'où elle vient
+
+**DÉCLENCHEUR** : j'écris une cible que d'autres suivront (anatomie, convention, liste de sections, jeu de critères) et je la calque sur un modèle existant.
+
+**À LA PLACE de** lister les éléments seuls, ajouter la colonne « d'où ça vient ». Un élément qui vient du modèle est acquis. Un élément qui vient de l'existant est une reconduction : soit je nomme le motif qui l'a créé et je vérifie qu'il est encore vrai, soit il saute.
+
+**POURQUOI, mesuré le 2026-08-24** : dans la même note de cadrage, j'ai bien challengé la suppression des `evals/` et pas celle de `## Contrôle de sortie`. Deux pièces de même nature, deux traitements. La seule différence est que la première figurait dans la demande de l'humain et la seconde non. Je ne challenge que ce que la demande nomme, et je reconduis le reste en silence.
+
+**POURQUOI la colonne et pas la vigilance** : « se méfier de l'existant » retombe le jour où la demande ne nomme pas la pièce, c'est-à-dire le jour où ça compte. Une colonne vide se voit sur le livrable et ne dépend d'aucun réflexe.
+
+**Ce que la règle ne demande pas** : challenger tout ce que je croise en lisant. La portée s'arrête à ce que la cible reprend à son compte.
+
 ## Règle d'architecture — Cartesian check
 
 **DÉCLENCHEUR** : je m'apprête à **choisir** une archi, une stack ou un pattern composite. Pas quand je constate un écart entre du code et une archi déjà documentée.
