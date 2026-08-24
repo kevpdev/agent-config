@@ -157,9 +157,13 @@ Une session fraîche par cas, en `claude -p`. Elle ne rend que les deux verdicts
 
 La chasse aux doublons (un même fait à deux endroits) ne se mécanise pas et n'a pas à tourner à chaque passe. Elle se fait au moment de la refonte, par relecture. **POURQUOI ce n'est pas un troisième étage** : un étage permanent qu'on ne joue jamais coûte de la doc et ne rend aucun verdict.
 
-### Ce sur quoi on ne bâtit pas encore
+### Ce sur quoi on ne bâtit pas
 
-`claude plugin eval` et `/skill-doctor` existent dans le binaire mais sont en early access, absents de la doc publique et non activés ici (vérifié le 2026-08-24, `claude plugin eval` répond « currently in early access »). On s'en inspire, on n'en dépend pas. `claude plugin validate`, lui, est public et stable, et couvre une partie du lint pour un plugin — à évaluer le jour où nos skills en deviennent un.
+**Aucun outil natif de Claude Code n'entre dans le lint ni dans l'éval.** Ni `claude plugin eval`, ni `/skill-doctor`, ni `claude plugin validate`. Ce sont des sources d'inspiration, jamais des dépendances.
+
+**POURQUOI ce n'est pas leur maturité qui les écarte** : leur statut le jour de la décision n'est pas le critère, sinon la question se rouvrirait à chaque release. Le critère est l'agnosticisme posé en arbitrage fondateur. Un outil natif ne se justifierait que pour les skills du wrapper Claude, et cette exception est YAGNI tant qu'aucun besoin ne la réclame.
+
+État constaté le 2026-08-24, pour mémoire et non comme condition : `claude plugin eval` et `/skill-doctor` sont en early access, absents de la doc publique et non activés ici. `claude plugin validate` est public et stable.
 
 ### Bornes et interdits
 
