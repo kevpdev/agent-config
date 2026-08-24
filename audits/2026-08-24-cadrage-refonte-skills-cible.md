@@ -10,8 +10,9 @@ Posés par l'humain, ils ne se rediscutent pas dans les sessions d'adaptation.
 
 - Le référentiel AIDD est en lecture seule. On s'en inspire, on n'y touche jamais.
 - Le multi-CLI (codex, opencode…) est YAGNI. Rien n'est conçu pour lui.
-- L'évaluateur lourd (dossiers `evals/`, `run-skill-evals.py`) est remplacé par un checker minimal : lint, conformité au template, review autonome pour les seuls skills éligibles. Les autres se testent à la main.
-- Est non éligible à la review autonome tout skill qui porte un arbitrage humain non inférable, un outil externe, une auth requise, ou une écriture sensible (MCP, réseau en écriture).
+- L'évaluateur lourd (`run-skill-evals.py`, 695 lignes) est remplacé par un système minimal : un lint mécanique et une éval comportementale. Les dossiers `evals/` se révisent contre le nouveau format au lieu de se jeter, la suppression ayant été proposée pour leur défaut, pas pour leur principe.
+- Le système reste **agnostique** : le format des cas ne cite ni outil ni agent. On s'inspire de l'outillage d'Anthropic, on n'en dépend pas.
+- On ne vérifie tout seul que ce qui se vérifie **correctement**. Aucun motif fragile.
 - Les subagents s'emploient plus souvent quand c'est pertinent, agnostiques du modèle, en commençant simple. Le ratio performance sur coût prime.
 - Le pattern Frame–Deliver–Checker de l'orchestrateur AIDD se généralise aux skills où il a du sens, borné à 3 passes.
 - Les skills se préfixent par domaine.
@@ -44,7 +45,7 @@ Chaque dossier est optionnel, comme chez AIDD (`skill-tree.md` : « Omit `action
 | `actions/NN-<slug>.md` | si plusieurs actions distinctes |
 | `references/*.md` | si de la connaissance se charge à la demande |
 | `assets/*.md` | si un gabarit se copie dans un artefact. `skill-craft` y porte les deux gabarits de skill |
-| `evals/` | **supprimé partout** (section 4) |
+| `evals/` | si le skill porte des cas d'éval, au format de la section 4 |
 | `scripts/` | non retenu. L'exécutable partagé vit dans `skills/_shared/`, l'outillage dans `wrappers/claude/scripts/` |
 
 **POURQUOI pas de `scripts/` par skill** : le cache AIDD n'en porte qu'un sur 46 skills, hors arbre canonique, et le nôtre concentre déjà l'exécutable en deux homes qui suffisent.
@@ -99,7 +100,7 @@ Quatre sections, celles du gabarit `action-template.md`, ni plus ni moins.
 | `## Garde-fou — vault requis` (7) | première étape du `## Process`, et une seule fois : le bloc est copié à l'identique dans les 7 skills `vault-*` |
 | `## Contexte`, `## Méthode`, `## Sortie`, `## Verdict`, `## Délégation`, `## Flux`, `## Hors périmètre` | `## Input`, `## Output`, `## Process`, ou le flux mermaid du routeur |
 
-La suppression de `## Contrôle de sortie` clôt au passage une contradiction : R8 et `01-scaffold` l'imposaient, la section anatomie de `skill-authoring-fr.md` l'omettait. **POURQUOI elle ne manque pas** : le `## Test` d'AIDD porte déjà l'observable en cours d'exécution (« le fichier est relu | aucun placeholder ne survit »), et le `## Process` porte déjà les gardes (« **Gate.** Quand tout candidat revient ❌, … ne pas passer à l'action 04 »). La séparation que R8 défendait tenait à l'existence des `evals/` ; sans eux, elle n'a plus d'objet.
+La suppression de `## Contrôle de sortie` clôt au passage une contradiction : R8 et `01-scaffold` l'imposaient, la section anatomie de `skill-authoring-fr.md` l'omettait. **POURQUOI elle ne manque pas** : le `## Test` d'AIDD porte déjà l'observable en cours d'exécution (« le fichier est relu | aucun placeholder ne survit »), et le `## Process` porte déjà les gardes (« **Gate.** Quand tout candidat revient ❌, … ne pas passer à l'action 04 »). La séparation que R8 défendait tenait au fait que `## Test` ne portait qu'un pointeur vers `evals/`. Avec un `## Test` en table d'observables, elle n'a plus d'objet.
 
 Une citation est un lien markdown relatif dans la phrase qui l'utilise, jamais un bloc à part ni un include `@` (R18 AIDD). Un bloc fencé est du contenu que l'action émet, pas de la structure (R12 AIDD).
 
@@ -108,41 +109,62 @@ Une citation est un lien markdown relatif dans la phrase qui l'utilise, jamais u
 - Une référence est plate et autonome. Un fait par ligne, en table ou en liste, la prose pour le reste (R15 AIDD). Elle nomme une sœur en backticks et ne la lie jamais.
 - Un asset dit comment il se remplit et ce qui s'efface. Rien du scaffold ne survit dans l'artefact produit (R16 AIDD). Placeholders `<...>`, un seul format.
 
-## 3. Éligibilité à la review autonome (Q2)
+## 3. Ce qui se teste tout seul, et ce qui ne se teste pas (Q2)
 
-Les quatre critères d'exclusion, opérationnalisés depuis l'inventaire du 2026-08-24 :
+**La coupure n'est pas par skill, elle est par affirmation.** Un même skill se vérifie tout seul sur ce qui se contrôle depuis sa sortie, et se relit à la main sur le reste. Chercher une liste de skills éligibles était la mauvaise question.
 
-| Critère | Ce qui disqualifie | Ce qui ne disqualifie pas |
-| --- | --- | --- |
-| arbitrage humain non inférable | une gate bloquante par design (`memory-bootstrap` : « attendre la réponse ») | une question bornée dont la réponse se pré-fournit dans le prompt de test (`cadre-prompt` : une question maximum) |
-| outil externe | un outil à installer ou configurer (`glab`, Slidev) | l'outillage natif de l'agent, recherche web comprise |
-| auth requise | token, login, MCP authentifié (`jira`) | — |
-| écriture sensible | MCP en écriture, réseau en écriture, push, commit | écrire un fichier local que la session peut relire |
+| Ce qu'on vérifie tout seul | Pourquoi c'est robuste |
+| --- | --- |
+| le **déclenchement** : le skill part quand il doit, et se tait quand il ne doit pas | verdict binaire, l'outil Skill a été appelé ou non. Marche sur les 24 skills, même ceux qui ne rendent que de la prose |
+| l'**artefact** : le fichier produit existe, parse, et porte les sections de son gabarit | verdict par script, sans interprétation |
 
-**Le flag est la première ligne du `## Test` du SKILL.md** : « Review autonome » ou « Test manuel : \<geste\> ». Il se juge une fois, à l'échafaudage par `skill-craft` ou à la refonte, contre les quatre critères. **POURQUOI cette forme** : déclaratif et grep-able, le checker ne re-devine rien à chaque run, et aucun champ de frontmatter non standard n'est inventé, le comportement de Claude Code sur un champ inconnu n'étant pas vérifié.
+| Ce qu'on refuse d'asserter | Pourquoi |
+| --- | --- |
+| l'ordre des outils appelés | trop fragile, ça punit les chemins valides que personne n'avait prévus. Anthropic le déconseille nommément dans sa méthodo d'éval d'agents |
+| une regexp sur de la prose | casse à la première variation valide de formulation |
+| le style, le ton, « ça sonne juste » | ne se décompose pas en pass/fail. C'est de la relecture humaine, et les sources d'Anthropic le rangent là |
 
-Répartition attendue sur les 24 skills : ~9 éligibles (les 6 experts restants, `mermaid-craft`, `fact-checker`, `cadre-prompt`), le reste en test manuel.
+**Le problème d'éligibilité disparaît presque.** Le test de déclenchement se joue **outils coupés** : le skill se déclenche mais ne peut rien exécuter. `jira` et `vault-save` se testent donc sans aucun risque. Ne restent manuels que les affirmations refusées ci-dessus, et les artefacts écrits hors du dossier de travail.
 
-## 4. Le checker (Q3)
+**POURQUOI ce critère et pas « sortie réversible et vérifiable mécaniquement »** : la réversibilité est le travail du harnais, pas une propriété du skill — l'industrie simule le système externe au lieu de renoncer à tester. Et le vérifiable mécaniquement est trop strict : le format d'éval officiel d'Anthropic fait juger des affirmations en langage naturel. Le vrai critère documenté est qu'une affirmation se contrôle depuis la sortie seule.
 
-### Les `evals/` disparaissent
+## 4. Deux outils, pas trois étages (Q3)
 
-Les dossiers `evals/` se suppriment sur les 24 skills, et `run-skill-evals.py` (695 lignes) avec eux, git les garde. Décision rejouée sans biais de conservation : le corpus dérive déjà (champ `setup` non documenté chez `audit-harnais` qui écrit dans le repo réel, zéro scénario négatif chez `skill-craft` contre sa propre règle) et une passe coûte 5 à 6 $. Un checker qui **dérive ses scénarios du skill lui-même** ne dérive jamais : la `description` est le contrat de déclenchement à tester, les gardes du `## Process` et les tables `## Test` sont le comportement attendu à juger.
+### Le lint — mécanique, gratuit, à chaque fois
 
-### Trois étages
+Il lit le fichier, n'exécute rien, tourne sur les 24 skills en une seconde. Six vérifications, toutes sans interprétation :
 
-| Étage | Nature | Ce qu'il vérifie |
-| --- | --- | --- |
-| ① lint | script déterministe, sans LLM | frontmatter qui parse (YAML strict), champs R5 et R13, seuils R1 (~150) et R4 (500), **sections comparées à celles du gabarit** (aucune manquante, aucune en trop, dans l'ordre), flag de test présent, placeholders résiduels, liens relatifs morts |
-| ② template | jugement, l'action validate de `skill-craft` | anatomie des actions, doublons R6, tri des natures R8, sections vides R9 |
-| ③ review autonome | agent checker, skills flagués seulement | session fraîche via `claude -p` : le déclenchement se vérifie sur la sortie, le comportement se juge contre les tables `## Test` et les gardes du `## Process`, plus un cas négatif dérivé des clauses NE PAS de la description |
+- le frontmatter parse (YAML strict) et porte `name`, `description`, `argument-hint`
+- `name` est égal au nom du dossier
+- la `description` tient sous 1 536 caractères
+- les `##` du fichier correspondent à ceux du gabarit : aucune manquante, aucune en trop, dans l'ordre
+- aucun placeholder `<...>` oublié
+- aucun lien relatif mort
 
-La mécanique de session fraîche de l'étage ③ reprend ce que `run-skill-evals.py` a éprouvé : `claude -p`, verdict de déclenchement séparé du verdict de comportement, mesure du 2026-08-06 à l'appui (7/8 sur opus, 0/8 sur sonnet à requêtes identiques).
+**Ce qu'il ne vérifie surtout pas** : tout ce qui demande de comprendre ce que le skill *fait*. Un grep sur « push » ou « commit » attrape `security-reviewer`, qui cite ces mots pour décrire du code qu'il relit sans rien exécuter. `skill-craft` le dit déjà : « ne pas compter les mots-clés, lire ce que le skill fait ».
+
+### L'éval — exécution, payante, à la demande
+
+Une session fraîche par cas, en `claude -p`. Elle ne rend que les deux verdicts de la section 3, déclenchement et artefact. Chaque skill porte un cas positif, et un cas négatif par frère cité en clause NE PAS.
+
+**Le fichier d'évals ne contient que des données** : la requête, le déclenchement attendu, l'artefact attendu. Aucun nom d'outil, aucun nom d'agent. L'exécuteur est forcément spécifique à Claude et vit dans `wrappers/`. **POURQUOI** : tous les formats d'éval existants sont couplés à leur outil, et on veut pouvoir changer d'exécuteur sans réécrire les cas.
+
+**Emprunt à la méthode officielle d'Anthropic, gratuit parce que c'est du tri et pas de l'outillage** : jouer chaque cas deux fois, avec le skill et sans lui. Une affirmation qui passe dans les deux cas ne mesure pas le skill, elle se supprime.
+
+**Ce qui remplace `run-skill-evals.py`** : le même geste de session fraîche, sans juge LLM pour le comportement. Le corpus existant se révise contre ce format au lieu de se jeter, ses deux défauts connus corrigés — le champ `setup` non documenté qui écrit dans le repo réel disparaît, et les scénarios négatifs manquants s'ajoutent.
+
+### Ce qui reste à un humain ou à une relecture
+
+La chasse aux doublons (un même fait à deux endroits) ne se mécanise pas et n'a pas à tourner à chaque passe. Elle se fait au moment de la refonte, par relecture. **POURQUOI ce n'est pas un troisième étage** : un étage permanent qu'on ne joue jamais coûte de la doc et ne rend aucun verdict.
+
+### Ce sur quoi on ne bâtit pas encore
+
+`claude plugin eval` et `/skill-doctor` existent dans le binaire mais sont en early access, absents de la doc publique et non activés ici (vérifié le 2026-08-24, `claude plugin eval` répond « currently in early access »). On s'en inspire, on n'en dépend pas. `claude plugin validate`, lui, est public et stable, et couvre une partie du lint pour un plugin — à évaluer le jour où nos skills en deviennent un.
 
 ### Bornes et interdits
 
 - **3 passes checker-corrections maximum.** Au-delà, le défaut est dans le diagnostic ou la frame, pas dans l'exécution. Même borne que `max_iterations` (défaut 3) d'`aidd-orchestrator:00-async-dev`, seule borne numérique du référentiel.
-- **Anti-auto-notation conservé** : le contexte qui vient d'écrire un skill ne joue jamais l'étage ③. Il rend la commande et déclare la passe non jouée.
+- **Anti-auto-notation conservé** : le contexte qui vient d'écrire un skill ne joue jamais son éval. Il rend la commande et déclare la passe non jouée.
 - Aucun scénario de checker n'écrit dans le repo réel. Le champ `setup` de l'ancien schéma disparaît avec lui.
 
 ## 5. Doctrine subagents (Q4)
@@ -206,23 +228,23 @@ Listés pour la session d'adaptation, sans les implémenter ici.
 
 ### skill-craft (futur `harness-skill-craft`)
 
-- Réécrire `references/skill-authoring-fr.md` contre cette note : anatomie génération 2 francisée (flux mermaid, table 2 colonnes, `## Test` en table), liste de sections **fermée** aux quatre d'AIDD, R4 justifié ou remesuré, R7 et R8 réécrites sans `evals/` ni `## Contrôle de sortie`.
+- Réécrire `references/skill-authoring-fr.md` contre cette note : anatomie génération 2 francisée (flux mermaid, table 2 colonnes, `## Test` en table), liste de sections **fermée** aux quatre d'AIDD, R4 justifié ou remesuré, R7 réécrite pour le nouveau format d'éval, R8 supprimée avec `## Contrôle de sortie`.
 - Créer `skills/skill-craft/assets/skill-template.md` et `assets/action-template.md`, francisés depuis les gabarits AIDD. Ils deviennent la source de la liste de sections, et `01-scaffold` les copie au lieu de dérouler l'anatomie en prose.
 - Ajouter au lint la règle qui tient la fermeture : les `##` du fichier se comparent à ceux du gabarit, tout en-tête en trop est un échec avec le home de remplacement en message. **POURQUOI un lint et pas une consigne** : une section inventée est exactement ce qu'une convention en prose ne rattrape pas, 23 fichiers l'ont prouvé.
-- Règles nouvelles : le flag d'éligibilité et ses quatre critères, la doctrine subagents (locus, agnosticisme, wrapper), Frame–Deliver–Checker et sa borne, les préfixes de domaine dans le nommage.
-- `01-scaffold` décide l'éligibilité à l'échafaudage, avant d'écrire la description.
-- `02-validate` devient l'étage ② du checker. Ses propres `evals/` sautent comme les autres.
+- Règles nouvelles : ce qui se vérifie tout seul et ce qui se refuse (section 3), la doctrine subagents (locus, agnosticisme, wrapper), Frame–Deliver–Checker et sa borne, les préfixes de domaine dans le nommage.
+- `01-scaffold` écrit les cas d'éval du skill neuf, cas positif et cas négatif par frère cité en clause NE PAS.
+- `02-validate` se réduit : ce que le lint fait mécaniquement en sort, il ne lui reste que la relecture des doublons. Ses propres cas d'éval se révisent au nouveau format.
 
 ### audit-harnais (futur `harness-audit`) et la grille
 
-- C3 sur les descriptions change d'instrument : le scénario d'éval stocké n'existe plus, la falsifiabilité d'un contrat de routage passe par l'étage ③ du checker, joué à la demande. Le verdict mécanique « `ls <skill>/evals/` » de la grille se remplace par « le flag de `## Test` et l'étage ③ ».
+- C3 sur les descriptions garde un instrument mécanique, et il se renforce : le déclenchement se teste en verdict binaire, cas positif et cas négatif, sur tous les skills. Le verdict « `ls <skill>/evals/` » se remplace par la présence d'un cas négatif par frère cité en clause NE PAS, ce que la grille nommait déjà comme son angle mort.
 - Les passes C et D de l'audit skills prennent cette note comme source de conformité de construction, ce que la grille prévoit déjà en déléguant ce point hors d'elle.
 
 ### Outillage
 
-- Un script de lint (étage ①) dans `wrappers/claude/scripts/`.
-- Un agent checker (étage ③) dans `wrappers/claude/agents/`.
-- `run-skill-evals.py` et son test retirés. La section « Jouer les évals des skills » du README se réécrit pour le checker.
+- Un script de lint dans `wrappers/claude/scripts/`, six vérifications, sans LLM.
+- Un exécuteur d'évals dans `wrappers/claude/scripts/`, réduit à deux verdicts et sans juge LLM.
+- `run-skill-evals.py` et son test réduits au nouveau format, ou réécrits. La section « Jouer les évals des skills » du README se met à jour.
 
 ## Hors périmètre
 
