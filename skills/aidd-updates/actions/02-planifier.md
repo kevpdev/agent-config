@@ -40,9 +40,10 @@ Le corps du plan écrit dans le fichier d'état via `--marquer-planifie`, au for
 
 ## Test
 
-- Sur l'état réel de cette machine, le plan doit nommer `skills/aidd-pilot/actions/01-intake.md` et
-  le passage de `aidd-refine:04-shadow-areas` à `aidd-refine:03-shadow-areas`. C'est la cible connue
-  d'avance, donc le juge du plan.
+- *Ce `## Test` n'a plus d'arme à réponse connue, et c'est à dire : sa cible d'avance était un
+  renommage réel du repo, et il n'en reste aucun depuis l'archivage du 2026-08-24. Les deux lignes
+  ci-dessous vérifient la cohérence interne du plan, pas sa justesse. Rétablir une cible nommée au
+  prochain renommage réel, au lieu d'en fabriquer une — un renommage inventé mesurerait le test.*
 - `grep -c '^| ' ` sur la section « ce qui casse » rend autant de lignes que
   `grep -rn '<ancien nom>'` trouve d'occurrences dans le repo. Un écart signale une entrée inventée
   ou une occurrence manquée.

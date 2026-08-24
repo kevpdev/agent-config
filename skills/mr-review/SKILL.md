@@ -18,7 +18,7 @@ personne ne fait à la main sans se tromper — retrouver le vrai périmètre du
 revue à ce qui est jugeable sans contexte, et route le reste.
 
 > [!note] Pourquoi ce skill n'est pas un skill de revue
-> `code-reviewer` et `aidd-dev:05-review` jugent déjà du code. Ce qui manquait est en amont : une MR
+> `aidd-dev:05-review` juge déjà du code. Ce qui manquait est en amont : une MR
 > de plusieurs milliers de lignes n'est pas relisible tant que son périmètre exact n'est pas établi,
 > et un reviewer sans le métier se perd faute d'ancrage, pas faute de compétence.
 

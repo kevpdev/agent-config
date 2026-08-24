@@ -1,6 +1,6 @@
 # 03 — validate-live : run-tests + exercise-api
 
-Produit une **preuve** exploitable par le caller (ex. la ladder d'aidd-pilot). Ne juge pas la feature : rend des faits (pass/fail + evidence).
+Produit une **preuve** exploitable par le caller (ex. la boucle d'`aidd-orchestrator:01-sdlc`). Ne juge pas la feature : rend des faits (pass/fail + evidence).
 
 ## run-tests(kind)
 

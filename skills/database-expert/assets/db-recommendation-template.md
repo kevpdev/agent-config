@@ -44,5 +44,5 @@ EXPLAIN (ANALYZE, BUFFERS) SELECT ...
 ## Hors périmètre
 
 - Scaffolding ORM / génération de DTOs → prompt direct
-- Architecture applicative → `backend-architect`
+- Architecture applicative → hors de cette recommandation
 ```

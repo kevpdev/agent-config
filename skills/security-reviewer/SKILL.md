@@ -70,7 +70,7 @@ Produis le rapport selon `assets/security-report-template.md`.
   *Pourquoi :* un risque supposé sur une config jamais lue est une inquiétude, pas une faille. Le mettre en Risk gonfle le rapport pour avoir quelque chose à signaler, et un rapport qui trouve toujours quelque chose ne se distingue plus d'un rapport qui fonctionne.
   **Aucune recommandation actionnable ne sort de « Hors périmètre »** — ni en note, ni au conditionnel (« si ce champ est nullable, alors inverser… »). Un « si » posé sur du non-lu reste du non-lu, et le lecteur agit sur la recommandation sans relire la condition.
 
-- **Ne jamais** dupliquer une review qualité (SOLID, naming) → **à la place** redirige vers `code-reviewer` et reste sur la sécurité.
+- **Ne jamais** dupliquer une review qualité (SOLID, naming) → **à la place** redirige vers `aidd-dev:05-review` et reste sur la sécurité.
   *Pourquoi :* dilue le verdict et noie les vraies vulnérabilités sous des remarques de style.
 
 - **Ne jamais** suggérer de "rouler son propre crypto" → **à la place** utilise les libs éprouvées (libsodium, Bouncy Castle, Web Crypto API).

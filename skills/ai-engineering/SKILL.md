@@ -77,7 +77,7 @@ Arbitrer sur les **axes** — pas sur un classement daté :
 | Privacy / souveraineté | données sensibles → **local** vs API |
 | Local vs API | infra/contrôle vs simplicité/capacité (axe orthogonal à l'agence) |
 
-**Ne jamais** trancher sur un benchmark/pricing mémorisé → **à la place** valider sur ton propre golden set, et pour les chiffres du jour → skill `docs-check` ou recherche web. *Pourquoi :* benchmarks et prix **pourrissent en semaines** ; un chiffre daté affirmé = décision sur base fausse.
+**Ne jamais** trancher sur un benchmark/pricing mémorisé → **à la place** valider sur ton propre golden set, et pour les chiffres du jour → la recherche de doc et la recherche web natives. *Pourquoi :* benchmarks et prix **pourrissent en semaines** ; un chiffre daté affirmé = décision sur base fausse.
 
 ## Diagnostic
 

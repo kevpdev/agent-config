@@ -43,8 +43,8 @@
 
 - 🔍 Scan de dépendances : utiliser `npm audit` / `mvn dependency-check` / Snyk.
 - 🌐 Pentest dynamique : utiliser ZAP / Burp / nuclei.
-- 📐 Décisions d'architecture (auth flow, design d'API) : utiliser `backend-architect`.
-- ✨ Qualité du code (SOLID, naming, perf) : utiliser `code-reviewer`.
+- 📐 Décisions d'architecture (auth flow, design d'API) : hors de ce rapport.
+- ✨ Qualité du code (SOLID, naming, perf) : utiliser `aidd-dev:05-review`.
 
 ---
 
@@ -63,4 +63,4 @@ Le fix est correct si :
 - **Toujours** citer la ref OWASP quand applicable
 - **Toujours** décrire l'**exploit concret**, pas juste "c'est mauvais"
 - **Adapter** la sévérité au contexte (POC ≠ prod)
-- **Ne pas** dupliquer les checks de `code-reviewer`
+- **Ne pas** dupliquer les checks d'`aidd-dev:05-review`

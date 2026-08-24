@@ -136,6 +136,6 @@ Trois axes sortent du périmètre. Les raisons vivent dans les règles transvers
 
 | Axe | Destinataire |
 |---|---|
-| Qualité de code — lisibilité, SOLID, nommage, duplication | `code-reviewer`, ou `aidd-dev:05-review` quand un plan AIDD existe |
+| Qualité de code — lisibilité, SOLID, nommage, duplication | `aidd-dev:05-review` |
 | Sécurité — injections, authz, secrets, crypto | `security-reviewer` |
 | Valeur métier — ce chiffre est-il le bon, cette maille est-elle la bonne, cette liste est-elle complète | le propriétaire de la spec, via `04-route` |
