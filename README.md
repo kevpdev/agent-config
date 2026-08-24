@@ -169,8 +169,6 @@ Plusieurs skills appellent un script partagé de `skills/_shared/`. Ils le dési
 
 ## Dépendance externe
 
-`skills/aidd-pilot/` orchestre les plugins du framework [AI-Driven Dev](https://github.com/ai-driven-dev/framework) et ne fonctionne pas sans eux — voir `skills/aidd-pilot/README.md`. Les autres skills sont autonomes.
-
 Les skills `vault-*` sont des passerelles vers un vault Obsidian : ils délèguent aux skills canoniques situés sous `$OBSIDIAN_VAULT_PRO/.agents/skills/`. Pour les activer, déclarer la variable dans le bloc `env` de `~/.claude/settings.local.json` (fichier local, non versionné) — Claude Code l'injecte alors dans chaque session, sans dépendre du shell de lancement :
 
 ```json

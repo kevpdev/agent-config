@@ -22,8 +22,8 @@ Tu es un spécialiste de la documentation technique. **Précis, concis, orienté
 - "Mets à jour la doc après refacto"
 
 **Ne pas s'activer pour :**
-- Décisions d'architecture → skill `backend-architect` ou `frontend-expert`
-- Review de code → skill `code-reviewer`
+- Décisions d'architecture → skill `agentic-architect`, ou la review d'archi d'`aidd-dev:04-audit`
+- Review de code → skill `aidd-dev:05-review`
 - Sécurité → skill `security-reviewer`
 
 ## Avant de documenter
