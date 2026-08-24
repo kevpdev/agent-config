@@ -1,46 +1,61 @@
 ---
 name: skill-craft
 description: >-
-  Fabrique et vérifie les skills perso en français, selon la convention de rédaction
-  (`references/skill-authoring-fr.md`). Prend une intention de skill (nom, domaine, but, actions
-  pressenties) et produit un skill au format routeur AIDD — SKILL.md pur + actions à l'anatomie +
-  références. Vérifie aussi un skill existant : relance les `## Contrôle de sortie` de chaque action et
-  lint les dérives R1/R6/R4/R8 que rien d'autre n'attrape. Autonome, sans dépendance au framework AIDD,
-  sortie 100 % française. Utiliser quand l'utilisateur dit "crée un skill perso", "refonds ce skill",
-  "valide ce skill", "lint ce skill", ou "/skill-craft". NE PAS utiliser pour un skill d'équipe destiné
-  au partage anglophone (→ aidd-context:04-skill-generate), ni pour piloter un workflow de dev
-  (→ aidd-pilot).
+  Fabrique et vérifie les skills perso en français, au format routeur AIDD francisé :
+  SKILL.md pur, actions à l'anatomie fermée, références et gabarits. Prend une intention
+  de skill (nom, domaine, but, actions pressenties) et rend l'arborescence complète, cas
+  d'éval compris. Vérifie aussi un skill existant : lance le lint mécanique, puis relit
+  les deux dérives qu'aucun script n'attrape, le routeur qui regonfle en logique métier
+  et le fait recopié à deux endroits. Autonome, sans dépendance au framework AIDD, sortie
+  100 % française. Utiliser quand l'utilisateur dit "crée un skill perso", "refonds ce
+  skill", "valide ce skill", "lint ce skill", ou "/skill-craft". NE PAS utiliser pour un
+  skill d'équipe destiné au partage anglophone (→ aidd-context:04-skill-generate).
+argument-hint: une intention de skill, ou le nom d'un skill à vérifier
 ---
 
 # skill-craft
 
-Fabrique de skills perso. Il applique **ma** convention de rédaction (`references/skill-authoring-fr.md`, fork FR des règles AIDD) au lieu de dépendre du plugin AIDD. Deux gestes : **échafauder** un skill neuf, **vérifier** un skill existant.
+Fabrique de skills perso. Il applique ma convention de rédaction au lieu de dépendre du plugin AIDD, et ne couvre que les skills de `skills/` — ni les règles, ni les agents, ni les hooks.
 
-> [!note] Pourquoi un skill et pas juste la convention
-> Un document ne sert que s'il est chargé en contexte. Un skill est invocable et se suffit à lui-même, donc il atteint un contexte neuf, même un sous-agent. C'est ce qui fait mordre la convention au lieu d'espérer qu'elle soit sous les yeux.
-
-## Le flux
-
+```mermaid
+flowchart TD
+  intention[une intention de skill] --> scaffold
+  existant[un skill déjà écrit] --> validate
+  scaffold --> validate
+  validate -- des défauts, corriger --> validate
+  validate -- conforme --> pret([skill prêt])
 ```
-intention → 01-scaffold → 02-validate → skill prêt
-                              ↑
-        skill existant ───────┘  (02 tourne aussi seul)
-```
-
-- **Échafauder puis vérifier** pour un skill neuf : `01-scaffold` pose l'arborescence, `02-validate` la contrôle avant de rendre la main.
-- **Vérifier seul** pour un skill déjà écrit (refonte, audit) : entrer direct dans `02-validate` avec le chemin du skill.
 
 ## Actions
 
-| Étape | Fichier | Rôle |
-|---|---|---|
-| Échafaudage | `actions/01-scaffold.md` | de l'intention au squelette : nom, check de collision, SKILL.md routeur, actions à l'anatomie, en français |
-| Vérification | `actions/02-validate.md` | relance les `## Contrôle de sortie` + lint R1 (routeur pur), R4 (<500 lignes), R6 (doublon), R8 (tri des natures) ; ne joue pas les évals |
+Dérouler le flux. Ne lire que la prochaine action.
 
-## Règles transverses
+| Action | Fait |
+| --- | --- |
+| scaffold | échafauder un skill neuf depuis son intention |
+| validate | lancer le lint sur un skill, puis relire ce qu'il ne voit pas |
 
-- **La convention est l'unique source.** Les règles R1–R12, l'anatomie d'action, le nommage vivent dans `references/skill-authoring-fr.md`. Les actions la citent, ne la recopient pas (R6). *Pourquoi : un fait à deux endroits dérive.*
-- **Français partout.** Frontmatter, corps, actions, références en français. Seuls les en-têtes d'anatomie (`Input`/`Output`/`Process`/`Test`) restent en anglais, ce sont des repères de structure ; `Contrôle de sortie` est la seule section en français, parce qu'elle n'a pas d'équivalent dans les repères AIDD. *Pourquoi : mes skills perso sont pour moi, pas pour du partage anglophone — c'est le R10 modifié.*
-- **Sans dépendance AIDD.** Ce skill ne compose pas `04-skill-generate` et ne suppose aucun plugin installé. Il porte sa propre convention. *Pourquoi : un skill perso doit se créer n'importe où, même sans le framework AIDD, et sans repasser par une traduction depuis l'anglais.*
-- **R1, R6 et R8 ne se vérifient qu'ici.** Aucun autre outil ne détecte un routeur qui regonfle en logique métier, un fait recopié, ni un `## Test` qui a gardé des critères au lieu de pointer vers `evals/`. C'est le lint de `02-validate` qui bouche ce trou. *Pourquoi : ce sont les trois dérives les plus fréquentes, et la troisième passe un lint qui ne compte que la présence des titres.*
-- **Les évals ne se jouent pas depuis ce skill.** `02-validate` rend la commande de l'exécuteur externe et déclare la passe non jouée. *Pourquoi : le contexte qui vient d'écrire un skill ne peut pas l'évaluer — il se noterait lui-même, et une passe coûte de l'argent, donc elle se déclenche à la main.*
+## Transversal rules
+
+- **La convention est l'unique source.** Les règles, l'anatomie et le nommage vivent dans [`references/skill-authoring-fr.md`](references/skill-authoring-fr.md) et les deux gabarits d'`assets/`. Les actions les citent, ne les recopient pas.
+- **Le lint fait le mécanique, la relecture fait le reste.** `wrappers/claude/scripts/lint-skills.py` tranche les six vérifications sans interprétation. Ce qui demande de comprendre ce que le skill *fait* n'entre jamais dans un script, et reste à l'étape de relecture de `validate`.
+- **Les évals ne se jouent pas d'ici.** `validate` rend la commande de l'exécuteur externe et déclare la passe non jouée. *Le contexte qui vient d'écrire un skill se noterait lui-même, et il se donne toujours la moyenne.*
+- **Sans dépendance AIDD.** Ce skill ne compose aucun skill du plugin et ne suppose rien d'installé. Il porte sa propre convention, pour qu'un skill perso se crée n'importe où et sans repasser par une traduction depuis l'anglais.
+
+## References
+
+- `references/skill-authoring-fr.md` — les règles, les cinq deltas par rapport à AIDD, et les deux dérives que le lint ne voit pas
+
+## Assets
+
+- `assets/skill-template.md` — le moule d'un `SKILL.md`, et la source de sa liste de sections
+- `assets/action-template.md` — le moule d'un fichier d'action
+
+## Test
+
+Jouable seul, sans session neuve : les deux commandes tranchent sans LLM.
+
+| Cas | Preuve |
+| --- | --- |
+| `python3 wrappers/claude/scripts/lint-skills.py --skill skill-craft` | rend 0, « 1/1 skills conformes » |
+| `python3 wrappers/claude/scripts/tests/test-lint-skills.py` | rend 0, tous les cas passent |

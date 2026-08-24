@@ -1,53 +1,45 @@
 # 01 - Échafauder
 
-De l'intention à un skill au format routeur, prêt à vérifier. Applique la convention (`references/skill-authoring-fr.md`) à chaque fichier écrit.
+De l'intention à un skill complet, prêt à vérifier.
 
 ## Input
 
 L'intention du skill, en prose libre :
 
-- Le but, en une phrase (ce qu'il fait, quand on l'appelle).
-- Le domaine : outil (un nom, ex. `slack`) ou activité (un verbe, ex. `review`).
-- Les actions pressenties, si je les ai déjà en tête. Sinon on les dégage à l'étape 2.
+- Le but, en une phrase : ce qu'il fait, et quand on l'appelle.
+- Le domaine : outil (un nom, ex. `jira`) ou activité (un verbe, ex. `review`).
+- Les actions pressenties, si elles sont déjà en tête. Sinon on les dégage à l'étape 4.
 
 ## Output
 
-Une arborescence de skill sous `skills/<nom>/` :
-
-- `SKILL.md` — routeur pur.
-- `actions/NN-<slug>.md` — une par action, à l'anatomie : `## Contrôle de sortie` pour les critères qui s'appliquent en tournant, `## Test` réduit à un pointeur.
-- `evals/eval.json` — les scénarios qui jugent si le skill marche, en données pures.
-- `references/` et `assets/` — seulement si une action en a besoin.
+Une arborescence sous `skills/<nom>/` : `SKILL.md`, un `actions/NN-<slug>.md` par action, `evals/eval.json`, plus `references/` et `assets/` si une action en a besoin.
 
 ## Process
 
-1. **Lire la convention.** Ouvrir `references/skill-authoring-fr.md` avant d'écrire quoi que ce soit. Toutes les règles citées plus bas (R1, R5, R8…) y sont définies. Je ne les recopie pas ici.
-2. **Nommer et vérifier la collision.** Choisir le nom selon la section « Nommage » de la convention, puis appliquer son « Check de collision » avant de créer. *(Les deux vivent dans la convention, on ne les recopie pas ici — R6.)*
-3. **Choisir la forme.** Responsabilité unique, pas de référence à différer → mono-fichier (`SKILL.md` seul, exception R1). Plusieurs actions distinctes ou de la connaissance à charger à la demande → routeur + `actions/`. Dans le doute, commencer mono-fichier ; on découpe quand ça déborde.
-4. **Cadrer les actions** (si routeur). Découper le but en actions à responsabilité unique. Une action = une étape vérifiable. Numéroter (`01-`, `02-`…) seulement si l'ordre est strict.
-5. **Trancher le mode d'invocation, avant d'écrire la description.** Question à poser explicitement : ce skill écrit-il un fichier versionné, committe-t-il, pousse-t-il, supprime-t-il, ou envoie-t-il sur le réseau ? Oui → `disable-model-invocation: true` et une description sans phrases déclencheuses (R13). Non → champ omis, description en forme R5 complète. *Pourquoi ici et pas après :* le mode change la forme de la description, donc le décider ensuite oblige à la réécrire — et personne ne la réécrit.
-6. **Écrire le `SKILL.md`.** Frontmatter (`name` égal au dossier, `description` selon R5 et le mode tranché à l'étape 5, `disable-model-invocation` si le mode l'exige). Puis le corps : routeur pur (intro, flux, table d'actions, règles transverses) si routeur ; méthode inline directe si mono-fichier. Pas de logique métier dans un routeur (R1).
-7. **Écrire chaque action** (si routeur). Suivre l'anatomie de la convention : `# NN - Titre` + phrase, `## Input` (si utile), `## Output` (obligatoire), `## Process` (étapes numérotées, label gras d'un mot par étape), `## Contrôle de sortie`, `## Test`. Une idée par phrase (R11). Toujours le pourquoi sur une règle (R12).
-8. **Trier les critères de vérification par nature** — c'est le point où un skill part de travers, parce que les deux natures se ressemblent à l'écriture. Appliquer le sous-point de R8 :
-   - Un critère que l'action applique **pendant** qu'elle travaille (l'artefact porte tel champ, la commande sort en zéro, la sortie cite une preuve) → `## Contrôle de sortie`. Il sert à chaque exécution, donc il reste inline.
-   - Un scénario qui juge **si le skill marche** (il se déclenche sur telle requête, il s'arrête au lieu de continuer, il n'appelle pas tel outil) → `evals/eval.json`, et `## Test` n'en garde que le pointeur.
-   - *Le test qui distingue les deux :* est-ce que ce critère peut s'évaluer **au milieu** d'une exécution, à partir de ce que l'action vient de produire ? Oui → contrôle de sortie. Non, il faut lancer une session neuve et regarder son comportement → éval.
-9. **Écrire les évals.** Un `evals/eval.json` en données pures, aux champs définis par R7 — jamais un nom d'agent ni un appel d'outil. Un scénario par comportement qui doit tenir, en visant d'abord ceux qui *échouent ouvert* : le skill qui continue là où il devait s'arrêter, celui qui appelle un outil interdit. *Pourquoi ceux-là d'abord :* un skill qui rend un résultat plausible au lieu de refuser ne se voit dans aucun contrôle de sortie.
-   - **Puis un scénario négatif par frère cité dans la clause `NE PAS` de la description** (`expect_trigger: false`, forme et choix du marqueur en R7). *Pourquoi celui-là ne s'oublie pas :* les neuf experts du repo n'en avaient aucun, alors que leurs `## Test` en annonçaient un — un corpus qui ne teste que le nominal laisse la moitié du contrat de routage non falsifiée.
-10. **Sortir les données lourdes.** Un gabarit à copier va dans `assets/`, une donnée à lire va dans `references/`. Une action cite le fichier, ne l'inline pas (R6/R7).
-11. **Rédiger en français.** Tout le contenu en français, sauf les en-têtes d'anatomie anglais. Si une source anglaise a servi, réécrire la prose en français (R10).
-12. **Emplacement.** Le skill vit dans `agent-config/skills/<nom>/`. Chaque agent l'expose depuis ce dossier via son propre wrapper, qui pose aussi `$SKILLS_ROOT` — aucun lien par skill à créer. *Pourquoi cette variable :* un skill qui code en dur le chemin d'un agent ne tourne plus sous un autre, alors que le script visé est au même endroit relatif partout.
-
-## Contrôle de sortie
-
-- `SKILL.md` existe, avec un frontmatter portant `name` (égal au dossier) et `description`.
-- Si le skill a des actions : chaque fichier `actions/*.md` porte `## Output` et `## Contrôle de sortie` (grep les deux en-têtes, aucune action ne doit en manquer). En mono-fichier, ce check ne s'applique pas.
-- Chaque `## Test` ne contient **qu'un pointeur** vers `evals/`, aucun critère exécutable. Un `## Test` qui porte une liste de vérifs est un tri de natures non fait (étape 8).
-- `evals/eval.json` existe et parse, chaque scénario portant au moins `query` et `expected_behavior`. Un skill purement conversationnel peut légitimement n'en avoir aucun — alors le dossier est absent, pas vide.
-- Aucun fichier ne contient de placeholder vide type `## X → Aucun` (R9) : grep ne renvoie rien.
-- Aucun en-tête de section autre que `Input`/`Output`/`Process`/`Test` (anglais, R10) et `Contrôle de sortie` (français, seule exception) ; le reste de la prose est en français.
-- Enchaîner sur `02-validate` sur le skill fraîchement écrit : il doit passer.
+1. **Lire.** Ouvrir [`../references/skill-authoring-fr.md`](../references/skill-authoring-fr.md) et les deux gabarits d'`../assets/` avant d'écrire quoi que ce soit. Toutes les règles citées plus bas y sont définies, elles ne sont pas recopiées ici.
+2. **Nommer.** Choisir le nom selon la section « Nommage » de la convention, préfixe de domaine compris, puis appliquer son « Check de collision ».
+   - **Garde.** Un recouvrement de description avec un skill installé arrête la création : remonter le choix (fusionner, renommer, resserrer) au lieu d'ajouter un deuxième candidat sur la même phrase.
+3. **Choisir la forme.** Responsabilité unique et aucune connaissance à différer → mono-fichier, la méthode sous `## Process`. Plusieurs actions distinctes ou de la référence à charger à la demande → routeur plus `actions/`. Dans le doute, commencer mono-fichier.
+4. **Cadrer les actions**, si routeur. Découper le but en actions à responsabilité unique, une action valant une étape vérifiable. Numéroter seulement si l'ordre est strict.
+5. **Trancher le mode d'invocation.** Question explicite : ce skill écrit-il un fichier versionné, committe-t-il, pousse-t-il, supprime-t-il, ou envoie-t-il sur le réseau ?
+   - **Garde.** Ce point se tranche **avant** d'écrire la description, jamais après : le mode change la forme de la description (R13), donc le décider ensuite oblige à la réécrire, et personne ne la réécrit.
+6. **Copier `skill-template.md`** et le remplir. Le gabarit porte la liste des sections, leur ordre et leur statut — ne rien inventer à côté, ne rien réordonner. Le flux mermaid en `TD` montre chaque chemin, branches et retours de boucle compris : une branche dite en prose est une branche manquante du flux.
+7. **Copier `action-template.md`** une fois par action, si routeur. Quatre sections, ni plus ni moins.
+8. **Répartir les critères de vérification**, c'est le point où un skill part de travers.
+   - Un critère qui **décide en cours de route** (« si tout candidat revient rouge, ne pas passer à l'action suivante ») devient une étape `**Garde.**` du `## Process`, sous-puce de l'étape qu'elle borne.
+   - Un critère qui **constate** (« le fichier est relu, aucun placeholder ne survit ») devient une ligne du `## Test`, observable par exécution réelle.
+   - Un critère qui juge **si le skill marche** (il part sur telle requête, il cède la main à un frère) va dans `evals/`, jamais inline : il demande une session neuve, donc il ne peut pas s'évaluer au milieu d'une exécution.
+9. **Sortir les données lourdes.** Un gabarit à copier va dans `assets/`, une donnée à lire va dans `references/`. L'action cite le fichier par un lien relatif dans la phrase qui l'utilise, ne l'inline pas.
+10. **Écrire les cas d'éval.** Un `evals/eval.json` en données pures, aux champs définis par R7 — jamais un nom d'outil ni un nom d'agent. Un cas positif, plus un cas négatif par frère vivant cité dans la clause NE PAS de la description.
+11. **Rédiger en français.** Tout le contenu, labels d'étapes et cellules de table compris. Seuls les huit en-têtes de structure restent en anglais. Si une source anglaise a servi, réécrire la prose au lieu de la traduire mot à mot.
+12. **Enchaîner sur `02-validate`** avec le chemin du skill fraîchement écrit.
+    - **Garde.** Ne pas rendre la main tant que le lint sort rouge. Un skill livré non conforme fabrique la dette que ce skill existe pour éviter.
 
 ## Test
 
-Scénarios dans `evals/eval.json`. Celui qui compte ici est l'échafaudage d'un skill neuf : il porte le cas du tri des natures, parce qu'un générateur qui produit un `## Test` rempli de vérifs exécutables fabrique en série des skills qui paient leurs évals en contexte à chaque invocation.
+| Cas | Preuve |
+| --- | --- |
+| `python3 wrappers/claude/scripts/lint-skills.py --skill <nom>` sur le skill neuf | rend 0 |
+| `python3 -c "import json; json.load(open('skills/<nom>/evals/eval.json'))"` | parse, chaque cas portant `skill` et `query` |
+| relecture du corpus d'évals | un cas positif, et un cas `expect_trigger: false` par frère vivant cité en clause NE PAS |
+| `grep -rn "supprimer cette ligne" skills/<nom>/` | ne rend rien, la ligne d'instruction du gabarit n'a pas survécu |

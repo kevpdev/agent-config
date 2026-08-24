@@ -1,100 +1,127 @@
 # Convention — Rédaction de mes skills (FR)
 
-Comment j'écris un skill perso pour qu'il reste propre et lisible. À relire avant d'en créer ou d'en refondre un.
+Ce qui reste à décider quand les deux gabarits ont déjà répondu. À relire avant de créer ou de refondre un skill.
 
-## D'où ça vient
+## Les gabarits font foi, pas cette page
 
-C'est un fork français des règles de l'AIDD (`aidd-context:04-skill-generate`, fichier `references/skill-authoring.md`). Je garde le jeu de règles, qui a fait ses preuves. J'y change deux choses, et c'est tout :
+L'anatomie ne se raconte pas, elle se copie : [`skill-template.md`](../assets/skill-template.md) et [`action-template.md`](../assets/action-template.md). Ils portent la liste des sections, leur ordre et leur statut. `wrappers/claude/scripts/lint-skills.py` la dérive d'eux au lieu de la coder.
 
-- **R10** passe de « anglais imposé » à **français**. Mes skills perso sont pour moi, pas pour du partage d'équipe.
-- **R12** ajoute le pourquoi **quand il porte une information**, que l'AIDD trop sobre ne demande jamais.
+**Aucune section hors de cette liste.** Une section perso n'apporte pas de valeur : son contenu a déjà un home, et l'inventer ailleurs le rend invisible à qui lit le gabarit.
 
-Deux règles (R1, R6) ne sont vérifiées par aucun outil, même côté AIDD. C'est par là qu'un skill dérive. Le lint de `../actions/02-validate.md` les couvre ; à surveiller à la main hors de ce skill.
+**POURQUOI cette page ne redit pas la liste** : une liste décrite en prose et une liste vérifiée par un script divergent au premier edit de l'une des deux. Une seule liste ne peut pas dériver.
+
+## D'où ça vient, et les cinq deltas
+
+Fork français des 19 règles d'AIDD (`aidd-context:04-skill-generate`, fichier `references/skill-authoring.md`). Le jeu de règles est gardé, cinq choses changent.
+
+| Delta | Contenu |
+| --- | --- |
+| langue | le contenu est en français, seuls les huit en-têtes de structure restent en anglais (R10) |
+| pourquoi | il s'écrit quand il porte un fait indéduisible, ce qu'AIDD ne demande jamais (R12) |
+| flux | mermaid `TD` et non `LR` : `rules/mermaid.md` écrase le défaut d'AIDD |
+| évals | le dossier `evals/` et son format n'existent pas chez AIDD (R7) |
+| nommage | préfixe de domaine obligatoire, voir « Nommage » |
 
 ## Les règles
 
-- **R1. SKILL.md est un routeur pur** : description, table d'actions, règles transverses. Zéro logique métier.
-  - **Exception mono-fichier.** Un skill à responsabilité unique peut vivre en `SKILL.md` seul, sans `actions/`. Il porte alors sa méthode inline, ce n'est pas une violation. On ne découpe que si deux conditions apparaissent : plusieurs actions distinctes, ou de la connaissance de référence à charger à la demande (R7). Seuil d'alerte : au-delà de ~150 lignes, se demander ce qui peut sortir. Pourquoi : imposer routeur + actions à un skill de 80 lignes trahit l'esprit de R1 (garder le contexte léger), on remplace un fichier par quatre sans rien gagner.
-- **R2. Un skill = un domaine.** Domaine-outil, un nom singulier (`slack`). Domaine-activité, un verbe (`review`). Voir Nommage.
-- **R3. Références à un seul niveau.** Une référence n'en appelle jamais une autre.
-- **R4. SKILL.md sous 500 lignes.** Au-delà, découper en références.
-- **R5. `description` = quoi + quand.** 3e personne, sous 1536 caractères (plafond du listing Claude Code, doc vérifiée le 2026-08-11 ; 1024 est la limite de la spec API, plus basse), pas de XML.
+- **R1. SKILL.md est un routeur pur** : portée, flux, table d'actions, règles transverses. Zéro logique métier. Il ne porte rien qu'une action ou une référence pourrait porter, parce qu'il se charge à chaque invocation quand une action ne se charge qu'à son tour.
+  - **Exception mono-fichier.** Un skill à responsabilité unique vit en `SKILL.md` seul, sa méthode sous `## Process` à la place de la table d'actions. Ce n'est pas une violation, et le moule ne change pas. On découpe quand apparaissent plusieurs actions distinctes, ou de la connaissance de référence à charger à la demande (R7).
+- **R2. Un skill = un domaine.** Domaine-outil, un nom singulier (`jira`). Domaine-activité, un verbe (`review`).
+- **R3. Références à un seul niveau.** Une référence n'en appelle jamais une autre. Elle nomme une sœur en backticks et ne la lie jamais.
+- **R4. Pas de plafond de lignes sur un routeur.** R1 et le lint le bornent déjà. Seule alerte : au-delà de ~150 lignes, un mono-fichier se demande ce qui peut sortir en actions ou en références.
+  - *Le plafond de 500 lignes que cette page portait avant le 2026-08-24 est supprimé, faute d'avoir jamais servi : mesuré sur les 24 skills du repo, le plus gros `SKILL.md` fait 119 lignes.*
+- **R5. `description` = quoi + quand.** 3e personne, sous 1 536 caractères (plafond du listing Claude Code, doc vérifiée le 2026-08-11 ; 1 024 est la limite de la spec API, plus basse), pas de XML.
   - Tout le « quand » vit ici, pas dans le corps.
   - Triggers explicites et un peu insistants. Le modèle sous-déclenche, donc sur-liste.
   - **Sauf en invocation manuelle (R13)** : pas de liste de phrases, la description dit par quoi le skill s'appelle. Une phrase déclencheuse sur un skill manuel promet un comportement qui n'existe plus.
   - Le nom de l'artefact en tête. Une parenthèse pour définir, pas un tiret.
-  - Clause « NE PAS utiliser pour X (→ frère) » seulement si un skill voisin peut se déclencher à tort.
-- **R6. Zéro doublon.** Un fait, un seul home. Les gabarits vivent dans `assets/`, les actions les citent.
-- **R7. Rôle des dossiers.** `references/` se LIT. `assets/` se COPIE ou s'INJECTE. `evals/` se JOUE par un exécuteur, et n'est jamais lu par le skill lui-même.
-  - Un `evals/eval.json` porte des scénarios en données pures, sans aucun appel d'outil ni nom d'agent. Pourquoi : l'exécuteur est forcément spécifique à l'agent et vit dans son wrapper. Un skill qui nomme un agent ne tourne plus sous un autre.
-  - Champs d'un scénario. `query` et `expected_behavior` sont requis. `files` liste des fixtures voisines sous `evals/fixtures/`, que l'exécuteur copie dans un répertoire jetable. `trigger_markers` liste des chaînes littérales que la sortie doit contenir si le skill a tourné. `forbidden_tools` liste des outils dont l'appel est un échec. `expect_trigger: false` inverse le verdict, pour un scénario qui vérifie que le skill **cède la main** à un frère au lieu de répondre.
-  - **Un corpus sans scénario négatif ne falsifie que la moitié du contrat.** Vérifier qu'un skill part ne vérifie pas qu'il ne part pas à tort, et c'est l'autre moitié que mesurent les collisions de déclencheurs. **À LA PLACE de** ne tester que les cas nominaux → un scénario `expect_trigger: false` par frère vers lequel la `description` redirige.
-    - Son marqueur se choisit sous sa **forme structurelle** (`## 🔴 Bloquants`, `**Priorité**`), et se vérifie **absent du gabarit du frère visé**. Pourquoi : le scénario tourne sans forçage, donc la session peut légitimement ouvrir ce frère — un marqueur partagé transformerait une redirection réussie en verdict rouge.
-  - **Un scénario qui décrit un artefact au lieu de le fournir ne mesure rien.** Mesuré le 2026-08-06 : les trois évals de revue de code décrivaient le code en prose, et la session répondait « je ne vois pas le code » — un échec qui ne dit rien du skill. D'où `files`.
-  - **Deux signaux de déclenchement, et le meilleur est le registre.** En déclenchement automatique, l'appel à l'outil `Skill` nomme le skill ouvert : preuve directe, lisible dans `stream-json` (mesuré le 2026-08-11 sur 18 scénarios). C'est ce que l'exécuteur lit en premier. *Correction d'une affirmation antérieure :* « aucun appel d'outil n'atteste qu'un skill a tourné » (mesuré le 2026-08-06) ne vaut que pour l'invocation **forcée** par `/<nom>`, non rejouée depuis — pas pour le déclenchement automatique, où le registre existe bel et bien.
-  - **Un marqueur mesure l'adhérence au gabarit, pas le chargement du skill.** Les deux ne coïncident que si le gabarit est contraignant. Mesuré le 2026-08-06 sur `devops-expert` puis le 2026-08-11 sur `brain-expert` : marqueurs absents, skill pourtant ouvert — le registre le voit, le marqueur non. Sur 9 scénarios les deux signaux s'accordent 8 fois. **À LA PLACE de** conclure au non-déclenchement sur un marqueur absent → lire le registre, et ne déclarer des marqueurs que sur un gabarit à intitulés imposés.
-    - Le registre s'**ajoute** aux marqueurs, il n'a pas de droit de veto. Un chargement sans trace au registre n'a pas été observé, mais n=9 ne l'a pas réfuté : lui donner le dernier mot échangerait un faux négatif contre un autre.
-    - `trigger_markers` reste **obligatoire** sur un scénario négatif. Sans lui, l'absence de déclenchement ne se distingue pas de l'absence de mesure, et le scénario rendrait vert sans avoir rien vérifié.
-  - **Le taux de déclenchement dépend d'abord du modèle.** Mesuré le 2026-08-06 sur quatre skills en deux répétitions, à skills, requêtes et règles identiques : 7/8 sur `opus` contre 0/8 sur `sonnet`, deux des quatre passant de 0/2 à 2/2. **À LA PLACE de** réécrire une `description` sur un déclenchement rouge → rejouer sur le modèle réellement utilisé. Une éval jouée sur un modèle plus petit mesure un agent qu'on n'exécute pas, et impute au skill un défaut qui n'est pas le sien.
-- **R8. Chaque action suit l'anatomie et porte un `## Test`.** En mono-fichier (pas d'`actions/`), c'est `SKILL.md` qui porte le `## Test`, dès qu'il produit un artefact vérifiable.
-  - **Ne pas confondre deux natures.** Un critère que le skill applique **pendant** qu'il travaille est un contrôle de sortie, il reste inline (`## Contrôle de sortie`) puisqu'il sert à chaque exécution. Un scénario qui juge **si le skill marche** est une éval, elle part dans `evals/` et `## Test` n'en garde que le pointeur. Pourquoi : une éval inline se paie en contexte à chaque invocation pour une vérification qui ne tourne jamais à ce moment-là.
-- **R9. Pas de section vide.** J'omets une section optionnelle sans contenu. Jamais de placeholder « ## X → Aucun ».
-- **R10. Contenu en français** (frontmatter, corps, actions, références). Seuls les en-têtes d'anatomie restent en anglais (voir plus bas, ce sont des mots-clés de structure).
-- **R11. Une idée par phrase.** Je coupe une phrase qui dépasse la ligne. Exceptions : la `description` mono-ligne et les cellules de tableau.
+  - Clause « NE PAS utiliser pour X (→ frère) » seulement si un skill voisin peut se déclencher à tort. Chaque frère qu'elle nomme se paie un cas d'éval négatif (R7).
+- **R6. Zéro doublon.** Un fait, un seul home. Les gabarits vivent dans `assets/`, les actions les citent. Une citation est un lien markdown relatif dans la phrase qui l'utilise, jamais un bloc à part ni un include `@`, que rien ne résout.
+- **R7. Rôle des dossiers.** `references/` se LIT. `assets/` se COPIE. `evals/` se JOUE par un exécuteur externe, et n'est jamais lu par le skill lui-même. Pas de `scripts/` par skill : l'exécutable partagé vit dans `skills/_shared/`, l'outillage dans `wrappers/claude/scripts/`.
+  - **Un `evals/eval.json` ne porte que des données.** Aucun nom d'outil, aucun nom d'agent, aucune commande. L'exécuteur est forcément spécifique à l'agent et vit dans son wrapper. Un skill qui nomme un agent ne tourne plus sous un autre.
+  - Champs d'un cas. `skill` et `query` sont requis. `expect_trigger` vaut `true` par défaut, `false` sur un cas négatif. `files` liste des fixtures voisines sous `evals/fixtures/`, que l'exécuteur copie dans un répertoire jetable. `artifact` porte `path` et `template` quand le cas produit un fichier.
+  - **Un cas positif par skill, et un cas négatif par frère vivant cité en clause NE PAS.** Vérifier qu'un skill part ne vérifie pas qu'il ne part pas à tort, et c'est l'autre moitié que mesurent les collisions de déclencheurs.
+  - **Un cas qui décrit un artefact au lieu de le fournir ne mesure rien.** Mesuré le 2026-08-06 : trois évals de revue de code décrivaient le code en prose, et la session répondait « je ne vois pas le code » — un échec qui ne dit rien du skill. D'où `files`.
+  - **Le taux de déclenchement dépend d'abord du modèle.** Mesuré le 2026-08-06 sur quatre skills en deux répétitions, à skills, requêtes et règles identiques : 7/8 sur `opus` contre 0/8 sur `sonnet`, deux des quatre passant de 0/2 à 2/2. **À LA PLACE de** réécrire une `description` sur un déclenchement rouge → rejouer sur le modèle réellement utilisé. Une éval jouée sur un modèle plus petit mesure un agent qu'on n'exécute pas.
+  - **Trier avant de garder : jouer chaque cas deux fois, avec le skill et sans lui.** Un cas qui passe dans les deux ne mesure pas le skill, il se supprime. C'est un geste de relecture au moment de la refonte, pas un flag de l'exécuteur.
+  - *Le numéro R8 reste vacant : il portait `## Contrôle de sortie`, supprimée le 2026-08-24 avec la section. Ne pas le réaffecter, des rapports d'audit le citent.*
+- **R9. Pas de section vide.** Une section optionnelle sans contenu s'omet. Jamais de placeholder « ## X → Aucun ».
+- **R10. Contenu en français** : frontmatter, corps, actions, références, labels d'étapes et cellules de table. Huit en-têtes de structure restent en anglais, au mot près, parce que ce sont des mots-clés de la famille AIDD et non de la prose : `Actions`, `Transversal rules`, `References`, `Assets`, `Input`, `Output`, `Process`, `Test`.
+  - **POURQUOI les huit et pas quatre** : un lint sur une liste bilingue doit traiter les deux orthographes de chaque section, et c'est exactement le genre de tolérance qui laisse passer une section inventée.
+- **R11. Une idée par phrase.** Une phrase qui dépasse la ligne se coupe. Exceptions : la `description` mono-ligne et les cellules de tableau.
 - **R12. Le pourquoi quand il porte une information.** Une règle énonce sa raison **si cette raison apporte un fait indéduisible** : contrainte d'environnement, mesure, piège vécu. **À LA PLACE de** justifier ce qu'un modèle sait déjà, couper.
-  - Le critère est le contenu, jamais la présence. Une raison qui transmet un fait de mon environnement se donne, une raison qui explique au modèle ce qu'il sait déjà se paie en contexte pour rien.
   - Une valeur arbitraire (seuil, constante, délai) se justifie toujours : sans sa raison, personne ne sait comment la recalculer.
   - Le pourquoi tient en une ligne. Ce n'est pas une permission de rallonger, R11 tient toujours.
-  - `rules/reasoning.md`, section « Méta-règle », fait foi. Les deux pages de doc qui tranchent sont citées dans `rules/references/ref-reasoning.md`.
+  - `rules/reasoning.md`, section « Méta-règle », fait foi.
 - **R13. Mode d'invocation déclaré.** Un skill à effet de bord porte `disable-model-invocation: true` et s'appelle par `/<nom>`. Sans effet de bord, le champ est omis et le skill reste auto-déclenchable.
-  - Pourquoi : le déclenchement par phrase est probabiliste, donc il se trompera. Sur une action réversible ça coûte un paragraphe inutile ; sur un `git push` ça coûte un commit non voulu.
   - Compte comme effet de bord : écrire un fichier versionné, committer, pousser, supprimer, déplacer, envoyer sur le réseau. Lire, analyser et conseiller n'en sont pas.
-  - Le champ est le seul mécanisme déterministe disponible. Une `description` mieux rédigée ne fait que déplacer la probabilité, elle ne la supprime pas.
+  - **POURQUOI le champ et pas une meilleure description** : le déclenchement par phrase est probabiliste, donc il se trompera. Sur une action réversible ça coûte un paragraphe inutile, sur un `git push` ça coûte un commit non voulu. Le champ est le seul mécanisme déterministe disponible.
 
-## Anatomie d'une action
+## Ce qui se vérifie tout seul, et ce qui se refuse
 
-Un fichier par action, numéroté quand l'ordre compte (`01-<slug>.md`). Ces parties, dans cet ordre :
+**La coupure est par affirmation, jamais par skill.** Un même skill se vérifie tout seul sur ce qui se contrôle depuis sa sortie, et se relit à la main sur le reste. Chercher une liste de skills éligibles est la mauvaise question.
 
-- `# NN - Titre` + une phrase : ce que fait l'action.
-- `## Input` : OPTIONNEL, prose ou bullets libres. Omis si rien. Pas de bloc de données figé.
-- `## Output` : OBLIGATOIRE, une ligne ou une petite forme inline.
-- `## Process` : petites étapes numérotées, une responsabilité chacune.
-  - Chaque étape démarre par un label en gras d'un mot (ex. **Détecter.**), puis des phrases impératives courtes. Deux phrases valent mieux qu'un point-virgule.
-  - Sous-bullets pour une branche, une condition (« si X, alors Y »), ou un retour en arrière.
-  - Étapes agnostiques de l'outil. Les détails par outil (chemins, formats) vivent dans une référence.
-  - La décision de flux vit dans l'étape, pas derrière un pointeur. La référence ne porte que la donnée consultée.
-  - `→` seulement pour une chaîne de flux, jamais `->`.
-- `## Test` : une liste de vérifs simples. Une commande, un contrôle d'artefact, ou un effet observable. Déterministe autant que possible. Pour une action pilotée par le modèle, on vérifie une propriété observable de la sortie (sa structure, un champ requis), pas une valeur exacte. Exécution réelle, jamais un `*.test.js` mocké.
+| Ce qui se vérifie tout seul | Pourquoi c'est robuste |
+| --- | --- |
+| le **déclenchement** : le skill part quand il doit, se tait quand il ne doit pas | verdict binaire, le registre de la session nomme les skills ouverts. Marche même sur un skill qui ne rend que de la prose |
+| l'**artefact** : le fichier produit existe, parse, et porte les sections de son gabarit | verdict par script, sans interprétation |
 
-Les en-têtes `Input` / `Output` / `Process` / `Test` restent en anglais. Pourquoi : ce sont des repères de structure de la famille AIDD, pas de la prose. Les garder rend mes skills reconnaissables et alignés. Tout le reste est en français.
+| Ce qu'on refuse d'asserter | Pourquoi |
+| --- | --- |
+| l'ordre des outils appelés | trop fragile, ça punit les chemins valides que personne n'avait prévus |
+| une regexp sur de la prose | casse à la première variation valide de formulation |
+| le style, le ton, « ça sonne juste » | ne se décompose pas en pass/fail, c'est de la relecture humaine |
 
-## SKILL.md (le routeur)
+**Le déclenchement se joue outils coupés** : le skill part mais ne peut rien exécuter. Un skill à effet de bord se teste donc sans risque, et le problème d'éligibilité disparaît presque. Ne restent manuels que les trois refus ci-dessus, et les artefacts écrits hors du dossier de travail.
 
-Frontmatter YAML + corps markdown.
+**Aucun outil natif de Claude Code n'entre dans le lint ni dans l'éval.** Ni `claude plugin eval`, ni `/skill-doctor`, ni `claude plugin validate`. Ce sont des sources d'inspiration, jamais des dépendances : le critère est l'agnosticisme, pas leur maturité, sinon la question se rouvre à chaque release.
 
-- `name` en kebab-case, sous 64 caractères, **égal au nom du dossier**. Pas de deux-points, slash, point, préfixe de plugin. Mots réservés interdits : `anthropic`, `claude`. Regex `^[a-z0-9]+(-[a-z0-9]+)*$`.
-- `description` : selon R5, forme FR « <quoi>. Utiliser quand <triggers>. NE PAS utiliser pour <X> (→ frère). » En invocation manuelle (R13), « Utiliser quand <triggers> » devient « Invocation manuelle uniquement, par `/<nom>` : <raison en une ligne> ».
-- `disable-model-invocation: true` : présent si et seulement si le skill a un effet de bord (R13). Absent sinon — un champ posé par défaut rendrait tous les skills manuels.
-- Corps = routeur pur. La table d'actions mappe chaque numéro et slug à un rôle et un input. J'énonce le flux, soit une chaîne séquentielle, soit une carte trigger → action. Les auto-skips sont dits explicitement.
+## Doctrine subagents
 
-`name` n'est pas le token d'invocation. L'adresse se construit à partir du plugin et du dossier. Un deux-points ou un préfixe dans `name` casse le chargement.
+| Quand découper | Signe |
+| --- | --- |
+| **locus** | borné et sans interaction humaine → subagent ; persistant ou interactif → parent. Un serveur meurt avec le subagent, un dialogue de confirmation n'y est pas possible |
+| **saturation** | une recherche dont les dumps noieraient le contexte du parent se délègue |
+| **parallélisable** | des tâches indépendantes se lancent en un seul message, plusieurs appels |
+
+- **Commencer simple** : agent générique avec brief inline dans le `## Process`. Un agent nommé ne se crée que quand le brief se répète entre skills ou porte un rôle durable.
+- **Agents agnostiques du modèle** : pas de champ `model`, à l'inverse d'AIDD. Le ratio performance sur coût se règle à l'usage, pas dans le fichier.
+- **Un agent nommé vit en `.md` dans `wrappers/claude/agents/`**, jamais dans un dossier `agents/` du skill — même logique qu'AIDD, dont les agents vivent au niveau plugin. Le skill qui en dépend le déclare dans ses règles transverses. *Les agents sont propres au CLI, un skill reste théoriquement portable.*
+- Un agent garde sa liste blanche de skills en fin de fichier, et l'interdiction de déléguer à un autre agent.
+
+## Frame–Deliver–Checker
+
+Le pattern s'emploie sur un skill qui produit un artefact vérifiable et boucle dessus : une zone qui cadre le contrat, une qui produit, un checker indépendant qui juge contre le contrat.
+
+- **3 passes maximum.** Au-delà, le défaut est dans le diagnostic ou dans le cadrage, pas dans l'exécution. Même borne que le `max_iterations` d'`aidd-orchestrator:00-async-dev`, seule borne numérique du référentiel.
+- **Anti-auto-notation** : le contexte qui vient d'écrire un skill ne joue jamais son éval. Il rend la commande et déclare la passe non jouée.
+- Aucun cas de checker n'écrit dans le repo réel.
 
 ## Nommage
 
-- **Domaine-outil, un nom singulier** : `slack`, `notion`.
-- **Domaine-activité, un verbe** : `review`, `plan`, `test`.
-- Fichiers d'action en kebab-case verbe (`post-message`, `run-tests`). Préfixe numéroté quand l'ordre est strict ou qu'un groupement aide la lecture. Le slug ailleurs, c'est le nom sans le préfixe.
+**Le nom d'un skill est en anglais, préfixe compris. Seul le contenu est français.**
+
+| Préfixe | Domaine |
+| --- | --- |
+| `expert-` | conseil et analyse, sans effet de bord |
+| `vault-` | le vault Obsidian |
+| `aidd-custom-` | skills perso dont l'**objet** est le framework AIDD |
+| `harness-` | maintenance du harnais lui-même |
+| `dev-` | livraison quotidienne |
+
+- **POURQUOI `aidd-custom-` et pas `aidd-`** : les skills du plugin s'affichent déjà en `aidd-*`, et un skill perso au même préfixe s'y confond dans un listing. Un skill qui invoque un skill AIDD en sous-étape garde son domaine d'usage, il ne change pas de préfixe.
+- Fichiers d'action en kebab-case verbe (`post-message`, `run-tests`), préfixe numéroté quand l'ordre est strict. Le slug, c'est le nom sans le préfixe.
 - À éviter : préfixe redondant (`skill-slack`), noms vagues (`helper`, `utils`), gérondifs (`reviewing`).
 
 ## Check de collision
 
-Avant de créer un skill, lister les skills installés et chercher un recouvrement de description. Si deux skills se déclenchent sur la même phrase, l'un est de trop. Fusionner, renommer, ou resserrer. Dans le doute, demander.
+Avant de créer un skill, lister les skills installés et chercher un recouvrement de description. Si deux skills se déclenchent sur la même phrase, l'un est de trop : fusionner, renommer, ou resserrer. Dans le doute, demander.
 
-## Ce que rien ne vérifie automatiquement
+## Ce que le lint ne voit pas
 
-L'étape `05-validate` de l'AIDD relance juste le `## Test` de chaque action. Elle ne voit pas :
+Deux dérives échappent à tout contrôle mécanique, ici comme chez AIDD. Ce sont les deux plus fréquentes, et elles se relisent à la main au moment de la refonte.
 
-- **R1** : un SKILL.md qui regonfle en logique métier au lieu de router.
-- **R6** : un fait recopié à deux endroits.
-
-Ce sont les deux dérives les plus fréquentes (aidd-pilot était tombé dans les deux). Le lint de `../actions/02-validate.md` les remonte.
+| Dérive | Ce qu'elle donne |
+| --- | --- |
+| **R1** | un `SKILL.md` qui regonfle en logique métier au lieu de router |
+| **R6** | un même fait recopié à deux endroits, dont la copie périmée survit |
