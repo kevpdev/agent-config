@@ -59,26 +59,39 @@ Le référentiel a deux générations rédactionnelles et sa spec décrit la sec
 - `## Actions` : table à 2 colonnes, slug nu et impératif court, suivie de « Dérouler le flux. Ne lire que la prochaine action. »
 - `## Règles transverses` : ce qu'aucune action ne porte seule. Une règle dite là ne se redit nulle part (R9 AIDD).
 - `## Références` et `## Assets` : chemin en backticks plus rôle en une ligne, par fichier.
-- `## Test` : première ligne le mode de vérification (section 3), puis le geste si test manuel.
+- `## Test` : première ligne le mode de vérification (section 3), puis la table `| Cas | Preuve |` ou le geste manuel.
 
 Le routeur ne porte rien qu'une action ou une référence pourrait porter (R10 AIDD). **POURQUOI** : le routeur se charge à chaque invocation, une action seulement à son tour.
 
-Le gabarit des experts monolithiques (`## Rôle`, `## Ne pas s'activer pour`, `## Règles strictes`) est un **second moule légitime** pour les mono-fichiers de conseil, pas une dérive à corriger.
+**Un seul moule, y compris pour les mono-fichiers.** Un skill de conseil sans actions garde les mêmes en-têtes : sa phrase de portée absorbe le `## Rôle`, sa méthode vit sous `## Process`, ses interdits sous `## Règles transverses`. Le gabarit persona (`## Rôle`, `## Ne pas s'activer pour`, `## Règles strictes`) disparaît. **POURQUOI** : deux moules obligent le checker à deviner lequel s'applique avant de juger, et `## Ne pas s'activer pour` recopie la clause NE PAS de la description.
 
 ### Anatomie d'une action
 
 Dans cet ordre, en-têtes d'anatomie en anglais et tout le reste en français (R10 de la convention perso).
+
+Quatre sections, celles du gabarit `action-template.md`, ni plus ni moins.
 
 | Section | Statut | Contenu |
 | --- | --- | --- |
 | `# NN - Titre` + une phrase | obligatoire | ce que fait l'action |
 | `## Input` | optionnel | ce que l'action consomme, omis sinon |
 | `## Output` | obligatoire | une ligne nommant ce qui est produit, avec son chemin d'écriture si fichier |
-| `## Process` | obligatoire | étapes numérotées `**Label.** phrase impérative`, branches et boucles en sous-puces jamais numérotées |
-| `## Contrôle de sortie` | si des critères s'évaluent pendant l'exécution | critères vérifiables sur ce que l'action vient de produire |
+| `## Process` | obligatoire | étapes numérotées `**Label.** phrase impérative`, branches, boucles et gardes en sous-puces jamais numérotées |
 | `## Test` | obligatoire | table `\| Cas \| Preuve \|`, chaque ligne observable par exécution réelle |
 
-`## Contrôle de sortie` entre officiellement dans l'anatomie. La convention actuelle se contredisait : R8 et `01-scaffold` l'imposaient, la section anatomie de `skill-authoring-fr.md` l'omettait.
+**Aucune section hors de cette liste.** Une section sans équivalent AIDD n'apporte pas de valeur : son contenu a déjà un home, et l'inventer ailleurs le rend invisible à qui lit le gabarit.
+
+| Section perso supprimée | Où va son contenu |
+| --- | --- |
+| `## Contrôle de sortie` (23 fichiers) | un critère qui décide en cours de route devient une étape `**Garde.**` du `## Process` ; un critère qui constate devient une ligne du `## Test` |
+| `## Ne pas s'activer pour` (9) | rien : c'est la clause NE PAS de la `description`, recopiée (doublon R6) |
+| `## Rôle` (11) | la phrase de portée sous le titre |
+| `## Règles strictes` (5) | `## Règles transverses` du routeur |
+| `## Si ça casse` (3) | sous-puces de l'étape concernée du `## Process` |
+| `## Garde-fou — vault requis` (7) | première étape du `## Process`, et une seule fois : le bloc est copié à l'identique dans les 7 skills `vault-*` |
+| `## Contexte`, `## Méthode`, `## Sortie`, `## Verdict`, `## Délégation`, `## Flux`, `## Hors périmètre` | `## Input`, `## Output`, `## Process`, ou le flux mermaid du routeur |
+
+La suppression de `## Contrôle de sortie` clôt au passage une contradiction : R8 et `01-scaffold` l'imposaient, la section anatomie de `skill-authoring-fr.md` l'omettait. **POURQUOI elle ne manque pas** : le `## Test` d'AIDD porte déjà l'observable en cours d'exécution (« le fichier est relu | aucun placeholder ne survit »), et le `## Process` porte déjà les gardes (« **Gate.** Quand tout candidat revient ❌, … ne pas passer à l'action 04 »). La séparation que R8 défendait tenait à l'existence des `evals/` ; sans eux, elle n'a plus d'objet.
 
 Une citation est un lien markdown relatif dans la phrase qui l'utilise, jamais un bloc à part ni un include `@` (R18 AIDD). Un bloc fencé est du contenu que l'action émet, pas de la structure (R12 AIDD).
 
@@ -106,15 +119,15 @@ Répartition attendue sur les 24 skills : ~9 éligibles (les 6 experts restants,
 
 ### Les `evals/` disparaissent
 
-Les dossiers `evals/` se suppriment sur les 24 skills, et `run-skill-evals.py` (695 lignes) avec eux, git les garde. Décision rejouée sans biais de conservation : le corpus dérive déjà (champ `setup` non documenté chez `audit-harnais` qui écrit dans le repo réel, zéro scénario négatif chez `skill-craft` contre sa propre règle) et une passe coûte 5 à 6 $. Un checker qui **dérive ses scénarios du skill lui-même** ne dérive jamais : la `description` est le contrat de déclenchement à tester, le `## Contrôle de sortie` et les tables `## Test` sont le comportement attendu à juger.
+Les dossiers `evals/` se suppriment sur les 24 skills, et `run-skill-evals.py` (695 lignes) avec eux, git les garde. Décision rejouée sans biais de conservation : le corpus dérive déjà (champ `setup` non documenté chez `audit-harnais` qui écrit dans le repo réel, zéro scénario négatif chez `skill-craft` contre sa propre règle) et une passe coûte 5 à 6 $. Un checker qui **dérive ses scénarios du skill lui-même** ne dérive jamais : la `description` est le contrat de déclenchement à tester, les gardes du `## Process` et les tables `## Test` sont le comportement attendu à juger.
 
 ### Trois étages
 
 | Étage | Nature | Ce qu'il vérifie |
 | --- | --- | --- |
-| ① lint | script déterministe, sans LLM | frontmatter qui parse (YAML strict), champs R5 et R13, seuils R1 (~150) et R4 (500), sections obligatoires, flag de test présent, placeholders résiduels, liens relatifs morts |
+| ① lint | script déterministe, sans LLM | frontmatter qui parse (YAML strict), champs R5 et R13, seuils R1 (~150) et R4 (500), sections obligatoires **et aucune section hors liste**, flag de test présent, placeholders résiduels, liens relatifs morts |
 | ② template | jugement, l'action validate de `skill-craft` | anatomie des actions, doublons R6, tri des natures R8, sections vides R9 |
-| ③ review autonome | agent checker, skills flagués seulement | session fraîche via `claude -p` : le déclenchement se vérifie sur la sortie, le comportement se juge contre le Contrôle de sortie et les tables Test, plus un cas négatif dérivé des clauses NE PAS de la description |
+| ③ review autonome | agent checker, skills flagués seulement | session fraîche via `claude -p` : le déclenchement se vérifie sur la sortie, le comportement se juge contre les tables `## Test` et les gardes du `## Process`, plus un cas négatif dérivé des clauses NE PAS de la description |
 
 La mécanique de session fraîche de l'étage ③ reprend ce que `run-skill-evals.py` a éprouvé : `claude -p`, verdict de déclenchement séparé du verdict de comportement, mesure du 2026-08-06 à l'appui (7/8 sur opus, 0/8 sur sonnet à requêtes identiques).
 
@@ -185,7 +198,8 @@ Listés pour la session d'adaptation, sans les implémenter ici.
 
 ### skill-craft (futur `harness-skill-craft`)
 
-- Réécrire `references/skill-authoring-fr.md` contre cette note : anatomie génération 2 francisée (flux mermaid, table 2 colonnes, `## Test` en table), `## Contrôle de sortie` intégré à la section anatomie, R4 justifié ou remesuré, R7 et R8 réécrites sans `evals/`.
+- Réécrire `references/skill-authoring-fr.md` contre cette note : anatomie génération 2 francisée (flux mermaid, table 2 colonnes, `## Test` en table), liste de sections **fermée** aux quatre d'AIDD, R4 justifié ou remesuré, R7 et R8 réécrites sans `evals/` ni `## Contrôle de sortie`.
+- Ajouter au lint la règle qui tient la fermeture : tout en-tête `##` hors de la liste est un échec, avec le home de remplacement en message. **POURQUOI un lint et pas une consigne** : une section inventée est exactement ce qu'une convention en prose ne rattrape pas, 23 fichiers l'ont prouvé.
 - Règles nouvelles : le flag d'éligibilité et ses quatre critères, la doctrine subagents (locus, agnosticisme, wrapper), Frame–Deliver–Checker et sa borne, les préfixes de domaine dans le nommage.
 - `01-scaffold` décide l'éligibilité à l'échafaudage, avant d'écrire la description.
 - `02-validate` devient l'étage ② du checker. Ses propres `evals/` sautent comme les autres.
