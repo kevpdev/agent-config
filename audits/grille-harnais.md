@@ -97,11 +97,13 @@ La règle gardée en prose porte-t-elle une condition de violation observable �
 3. Impératif court non ambigu — suivi probabiliste
 4. Prose vague ou de style — inutile même pour un bon modèle → **supprimer ou reformuler en 2/3**
 
-**Sur un contrat de routage, la commande de vérification est un scénario d'éval.** Le niveau 2 s'y lit : un `evals/eval.json` existe, et il porte des `trigger_markers` pour le comportement jugé. Sans lui, l'instruction retombe au niveau 3 — et le verdict est mécanique, pas interprétatif : `ls <skill>/evals/`.
+**Sur un contrat de routage, la commande de vérification est un cas d'éval.** Le niveau 2 s'y lit ainsi, et le verdict reste mécanique : le corpus `evals/eval.json` porte un cas positif, **et un cas `expect_trigger: false` par frère cité en clause NE PAS**. Sans ce cas négatif, l'instruction retombe au niveau 3.
 
-**Deux angles morts de cet instrument, à dire dans le verdict plutôt qu'à ignorer** :
-- Un scénario qui vérifie que le skill **part** ne vérifie pas qu'il **ne part pas** à tort. Un corpus d'évals sans scénario négatif ne falsifie qu'une moitié du contrat, et c'est l'autre moitié que mesurent les collisions de déclencheurs.
-- Un marqueur absent avec un comportement entièrement vert est un faux négatif de l'instrument, pas un non-déclenchement (mesuré le 2026-08-06 sur `devops-expert`).
+**POURQUOI le cas négatif et pas la simple présence d'un corpus** : vérifier qu'un skill **part** ne vérifie pas qu'il **ne part pas** à tort, et c'est l'autre moitié du contrat que mesurent les collisions de déclencheurs. Un instrument qui se contente de constater le corpus valide donc la moitié d'un contrat en croyant en valider un. Compter les cas négatifs contre les frères nommés referme l'écart sans rien coûter de plus, le verdict restant un comptage.
+
+**L'angle mort qui reste, à dire dans le verdict plutôt qu'à ignorer** : l'instrument compte les cas négatifs, il ne juge pas s'ils sont bien choisis. Et un frère cité en clause NE PAS mais archivé ne peut pas recevoir de cas — le noter, au lieu de compter un manque.
+
+*Le second angle mort de cet instrument est mort avec l'ancien format d'éval : un marqueur absent sur un comportement vert était un faux négatif (mesuré le 2026-08-06 sur `devops-expert`), et le format n'a plus de marqueur.*
 
 **Exception assumée** : `ai-principles.md` ne prescrit rien donc n'est pas falsifiable, mais il est le repli quand une règle concrète est muette. Il se **réduit** (titres + une ligne de pourquoi), il ne se supprime pas.
 
@@ -225,7 +227,7 @@ Décomposer l'instruction en quatre parts — **grille de lecture pour l'audit, 
 
 **Calibrage du nouveau seuil, et sa limite** : rejoué sur les mêmes 26 descriptions, 130 mots marque **1 instruction** contre 19 pour l'ancien seuil — l'alerte redevient un pointeur au lieu d'un bruit de fond. Mais elle est dérivée de la médiane du corpus qu'elle juge, donc elle ne se transporte pas : les passes 7 et 9 (skills de vault, autre corpus) **remesurent leur médiane avant d'appliquer l'alerte**, elles n'héritent pas de ce 130.
 
-**Sur un contrat de routage, la quatrième part n'existe pas.** Les trois autres se relisent ainsi : l'impératif est le « quoi », le seuil est la liste de termes déclencheurs, l'exception est la clause « NE PAS utiliser pour → frère ». **Un terme déclencheur est un seuil au sens du tableau ci-dessus : porteur s'il est mesurable, donc s'il est couvert par un scénario d'éval.** Sans éval, il n'est pas une précision mais une assertion non testée — un défaut C3 déguisé, et c'est lui qui est compressible.
+**Sur un contrat de routage, la quatrième part n'existe pas.** Les trois autres se relisent ainsi : l'impératif est le « quoi », le seuil est la liste de termes déclencheurs, l'exception est la clause « NE PAS utiliser pour → frère ». **Un terme déclencheur est un seuil au sens du tableau ci-dessus : porteur s'il est mesurable, donc s'il est couvert par un cas d'éval.** Sans éval, il n'est pas une précision mais une assertion non testée — un défaut C3 déguisé, et c'est lui qui est compressible. Une clause NE PAS suit la même règle, et son cas est le cas négatif de C3.
 
 | Cas | Action |
 |---|---|
