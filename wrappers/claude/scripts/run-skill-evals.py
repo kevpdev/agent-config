@@ -141,6 +141,15 @@ def load_cases(skills_dir: str, wanted: list[str]) -> list[dict]:
                         f"{where} : un cas négatif ne produit rien, il ne peut pas "
                         "porter 'artifact'"
                     )
+            # Mesuré deux fois le 2026-08-21 puis deux fois le 2026-08-24 : `claude -p`
+            # sur un `/<nom>` n'ouvre pas le skill, ni appel à l'outil ni ligne du
+            # SKILL.md au transcript. Un cas positif préfixé mesurerait le harnais.
+            if expect and case["query"].lstrip().startswith("/"):
+                raise CannotConclude(
+                    f"{where} : une `query` de cas positif ne peut pas commencer par "
+                    "`/` — une invocation forcée n'ouvre pas le skill sous `claude -p`, "
+                    "le cas sortirait rouge sans avoir mesuré le skill"
+                )
             if case.get("files") and artifact is None:
                 raise CannotConclude(
                     f"{where} : 'files' n'a de sens qu'avec 'artifact' — sans lui les "

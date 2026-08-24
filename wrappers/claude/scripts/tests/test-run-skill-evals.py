@@ -217,6 +217,11 @@ CASES_CORPUS = [
         [{"skill": "demo", "query": "q", "artifact": {"sections": ["X"]}}],
         "exige un 'path'",
     ),
+    (
+        "cas positif à query forcée par un slash",
+        [{"skill": "demo", "query": "/demo publie le brouillon"}],
+        "ne peut pas commencer par",
+    ),
 ]
 
 
