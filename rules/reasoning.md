@@ -42,22 +42,24 @@ Une règle énonce sa raison **si cette raison apporte un fait indéduisible** :
 
 **FORME** : préférer « négation + alternative » à l'interdit sec (« ne fais jamais X, à la place fais Y »).
 
-## Règle — quand je copie un modèle, dire d'où vient chaque ligne
+## Règle — en refonte, l'existant n'est pas un acquis
 
-**DÉCLENCHEUR** : j'écris une liste que d'autres suivront (des sections, des critères, des étapes) en la copiant sur un modèle existant.
+**DÉCLENCHEUR** : on me demande d'améliorer, de refondre ou de remplacer quelque chose qui existe déjà.
 
-**À LA PLACE de** lister les éléments seuls, ajouter une colonne qui dit d'où vient chacun :
+**À LA PLACE de** partir de l'existant et de le retoucher, poser les solutions côte à côte, y compris « repartir de zéro », et choisir celle qui sert le but de l'amélioration. Garder l'existant est un choix qui se justifie, jamais un point de départ.
+
+**POURQUOI** : partir de l'existant limite d'avance ce que je peux proposer. Les bonnes solutions sont souvent celles que le fichier actuel ne contient pas.
+
+**Un moyen de le rendre visible** : dans une liste que d'autres suivront, ajouter une colonne « d'où ça vient ». Ce qui vient du vieux se justifie ou saute.
 
 | Section | D'où elle vient |
 |---|---|
-| `## Input` | le modèle |
-| `## Output` | le modèle |
+| `## Input` | la cible |
+| `## Output` | la cible |
 | `## Contrôle de sortie` | **nos vieux fichiers** |
-| `## Test` | le modèle |
+| `## Test` | la cible |
 
-Ce qui vient du modèle est acquis. Ce qui vient du vieux, soit j'écris pourquoi je le garde, soit je le supprime.
-
-**POURQUOI, mesuré le 2026-08-24** : dans la note ci-dessus, j'ai remis en question la suppression des `evals/` mais pas celle de `## Contrôle de sortie`. La seule différence, c'est que la première était dans la demande et l'autre non. Je ne remets en question que ce qu'on me nomme, et je recopie le reste sans le voir. Une colonne vide se voit, un réflexe de méfiance non.
+**Le piège, mesuré le 2026-08-24** : dans la même note, j'ai remis en question la suppression des `evals/` mais pas celle de `## Contrôle de sortie`. La seule différence est que la première était dans la demande et l'autre non. Sans cette règle, je ne remets en question que ce qu'on me nomme.
 
 ## Règle d'architecture — Cartesian check
 
