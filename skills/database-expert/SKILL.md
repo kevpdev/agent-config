@@ -7,7 +7,7 @@ description: >
   query", "SQL ou NoSQL pour ce cas", "cette migration est-elle safe en prod",
   "comment modéliser cette relation", "pourquoi cette query est lente", "EXPLAIN ANALYZE",
   "faut-il dénormaliser". NE PAS utiliser pour scaffolding ORM, génération de DTOs,
-  ou décisions d'architecture applicative (→ backend-architect).
+  ou décisions d'architecture applicative.
 ---
 
 # Skill — Database Expert

@@ -9,7 +9,7 @@ description: >
   "pourquoi ma sortie LLM est flaky/instable", "régression de prompt", "quel modèle
   LLM choisir", "valider une sortie LLM", "observabilité/coût tokens". NE PAS utiliser
   pour : orchestration multi-agent / routing (→ agentic-architect), archi backend
-  générale (→ backend-architect), review qualité du code (→ code-reviewer).
+  générale, review qualité du code (→ aidd-dev:05-review).
 ---
 
 # Skill — AI Engineering

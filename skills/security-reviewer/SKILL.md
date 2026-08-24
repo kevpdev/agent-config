@@ -6,7 +6,7 @@ description: >
   Utiliser quand l'utilisateur demande "audit sécurité", "security review", "est-ce sûr",
   "vérifie les vulnérabilités", "OWASP", ou avant un déploiement prod sensible (auth,
   paiement, données utilisateur). NE PAS utiliser pour la qualité générale du code
-  (→ skill code-reviewer) ni les choix d'architecture (→ skill backend-architect).
+  (→ aidd-dev:05-review) ni les choix d'architecture.
 ---
 
 # Skill — Security Reviewer

@@ -6,9 +6,9 @@ description: >
   un commentaire prêt à coller. Utiliser quand l'utilisateur dit "je dois reviewer une MR",
   "revue de MR", "aide-moi sur cette MR", "grosse MR", "je ne connais pas le contexte de cette MR",
   quand il donne un numéro ou une URL de merge request, ou "/mr-review".
-  NE PAS utiliser pour juger la qualité du code lui-même (→ code-reviewer, ou aidd-dev:05-review
-  quand un plan existe — ce skill les appelle), pour un audit sécurité (→ security-reviewer),
-  ni pour créer une MR (→ aidd-vcs:02-pull-request).
+  NE PAS utiliser pour juger la qualité du code lui-même (→ aidd-dev:05-review, que ce skill
+  appelle), pour un audit sécurité (→ security-reviewer), ni pour créer une MR
+  (→ aidd-vcs:02-pull-request).
 ---
 
 # mr-review

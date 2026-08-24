@@ -7,8 +7,8 @@ description: >
   "comment architecturer ce workflow agentique", "orchestrateur LLM ou hooks déterministes",
   "sous-agent ou skill ou code", "comment gérer le contexte entre agents", "MCP ou script",
   "délégation forcée ou probabiliste", "comment éviter les boucles dans une chaîne d'agents".
-  NE PAS utiliser pour l'architecture backend sans composante agentique (→ backend-architect),
-  ni pour la fiabilité / eval / choix de modèle d'une app LLM (→ ai-engineering).
+  NE PAS utiliser pour l'architecture backend sans composante agentique, ni pour la
+  fiabilité / eval / choix de modèle d'une app LLM (→ ai-engineering).
 ---
 
 # Skill — Agentic Architect

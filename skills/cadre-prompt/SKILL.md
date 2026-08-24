@@ -8,7 +8,7 @@ description: >-
   l'utilisateur dit "aide-moi à formuler ma demande", "améliore ce prompt", "cadre ma demande",
   "voilà mon brouillon de prompt", "je n'arrive pas à formuler ce que je veux", "prépare le prompt
   pour une nouvelle conversation", "fais un prompt de passation", ou "/cadre-prompt". NE PAS utiliser
-  pour dérouler le développement depuis une note de cadrage (→ aidd-pilot), pour fiabiliser une
+  pour dérouler le développement depuis une note de cadrage (→ aidd-orchestrator:01-sdlc), pour fiabiliser une
   application qui appelle un LLM et mesurer une régression de prompt (→ ai-engineering), ni pour un
   snapshot visuel de l'avancement destiné à l'humain (→ vault-recap-raisonnement).
 ---

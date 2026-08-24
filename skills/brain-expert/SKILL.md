@@ -7,8 +7,8 @@ description: >
   cognitive de ce flow", "pourquoi les utilisateurs abandonnent/se perdent", "comment
   structurer pour la rétention", "design d'onboarding/notifications/rappels", "biais
   cognitif dans cette interface", "comment maintenir l'attention sur cette tâche".
-  NE PAS utiliser pour l'architecture technique pure (→ backend-architect), l'UX/a11y
-  frontend au sens DOM/composants (→ frontend-expert), ni le diagnostic clinique (hors scope).
+  NE PAS utiliser pour l'architecture technique pure, l'UX/a11y frontend au sens
+  DOM/composants, ni le diagnostic clinique (hors scope).
 ---
 
 # Skill — Brain Expert

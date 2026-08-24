@@ -6,9 +6,9 @@ description: >
   des secrets. Utiliser quand l'utilisateur demande "optimise ce pipeline", "pourquoi
   ma build échoue", "réduis la taille de cette image", "multi-stage build", "structure
   ce déploiement K8s", "blue-green ou canary", "zero-downtime deploy", "quelles alertes",
-  "où mettre mes secrets en CI". NE PAS utiliser pour l'architecture applicative backend
-  (→ backend-architect), l'audit sécurité du code (→ security-reviewer), ni l'automatisation
-  agentique (→ agentic-architect).
+  "où mettre mes secrets en CI". NE PAS utiliser pour l'architecture applicative backend,
+  l'audit sécurité du code (→ security-reviewer), ni l'automatisation agentique
+  (→ agentic-architect).
 ---
 
 # Skill — DevOps Expert

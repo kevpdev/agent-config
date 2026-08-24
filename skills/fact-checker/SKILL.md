@@ -10,7 +10,7 @@ description: >
   "challenge / démonte cette thèse", "est-ce vrai ce qu'il dit". NE PAS utiliser pour la
   méthodo d'eval d'une app LLM (golden set, LLM-judge → ai-engineering), ni pour l'archi du
   système multi-agent lui-même (→ agentic-architect), ni pour une simple recherche doc
-  technique d'une lib (→ docs-check).
+  technique d'une lib.
 ---
 
 # fact-checker — établir ce qui est vérifié, et à quel degré
