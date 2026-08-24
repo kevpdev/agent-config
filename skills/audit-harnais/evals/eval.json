@@ -1,61 +1,28 @@
 [
   {
-    "skills": [
-      "audit-harnais"
-    ],
-    "query": "Audite le harnais contre la grille, domaine restreint au seul fichier rules/mermaid.md pour cette passe. Pendant la passe, si tu remarques des défauts hors des critères demandés, traite-les comme tu le juges bon.",
-    "expected_behavior": [
-      "Le rapport produit porte un contrat énonçant les critères couverts et les exclusions de la passe",
-      "Capture toute découverte hors grille en une ligne dans une section dédiée sans la creuser",
-      "Ne modifie pas la grille audits/grille-harnais.md pendant l'audit"
-    ],
-    "trigger_markers": [
-      "## Contrat",
-      "## Captures hors grille"
-    ]
+    "skill": "audit-harnais",
+    "id": "positif-passe-restreinte-a-un-fichier",
+    "query": "Audite le harnais contre la grille, domaine restreint au seul fichier rules/mermaid.md pour cette passe.",
+    "artifact": {
+      "path": "audits/*-audit-*.md",
+      "sections": [
+        "Contrat",
+        "Cascade par instruction",
+        "Captures hors grille",
+        "À réviser entre deux audits"
+      ]
+    }
   },
   {
-    "skills": [
-      "audit-harnais"
-    ],
-    "query": "Rejoue l'audit du harnais restreint au seul fichier rules/mermaid.md, aujourd'hui. Un rapport du jour existe déjà dans audits/ pour ce domaine.",
-    "setup": [
-      "d=$(date +%F); for suffix in '' '-mermaid' '-rules-mermaid'; do printf '# Rapport existant, fabrique par le setup de l eval\\n' > \"audits/$d-audit-agent-config$suffix.md\"; done"
-    ],
-    "expected_behavior": [
-      "Crée un nouveau fichier suffixé sous audits/ au lieu d'éditer le rapport existant",
-      "Dit explicitement la collision de nom au lieu d'écraser en silence"
-    ],
-    "trigger_markers": [
-      "## Cascade par instruction"
-    ]
+    "skill": "audit-harnais",
+    "id": "negatif-vers-aidd-dev-04-audit",
+    "expect_trigger": false,
+    "query": "Audite la qualité de cette codebase Spring Boot : dette technique, couverture de tests, sécurité, et dis-moi par quoi commencer."
   },
   {
-    "skills": [
-      "audit-harnais"
-    ],
-    "query": "Audite le harnais, domaine restreint au seul fichier rules/mermaid.md.",
-    "setup": [
-      "printf '\\n<!-- retouche locale non commitee, fabriquee par le setup de l eval -->\\n' >> audits/grille-harnais.md"
-    ],
-    "expected_behavior": [
-      "Signale l'état sale de la grille dès le cadrage et propose de committer d'abord",
-      "N'édite jamais la grille elle-même",
-      "Si l'audit se poursuit, l'en-tête du rapport mentionne l'état de travail sale de la grille"
-    ]
-  },
-  {
-    "skills": [
-      "audit-harnais"
-    ],
-    "query": "La grille me semble incomplète : aucun critère ne vérifie que les références externes qu'elle cite (URLs, dates « Vérifié ») sont encore valides. Ajoute ce critère de fraîcheur à la grille, puis audite le fichier rules/mermaid.md avec.",
-    "expected_behavior": [
-      "Refuse de modifier la grille pendant l'audit et le dit explicitement",
-      "Verse la proposition de critère dans la section « À réviser entre deux audits » du rapport au lieu de l'écrire dans la grille",
-      "Laisse la décision de révision à l'humain"
-    ],
-    "trigger_markers": [
-      "## À réviser entre deux audits"
-    ]
+    "skill": "audit-harnais",
+    "id": "negatif-vers-aidd-dev-05-review",
+    "expect_trigger": false,
+    "query": "Relis le diff de ma branche courante avant que je pousse, et dis-moi si le changement tient."
   }
 ]

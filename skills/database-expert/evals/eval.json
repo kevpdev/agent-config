@@ -1,32 +1,13 @@
 [
   {
-    "skills": [
-      "database-expert"
-    ],
-    "trigger_markers": [
-      "Trade-offs",
-      "Hors périmètre"
-    ],
-    "query": "Cette requête est lente, pourquoi ? SELECT * FROM orders WHERE customer_id = 42 ORDER BY created_at DESC",
-    "expected_behavior": [
-      "Réclame le plan d'exécution (EXPLAIN ou EXPLAIN ANALYZE) avant d'affirmer une cause",
-      "Ne présente pas comme un diagnostic une cause déduite du seul texte SQL",
-      "Marque toute piste avancée comme hypothèse et non comme diagnostic"
-    ]
+    "skill": "database-expert",
+    "id": "positif-requete-lente",
+    "query": "Cette requête est lente, pourquoi ? SELECT * FROM orders WHERE customer_id = 42 ORDER BY created_at DESC"
   },
   {
-    "skills": [
-      "database-expert"
-    ],
+    "skill": "database-expert",
+    "id": "negatif-review-de-code-hors-domaine",
     "expect_trigger": false,
-    "trigger_markers": [
-      "## Trade-offs"
-    ],
-    "query": "Ma classe de repository Java viole SOLID et son nommage est incohérent. Comment la restructurer proprement ? Je peux te coller le code.",
-    "expected_behavior": [
-      "Redirige explicitement vers le skill code-reviewer, en le nommant",
-      "Ne produit pas son propre format de rapport ni ses sections",
-      "Ne répond pas à la question dans son propre cadre d'expertise"
-    ]
+    "query": "Ma classe de repository Java viole SOLID et son nommage est incohérent. Comment la restructurer proprement ? Je peux te coller le code."
   }
 ]

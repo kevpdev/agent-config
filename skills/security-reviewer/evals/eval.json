@@ -1,39 +1,13 @@
 [
   {
-    "skills": [
-      "security-reviewer"
-    ],
-    "files": [
-      "fixtures/InvoiceController.java"
-    ],
-    "trigger_markers": [
-      "Contexte assumé",
-      "Stack identifiée",
-      "Critical"
-    ],
-    "query": "Audit sécurité de l'endpoint de InvoiceController.java.",
-    "expected_behavior": [
-      "La section Critical est présente et annonce qu'il n'y a aucune faille",
-      "N'invente pas de faille pour justifier l'audit",
-      "Ne signale aucun risque tiré d'un fichier absent du périmètre fourni"
-    ]
+    "skill": "security-reviewer",
+    "id": "positif-audit-d-un-endpoint",
+    "query": "Audit sécurité de l'endpoint de facturation : il prend un identifiant client en paramètre de requête et le concatène dans une requête SQL."
   },
   {
-    "skills": [
-      "security-reviewer"
-    ],
+    "skill": "security-reviewer",
+    "id": "negatif-review-de-qualite-hors-domaine",
     "expect_trigger": false,
-    "trigger_markers": [
-      "Stack identifiée"
-    ],
-    "query": "Est-ce que InvoiceController.java respecte SOLID ? Le nommage et le découpage des méthodes me paraissent douteux.",
-    "expected_behavior": [
-      "Redirige explicitement vers le skill code-reviewer, en le nommant",
-      "Ne produit pas son propre format de rapport ni ses sections",
-      "Ne répond pas à la question dans son propre cadre d'expertise"
-    ],
-    "files": [
-      "fixtures/InvoiceController.java"
-    ]
+    "query": "Est-ce que ce contrôleur respecte SOLID ? Le nommage et le découpage des méthodes me paraissent douteux."
   }
 ]

@@ -135,23 +135,41 @@ rien, un détecteur cassé se tait exactement comme un détecteur qui n'a rien t
 est donc un retard **fabriqué à la main**, et elle s'arrête là s'il échoue plutôt que de rendre un vert
 trompeur sur des silences.
 
-### Jouer les évals des skills
+### Linter les skills
 
-Un skill qui porte un `evals/eval.json` déclare des scénarios en données pures : une requête, le comportement attendu, et de quoi juger. L'exécuteur, lui, est spécifique à Claude Code — ouvrir une session neuve passe par `claude -p`.
+Le lint lit les fichiers et n'exécute rien : six vérifications mécaniques sur les 24 skills, en une seconde et sans appel LLM. Le frontmatter parse et porte ses trois clés, `name` égale le dossier, la `description` tient sous le plafond, les `##` correspondent à ceux du gabarit, aucun placeholder ne survit, aucun lien relatif n'est mort.
 
 ```bash
-python3 wrappers/claude/scripts/run-skill-evals.py --self-test        # calibre le juge, ne joue aucun scénario
-python3 wrappers/claude/scripts/run-skill-evals.py                    # joue tout, rend un tableau de verdicts
-python3 wrappers/claude/scripts/run-skill-evals.py --skill code-reviewer --force
+python3 wrappers/claude/scripts/lint-skills.py                      # tous les skills
+python3 wrappers/claude/scripts/lint-skills.py --skill skill-craft   # un seul
+python3 wrappers/claude/scripts/tests/test-lint-skills.py            # calibre les six vérifications
 ```
 
-Chaque scénario rend deux verdicts. Le **déclenchement** est déterministe : les `trigger_markers` du scénario apparaissent-ils dans la sortie ? Le **comportement** passe par un juge LLM confronté aux `expected_behavior`. `--force` préfixe la requête par `/<skill>` et isole donc le comportement du déclenchement.
+**La liste des sections n'est pas dans le script.** Elle est dérivée des deux gabarits de `skills/skill-craft/assets/`, qui font foi pour l'humain comme pour le lint. Une liste décrite en prose et une liste vérifiée par un script divergent au premier edit de l'une des deux.
+
+**Rien n'y grep ce que le skill fait.** Un comptage de « push » ou « commit » attrape `security-reviewer`, qui cite ces mots pour décrire du code qu'il relit sans rien exécuter. Ce qui demande de comprendre le skill reste à la relecture de `skill-craft:02-validate`.
+
+### Jouer les évals des skills
+
+Un skill qui porte un `evals/eval.json` déclare ses cas en données pures : la requête, le déclenchement attendu, l'artefact attendu. Aucun nom d'outil, aucun nom d'agent — l'exécuteur est le seul à connaître Claude Code, ouvrir une session neuve passant par `claude -p`.
+
+```bash
+python3 wrappers/claude/scripts/tests/test-run-skill-evals.py   # calibre les verdicts, ne joue aucun cas
+python3 wrappers/claude/scripts/run-skill-evals.py              # joue tout, rend un tableau de verdicts
+python3 wrappers/claude/scripts/run-skill-evals.py --skill mr-review
+```
+
+Chaque cas rend deux verdicts, tous deux déterministes et sans juge LLM. Le **déclenchement** se lit au registre de la session : un appel à l'outil `Skill` nomme le skill ouvert, et sur un cas négatif le verdict s'inverse. L'**artefact** se contrôle par script : le fichier annoncé existe et porte les sections de son gabarit.
+
+**Le champ `artifact` choisit le mode d'exécution.** Sans lui, le cas tourne `--tools "Skill"` : le skill peut s'ouvrir, rien d'autre ne peut s'exécuter, donc un skill à effet de bord se teste sans risque et sans worktree. Avec lui, le cas tourne outils ouverts dans un worktree jetable du repo. Couper **tous** les outils couperait aussi celui qui ouvre un skill, et l'instrument mesurerait sa propre censure (mesuré le 2026-08-24).
+
+**Un skill à invocation manuelle n'a pas de cas positif.** Mesuré le 2026-08-24 : un `/<nom>` injecte le skill côté client, donc il ne laisse aucune trace au registre. `jira` ne porte que des cas négatifs, ce qui est le contrat qui compte pour lui — il ne doit jamais partir tout seul.
 
 **Le déclenchement dépend d'abord du modèle, pas du skill.** Mesuré le 2026-08-06 sur quatre skills en deux répétitions, à skills, requêtes et règles identiques : **7/8 sur `opus`, 0/8 sur `sonnet`**. Deux des quatre ne déclenchaient jamais sous Sonnet et déclenchent 2/2 sous Opus. D'où le `--model opus` par défaut : jouer les évals sur un modèle plus petit mesure un agent qu'on n'exécute pas, et fait passer pour un défaut de `description` ce qui n'en est pas un. Corollaire : un verdict de déclenchement rouge se réinterprète en changeant de modèle **avant** de réécrire quoi que ce soit.
 
-**Une passe coûte de l'argent** — environ 0,51 $ par scénario joué sur `opus` plus 0,07 $ de juge, soit 5 à 6 $ pour les dix. Ce n'est pas un lint qu'on lance à chaque commit.
+**Une passe coûte de l'argent** — 0,97 $ pour un cas de déclenchement joué sur `opus`, mesuré le 2026-08-24, soit une trentaine de dollars pour les 31 cas du corpus. Ce n'est pas un lint qu'on lance à chaque commit, et c'est pourquoi le lint existe à côté.
 
-**Lancer `--self-test` avant de croire une passe.** Il confronte le juge à trois sorties fabriquées — conforme, vide, partielle — et exige les trois verdicts attendus. Sans lui, un juge aveugle qui répond toujours PASS est indiscernable d'un juge intact.
+**Lancer la batterie avant de croire une passe.** Elle confronte les deux verdicts et la validation du corpus à 20 cas fabriqués à la main. Sans elle, un verdict aveugle qui répond toujours OK est indiscernable d'un verdict intact.
 
 ### `SKILLS_ROOT` — le contrat entre un skill et son agent
 

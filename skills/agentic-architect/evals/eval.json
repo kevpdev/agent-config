@@ -1,32 +1,13 @@
 [
   {
-    "skills": [
-      "agentic-architect"
-    ],
-    "trigger_markers": [
-      "Signal de révision",
-      "Trade-off accepté"
-    ],
-    "query": "Je veux un agent qui renomme mes fichiers selon leur date de création, chaque nuit. Comment l'architecturer ?",
-    "expected_behavior": [
-      "Recommande une solution déterministe (script plus planificateur) et non un agent",
-      "Dit explicitement pourquoi un LLM n'a pas sa place ici : la règle est fixe et vérifiable",
-      "Donne une condition observable qui obligerait à revoir ce choix"
-    ]
+    "skill": "agentic-architect",
+    "id": "positif-architecture-d-un-agent-nocturne",
+    "query": "Je veux un agent qui renomme mes fichiers selon leur date de création, chaque nuit. Comment l'architecturer ?"
   },
   {
-    "skills": [
-      "agentic-architect"
-    ],
+    "skill": "agentic-architect",
+    "id": "negatif-vers-ai-engineering",
     "expect_trigger": false,
-    "trigger_markers": [
-      "Trade-off accepté"
-    ],
-    "query": "Comment savoir si mon extraction LLM est fiable ? Je pense qu'il me faut un golden set et un seuil.",
-    "expected_behavior": [
-      "Redirige explicitement vers le skill ai-engineering, en le nommant",
-      "Ne produit pas son propre format de rapport ni ses sections",
-      "Ne répond pas à la question dans son propre cadre d'expertise"
-    ]
+    "query": "Comment savoir si mon extraction LLM est fiable ? Je pense qu'il me faut un golden set et un seuil."
   }
 ]

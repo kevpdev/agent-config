@@ -1,31 +1,13 @@
 [
   {
-    "skills": [
-      "brain-expert"
-    ],
-    "trigger_markers": [
-      "Problème cognitif"
-    ],
-    "query": "Mon écran de configuration a quatorze champs sur une seule page. Comment réduire la charge cognitive ?",
-    "expected_behavior": [
-      "Réclame la population visée et la fréquence d'usage avant de conclure",
-      "Ne généralise pas une recommandation à une population non précisée",
-      "Distingue le cas de l'utilisateur expert récurrent de celui du novice occasionnel"
-    ]
+    "skill": "brain-expert",
+    "id": "positif-charge-cognitive-d-un-ecran",
+    "query": "Mon écran de configuration a quatorze champs sur une seule page. Comment réduire la charge cognitive ?"
   },
   {
-    "skills": [
-      "brain-expert"
-    ],
+    "skill": "brain-expert",
+    "id": "negatif-a11y-frontend-hors-domaine",
     "expect_trigger": false,
-    "trigger_markers": [
-      "Problème cognitif"
-    ],
-    "query": "Ce composant React est-il accessible au lecteur d'écran ? Je m'interroge sur les attributs aria et la gestion du focus.",
-    "expected_behavior": [
-      "Redirige explicitement vers le skill frontend-expert, en le nommant",
-      "Ne produit pas son propre format de rapport ni ses sections",
-      "Ne répond pas à la question dans son propre cadre d'expertise"
-    ]
+    "query": "Ce composant React est-il accessible au lecteur d'écran ? Je m'interroge sur les attributs aria et la gestion du focus."
   }
 ]

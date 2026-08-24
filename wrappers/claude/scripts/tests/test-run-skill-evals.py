@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Calibre les verdicts déterministes de `run-skill-evals.py` sur des cas fabriqués.
+"""Calibre les deux verdicts de `run-skill-evals.py` sur des cas fabriqués.
 
 Ne joue aucune session et n'appelle aucun LLM : ne teste que la logique de verdict et
-la validation des scénarios, qui sont déterministes et donc les seules choses qu'une
+la validation du corpus, qui sont déterministes et donc les seules choses qu'une
 batterie peut trancher.
 
-Pourquoi cette batterie existe : un verdict de déclenchement se comporte exactement
-pareil qu'il soit juste ou cassé — il rend « OK » dans les deux cas. Sans un positif
-et un négatif exhibés à la main, rien ne distingue l'instrument qui mesure de
-l'instrument aveugle (`rules/reasoning.md`, calibrage avant comptage).
+Pourquoi cette batterie existe : un verdict se comporte exactement pareil qu'il soit
+juste ou cassé — il rend « OK » dans les deux cas. Sans un positif et un négatif
+exhibés à la main, rien ne distingue l'instrument qui mesure de l'instrument aveugle
+(`rules/reasoning.md`, calibrage avant comptage).
 
 Sortie : 0 si tout passe, 1 si un cas échoue.
 """
@@ -25,173 +25,278 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 RUNNER = os.path.join(os.path.dirname(HERE), "run-skill-evals.py")
 
 
-def load_runner():
-    if not os.path.exists(RUNNER):
-        sys.exit(f"run-skill-evals.py introuvable à {RUNNER}")
-    spec = importlib.util.spec_from_file_location("runner", RUNNER)
+def load(path: str, name: str):
+    if not os.path.exists(path):
+        sys.exit(f"{os.path.basename(path)} introuvable à {path}")
+    spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
 
 
+# (nom, cas, skills ouverts, verdict attendu, fragment attendu dans la raison)
 CASES_TRIGGER = [
-    # (nom, scénario, sortie de session, registre des skills ouverts, verdict attendu)
     (
-        "positif — marqueurs présents",
-        {"_skill": "code-reviewer", "trigger_markers": ["Bloquants", "Contexte assumé"]},
-        "## Contexte assumé\nprod\n## Bloquants\nAucun",
+        "positif — le skill s'est ouvert",
+        {"skill": "demo", "query": "q"},
+        ["demo"],
+        "OK",
+        "s'est ouvert",
+    ),
+    (
+        "positif — rien ne s'est ouvert",
+        {"skill": "demo", "query": "q"},
+        [],
+        "FAIL",
+        "aucun skill",
+    ),
+    (
+        "positif — un frère a pris la main",
+        {"skill": "demo", "query": "q"},
+        ["autre"],
+        "FAIL",
+        "autre",
+    ),
+    (
+        "négatif — le skill a pris la main quand même",
+        {"skill": "demo", "query": "q", "expect_trigger": False},
+        ["demo"],
+        "FAIL",
+        "non voulu",
+    ),
+    (
+        "négatif — a cédé la main au frère",
+        {"skill": "demo", "query": "q", "expect_trigger": False},
+        ["autre"],
+        "OK",
+        "cédé la main",
+    ),
+    (
+        "négatif — personne ne s'est ouvert",
+        {"skill": "demo", "query": "q", "expect_trigger": False},
         [],
         "OK",
+        "aucun autre skill",
     ),
+]
+
+SKILL_OK = """---
+name: git-hygiene
+description: Contrôle l'état d'un repo. Utiliser quand l'utilisateur veut le vérifier.
+argument-hint: le repo visé
+---
+
+# Git hygiene
+
+Skill fabriqué pour la batterie.
+
+## Actions
+
+Dérouler le flux. Ne lire que la prochaine action.
+
+| Action | Fait |
+| --- | --- |
+| mesurer | mesurer l'état du repo |
+
+## Transversal rules
+
+- Ne rien committer.
+
+## Test
+
+Jouable seul.
+
+| Cas | Preuve |
+| --- | --- |
+| le lint tourne | il rend zéro |
+"""
+
+RAPPORT_OK = """# Rapport d'audit
+
+## Contrat
+
+Le périmètre de la passe.
+
+## Captures hors grille
+
+Rien.
+"""
+
+
+def write(root: str, relative: str, content: str) -> None:
+    path = os.path.join(root, relative)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as handle:
+        handle.write(content)
+
+
+# (nom, spec artifact, fichiers à poser, verdict attendu, fragment attendu)
+CASES_ARTIFACT = [
+    ("aucun artefact annoncé", None, {}, "N/A", "aucun artefact"),
     (
-        "positif — un marqueur manque et rien au registre",
-        {"_skill": "code-reviewer", "trigger_markers": ["Bloquants", "Contexte assumé"]},
-        "## Bloquants\nAucun",
-        [],
-        "FAIL",
-    ),
-    (
-        # Le cas mesuré le 2026-08-11 sur brain-expert : chargé pour de bon, mais sa
-        # signature n'apparaît pas dans la sortie. Le seul marqueur rendait FAIL.
-        "positif — marqueur absent mais registre positif : faux négatif rattrapé",
-        {"_skill": "brain-expert", "trigger_markers": ["Problème cognitif"]},
-        "Voici comment alléger ce flux, étape par étape.",
-        ["brain-expert"],
+        "sections attendues présentes",
+        {"path": "audits/*.md", "sections": ["Contrat", "Captures hors grille"]},
+        {"audits/2026-01-01-audit.md": RAPPORT_OK},
         "OK",
+        "porte ses 2 section",
     ),
     (
-        "positif — registre nommant un AUTRE skill ne vaut pas déclenchement",
-        {"_skill": "brain-expert", "trigger_markers": ["Problème cognitif"]},
-        "Voici comment alléger ce flux.",
-        ["frontend-expert"],
+        "une section attendue manque",
+        {"path": "audits/*.md", "sections": ["Contrat", "À réviser entre deux audits"]},
+        {"audits/2026-01-01-audit.md": RAPPORT_OK},
         "FAIL",
+        "À réviser entre deux audits",
     ),
     (
-        "négatif — le frère a pris la main (abstention réelle)",
-        {"_skill": "code-reviewer", "expect_trigger": False, "trigger_markers": ["Bloquants"]},
-        "Cette question porte sur la sécurité, va voir security-reviewer.",
-        ["security-reviewer"],
+        "aucun fichier ne correspond au glob",
+        {"path": "audits/*.md", "sections": ["Contrat"]},
+        {},
+        "FAIL",
+        "aucun fichier",
+    ),
+    (
+        "gabarit respecté",
+        {"path": "skills/git-hygiene/SKILL.md", "template": "skill"},
+        {"skills/git-hygiene/SKILL.md": SKILL_OK},
         "OK",
+        "gabarit skill",
     ),
     (
-        "négatif — rien ne s'est chargé : vert, mais rien n'a été mesuré",
-        {"_skill": "code-reviewer", "expect_trigger": False, "trigger_markers": ["Bloquants"]},
-        "Voici mon avis sur la sécurité de ce endpoint.",
-        [],
-        "OK",
-    ),
-    (
-        "négatif — le skill a pris la main, vu au registre malgré une sortie muette",
-        {"_skill": "code-reviewer", "expect_trigger": False, "trigger_markers": ["Bloquants"]},
-        "Rien qui ressemble à mon gabarit.",
-        ["code-reviewer"],
+        "gabarit non respecté",
+        {"path": "skills/git-hygiene/SKILL.md", "template": "skill"},
+        {
+            "skills/git-hygiene/SKILL.md": SKILL_OK
+            + "\n## Contrôle de sortie\n\n- l'artefact parse\n"
+        },
         "FAIL",
+        "Garde",
+    ),
+]
+
+# (nom, contenu du corpus, fragment attendu du refus)
+CASES_CORPUS = [
+    (
+        "champ hors format — un corpus resté à l'ancien schéma",
+        [{"skill": "demo", "query": "q", "expected_behavior": ["…"]}],
+        "hors format",
     ),
     (
-        "négatif — le skill a pris la main (marqueur, sans registre)",
-        {"_skill": "code-reviewer", "expect_trigger": False, "trigger_markers": ["Bloquants"]},
-        "## Bloquants\n- rien à signaler",
-        [],
-        "FAIL",
+        "champ setup — supprimé du format",
+        [{"skill": "demo", "query": "q", "setup": ["rm -rf /"]}],
+        "hors format",
     ),
     (
-        "négatif — un seul marqueur sur deux suffit à trahir le déclenchement",
-        {"_skill": "code-reviewer", "expect_trigger": False, "trigger_markers": ["Bloquants", "Suggestions"]},
-        "## Suggestions\n- extraire la méthode",
-        [],
-        "FAIL",
+        "skill différent du dossier",
+        [{"skill": "autre", "query": "q"}],
+        "≠ dossier",
     ),
     (
-        "sans marqueur ni registre — non mesurable, jamais un succès",
-        {"_skill": "code-reviewer"},
-        "n'importe quoi",
-        [],
-        "N/A",
+        "query absente",
+        [{"skill": "demo"}],
+        "'query' absent",
+    ),
+    (
+        "cas négatif porteur d'un artefact",
+        [
+            {
+                "skill": "demo",
+                "query": "q",
+                "expect_trigger": False,
+                "artifact": {"path": "x.md"},
+            }
+        ],
+        "cas négatif ne produit rien",
+    ),
+    (
+        "fixtures sans artefact",
+        [{"skill": "demo", "query": "q", "files": ["fixtures/x.md"]}],
+        "n'a de sens qu'avec 'artifact'",
+    ),
+    (
+        "artefact sans path",
+        [{"skill": "demo", "query": "q", "artifact": {"sections": ["X"]}}],
+        "exige un 'path'",
     ),
 ]
 
 
-def scenario_file(tmp: str, skill: str, scenarios: list) -> str:
-    """Écrit un `evals/eval.json` jetable et rend la racine de skills à charger."""
-    root = os.path.join(tmp, "skills")
-    evals = os.path.join(root, skill, "evals")
-    os.makedirs(evals, exist_ok=True)
-    with open(os.path.join(evals, "eval.json"), "w", encoding="utf-8") as fh:
-        json.dump(scenarios, fh)
-    return root
-
-
-BASE = {"query": "q", "expected_behavior": ["c"]}
-
-CASES_LOAD = [
-    # (nom, scénario, doit lever CannotConclude)
-    ("scénario positif minimal", {**BASE}, False),
-    ("négatif complet", {**BASE, "expect_trigger": False, "trigger_markers": ["M"]}, False),
-    (
-        "négatif SANS marqueur — l'absence n'est pas mesurable, doit refuser",
-        {**BASE, "expect_trigger": False},
-        True,
-    ),
-    (
-        "négatif avec marqueurs vides — même défaut, doit refuser",
-        {**BASE, "expect_trigger": False, "trigger_markers": []},
-        True,
-    ),
-    (
-        "expect_trigger non booléen — doit refuser",
-        {**BASE, "expect_trigger": "false", "trigger_markers": ["M"]},
-        True,
-    ),
-]
+def check(name: str, got, expected, fragment: str | None, reason: str) -> int:
+    problems = []
+    if got != expected:
+        problems.append(f"verdict {got!r} au lieu de {expected!r}")
+    if fragment and fragment not in reason:
+        problems.append(f"raison sans « {fragment} » : {reason}")
+    if problems:
+        print(f"ÉCHEC  {name}")
+        for problem in problems:
+            print(f"       {problem}")
+        return 1
+    print(f"OK     {name}")
+    return 0
 
 
 def main() -> int:
-    runner = load_runner()
+    runner = load(RUNNER, "runner")
+    root = runner.derive_root()
+    linter = runner.load_linter(root)
+    templates = linter.load_templates(root)
+
     failures = 0
 
-    print("Verdicts de déclenchement")
-    for name, scenario, output, loaded, expected in CASES_TRIGGER:
-        got, why = runner.trigger_verdict(scenario, output, loaded)
-        ok = got == expected
-        failures += not ok
-        print(f"  {'OK  ' if ok else 'FAIL'} {name} : attendu {expected}, obtenu {got} — {why}")
+    for name, case, opened, expected, fragment in CASES_TRIGGER:
+        verdict, reason = runner.trigger_verdict(case, opened)
+        failures += check(name, verdict, expected, fragment, reason)
 
-    print("\nValidation des scénarios au chargement")
-    with tempfile.TemporaryDirectory() as tmp:
-        for index, (name, scenario, must_raise) in enumerate(CASES_LOAD):
-            root = scenario_file(os.path.join(tmp, str(index)), "faux-skill", [scenario])
+    for name, spec, files, expected, fragment in CASES_ARTIFACT:
+        with tempfile.TemporaryDirectory() as tmp:
+            for relative, content in files.items():
+                write(tmp, relative, content)
+            case = {"skill": "demo", "query": "q", "_label": name}
+            if spec:
+                case["artifact"] = spec
+            verdict, reason = runner.artifact_verdict(case, tmp, linter, templates)
+        failures += check(name, verdict, expected, fragment, reason)
+
+    for name, corpus, fragment in CASES_CORPUS:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "demo", "evals", "eval.json")
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8") as handle:
+                json.dump(corpus, handle)
             try:
-                runner.load_scenarios(root, [])
-                raised = False
-                why = "chargé sans erreur"
+                runner.load_cases(tmp, [])
+                verdict, reason = "ACCEPTÉ", ""
             except runner.CannotConclude as exc:
-                raised = True
-                why = str(exc).split(" : ", 1)[-1]
-            ok = raised == must_raise
-            failures += not ok
-            verb = "refus attendu" if must_raise else "acceptation attendue"
-            print(f"  {'OK  ' if ok else 'FAIL'} {name} : {verb}, {'refusé' if raised else 'accepté'} — {why}")
+                verdict, reason = "REFUSÉ", str(exc)
+        failures += check(name, verdict, "REFUSÉ", fragment, reason)
 
-    print("\nIncompatibilité avec --force")
-    negative = {**BASE, "expect_trigger": False, "trigger_markers": ["M"]}
-    positive = {**BASE, "trigger_markers": ["M"]}
-    # Le filtre vit dans main() ; on rejoue son prédicat pour vérifier qu'un scénario
-    # négatif est bien écarté sans que son auteur ait eu à poser aussi `skip_force`.
-    def tests_abstention(s: dict) -> bool:
-        return bool(s.get("skip_force")) or not s.get("expect_trigger", True)
+    # Arme positive de la validation : un corpus au format passe.
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "demo", "evals", "eval.json")
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as handle:
+            json.dump(
+                [
+                    {"skill": "demo", "id": "positif", "query": "q"},
+                    {
+                        "skill": "demo",
+                        "id": "negatif",
+                        "query": "q",
+                        "expect_trigger": False,
+                    },
+                ],
+                handle,
+            )
+        try:
+            loaded = runner.load_cases(tmp, [])
+            got = f"{len(loaded)} cas"
+            reason = ""
+        except runner.CannotConclude as exc:
+            got, reason = "REFUSÉ", str(exc)
+    failures += check("corpus au format — accepté", got, "2 cas", None, reason)
 
-    for name, scenario, expected in [
-        ("négatif écarté du mode forcé sans skip_force explicite", negative, True),
-        ("positif conservé en mode forcé", positive, False),
-        ("skip_force explicite toujours honoré", {**positive, "skip_force": True}, True),
-    ]:
-        got = tests_abstention(scenario)
-        ok = got == expected
-        failures += not ok
-        print(f"  {'OK  ' if ok else 'FAIL'} {name} : attendu {expected}, obtenu {got}")
-
-    total = len(CASES_TRIGGER) + len(CASES_LOAD) + 3
-    print(f"\n{total - failures}/{total} cas au vert")
+    total = len(CASES_TRIGGER) + len(CASES_ARTIFACT) + len(CASES_CORPUS) + 1
+    print(f"\n{total - failures}/{total} cas passent.")
     return 1 if failures else 0
 
 
