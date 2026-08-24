@@ -42,17 +42,22 @@ Une règle énonce sa raison **si cette raison apporte un fait indéduisible** :
 
 **FORME** : préférer « négation + alternative » à l'interdit sec (« ne fais jamais X, à la place fais Y »).
 
-## Règle — écrire une cible contre un modèle : chaque ligne dit d'où elle vient
+## Règle — quand je copie un modèle, dire d'où vient chaque ligne
 
-**DÉCLENCHEUR** : j'écris une cible que d'autres suivront (anatomie, convention, liste de sections, jeu de critères) et je la calque sur un modèle existant.
+**DÉCLENCHEUR** : j'écris une liste que d'autres suivront (des sections, des critères, des étapes) en la copiant sur un modèle existant.
 
-**À LA PLACE de** lister les éléments seuls, ajouter la colonne « d'où ça vient ». Un élément qui vient du modèle est acquis. Un élément qui vient de l'existant est une reconduction : soit je nomme le motif qui l'a créé et je vérifie qu'il est encore vrai, soit il saute.
+**À LA PLACE de** lister les éléments seuls, ajouter une colonne qui dit d'où vient chacun :
 
-**POURQUOI, mesuré le 2026-08-24** : dans la même note de cadrage, j'ai bien challengé la suppression des `evals/` et pas celle de `## Contrôle de sortie`. Deux pièces de même nature, deux traitements. La seule différence est que la première figurait dans la demande de l'humain et la seconde non. Je ne challenge que ce que la demande nomme, et je reconduis le reste en silence.
+| Section | D'où elle vient |
+|---|---|
+| `## Input` | le modèle |
+| `## Output` | le modèle |
+| `## Contrôle de sortie` | **nos vieux fichiers** |
+| `## Test` | le modèle |
 
-**POURQUOI la colonne et pas la vigilance** : « se méfier de l'existant » retombe le jour où la demande ne nomme pas la pièce, c'est-à-dire le jour où ça compte. Une colonne vide se voit sur le livrable et ne dépend d'aucun réflexe.
+Ce qui vient du modèle est acquis. Ce qui vient du vieux, soit j'écris pourquoi je le garde, soit je le supprime.
 
-**Ce que la règle ne demande pas** : challenger tout ce que je croise en lisant. La portée s'arrête à ce que la cible reprend à son compte.
+**POURQUOI, mesuré le 2026-08-24** : dans la note ci-dessus, j'ai remis en question la suppression des `evals/` mais pas celle de `## Contrôle de sortie`. La seule différence, c'est que la première était dans la demande et l'autre non. Je ne remets en question que ce qu'on me nomme, et je recopie le reste sans le voir. Une colonne vide se voit, un réflexe de méfiance non.
 
 ## Règle d'architecture — Cartesian check
 
