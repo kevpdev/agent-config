@@ -43,27 +43,35 @@ Chaque dossier est optionnel, comme chez AIDD (`skill-tree.md` : « Omit `action
 | `SKILL.md` | obligatoire. Seul sous ~150 lignes, routeur au-delà ou dès qu'il y a plusieurs actions |
 | `actions/NN-<slug>.md` | si plusieurs actions distinctes |
 | `references/*.md` | si de la connaissance se charge à la demande |
-| `assets/*.md` | si un gabarit se copie dans un artefact |
+| `assets/*.md` | si un gabarit se copie dans un artefact. `skill-craft` y porte les deux gabarits de skill |
 | `evals/` | **supprimé partout** (section 4) |
 | `scripts/` | non retenu. L'exécutable partagé vit dans `skills/_shared/`, l'outillage dans `wrappers/claude/scripts/` |
 
 **POURQUOI pas de `scripts/` par skill** : le cache AIDD n'en porte qu'un sur 46 skills, hors arbre canonique, et le nôtre concentre déjà l'exécutable en deux homes qui suffisent.
 
+### Deux gabarits font foi, la prose ne décrit que les deltas
+
+L'anatomie ne se raconte pas dans une convention, elle se copie depuis un fichier. `skills/skill-craft/assets/` porte `skill-template.md` et `action-template.md`, francisés depuis les deux gabarits AIDD de `04-skill-generate/assets/`. Ils sont la source unique de la liste de sections, **et le lint la dérive d'eux** au lieu de la coder en dur.
+
+**POURQUOI le gabarit plutôt que la prose** : une liste décrite en prose et une liste vérifiée par un script divergent au premier edit de l'une des deux. Une seule liste, lisible par l'humain comme par le script, ne peut pas dériver.
+
+**Les en-têtes de structure sont ceux d'AIDD, en anglais, au mot près** : `## Actions`, `## Transversal rules`, `## References`, `## Assets`, `## Input`, `## Output`, `## Process`, `## Test`. Tout le reste (prose, labels d'étapes, cellules de table) est en français. La convention actuelle gardait déjà quatre en-têtes en anglais comme « repères de structure de la famille AIDD » ; l'alignement étend la règle aux quatre autres. **POURQUOI** : un lint sur une liste bilingue doit traiter les deux orthographes de chaque section, et c'est exactement le genre de tolérance qui laisse passer une section inventée.
+
 ### SKILL.md routeur, aligné sur la génération 2 d'AIDD
 
-Le référentiel a deux générations rédactionnelles et sa spec décrit la seconde. On adopte la seconde, francisée.
+Le référentiel a deux générations rédactionnelles et sa spec décrit la seconde. On adopte la seconde.
 
 - Frontmatter : `name`, `description` (R5 : quoi + quand, 3e personne, sous 1 536 caractères), `argument-hint` (ce que l'utilisateur apporte), `disable-model-invocation: true` si effet de bord (R13). Aucun autre champ.
 - Titre, une phrase de portée.
 - Le flux en **mermaid `TD`**, branches et back-edges compris. Une branche dite en prose est une branche manquante du flux (R7 AIDD). `rules/mermaid.md` écrase le défaut `LR` d'AIDD.
 - `## Actions` : table à 2 colonnes, slug nu et impératif court, suivie de « Dérouler le flux. Ne lire que la prochaine action. »
-- `## Règles transverses` : ce qu'aucune action ne porte seule. Une règle dite là ne se redit nulle part (R9 AIDD).
-- `## Références` et `## Assets` : chemin en backticks plus rôle en une ligne, par fichier.
+- `## Transversal rules` : ce qu'aucune action ne porte seule. Une règle dite là ne se redit nulle part (R9 AIDD).
+- `## References` et `## Assets` : chemin en backticks plus rôle en une ligne, par fichier.
 - `## Test` : première ligne le mode de vérification (section 3), puis la table `| Cas | Preuve |` ou le geste manuel.
 
 Le routeur ne porte rien qu'une action ou une référence pourrait porter (R10 AIDD). **POURQUOI** : le routeur se charge à chaque invocation, une action seulement à son tour.
 
-**Un seul moule, y compris pour les mono-fichiers.** Un skill de conseil sans actions garde les mêmes en-têtes : sa phrase de portée absorbe le `## Rôle`, sa méthode vit sous `## Process`, ses interdits sous `## Règles transverses`. Le gabarit persona (`## Rôle`, `## Ne pas s'activer pour`, `## Règles strictes`) disparaît. **POURQUOI** : deux moules obligent le checker à deviner lequel s'applique avant de juger, et `## Ne pas s'activer pour` recopie la clause NE PAS de la description.
+**Un seul moule, y compris pour les mono-fichiers.** Un skill de conseil sans actions garde les mêmes en-têtes : sa phrase de portée absorbe le `## Rôle`, sa méthode vit sous `## Process`, ses interdits sous `## Transversal rules`. Le gabarit persona (`## Rôle`, `## Ne pas s'activer pour`, `## Règles strictes`) disparaît. **POURQUOI** : deux moules obligent le checker à deviner lequel s'applique avant de juger, et `## Ne pas s'activer pour` recopie la clause NE PAS de la description.
 
 ### Anatomie d'une action
 
@@ -86,7 +94,7 @@ Quatre sections, celles du gabarit `action-template.md`, ni plus ni moins.
 | `## Contrôle de sortie` (23 fichiers) | un critère qui décide en cours de route devient une étape `**Garde.**` du `## Process` ; un critère qui constate devient une ligne du `## Test` |
 | `## Ne pas s'activer pour` (9) | rien : c'est la clause NE PAS de la `description`, recopiée (doublon R6) |
 | `## Rôle` (11) | la phrase de portée sous le titre |
-| `## Règles strictes` (5) | `## Règles transverses` du routeur |
+| `## Règles strictes` (5) | `## Transversal rules` du routeur |
 | `## Si ça casse` (3) | sous-puces de l'étape concernée du `## Process` |
 | `## Garde-fou — vault requis` (7) | première étape du `## Process`, et une seule fois : le bloc est copié à l'identique dans les 7 skills `vault-*` |
 | `## Contexte`, `## Méthode`, `## Sortie`, `## Verdict`, `## Délégation`, `## Flux`, `## Hors périmètre` | `## Input`, `## Output`, `## Process`, ou le flux mermaid du routeur |
@@ -125,7 +133,7 @@ Les dossiers `evals/` se suppriment sur les 24 skills, et `run-skill-evals.py` (
 
 | Étage | Nature | Ce qu'il vérifie |
 | --- | --- | --- |
-| ① lint | script déterministe, sans LLM | frontmatter qui parse (YAML strict), champs R5 et R13, seuils R1 (~150) et R4 (500), sections obligatoires **et aucune section hors liste**, flag de test présent, placeholders résiduels, liens relatifs morts |
+| ① lint | script déterministe, sans LLM | frontmatter qui parse (YAML strict), champs R5 et R13, seuils R1 (~150) et R4 (500), **sections comparées à celles du gabarit** (aucune manquante, aucune en trop, dans l'ordre), flag de test présent, placeholders résiduels, liens relatifs morts |
 | ② template | jugement, l'action validate de `skill-craft` | anatomie des actions, doublons R6, tri des natures R8, sections vides R9 |
 | ③ review autonome | agent checker, skills flagués seulement | session fraîche via `claude -p` : le déclenchement se vérifie sur la sortie, le comportement se juge contre les tables `## Test` et les gardes du `## Process`, plus un cas négatif dérivé des clauses NE PAS de la description |
 
@@ -199,7 +207,8 @@ Listés pour la session d'adaptation, sans les implémenter ici.
 ### skill-craft (futur `harness-skill-craft`)
 
 - Réécrire `references/skill-authoring-fr.md` contre cette note : anatomie génération 2 francisée (flux mermaid, table 2 colonnes, `## Test` en table), liste de sections **fermée** aux quatre d'AIDD, R4 justifié ou remesuré, R7 et R8 réécrites sans `evals/` ni `## Contrôle de sortie`.
-- Ajouter au lint la règle qui tient la fermeture : tout en-tête `##` hors de la liste est un échec, avec le home de remplacement en message. **POURQUOI un lint et pas une consigne** : une section inventée est exactement ce qu'une convention en prose ne rattrape pas, 23 fichiers l'ont prouvé.
+- Créer `skills/skill-craft/assets/skill-template.md` et `assets/action-template.md`, francisés depuis les gabarits AIDD. Ils deviennent la source de la liste de sections, et `01-scaffold` les copie au lieu de dérouler l'anatomie en prose.
+- Ajouter au lint la règle qui tient la fermeture : les `##` du fichier se comparent à ceux du gabarit, tout en-tête en trop est un échec avec le home de remplacement en message. **POURQUOI un lint et pas une consigne** : une section inventée est exactement ce qu'une convention en prose ne rattrape pas, 23 fichiers l'ont prouvé.
 - Règles nouvelles : le flag d'éligibilité et ses quatre critères, la doctrine subagents (locus, agnosticisme, wrapper), Frame–Deliver–Checker et sa borne, les préfixes de domaine dans le nommage.
 - `01-scaffold` décide l'éligibilité à l'échafaudage, avant d'écrire la description.
 - `02-validate` devient l'étage ② du checker. Ses propres `evals/` sautent comme les autres.
