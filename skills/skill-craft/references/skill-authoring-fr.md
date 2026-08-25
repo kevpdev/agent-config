@@ -22,6 +22,18 @@ Fork français des 19 règles d'AIDD (`aidd-context:04-skill-generate`, fichier 
 | évals | le dossier `evals/` et son format n'existent pas chez AIDD (R7) |
 | nommage | préfixe de domaine obligatoire, voir « Nommage » |
 
+**Le rang des sources.** Trois sources bordent un skill, elles ne pèsent pas pareil.
+
+| Source | Rang |
+| --- | --- |
+| les deux gabarits d'`assets/` | l'anatomie, **fait foi**. `lint-skills.py` la dérive d'eux |
+| cette page | les règles autour de l'anatomie, **fait foi** |
+| <https://agentskills.io/specification> et le repo `anthropics/skills` | **support** : la conformité au standard ouvert |
+
+**Un écart au standard support s'écrit, il ne renverse pas la convention.** Porter les deux valeurs et le motif, comme R5 le fait déjà sur le plafond de description. Ce qui du standard se teste mécaniquement est déjà dans le lint : sa vérification 1, le frontmatter qui parse en YAML strict, vient de là. Sa vérification 3 porte au contraire l'écart assumé, 1 536 caractères et non 1 024.
+
+**POURQUOI le standard passe derrière** : il décrit un format portable entre agents, quand les gabarits et cette page décident ce que mes skills valent. La date de vérification du standard et le geste qui la rejoue vivent dans `audits/grille-harnais.md`, section « Sources normatives par sous-domaine », parce qu'ils appartiennent à une passe d'audit et non à l'écriture d'un skill.
+
 ## Les règles
 
 - **R1. SKILL.md est un routeur pur** : portée, flux, table d'actions, règles transverses. Zéro logique métier. Il ne porte rien qu'une action ou une référence pourrait porter, parce qu'il se charge à chaque invocation quand une action ne se charge qu'à son tour.

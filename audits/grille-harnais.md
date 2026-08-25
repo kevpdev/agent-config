@@ -279,11 +279,22 @@ Les instructions survivantes d'un même fichier tiennent-elles ensemble ? Quatre
 
 Contre quoi juger la **conformité de construction** d'un artefact (format, frontmatter, anatomie). On stocke le **pointeur**, jamais une copie (C1 : contenu volatil — la doc a déjà migré de domaine une fois).
 
+**Skills perso de `skills/`** — la convention locale fait foi, elle est versionnée avec les skills qu'elle borde :
+
+| Mécanisme | Source | Vérifié |
+|---|---|---|
+| Anatomie d'un skill et d'une action | `skills/skill-craft/assets/skill-template.md` et `action-template.md` | versionnés, `lint-skills.py` dérive d'eux sa liste de sections |
+| Les règles autour de l'anatomie (frontmatter, nommage, subagents, ce qui se vérifie) | `skills/skill-craft/references/skill-authoring-fr.md` | versionné, section « Le rang des sources » |
+
+**La source support se relit en ouverture d'une passe `skills/`**, comme la page de prompting par modèle plus bas. Si le standard ouvert a bougé depuis sa date de vérification, le delta devient un **constat du rapport**, une révision de la convention proposée à l'humain entre deux audits, jamais une correction en silence (règle transverse d'`audit-harnais` : la grille ne se touche pas pendant l'audit).
+
+**Un écart déjà assumé n'est pas un constat.** La convention le porte avec ses deux valeurs et son motif, comme R5 sur le plafond de description, 1 536 caractères contre 1 024 dans la spec. Le rapport ne le compte que si le motif a disparu ou si les valeurs ont changé.
+
 **Standards ouverts multi-agents** — la couche portable, à préférer quand elle couvre la fonction :
 
 | Mécanisme | Source | Vérifié |
 |---|---|---|
-| Skills | <https://agentskills.io/specification> + repo `anthropics/skills` | 2026-08-10, fetch |
+| Skills (**support** : les skills perso se jugent contre la convention ci-dessus) | <https://agentskills.io/specification> + repo `anthropics/skills` | 2026-08-10, fetch |
 | AGENTS.md | <https://agents.md> | supposé (standard connu, non re-fetché) |
 | MCP | <https://modelcontextprotocol.io> | supposé |
 
