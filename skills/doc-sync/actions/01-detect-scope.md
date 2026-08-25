@@ -15,7 +15,7 @@ Détecte où vit le code et la doc, propose un scope, et le fait confirmer avant
 
 ## Process
 
-1. **Détecter.** Établir la topologie. L'autorité (régimes du routeur) est universelle ; seul change **où chercher le code** et **combien de homes de doc** existent.
+1. **Détecter.** Établir la topologie. L'autorité (les régimes de [regimes-de-doc.md](../references/regimes-de-doc.md)) est universelle ; seul change **où chercher le code** et **combien de homes de doc** existent.
    - **Mono-repo** (défaut) : `aidd_docs/memory/` + `README.md` à la racine, code dans le repo courant. Un seul boulot : sync la doc-reflet du repo contre son propre code.
    - **Coordinateur** : le CWD contient des sous-dossiers qui sont des **projets enfants** — versionnés à part (`<child>/.git`) **ou** simplement rangés là dans un monorepo — et héberge une doc-contrat partagé enjambant ces enfants. Le **code** de chaque enfant vit dans `<child>/` ; la **memory-reflet** de l'enfant a deux homes possibles, à résoudre **par enfant** :
      - **distribué** : l'enfant porte son propre `aidd_docs/memory/` + `README.md` (chaque enfant = un mono-repo chez lui).

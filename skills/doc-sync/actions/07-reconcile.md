@@ -4,7 +4,7 @@ Compare doc-vs-code à HEAD quand l'ancre git est non fiable, et signale les éc
 
 ## Input
 
-- Les cibles de régime **décision** classées en action 02, quelles qu'elles soient — la table des régimes du `SKILL.md` en donne la liste, cette action n'en tient pas sa propre copie.
+- Les cibles de régime **décision** classées en action 02, quelles qu'elles soient — la table des régimes de [regimes-de-doc.md](../references/regimes-de-doc.md) en donne la liste, cette action n'en tient pas sa propre copie.
 - Tout scope où l'ancre git est non fiable (features mergées, doc peut-être touchée après un merge non documenté), ou tout contrat partagé de coordinateur.
 
 ## Output
