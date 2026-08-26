@@ -111,7 +111,8 @@ Fork français des 19 règles d'AIDD (`aidd-context:04-skill-generate`, fichier 
 Le pattern s'emploie sur un skill qui produit un artefact vérifiable et boucle dessus : une zone qui cadre le contrat, une qui produit, un checker indépendant qui juge contre le contrat.
 
 - **3 passes maximum.** Au-delà, le défaut est dans le diagnostic ou dans le cadrage, pas dans l'exécution. Même borne que le `max_iterations` d'`aidd-orchestrator:00-async-dev`, seule borne numérique du référentiel.
-- **Anti-auto-notation** : le contexte qui vient d'écrire un skill ne joue jamais son éval. Il rend la commande et déclare la passe non jouée.
+- **Anti-auto-notation** : le contexte qui vient d'écrire un skill ne le juge jamais. Ni son éval, qu'il rend en commande en déclarant la passe non jouée, ni les relectures de jugement de `02-validate`, qui partent en sous-agent.
+  - **Le lint échappe à la règle.** C'est un script, il rend le même verdict partout, donc il tourne où on veut. Ce qui se contamine, c'est le jugement porté sur sa propre prose.
 - Aucun cas de checker n'écrit dans le repo réel.
 
 ## Nommage

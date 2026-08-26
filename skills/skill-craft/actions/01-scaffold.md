@@ -30,9 +30,10 @@ Une arborescence sous `skills/<nom>/` : `SKILL.md`, un `actions/NN-<slug>.md` pa
    - Un critère qui **constate** (« le fichier est relu, aucun placeholder ne survit ») devient une ligne du `## Test`, observable par exécution réelle.
    - Un critère qui juge **si le skill marche** (il part sur telle requête, il cède la main à un frère) va dans `evals/`, jamais inline : il demande une session neuve, donc il ne peut pas s'évaluer au milieu d'une exécution.
 9. **Sortir les données lourdes.** Un gabarit à copier va dans `assets/`, une donnée à lire va dans `references/`. L'action cite le fichier par un lien relatif dans la phrase qui l'utilise, ne l'inline pas.
-10. **Écrire les cas d'éval.** Un `evals/eval.json` en données pures, aux champs définis par R7 — jamais un nom d'outil ni un nom d'agent. Un cas positif, plus un cas négatif par frère vivant cité dans la clause NE PAS de la description.
+10. **Écrire les cas d'éval.** Un `evals/eval.json` en données pures, aux champs définis par R7 — jamais un nom d'outil ni un nom d'agent. R7 porte aussi la composition du corpus, exception des skills à invocation manuelle comprise, et il en est le seul home.
 11. **Rédiger en français.** Tout le contenu, labels d'étapes et cellules de table compris. Seuls les huit en-têtes de structure restent en anglais. Si une source anglaise a servi, réécrire la prose au lieu de la traduire mot à mot.
-12. **Enchaîner sur `02-validate`** avec le chemin du skill fraîchement écrit.
+12. **Déléguer la vérification.** Ne jamais jouer `02-validate` dans ce contexte, le confier à un sous-agent générique (Explore, general-purpose) qui n'a pas écrit le skill. *Pourquoi : la convention, section « Frame–Deliver–Checker ».*
+    > Sous-agent : « Lis `skills/skill-craft/actions/02-validate.md` et joue-la telle quelle sur le skill `<nom>`. Tu n'as pas écrit ce skill et tu ne le corriges pas : rends le rapport, rien d'autre. »
     - **Garde.** Ne pas rendre la main tant que le lint sort rouge. Un skill livré non conforme fabrique la dette que ce skill existe pour éviter.
 
 ## Test
@@ -41,5 +42,5 @@ Une arborescence sous `skills/<nom>/` : `SKILL.md`, un `actions/NN-<slug>.md` pa
 | --- | --- |
 | `python3 wrappers/claude/scripts/lint-skills.py --skill <nom>` sur le skill neuf | rend 0 |
 | `python3 -c "import json; json.load(open('skills/<nom>/evals/eval.json'))"` | parse, chaque cas portant `skill` et `query` |
-| relecture du corpus d'évals | un cas positif, et un cas `expect_trigger: false` par frère vivant cité en clause NE PAS |
+| relecture du corpus d'évals contre R7 | la composition attendue y est, exception des skills à invocation manuelle comprise |
 | `grep -rn "supprimer cette ligne" skills/<nom>/` | ne rend rien, la ligne d'instruction du gabarit n'a pas survécu |
