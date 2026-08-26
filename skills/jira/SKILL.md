@@ -1,8 +1,8 @@
 ---
 name: jira
 description: "Publie un brouillon de backlog AIDD vers Jira, et rattache la clé du ticket créé au fichier du dépôt. Délègue toute la rédaction aux skills aidd-pm du type visé, et ne porte que ce que le framework AIDD n'a pas : le champ qui pointe le ticket, le gel du brouillon à la publication, la mise en forme du texte envoyé, et la demande avant toute écriture. Invocation manuelle uniquement, par `/jira` : il écrit un fichier versionné et crée un ticket que personne ne pourra supprimer. NE PAS utiliser pour rédiger le brouillon lui-même (→ aidd-pm:10-task, 02-user-stories, 07-epic, 09-defect, 05-spike), ni pour piloter un backlog entier (→ aidd-orchestrator:02-backlog)."
-disable-model-invocation: true
 argument-hint: "[chemin du brouillon | besoin à cadrer]"
+disable-model-invocation: true
 ---
 
 # jira
@@ -10,37 +10,37 @@ argument-hint: "[chemin du brouillon | besoin à cadrer]"
 Fait le pont entre un artefact de backlog du dépôt et son ticket Jira. Le framework AIDD écrit le
 brouillon, ce skill lui donne une clé de ticket et l'y envoie.
 
-> [!important] Ce skill ne rédige rien
-> Le brouillon appartient au skill `aidd-pm` de son type, qui porte son cycle de vie, ses relations et
-> ses critères de maturité. *Pourquoi : réécrire cette logique ici la dédoublerait et perdrait une
-> trentaine de fichiers de connaissance qu'aucun skill maison ne reproduit.*
-
-## Le flux
-
+```mermaid
+flowchart TD
+  besoin[un besoin encore informe] --> brouillon
+  brouillon --> publier
+  ecrit[un brouillon déjà écrit] --> publier
+  publier -- le brouillon est à reprendre --> brouillon
+  publier -- l'humain n'autorise pas --> propose([proposition rendue, aucun appel])
+  publier -- le ticket est créé --> fait([ticket publié, clé rattachée])
 ```
-besoin ou brouillon → 01-brouillon → 02-publier → ticket + clé rattachée
-                            ↑              │
-                            └──────────────┘  (brouillon à reprendre)
-```
-
-- **Brouillon déjà écrit** dans `aidd_docs/backlog/` : entrer direct dans `02-publier`.
-- **Besoin encore informe** : passer par `01-brouillon`, qui délègue puis contrôle.
 
 ## Actions
 
-| Étape | Fichier | Rôle |
-|---|---|---|
-| Brouillon | `actions/01-brouillon.md` | choisir le type, déléguer la rédaction au skill `aidd-pm`, contrôler l'artefact contre les conventions du dépôt |
-| Publication | `actions/02-publier.md` | mettre en forme, demander, créer le ticket, rattacher la clé, geler le brouillon |
+Dérouler le flux. Ne lire que la prochaine action.
 
-## Règles transverses
+| Action | Fait |
+| --- | --- |
+| brouillon | choisir le type, déléguer la rédaction au skill `aidd-pm`, contrôler l'artefact contre les conventions du dépôt |
+| publier | mettre en forme, demander, créer le ticket, rattacher la clé, geler le brouillon |
 
+## Transversal rules
+
+- **Ce skill ne rédige rien.** Le brouillon appartient au skill `aidd-pm` de son type, qui porte son
+  cycle de vie, ses relations et ses critères de maturité. *Pourquoi : réécrire cette logique ici la
+  dédoublerait, et perdrait une trentaine de fichiers de connaissance qu'aucun skill maison ne
+  reproduit.*
 - **La mémoire du dépôt fait autorité sur tout ce qui est propre au projet.** Le site Jira, les clés
   de projet autorisées, la convention de scope, le banc d'essai, le chemin des gabarits de
   description : lus dans la mémoire, jamais codés ici. Les gabarits d'`assets/` sont le défaut neutre
-  qui s'applique quand le dépôt n'en déclare aucun. *Pourquoi : ce skill est partagé publiquement, donc aucune donnée d'un client n'y entre. Et
-  c'est le mécanisme prévu par le framework, dont `01-ticket-info/references/tool-detection.md` place
-  l'outil de ticketing dans la mémoire projet.*
+  qui s'applique quand le dépôt n'en déclare aucun. *Pourquoi : ce skill est partagé publiquement,
+  donc aucune donnée d'un client n'y entre. Et c'est le mécanisme prévu par le framework, dont
+  `01-ticket-info/references/tool-detection.md` place l'outil de ticketing dans la mémoire projet.*
 - **Rien ne part vers Jira sans une demande explicite à l'humain**, nommant le ticket visé et ce que
   l'appel va écrire. *Pourquoi : un ticket créé ne se supprime pas forcément, le droit de suppression
   n'étant ni acquis pour l'humain ni exposé par le connecteur MCP. Une écriture est donc définitive.*
@@ -53,3 +53,26 @@ besoin ou brouillon → 01-brouillon → 02-publier → ticket + clé rattachée
 - **Aucune modification d'un ticket existant.** Ce skill crée, commente et relie. Éditer, transitionner
   ou pointer du temps appartient à l'humain. *Pourquoi : qui déplace un ticket en répond, et
   l'historique dit qui a décidé, pas quel outil a tapé.*
+
+## References
+
+- `references/extension-frontmatter.md` — pourquoi le dépôt déclare un champ qui porte la clé du
+  ticket, et pourquoi ce champ gèle le brouillon
+- `references/rendu-jira.md` — ce que devient le markdown envoyé au connecteur, mesuré par
+  aller-retour sur un ticket d'essai
+
+## Assets
+
+- `assets/description-defaut.md` — la description d'un ticket dont le type n'a pas de gabarit propre
+- `assets/description-task.md` — la description d'une task
+- `assets/description-user-story.md` — la description d'une user story
+
+## Test
+
+Le mécanique se joue seul par le lint. Le non-déclenchement se joue par l'exécuteur d'évals externe,
+jamais depuis la session qui vient d'écrire le skill.
+
+| Cas | Preuve |
+| --- | --- |
+| `python3 wrappers/claude/scripts/lint-skills.py --skill jira` | rend 0, « 1/1 skills conformes » |
+| les deux cas négatifs d'`evals/eval.json`, joués outils coupés | le skill ne s'ouvre pas, le registre de la session ne le nomme pas |
