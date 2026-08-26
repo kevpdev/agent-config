@@ -104,8 +104,10 @@ MANUEL = swap(
     "argument-hint: la démo voulue\ndisable-model-invocation: true",
 )
 
-# (nom du cas, SKILL.md, action, règles attendues, fragment attendu, [evals/eval.json])
-# Le sixième membre est optionnel : sans lui, le skill fabriqué n'a pas d'`evals/`.
+# (nom, SKILL.md, action, règles attendues, fragment, [eval.json], [corpus étranger])
+# Les deux derniers membres sont optionnels. Sans le sixième, le skill fabriqué n'a
+# pas d'`evals/`. Le septième à `True` joue le cas sans gabarit, comme le fait un
+# corpus qui n'a pas migré vers l'anatomie routeur.
 CASES = [
     (
         "positif — tout conforme",
@@ -216,6 +218,15 @@ CASES = [
         '[{"skill": "demo", "id": "positif-demo", "query": "fais la démo"}]',
     ),
     (
+        "corpus étranger — le gabarit se tait, le fond parle",
+        SKILL_OK + "\n## Contexte\n\n- [mort](../references/absente.md)\n",
+        ACTION_OK,
+        {"liens"},
+        "lien relatif mort",
+        None,
+        True,
+    ),
+    (
         "placeholder — un chevron du gabarit resté",
         SKILL_OK,
         swap(ACTION_OK, "Une ligne de sortie sur la console.", "<Une ligne de sortie.>"),
@@ -273,9 +284,10 @@ def main() -> int:
     for case in CASES:
         name, skill_md, action_md, expected, fragment = case[:5]
         eval_json = case[5] if len(case) > 5 else None
+        etranger = len(case) > 6 and case[6]
         with tempfile.TemporaryDirectory() as tmp:
             skill_dir = build(tmp, skill_md, action_md, eval_json)
-            defects = linter.lint_skill(skill_dir, templates)
+            defects = linter.lint_skill(skill_dir, None if etranger else templates)
         rules = {defect.rule for defect in defects}
         messages = " | ".join(defect.message for defect in defects)
 

@@ -4,7 +4,7 @@ Rejoue la validation sur plusieurs skills à la fois, corrige ce qui est mécani
 
 ## Input
 
-Une liste de noms de skills, ou rien, qui vaut tout le corpus de `skills/`.
+Une liste de noms de skills, ou rien, qui vaut tout le corpus de `skills/` de ce repo. La passe corrige de la **forme**, donc elle ne vise pas un corpus étranger, que la portée d'une convention met hors d'atteinte.
 
 ## Output
 

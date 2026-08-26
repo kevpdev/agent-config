@@ -42,7 +42,13 @@ import re
 import sys
 
 DESCRIPTION_MAX = 1536
-FRONTMATTER_KEYS = ("name", "description", "argument-hint")
+
+# `name` et `description` sont du fond : sans eux Claude Code ne peut ni charger le
+# skill ni décider de l'ouvrir. `argument-hint` est de la forme, exigé par ce harnais
+# seul — mesuré le 2026-08-26, les 22 skills du vault pro tournent sans, et
+# `ARCHITECTURE.md:32` y déclare un frontmatter à deux clés.
+FRONTMATTER_KEYS = ("name", "description")
+FRONTMATTER_KEYS_LOCAL = FRONTMATTER_KEYS + ("argument-hint",)
 
 # Les tournures par lesquelles une description promet un déclenchement automatique.
 # Deux suffisent : R5 impose « Utiliser quand » comme forme unique de la liste de
@@ -224,7 +230,9 @@ class Defect:
         self.path, self.rule, self.message = path, rule, message
 
 
-def check_frontmatter(path: str, raw: str | None, folder: str) -> list[Defect]:
+def check_frontmatter(
+    path: str, raw: str | None, folder: str, keys: tuple[str, ...] = FRONTMATTER_KEYS_LOCAL
+) -> list[Defect]:
     """Vérifications 1, 2 et 3, sur le seul fichier qui porte un frontmatter."""
     try:
         import yaml
@@ -242,7 +250,7 @@ def check_frontmatter(path: str, raw: str | None, folder: str) -> list[Defect]:
         return [Defect(path, "frontmatter", "le frontmatter n'est pas un mapping")]
 
     found = []
-    for key in FRONTMATTER_KEYS:
+    for key in keys:
         if key not in data or data[key] in (None, ""):
             found.append(Defect(path, "frontmatter", f"clé `{key}` absente ou vide"))
     name = data.get("name")
@@ -437,7 +445,16 @@ def check_links(path: str, body: str) -> list[Defect]:
 # --- parcours --------------------------------------------------------------
 
 
-def lint_skill(skill_dir: str, templates: dict[str, list[Slot]]) -> list[Defect]:
+def lint_skill(
+    skill_dir: str, templates: dict[str, list[Slot]] | None
+) -> list[Defect]:
+    """`templates` à `None` coupe le seul contrôle qui consomme les gabarits.
+
+    Un corpus étranger n'a pas encore migré vers l'anatomie routeur, et la portée
+    d'une convention s'arrête à ce qu'un run crée (`rules/autorite-des-conventions.md`).
+    Les autres contrôles restent : ils portent sur du fond, qui casse dans n'importe
+    quel repo.
+    """
     folder = os.path.basename(skill_dir.rstrip(os.sep))
     found: list[Defect] = []
 
@@ -446,9 +463,11 @@ def lint_skill(skill_dir: str, templates: dict[str, list[Slot]]) -> list[Defect]
         return [Defect(skill_md, "frontmatter", "SKILL.md absent")]
 
     raw, body = split_frontmatter(read(skill_md))
-    found += check_frontmatter(skill_md, raw, folder)
+    keys = FRONTMATTER_KEYS_LOCAL if templates else FRONTMATTER_KEYS
+    found += check_frontmatter(skill_md, raw, folder, keys)
     found += check_invocation(skill_md, raw, skill_dir)
-    found += check_sections(skill_md, body, templates["skill"])
+    if templates:
+        found += check_sections(skill_md, body, templates["skill"])
     found += check_placeholders(skill_md, body)
     found += check_links(skill_md, body)
 
@@ -459,7 +478,8 @@ def lint_skill(skill_dir: str, templates: dict[str, list[Slot]]) -> list[Defect]
                 continue
             path = os.path.join(actions_dir, name)
             action_body = split_frontmatter(read(path))[1]
-            found += check_sections(path, action_body, templates["action"])
+            if templates:
+                found += check_sections(path, action_body, templates["action"])
             found += check_placeholders(path, action_body)
             found += check_links(path, action_body)
 
@@ -490,23 +510,39 @@ def main() -> int:
         "--skill",
         action="append",
         default=[],
-        help="nom d'un skill à linter, répétable. Sans lui, tous.",
+        help="nom d'un skill à linter, répétable. Sans lui, tous ceux du corpus.",
+    )
+    parser.add_argument(
+        "--corpus",
+        default=None,
+        help=(
+            "dossier contenant les dossiers de skills. Par défaut celui de ce repo. "
+            "Sur un corpus étranger, la conformité au gabarit ne s'applique pas."
+        ),
     )
     args = parser.parse_args()
 
     root = derive_root()
-    templates = load_templates(root)
-    skills_dir = os.path.join(root, "skills")
+    default_corpus = os.path.join(root, "skills")
+    corpus = os.path.abspath(args.corpus) if args.corpus else default_corpus
+    if not os.path.isdir(corpus):
+        raise CannotConclude(f"corpus introuvable : {corpus}")
+
+    # Le gabarit vit toujours dans ce repo. Ce qui varie, c'est de savoir si le corpus
+    # visé l'a adopté. La portée d'une convention s'arrête à ce qu'un run crée, donc un
+    # corpus étranger non migré se contrôle sur le fond seulement.
+    est_local = os.path.realpath(corpus) == os.path.realpath(default_corpus)
+    templates = load_templates(root) if est_local else None
 
     wanted = args.skill or sorted(
         name
-        for name in os.listdir(skills_dir)
-        if os.path.isdir(os.path.join(skills_dir, name)) and not name.startswith("_")
+        for name in os.listdir(corpus)
+        if os.path.isdir(os.path.join(corpus, name)) and not name.startswith("_")
     )
 
     total, failed = 0, []
     for name in wanted:
-        skill_dir = os.path.join(skills_dir, name)
+        skill_dir = os.path.join(corpus, name)
         if not os.path.isdir(skill_dir):
             raise CannotConclude(f"skill introuvable : {skill_dir}")
         defects = lint_skill(skill_dir, templates)
@@ -515,12 +551,17 @@ def main() -> int:
             failed.append(name)
             print(f"\n{name}")
             for defect in defects:
-                relative = os.path.relpath(defect.path, root)
-                print(f"  FAIL  {defect.rule:<12} {relative}\n        {defect.message}")
+                # Chemin relatif chez soi, absolu ailleurs : un `skills/save/SKILL.md`
+                # rendu depuis le vault se lirait comme un fichier de ce repo.
+                shown = os.path.relpath(defect.path, root) if est_local else defect.path
+                print(f"  FAIL  {defect.rule:<12} {shown}\n        {defect.message}")
 
+    # Nommer les contrôles joués : un « 0 défaut » à 6 contrôles ne se lit pas comme un
+    # « 0 défaut » à 7 (`rules/reasoning.md`, ne jamais lire un zéro comme une absence).
+    joues = "7 vérifications sur 7" if est_local else "6 sur 7, sans le gabarit"
     print(
         f"\n{len(wanted) - len(failed)}/{len(wanted)} skills conformes, "
-        f"{total} défaut(s)."
+        f"{total} défaut(s). Corpus : {corpus} ({joues})."
     )
     return 1 if total else 0
 

@@ -142,8 +142,11 @@ Le lint lit les fichiers et n'exécute rien : sept vérifications mécaniques su
 ```bash
 python3 wrappers/claude/scripts/lint-skills.py                      # tous les skills
 python3 wrappers/claude/scripts/lint-skills.py --skill skill-craft   # un seul
+python3 wrappers/claude/scripts/lint-skills.py --corpus ~/projects/myvaultobsidian/.agents/skills
 python3 wrappers/claude/scripts/tests/test-lint-skills.py            # calibre les sept vérifications
 ```
+
+**`--corpus` vise les skills d'un autre repo, et n'y joue que six vérifications sur sept.** La conformité au gabarit et la présence d'`argument-hint` sont de la **forme** : la portée d'une convention s'arrête à ce qu'un run crée, jamais à l'existant qu'il croise (`rules/autorite-des-conventions.md`). Le reste est du **fond** et casse dans n'importe quel repo : un `name` qui diverge du dossier empêche Claude Code de résoudre le skill, une description au-delà de 1 536 caractères est refusée par l'API, un lien mort est mort. La ligne de bilan nomme toujours le corpus visé et le nombre de vérifications jouées, pour qu'un « 0 défaut » à six ne se lise pas comme un « 0 défaut » à sept.
 
 **La liste des sections n'est pas dans le script.** Elle est dérivée des deux gabarits de `skills/skill-craft/assets/`, qui font foi pour l'humain comme pour le lint. Une liste décrite en prose et une liste vérifiée par un script divergent au premier edit de l'une des deux.
 
