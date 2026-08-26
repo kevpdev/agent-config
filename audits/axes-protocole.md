@@ -25,7 +25,9 @@ Un axe s'applique quand **l'une** des deux conditions tient :
 
 En dessous, l'axe reste `ouvert` et rien ne bouge.
 
-**POURQUOI ce seuil et pas un jugement de pertinence** : c'est le signal que la grille utilise déjà pour disqualifier un de ses propres critères — « *un critère qui envoie trois fois de suite ses verdicts hors de sa propre table ne mesure pas ce qu'il prétend mesurer* ». Une observation isolée est une anecdote, et un modèle en produit à chaque passe. La même observation par deux passes qui ne se sont pas parlé est un défaut structurel.
+**POURQUOI ce seuil et pas un jugement de pertinence** : une observation isolée est une anecdote, et un modèle en produit à chaque passe. La même observation par deux passes qui ne se sont pas parlé est un défaut structurel.
+
+*La grille portait un signal voisin, « trois fois de suite hors de sa propre table ». Le cadrage du 2026-08-26 l'a mesuré inapplicable, « de suite » supposant un ordre de passes qui n'existe pas — deux passes ont tourné le même jour en parallèle, et une annexe ne rend aucune cascade. La formulation retenue est celle de ce fichier, deux passes **indépendantes**. Le renvoi s'inverse donc : c'est cette porte qui fait foi, et la grille ne porte plus l'autre.*
 
 **Purge** : un axe encore seul après **trois** passes se ferme en `fermé, anecdote`. Sans cette ligne le registre grossit, et un registre que plus personne ne lit ne vaut pas mieux que rien.
 
@@ -42,28 +44,39 @@ Figée par la passe `skills/` C1 du 2026-08-25 (corps de `doc-sync`). Quatre cas
 | Cas | Convention |
 | --- | --- |
 | étape `## Process` numérotée | une instruction, ses sous-puces *Pourquoi* comprises |
-| sous-puce portant un impératif autonome | compte à part — c'est le cas C7 « dépassement porté par l'impératif » |
-| bloc `## Input` ou `## Output` | ne compte que s'il porte un impératif, sinon c'est un contrat de données jugé en C8 |
-| ligne de `## Test` | **pas** une instruction : c'est la commande de vérification de l'instruction correspondante, jugée en C3 avec elle. Un test orphelin est un constat C8 |
+| sous-puce portant un impératif autonome | compte à part — c'est le cas « dépassement porté par l'impératif » du relevé de formulation |
+| bloc `## Input` ou `## Output` | ne compte que s'il porte un impératif, sinon c'est un contrat de données jugé au contrôle de cohérence |
+| ligne de `## Test` | **pas** une instruction : c'est la commande de vérification de l'instruction correspondante, jugée avec elle au contrôle de testabilité. Un test orphelin est un constat de cohérence |
 | puce d'une section normative d'un routeur | une instruction |
 
 **POURQUOI la figer plutôt que la redécider** : la grille a mesuré que « nombre d'obligations » n'est pas une grandeur sans convention écrite, trois valeurs annoncées en un jour sur le même fichier. « Nombre d'instructions » a le même défaut. Deux passes aux conventions différentes rendent des comptages qui ne se comparent pas, et personne ne le voit puisque les deux sont des entiers.
 
-### Seuil d'alerte C7
+### Seuil d'alerte du relevé de formulation
 
-Il se remesure par corpus, il ne s'hérite pas. Médianes mesurées à ce jour, pour mémoire et non pour réemploi.
+Il se remesure par corpus **et à chaque passe**, il ne s'hérite jamais. Ce tableau est le
+**seul foyer** de ces chiffres : la grille y renvoie sans les recopier.
 
-| Corpus | Médiane | Alerte |
-| --- | --- | --- |
-| couche `rules/` | 32 | 60 |
-| descriptions de skills | 86 | 130 |
-| corps de skill | 34,5 | 69 |
+| Corpus | Médiane | Alerte | Mesurée le |
+| --- | --- | --- | --- |
+| couche `rules/` | 32 | 60 | 2026-08-10 |
+| couche `rules/` | **36** | **72** | 2026-08-21 |
+| descriptions de skills | 86 | 130 | 2026-08-11 |
+| corps de skill | 34,5 | 69 | 2026-08-25 |
+
+**La médiane d'un même corpus a bougé de 32 à 36 en dix jours**, donc l'alerte qui en dérive se
+desserre exactement quand le corpus grossit. Une passe lit la ligne la plus récente de son corpus, et
+la remesure de toute façon.
+
+*La ligne du 2026-08-21 manquait à ce registre, créé quatre jours plus tard sans reprendre la mesure
+de la passe précédente. Transcription réparée le 2026-08-26, aucune mesure neuve.*
 
 ---
 
 ## Axes observés
 
 Statuts : `ouvert` (une occurrence, en attente) · `mûr` (porte franchie, applicable) · `appliqué` (avec sa date) · `fermé, anecdote` (seul après trois passes).
+
+**P1 à P6 ont été observés contre le protocole d'avant la refonte du 2026-08-26**, quand `02-cribler` déroulait une cascade de huit critères. Leur texte n'est pas retouché, une observation datée ne se réécrit pas. Mais les trois axes encore ouverts se rejugent contre le protocole **refondu**, jamais contre celui qu'ils décrivent.
 
 | # | Axe | Où ça se répare | Occurrences | Statut |
 | --- | --- | --- | --- | --- |
