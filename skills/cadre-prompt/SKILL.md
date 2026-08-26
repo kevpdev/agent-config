@@ -4,13 +4,14 @@ description: >-
   Transforme une ébauche de demande en prompt cadré, structuré selon le type de demande détecté
   (exécution, analyse, exploration) : ajoute les critères d'acceptation, le contrat de questions et
   son hors-périmètre, ou la condition d'arrêt, selon ce qui manque. Rend un prompt rédigé
-  immédiatement, trous comblés par des hypothèses marquées, une question au maximum. Utiliser quand
-  l'utilisateur dit "aide-moi à formuler ma demande", "améliore ce prompt", "cadre ma demande",
-  "voilà mon brouillon de prompt", "je n'arrive pas à formuler ce que je veux", "prépare le prompt
-  pour une nouvelle conversation", "fais un prompt de passation", ou "/cadre-prompt". NE PAS utiliser
+  immédiatement, trous comblés par des hypothèses marquées, une question au maximum, puis le capture
+  dans l'inbox du vault. S'appelle par "/cadre-prompt" en tête de message, l'ébauche à la suite ;
+  "--chat" sort le prompt dans la conversation au lieu du vault. NE PAS utiliser
   pour dérouler le développement depuis une note de cadrage (→ aidd-orchestrator:01-sdlc), pour fiabiliser une
   application qui appelle un LLM et mesurer une régression de prompt (→ ai-engineering), ni pour un
   snapshot visuel de l'avancement destiné à l'humain (→ vault-recap-raisonnement).
+argument-hint: <l'ébauche à cadrer> [--chat]
+disable-model-invocation: true
 ---
 
 # cadre-prompt
@@ -59,13 +60,23 @@ maladresse d'écriture, c'est une borne absente, et aucune relecture de style ne
 5. **Poser une question, au maximum, et seulement si la réponse change la sortie.** Sinon aucune.
    *Pourquoi : le budget d'attention de l'utilisateur est la ressource rare de l'échange, et un
    questionnaire le dépense avant que le travail commence.*
-6. **Rendre le prompt** dans la réponse, en bloc de code copiable, à partir du gabarit de son type.
+6. **Rédiger le prompt** à partir du gabarit de son type, en bloc de code copiable.
+7. **Capturer**, une fois le prompt rédigé et pas avant. Trois branches, et la première est le défaut.
+   *Pourquoi cet ordre : le repli garde ainsi toujours un prompt à afficher, au lieu de perdre le
+   travail avec la délégation.*
+   - Ouvrir `vault-capture` avec le prompt et un titre court, puis confirmer le chemin absolu créé.
+   - **`--chat` dans les arguments** → sauter la capture, rendre le prompt dans la réponse. Pour un
+     petit prompt qu'on relance tout de suite.
+   - **`vault-capture` s'arrête sur son garde-fou** (vault absent) → rendre le prompt dans la réponse,
+     en disant que la capture n'a pas eu lieu.
 
 ## Règles transverses
 
-- **Le prompt sort dans la réponse, le skill n'écrit aucun fichier.** Pour le garder, enchaîner sur
-  `vault-capture`. *Pourquoi : un geste, un home, et un skill sans effet de bord reste
-  auto-déclenchable.*
+- **Le prompt part dans l'inbox du vault par défaut, et l'écriture appartient à `vault-capture`.** Ce
+  skill ne l'écrit jamais lui-même. *Pourquoi : la résolution de la racine absolue et le garde-fou
+  « vault absent » vivent là-bas. Les recopier ici serait le doublon qu'interdit la R6 de
+  `skill-craft`, et c'est la dérive que sa convention annonce comme invisible au lint.*
+- **`--chat` n'écrit rien.** Le prompt sort dans la conversation, et le vault n'est pas touché.
 - **Le prompt cite des chemins, jamais des résumés de fichiers.** *Pourquoi : un résumé périme sans
   le dire, un chemin se relit.*
 - **Ce qui est mesuré et ce qui est supposé restent visuellement distincts** dans le prompt produit.
@@ -85,10 +96,16 @@ maladresse d'écriture, c'est une borne absente, et aucune relecture de style ne
   Relire la sortie en cherchant les verbes de décision (« il faut », « je propose », « donc on »).
 - Un type « exploration » porte une condition d'arrêt explicite. Un type « analyse » porte un
   hors-périmètre non vide. Un type « exécution » porte des critères d'acceptation vérifiables.
-- Le prompt est rendu en bloc de code, copiable d'un seul geste, et aucun fichier n'a été écrit.
+- Le prompt est rendu en bloc de code, copiable d'un seul geste.
+- Le chemin absolu du fichier d'inbox est confirmé à l'utilisateur. En `--chat` ou sur repli, le
+  prompt est dans la réponse et la raison de l'absence de capture est dite.
+- Rien n'a été écrit dans le repo courant, quelle que soit la branche.
 
 ## Test
 
-Scénarios dans [`evals/eval.json`](evals/eval.json). Celui qui compte le plus est la passation en fin
-de session riche : c'est le cas qui **échoue ouvert**, le skill transportant volontiers les
-conclusions de la session en produisant une sortie parfaitement plausible.
+Scénarios dans [`evals/eval.json`](evals/eval.json), tous négatifs : le skill étant à invocation
+manuelle, le contrat qui compte pour lui est de ne jamais partir tout seul.
+
+Ce qui **échoue ouvert** ne s'y teste pas, et se relit à la main : la passation en fin de session
+riche, où le skill transporte volontiers les conclusions de la session en produisant une sortie
+parfaitement plausible. Relire la sortie contre le ⛔ de l'étape 3 avant de capturer.

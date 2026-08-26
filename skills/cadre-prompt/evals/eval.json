@@ -1,16 +1,6 @@
 [
   {
     "skill": "cadre-prompt",
-    "id": "positif-brouillon-a-cadrer",
-    "query": "Voilà mon brouillon de prompt, aide-moi à le formuler correctement : « Je veux comprendre comment sont organisés les templates CI de mes repos et savoir quoi refactoriser. »"
-  },
-  {
-    "skill": "cadre-prompt",
-    "id": "positif-passation-de-session",
-    "query": "La conversation est trop longue, prépare le prompt pour repartir dans une nouvelle conversation sur ce sujet. On cherche pourquoi le job `sonarqube-check` est plus lent que son `test-code` : 32 s contre 88 s dans les traces du pipeline, et le cache Maven est écrasé par l'ordre de l'`extends:`."
-  },
-  {
-    "skill": "cadre-prompt",
     "id": "negatif-demande-ordinaire-mal-formulee",
     "expect_trigger": false,
     "query": "Faut que je centralise le ci-settings sur tous les repos, tu peux regarder comment c'est fait aujourd'hui ?"
