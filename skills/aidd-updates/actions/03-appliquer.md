@@ -37,8 +37,10 @@ Les plugins montés, les fichiers du repo patchés, une entrée de `CHANGELOG-ai
 
 ## Test
 
-- Après l'action, `claude plugin list --json` rend les versions cibles du plan.
-- `grep -rn '<chaque ancien nom>' skills/ rules/ wrappers/` rend zéro occurrence.
-- `--etat` rend `statut: applique`, et `--notify` ne produit plus rien.
-- `bash wrappers/claude/scripts/sync-rules.sh` reste vert.
-- `git status` montre un diff non committé, et aucune écriture hors du repo sauf le fichier d'état.
+| Cas | Preuve |
+| --- | --- |
+| `claude plugin list --json` après l'action | rend les versions cibles du plan |
+| `grep -rn '<chaque ancien nom>' skills/ rules/ wrappers/` | rend zéro occurrence |
+| `--etat` relancé après l'action | rend `statut: applique`, et `--notify` ne produit plus rien |
+| `bash wrappers/claude/scripts/sync-rules.sh` | reste vert |
+| `git status` | montre un diff non committé, et aucune écriture hors du repo sauf le fichier d'état |

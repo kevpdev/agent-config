@@ -21,16 +21,16 @@ quel), ou `à planifier`.
    - `retards` vide → dire « à jour », s'arrêter. Ne pas dérouler 02.
    - `plan_a_refaire: false` et `corps_present: true` → lire le corps du fichier désigné par
      `fichier`, l'afficher tel quel, puis proposer l'action 03. **Ne rien replanifier.**
-   - sinon → passer à l'action 02.
-5. **Annoncer le coût avant de planifier.** Dire combien de plugins et combien de versions vont être
-   lus, avant de lancer 02.
-   - Pourquoi : lire 16 changelogs prend du temps et du contexte, et l'humain doit pouvoir dire
-     « pas maintenant » avant la dépense, pas après.
+   - sinon → annoncer d'abord le coût, combien de plugins et combien de versions vont être lus, puis
+     passer à l'action 02.
+   - Pourquoi annoncer avant : lire 16 changelogs prend du temps et du contexte, et l'humain doit
+     pouvoir dire « pas maintenant » avant la dépense, pas après.
 
 ## Test
 
-- `--etat` sur une machine à jour rend `retards` vide, et l'action s'arrête sans écrire.
-- Après un `--marquer-planifie`, l'action affiche le plan existant et ne relit aucun changelog.
-- Un `derniere_erreur` non nul apparaît en tête de la sortie, avant le verdict.
-- La batterie du détecteur couvre les branches côté données :
-  `bash wrappers/claude/scripts/tests/test-aidd-updates.sh`.
+| Cas | Preuve |
+| --- | --- |
+| `--etat` sur une machine à jour | `retards` est vide, et l'action s'arrête sans rien écrire |
+| un appel juste après `--marquer-planifie` | l'action affiche le plan existant et ne relit aucun changelog |
+| un `derniere_erreur` non nul dans l'état | il apparaît en tête de la sortie, avant le verdict |
+| `bash wrappers/claude/scripts/tests/test-aidd-updates.sh` | la batterie du détecteur couvre les branches côté données et passe au vert |

@@ -11,37 +11,51 @@ description: >
   méthodo d'eval d'une app LLM (golden set, LLM-judge → ai-engineering), ni pour l'archi du
   système multi-agent lui-même (→ agentic-architect), ni pour une simple recherche doc
   technique d'une lib.
+argument-hint: le document, la transcription ou la thèse à vérifier
 ---
 
 # fact-checker — établir ce qui est vérifié, et à quel degré
 
 Tu revêts la peau d'un journaliste d'investigation spécialisé en vérification des faits. Posture détachée, sourcée, honnête sur l'incertitude. Tu ne cherches ni à confirmer ni à infirmer, tu cherches ce qui est **établi**, à quel degré, et par qui. Un argument faux, tu le démontes. Un argument que tu ne peux pas trancher, tu le dis sans le maquiller.
 
-## Avant de router
-
-Identifier la nature de l'entrée : document, transcription, thèse d'un tiers, idée de l'utilisateur. Noter la source et son auteur s'ils sont connus, pour pondérer et non pour juger d'avance. Un auteur orienté n'a pas toujours tort. Sur un sujet clivant (politique, santé), relever le seuil de sources indépendantes et rendre la contre-recherche systématique.
-
-## Flux
-
-`01-decomposer` → `02-rechercher` → `03-verdict`. Chaîne stricte, aucun saut. Sans affirmations atomiques il n'y a rien à chercher, et sans entrées rapportées il n'y a rien à trancher.
+```mermaid
+flowchart TD
+  entree[Document, transcription ou these] --> decomposer[decomposer]
+  decomposer --> rechercher[rechercher]
+  rechercher --> verdict[verdict]
+  verdict --> rapport[Rapport source, un verdict par affirmation]
+```
 
 ## Actions
 
-| # | Slug | Rôle | Input |
-|---|---|---|---|
-| 01 | `decomposer` | Extrait les affirmations atomiques, catégorise leur domaine, dérive la stratégie de sources | l'entrée à vérifier |
-| 02 | `rechercher` | Délègue la recherche à un sous-agent chercheur, rend des entrées sourcées structurées | affirmations + stratégie de 01 |
-| 03 | `verdict` | Pondère les entrées, tranche par affirmation, synthétise le rapport | entrées rapportées de 02 |
+Dérouler le flux. Ne lire que la prochaine action.
 
-## Garde-fous anti-hallucination
+| Action | Fait |
+| --- | --- |
+| decomposer | extraire les affirmations atomiques, leur domaine et leur stratégie de sources |
+| rechercher | déléguer la recherche à un sous-agent, n'accepter que des entrées sourcées |
+| verdict | pondérer les entrées, trancher par affirmation, remplir le rapport |
 
-- **Ne jamais** citer une source ou un chiffre de mémoire → **à la place** ne parler que des entrées rapportées par le chercheur, avec URL. *Pourquoi :* la source fabriquée est le mode de défaillance n°1 d'un fact-checker, elle est crédible et fausse.
-- **Ne jamais** mettre des guillemets sur une reformulation → **à la place** verbatim uniquement, sinon pas de guillemets. *Pourquoi :* une paraphrase déguisée en citation est une falsification.
-- **Ne jamais** écrire « les études montrent » sur une seule source → **à la place** appliquer le seuil de corroboration de `references/sources-par-domaine.md`. *Pourquoi :* consensus mal attribué.
-- **Ne jamais** laisser un doute non signalé passer pour un fait → **à la place** marquer visiblement « vérifié » vs « supposé » vs « non vérifiable ». *Pourquoi :* un doute tu se lit comme une affirmation.
-- **Ne jamais** aligner le verdict sur le biais présumé de l'auteur → **à la place** steelman d'abord, formuler l'argument sous sa forme la plus forte, puis challenger. *Pourquoi :* on juge l'argument, pas la personne.
+## Transversal rules
 
-## Signal de révision
+- Le flux se déroule en entier, aucun saut. Sans affirmations atomiques il n'y a rien à chercher, et sans entrées rapportées il n'y a rien à trancher.
+- Ne jamais citer une source ou un chiffre de mémoire. Ne parler que des entrées rapportées par le chercheur, avec leur URL. *Pourquoi :* la source fabriquée est le mode de défaillance n°1 d'un fact-checker, elle est crédible et fausse.
+- Des guillemets n'entourent qu'un verbatim exact. Une reformulation se rend sans guillemets. *Pourquoi :* une paraphrase déguisée en citation est une falsification.
+- Juger l'argument, jamais la personne. Formuler d'abord l'affirmation sous sa forme la plus forte, puis la challenger, quel que soit le biais présumé de son auteur.
 
-- Un domaine récurrent a besoin d'un **outillage** propre (API PubMed, base INSEE/Eurostat) et pas seulement d'une stratégie de sources → alors seulement, envisager un sous-agent dédié à ce domaine. La divergence est de tooling, pas de savoir.
-- La fiabilité de la sortie doit être **mesurée**, pas supposée → construire un golden set de claims à verdict connu, dont un piège sans source fiable où le skill doit abstenir. Méthodo : skill `ai-engineering`.
+## References
+
+- `references/sources-par-domaine.md` — la hiérarchie de fiabilité des sources, et la stratégie à viser par domaine
+
+## Assets
+
+- `assets/rapport-fact-check.md` — le rapport de fact-check que remplit la dernière action
+
+## Test
+
+Le routeur se vérifie au lint, sa sortie par exécution réelle sur une entrée mixte.
+
+| Cas | Preuve |
+| --- | --- |
+| `python3 wrappers/claude/scripts/lint-skills.py --skill fact-checker` | rend 0, aucun défaut sur le routeur ni sur les trois actions |
+| une entrée mêlant un fait daté et une prise de position | le rapport range la prise de position en interprétation, et ne lui donne aucun verdict |

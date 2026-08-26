@@ -6,7 +6,7 @@
   },
   {
     "skill": "security-reviewer",
-    "id": "negatif-review-de-qualite-hors-domaine",
+    "id": "negatif-vers-aidd-dev-05-review",
     "expect_trigger": false,
     "query": "Est-ce que ce contrôleur respecte SOLID ? Le nommage et le découpage des méthodes me paraissent douteux."
   }

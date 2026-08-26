@@ -7,101 +7,79 @@ description: >
   query", "SQL ou NoSQL pour ce cas", "cette migration est-elle safe en prod",
   "comment modéliser cette relation", "pourquoi cette query est lente", "EXPLAIN ANALYZE",
   "faut-il dénormaliser". NE PAS utiliser pour scaffolding ORM, génération de DTOs,
-  ou décisions d'architecture applicative.
+  ou décisions d'architecture applicative, ni pour juger la qualité d'un repository
+  ou d'une classe d'accès aux données (→ aidd-dev:05-review).
+argument-hint: "la question base de données, avec le plan d'EXPLAIN ANALYZE, le DDL et la volumétrie quand ils existent"
 ---
 
-# Skill — Database Expert
+# Database Expert
 
-## Rôle
+Diagnostique et conçoit le schéma, l'indexing, les requêtes et les migrations sur PostgreSQL, MySQL, MongoDB et Redis, en faisant passer la performance mesurée avant la théorie, et rend la main dès qu'il faut écrire le code applicatif ou jouer la migration.
 
-Tu es Morgan, database expert. **Performance mesurable > théorie.**
-Tu fournis des solutions concrètes (DDL, index, query plan) avec métriques attendues.
-
-## Ne pas s'activer pour
-
-- Scaffolding ORM, génération de DTOs → **à la place** prompt direct
-- Décisions d'architecture applicative → **à la place** skill `backend-architect`
-- Review de code Java/TypeScript → **à la place** skill `code-reviewer`
-
-## Avant l'analyse
-
-1. **Demande l'EXPLAIN ANALYZE** si la question porte sur une perf — sans lui, le diagnostic est une supposition.
-2. **Identifie les volumétries** : nombre de rows, lectures/écritures par seconde.
-3. **Identifie le pattern d'accès** : read-heavy, write-heavy, OLTP, OLAP.
-4. **Charge la référence si nécessaire** :
-   - Indexing → `references/index-patterns.md`
-   - Migrations → `references/migration-safety.md`
-   - Doc de lib/driver à jour (version, API, breaking change) → doc officielle via recherche web
-
-## Pendant l'analyse
-
-1. **Pseudo-SQL d'abord**, requête complète uniquement sur demande explicite.
-2. **Propose la solution avec preuve** : nom de l'index, query plan attendu, gain estimé.
-3. **Liste les gotchas** : locks de migration, cardinalité d'index, write amplification.
-4. **Diagrammes ASCII** pour les pipelines complexes (ETL, réplication, sharding).
-
-## Après l'analyse
-
-Produis la réponse selon `assets/db-recommendation-template.md`.
-
-## Règles strictes (négations + alternatives)
-
-- **Ne jamais** diagnostiquer une perf sans EXPLAIN ANALYZE → **à la place** demande-le ou formule l'hypothèse explicitement.
-  *Pourquoi :* sans le query plan réel, le diagnostic est une supposition qui peut aggraver le problème.
-
-- **Ne jamais** recommander un `DROP COLUMN` / `DROP TABLE` sans mise en garde migration → **à la place** propose un plan en plusieurs étapes (deprecate → migrate → drop).
-  *Pourquoi :* un drop immédiat en prod peut casser des applications qui lisent encore cette colonne.
-
-- **Ne jamais** créer un index sans mentionner `CONCURRENTLY` sur PostgreSQL → **à la place** utilise `CREATE INDEX CONCURRENTLY` systématiquement en prod.
-  *Pourquoi :* un index sans `CONCURRENTLY` pose un lock TABLE en écriture — bloque la prod.
-
-- **Ne jamais** recommander de dénormaliser sans chiffrer le gain → **à la place** estime le gain de perf vs le coût de maintenance de la duplication.
-
-## Code patterns à reproduire
-
-### Index safe en prod (PostgreSQL)
-```sql
--- CONCURRENTLY évite le lock TABLE en écriture
-CREATE INDEX CONCURRENTLY idx_orders_user_id
-    ON orders(user_id)
-    WHERE deleted_at IS NULL;
-
--- Validation
-EXPLAIN (ANALYZE, BUFFERS)
-SELECT * FROM orders WHERE user_id = $1 AND deleted_at IS NULL;
+```mermaid
+flowchart TD
+  A[Question base de données] --> B[Cadrage volumétrie et pattern d'accès]
+  B --> C{Plan d'exécution fourni ?}
+  C -- non --> D[Réclamer un EXPLAIN ANALYZE]
+  D --> E[Pistes marquées Hypothèses]
+  C -- oui --> F[Diagnostic mesuré]
+  E --> G[Recommandation au gabarit]
+  F --> G
 ```
 
-### Migration safe (ajout colonne NOT NULL)
-```sql
--- Étape 1 — nullable sans valeur par défaut (instantané)
-ALTER TABLE users ADD COLUMN preferences jsonb;
+## Process
 
--- Étape 2 — backfill par batch (hors lock)
-UPDATE users SET preferences = '{}' WHERE preferences IS NULL;
+1. **Cadrage.** Recueillir la volumétrie et le pattern d'accès avant toute hypothèse.
+   - Volumétrie : nombre de rows, lectures et écritures par seconde.
+   - Pattern d'accès : read-heavy, write-heavy, OLTP ou OLAP.
+2. **Garde — la mesure avant le diagnostic.** Sur une question de performance, réclamer l'`EXPLAIN ANALYZE` avant de conclure.
+   - Sans plan d'exécution, titrer la section « Hypothèses » et non « Diagnostic », et marquer chaque piste comme supposée.
+   - *Pourquoi* : titrer « Diagnostic » suffit à faire lire trois suppositions comme un constat, quoi qu'annonce le corps du texte.
+3. **Charger la référence utile.** Ne lire que celle que la question appelle.
+   - Sur une question d'indexing, [`references/index-patterns.md`](references/index-patterns.md).
+   - Sur une migration, [`references/migration-safety.md`](references/migration-safety.md).
+   - Sur une version de lib ou de driver, la doc officielle par recherche web, jamais la mémoire.
+4. **Analyser.** Écrire le pseudo-SQL d'abord, la requête complète seulement sur demande explicite.
+   - Nommer l'index proposé, le plan d'exécution attendu et le gain estimé.
+   - Lister les gotchas : locks de migration, cardinalité de l'index, write amplification.
+   - Le N+1 se reconnaît à un `findAll()` suivi d'un accès lazy dans une boucle, et se corrige par un `JOIN FETCH`.
 
--- Étape 3 — contrainte NOT NULL (après backfill complet)
-ALTER TABLE users ALTER COLUMN preferences SET NOT NULL;
-ALTER TABLE users ALTER COLUMN preferences SET DEFAULT '{}';
-```
+     ```java
+     // ❌ N+1 — chaque user déclenche une query orders
+     List<User> users = userRepo.findAll();
+     users.forEach(u -> u.getOrders().size());  // lazy loading
 
-### Détection N+1 (Spring/JPA)
-```java
-// ❌ N+1 — chaque user déclenche une query orders
-List<User> users = userRepo.findAll();
-users.forEach(u -> u.getOrders().size());  // lazy loading
+     // ✅ Fix — JOIN FETCH
+     @Query("SELECT u FROM User u JOIN FETCH u.orders WHERE u.active = true")
+     List<User> findAllWithOrders();
+     ```
 
-// ✅ Fix — JOIN FETCH
-@Query("SELECT u FROM User u JOIN FETCH u.orders WHERE u.active = true")
-List<User> findAllWithOrders();
-```
+   - Un pipeline complexe (ETL, réplication, sharding) se dessine en ASCII.
+5. **Rendre.** Écrire la recommandation selon [`assets/db-recommendation-template.md`](assets/db-recommendation-template.md).
 
-## Contrôle de sortie
+## Transversal rules
 
-Avant de rendre la recommandation, vérifier et corriger si besoin :
+- Ne jamais diagnostiquer une performance sans plan d'exécution. À la place, le réclamer, ou formuler l'hypothèse et la marquer comme telle.
+- Ne jamais recommander un `DROP COLUMN` ou un `DROP TABLE` sec. À la place, proposer un retrait en plusieurs déploiements, dont [`references/migration-safety.md`](references/migration-safety.md) porte le détail.
+- Ne jamais proposer un `CREATE INDEX` sans `CONCURRENTLY` sur PostgreSQL, parce que la création pose sinon un lock en écriture sur toute la table.
+- Ne jamais recommander une dénormalisation sans chiffrer le gain. À la place, poser le gain de performance face au coût de maintenance de la duplication.
 
-- Toutes les sections de `assets/db-recommendation-template.md` sont présentes : diagnostic, recommandation, trade-offs, validation, hors périmètre.
-- Le diagnostic s'appuie sur un plan d'exécution cité, pas sur la lecture de la requête. Une cause de lenteur déduite du SQL seul est une hypothèse, pas un diagnostic. **Sans plan d'exécution, la section se titre « Hypothèses »** et chaque piste porte son propre marqueur de doute — la titrer « Diagnostic » suffit à transformer trois suppositions en constat, quoi qu'annonce le corps du texte.
+## References
+
+- `references/index-patterns.md` — les patterns d'index PostgreSQL, leurs coûts et les requêtes de diagnostic.
+- `references/migration-safety.md` — les migrations sans lock, en Expand/Contract, et la checklist d'avant-prod.
+
+## Assets
+
+- `assets/db-recommendation-template.md` — le gabarit de la recommandation rendue.
 
 ## Test
 
-Scénarios dans `evals/eval.json`. Ils portent les cas où le skill doit réclamer une mesure avant de conclure.
+Le déclenchement se joue par l'exécuteur d'évals sur `evals/eval.json`, le reste se relit sur la recommandation rendue.
+
+| Cas | Preuve |
+| --- | --- |
+| le cas positif, une requête lente livrée sans plan d'exécution | le skill part et réclame un `EXPLAIN ANALYZE` avant de conclure |
+| le cas négatif, une revue de qualité d'un repository Java | le skill ne part pas |
+| relire la recommandation rendue | les cinq sections du gabarit sont là, diagnostic, recommandation, trade-offs, validation, hors périmètre |
+| relire une recommandation rendue sans plan d'exécution au dossier | la section porte le titre « Hypothèses », et chaque piste son marqueur de doute |

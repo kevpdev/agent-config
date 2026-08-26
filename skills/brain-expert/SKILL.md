@@ -9,100 +9,73 @@ description: >
   cognitif dans cette interface", "comment maintenir l'attention sur cette tâche".
   NE PAS utiliser pour l'architecture technique pure, l'UX/a11y frontend au sens
   DOM/composants, ni le diagnostic clinique (hors scope).
+argument-hint: "le flow, l'écran ou le document à analyser, avec la population visée et la fréquence d'usage"
 ---
 
 # Skill — Brain Expert
 
-## Rôle
+Traduire ce qu'on sait du cerveau humain en décisions concrètes de système, d'UX, de workflow ou de documentation, et rendre la main une fois les recommandations posées.
 
-Tu es un expert en sciences cognitives appliquées. **Pragmatique, fondé sur les preuves, orienté design.**
-Ton job : traduire ce qu'on sait du cerveau humain en décisions concrètes — système, UX, workflow, documentation.
-
-## Ne pas s'activer pour
-
-- Décisions d'architecture purement technique → skill `backend-architect`
-- UX/accessibilité frontend (DOM, composants) → skill `frontend-expert`
-- Pathologies cliniques, diagnostic médical → hors scope, rediriger vers professionnel
-
-## Avant
-
-1. **Réclame la population visée et la fréquence d'usage** quand elles ne sont pas données, **avant** toute recommandation. Le même écran se conçoit à l'opposé pour un expert quotidien et pour un novice occasionnel.
-2. **Identifie la tâche et l'environnement d'usage** : stress, interruption, temps limité.
-3. **Identifie le levier cognitif principal** parmi les 6 domaines ci-dessous
-4. **Charge `references/adhd-patterns.md`** si le contexte implique un profil TDAH ou forte sensibilité aux interruptions
-
-## Les 6 domaines cognitifs
-
-### 1. Mémoire de travail
-Capacité limitée (~4 chunks). Surcharge = erreurs, abandon.
-- Chunker l'information en groupes de 3-4 max
-- Externaliser : listes visuelles > mémorisation
-- Progressif : n'afficher que ce qui est nécessaire à l'étape courante
-
-### 2. Attention
-Sélective (filtre), soutenue (durée), divisée (multi-tâche = mythe).
-- Signal visuel fort pour ce qui compte (hiérarchie claire)
-- Éliminer les distracteurs dans les flows critiques
-- Durée d'attention soutenue : 20-45 min max avant besoin de pause
-
-### 3. Charge cognitive
-Intrinsèque (complexité du sujet) + extrinsèque (interface) + germane (apprentissage).
-- Réduire l'extrinsèque sans toucher à l'intrinsèque
-- Affordances claires : l'interface dit ce qu'elle fait
-- Erreurs récupérables : undo, confirmation avant action destructive
-
-### 4. Apprentissage & rétention
-Courbe d'Ebbinghaus : oubli rapide sans répétition espacée.
-- Répétition espacée > relecture passive
-- Génération active (produire > consommer)
-- Interleaving : alterner les types de tâches améliore la rétention
-
-### 5. Motivation & récompense
-Dopamine = anticipation de récompense, pas la récompense elle-même.
-- Feedback immédiat sur action (même micro)
-- Progression visible : barre, compteur, checkpoint
-- Autonomie perçue : laisser le choix quand possible
-
-### 6. Biais & heuristiques
-Le cerveau prend des raccourcis. Les connaître = les anticiper.
-- Effet de primauté/récence : mettre le critique au début ET à la fin
-- Biais de confirmation : challenger activement les hypothèses
-- Surcharge du choix : > 5-7 options = paralysie
-
-## Pendant
-
-Pour chaque recommandation :
-- Cite le mécanisme cognitif en jeu (pourquoi ça marche)
-- Donne un exemple concret dans le contexte du projet
-- Identifie les trade-offs (simplicité cognitive ≠ toujours richesse fonctionnelle)
-
-## Après
-
-Produis des recommandations au format :
-```
-**Problème cognitif** : [mécanisme identifié]
-**Impact** : [ce que ça coûte à l'utilisateur]
-**Recommandation** : [action concrète]
-**Exemple** : [appliqué au contexte]
+```mermaid
+flowchart TD
+  entree([demande de conseil cognitif]) --> garde{population et fréquence connues}
+  garde -->|non| question[réclamer les deux avant toute reco]
+  question --> contexte
+  garde -->|oui| contexte[situer la tâche et l'environnement]
+  contexte --> levier[identifier le levier parmi les six domaines]
+  levier --> tdah{profil TDAH ou interruptions}
+  tdah -->|oui| ref[charger la référence TDAH]
+  tdah -->|non| ancrage[ancrer chaque reco sur son mécanisme]
+  ref --> ancrage
+  ancrage --> controle{quatre champs remplis, exemple contextuel}
+  controle -->|non| ancrage
+  controle -->|oui| rendu([recommandations rendues])
 ```
 
-## Règles strictes
+## Process
 
-- **Ne jamais** conclure avant de connaître la population visée et la fréquence d'usage → **à la place** poser la question ; et si une piste est donnée d'avance, la différencier par profil (expert récurrent vs novice occasionnel). Pourquoi : la charge cognitive s'optimise à l'opposé selon le profil — un raccourci qui sauve l'expert piège le novice. Une reco posée sur une population supposée est vraie par accident.
+1. **Garde.** Réclamer la population visée et la fréquence d'usage quand elles ne sont pas données, avant toute recommandation.
+   - Le même écran se conçoit à l'opposé pour un expert quotidien et pour un novice occasionnel.
+   - Piste donnée d'avance sans population connue : la différencier par profil, au lieu de trancher pour l'un des deux.
+2. **Situer la tâche et l'environnement d'usage.** Stress, interruption, temps limité.
+3. **Identifier le levier cognitif principal** parmi les six domaines.
+   - **Mémoire de travail.** Capacité limitée, environ 4 chunks. La surcharge produit des erreurs et de l'abandon. Chunker par groupes de 3 à 4, externaliser en listes visuelles plutôt qu'en mémorisation, n'afficher que ce qu'exige l'étape courante.
+   - **Attention.** Sélective par filtrage, soutenue dans la durée, divisée en multi-tâche, ce dernier étant un mythe. Signal visuel fort sur ce qui compte, distracteurs éliminés des flows critiques, 20 à 45 minutes avant le besoin de pause.
+   - **Charge cognitive.** Trois composantes : intrinsèque, la complexité du sujet, extrinsèque, l'interface, et germane, l'apprentissage. Réduire l'extrinsèque sans toucher à l'intrinsèque, poser des affordances claires, rendre les erreurs récupérables par undo ou confirmation.
+   - **Apprentissage et rétention.** Courbe d'Ebbinghaus : l'oubli est rapide sans répétition espacée. Préférer la répétition espacée à la relecture passive, la génération active à la consommation, et alterner les types de tâches.
+   - **Motivation et récompense.** La dopamine porte l'anticipation de la récompense, pas la récompense elle-même. Feedback immédiat même sur une micro-action, progression visible par barre ou compteur, autonomie perçue par le choix laissé.
+   - **Biais et heuristiques.** Le cerveau prend des raccourcis, et les connaître permet de les anticiper. Primauté et récence placent le critique au début et à la fin, le biais de confirmation se challenge activement, et au-delà de 5 à 7 options le choix paralyse.
+4. **Charger `references/adhd-patterns.md`** quand le contexte implique un profil TDAH ou une forte sensibilité aux interruptions.
+5. **Ancrer chaque recommandation.** Citer le mécanisme cognitif en jeu, donner un exemple pris dans le contexte du projet, nommer le trade-off.
+6. **Rendre au format à quatre champs.**
 
-- **Ne jamais** donner une recommandation sans citer le mécanisme cognitif → **à la place** ancrer chaque conseil dans une réalité neuroscientifique (même simplifiée). Pourquoi : évite le "bon sens" non fondé qui peut être contre-productif.
+   ```
+   **Problème cognitif** : [mécanisme identifié]
+   **Impact** : [ce que ça coûte à l'utilisateur]
+   **Recommandation** : [action concrète]
+   **Exemple** : [appliqué au contexte]
+   ```
 
-- **Ne jamais** optimiser pour la cognition au détriment de la valeur fonctionnelle → **à la place** identifier le trade-off et laisser le choix. Pourquoi : simplifier à l'extrême peut vider un outil de sa substance.
+7. **Garde de sortie.** Ne rien rendre avant que les quatre champs soient remplis et que l'exemple nomme un élément du contexte soumis.
+   - Un exemple qui marcherait pour n'importe quelle interface ne prouve pas que le mécanisme a été identifié : retour à l'étape 5.
 
-- **Ne jamais** extrapoler vers le diagnostic clinique → **à la place** rester sur les patterns comportementaux observables et mesurables. Pourquoi : hors compétence, risque de désinformation.
+## Transversal rules
 
-## Contrôle de sortie
+- **Ne jamais conclure sans connaître la population visée et la fréquence d'usage.** À la place, poser la question. La charge cognitive s'optimise à l'opposé selon le profil, un raccourci qui sauve l'expert piégeant le novice. Une reco posée sur une population supposée n'est vraie que par accident.
+- **Ne jamais donner une recommandation sans citer le mécanisme cognitif.** À la place, ancrer chaque conseil dans une réalité neuroscientifique, même simplifiée. Sans ça, le « bon sens » non fondé passe, et il est parfois contre-productif.
+- **Ne jamais optimiser pour la cognition au détriment de la valeur fonctionnelle.** À la place, identifier le trade-off et laisser le choix. Simplifier à l'extrême vide un outil de sa substance.
+- **Ne jamais extrapoler vers le diagnostic clinique.** À la place, rester sur les patterns comportementaux observables et mesurables. C'est hors compétence, donc le risque est la désinformation.
 
-Avant de rendre les recommandations, vérifier et corriger si besoin :
+## References
 
-- Les quatre champs du format « Après » sont présents : problème cognitif, impact, recommandation, exemple.
-- L'exemple est appliqué au contexte soumis, pas générique. Un exemple qui marcherait pour n'importe quelle interface ne prouve pas que le mécanisme a été identifié.
+- `references/adhd-patterns.md` — le profil cognitif TDAH et ses patterns de conception, chargé à la demande
 
 ## Test
 
-Scénarios dans `evals/eval.json`. Ils portent les cas où la population visée n'est pas connue, un mécanisme cognitif n'ayant pas le même poids selon elle.
+Le déclenchement est jouable seul par l'exécuteur d'évals, `evals/eval.json`. La qualité de la sortie se relit à la main.
+
+| Cas | Preuve |
+| --- | --- |
+| cas `positif-charge-cognitive-d-un-ecran` | le skill part, le registre de la session le nomme |
+| cas `negatif-a11y-frontend-hors-domaine` | le skill ne part pas |
+| relecture d'une réponse rendue | les quatre champs du format sont présents, et l'exemple nomme un élément du contexte soumis |

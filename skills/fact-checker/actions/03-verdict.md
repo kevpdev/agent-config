@@ -15,7 +15,9 @@ Le rapport rempli d'après le gabarit `../assets/rapport-fact-check.md`.
 1. **Pondérer.** Noter chaque source par son `tier` et son biais connu, en s'appuyant sur `../references/sources-par-domaine.md`. Une affirmation soutenue uniquement par des sources de biais convergent est un signal de faiblesse, pas de force.
 2. **Exiger l'extrait.** Ne trancher qu'appuyé sur un extrait verbatim cité. Pas d'extrait, le verdict est « non vérifiable ». *Pourquoi :* c'est l'extrait qui rend le verdict réfutable par le lecteur.
 3. **Contrôler la contre-recherche.** Refuser le mot « consensus » tant qu'aucune entrée `contre` ou `nuance` n'a été cherchée. Le seuil chiffré de sources indépendantes et le plafond de confiance associé sont dans `../references/sources-par-domaine.md`, section « Règle transverse ».
+   - Le refus porte sur toute formule de consensus, « les études montrent » comprise, et pas sur le seul mot « consensus ». Une source unique n'en autorise aucune.
 4. **Trancher.** Attribuer `vrai`, `plutôt vrai`, `trompeur` (fait exact, cadrage biaisé), `faux`, ou `non vérifiable`. Ajouter la confiance (haut, moyen, bas), fonction du tier des sources, de leur nombre et de leur indépendance.
+   - Le doute se marque dans le verdict, jamais entre les lignes. Une affirmation qui ne porte aucune marque se lit comme vérifiée.
 5. **Abstenir.** « Non vérifiable » est un verdict de première classe, pas un échec. Ne jamais fabriquer une conclusion pour rendre un rapport complet.
 6. **Synthétiser.** Remplir le gabarit. Séparer ce qui est vérifié, ce qui reste interprétation de l'auteur, et ce qui reste ouvert. Si l'entrée portait une thèse d'ensemble, dire ce qu'elle vaut une fois les faits recomposés, sans aller au-delà des sources.
 

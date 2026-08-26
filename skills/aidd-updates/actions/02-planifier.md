@@ -40,12 +40,13 @@ Le corps du plan écrit dans le fichier d'état via `--marquer-planifie`, au for
 
 ## Test
 
-- *Ce `## Test` n'a plus d'arme à réponse connue, et c'est à dire : sa cible d'avance était un
-  renommage réel du repo, et il n'en reste aucun depuis l'archivage du 2026-08-24. Les deux lignes
-  ci-dessous vérifient la cohérence interne du plan, pas sa justesse. Rétablir une cible nommée au
-  prochain renommage réel, au lieu d'en fabriquer une — un renommage inventé mesurerait le test.*
-- `grep -c '^| ' ` sur la section « ce qui casse » rend autant de lignes que
-  `grep -rn '<ancien nom>'` trouve d'occurrences dans le repo. Un écart signale une entrée inventée
-  ou une occurrence manquée.
-- Après l'action, `--etat` rend `plan_a_refaire: false` et `corps_present: true`.
-- Le plan ne contient ni « à vérifier », ni « probablement », ni section vide.
+*Ce `## Test` n'a plus de cible à réponse connue : sa cible d'avance était un renommage réel du repo,
+et il n'en reste aucun depuis l'archivage du 2026-08-24. Les lignes ci-dessous vérifient la cohérence
+interne du plan, pas sa justesse. Rétablir une cible nommée au prochain renommage réel, au lieu d'en
+fabriquer une. Un renommage inventé mesurerait le test.*
+
+| Cas | Preuve |
+| --- | --- |
+| compter les lignes de tableau de la section « ce qui casse » | autant de lignes que `grep -rn '<ancien nom>'` trouve d'occurrences dans le repo, un écart signalant une entrée inventée ou une occurrence manquée |
+| `--etat` relancé après l'action | rend `plan_a_refaire: false` et `corps_present: true` |
+| relecture du plan écrit | il ne contient ni « à vérifier », ni « probablement », ni section vide |

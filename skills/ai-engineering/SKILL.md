@@ -9,110 +9,92 @@ description: >
   "pourquoi ma sortie LLM est flaky/instable", "régression de prompt", "quel modèle
   LLM choisir", "valider une sortie LLM", "observabilité/coût tokens". NE PAS utiliser
   pour : orchestration multi-agent / routing (→ agentic-architect), archi backend
-  générale, review qualité du code (→ aidd-dev:05-review).
+  générale, review qualité du code (→ aidd-dev:05-review), audit de vulnérabilités
+  et de secrets (→ security-reviewer).
+argument-hint: l'étape LLM à fiabiliser, et la preuve dont tu disposes déjà
 ---
 
 # Skill — AI Engineering
 
-## Rôle
+Décider la méthodo d'évaluation, de fiabilité et de choix de modèle d'une app qui *utilise* un LLM, puis rendre la main sur la reco. Ce skill ne code pas.
 
-Tu fiabilises une app qui *utilise* un LLM. **Décide la méthodo d'eval, de fiabilité et de choix de modèle — ne code pas.**
-Posture : l'output LLM est **probabiliste** ; on ne le « répare » pas, on construit un système qui marche **malgré** ça (eval, garde-fous, observabilité). On teste le **comportement métier**, pas l'implémentation.
-
-## Ne pas s'activer pour
-
-- Orchestration multi-agent, routing, sous-agent vs skill → **à la place** skill `agentic-architect`
-- Archi backend générale (API, hexagonal, scaling) → **à la place** skill `backend-architect`
-- Review qualité / SOLID du code → **à la place** skill `code-reviewer`
-- Vulnérabilités / OWASP → **à la place** skill `security-reviewer`
-
-*Pourquoi cette frontière :* la **fiabilité d'un output LLM est orthogonale à l'agentique** — un simple appel LLM (pipeline non-agentique) a déjà tout besoin d'eval/garde-fous, et un système agentique s'appuie dessus. Ce skill est la **fondation**, `agentic-architect` traite la structure au-dessus.
-
-## Avant
-
-1. **Déterministe / LLM / agent ?** charge `../_shared/llm-decision-grid.md` — beaucoup de « problèmes de fiabilité LLM » se règlent en **remplaçant l'étape par du code**.
-2. **Quel est le comportement métier attendu ?** (pas l'implémentation) — c'est ce qu'on évalue.
-3. **Y a-t-il un ground truth stable ?** si oui → golden set ; si non (tâche ouverte) → eval offline **+** online (prod), LLM-as-judge.
-
-## Les décisions clés
-
-### 1. Stratégie d'évaluation
-
-| Question | Réponse |
-|---|---|
-| Mesurer quoi ? | le **comportement/contrat métier**, via métriques + seuils (pas l'égalité exacte — l'output est probabiliste) |
-| Avec quoi ? | **golden set** de cas réels (vise 500–1000 ex. pour juger un LLM-judge) |
-| Qui juge si pas de réponse exacte ? | **LLM-as-judge**, validé à **75–90 % d'accord** avec labels humains *avant* de scaler ; humains = arbitres sur échantillon |
-| Où ? | **offline** (golden set en dev/CI) **+ online** (prod, sur tâches à ground truth instable) |
-
-**Boucle** : *evaluation-driven iteration* — run → ajuste → rerun. Piège connu : améliorer un prompt **régresse** un autre cas → seul un golden set le détecte.
-
-### 2. Régression prompt / modèle
-
-- **Prompt = code** : versionné, hashé.
-- **CI rejoue l'eval** sur le golden set ; **merge bloqué si score < baseline**.
-- **Version drift** : le provider met à jour le modèle en silence → régression sans changement de ton code → **version pinning** + eval périodique.
-
-### 3. Garde-fous d'implémentation (invariants)
-
-- **temp = 0** en test (reproductibilité).
-- **Valider la sortie structurée** (schéma JSON) + retry + **fallback déterministe**.
-- **Ne jamais logguer de PII brute** dans prompts/traces.
-- Pin la version de modèle en prod.
-
-### 4. Observabilité & coût
-
-- Le monitoring classique **ne suffit pas** (pas de stack trace sur un « mauvais » output) → logguer **input/output/tokens/latence/coût**, tracer.
-- Coût : breakdown par span/trace/**outil** ; RAG = forte variance de tokens.
-
-### 5. Choix de modèle (framework, pas palmarès)
-
-Arbitrer sur les **axes** — pas sur un classement daté :
-
-| Axe | Question |
-|---|---|
-| Précision | le modèle atteint-il le seuil métier sur **ton** golden set ? |
-| Coût | tokens × volume — tenable à l'échelle ? |
-| Latence | budget temps par requête |
-| Privacy / souveraineté | données sensibles → **local** vs API |
-| Local vs API | infra/contrôle vs simplicité/capacité (axe orthogonal à l'agence) |
-
-**Ne jamais** trancher sur un benchmark/pricing mémorisé → **à la place** valider sur ton propre golden set, et pour les chiffres du jour → la recherche de doc et la recherche web natives. *Pourquoi :* benchmarks et prix **pourrissent en semaines** ; un chiffre daté affirmé = décision sur base fausse.
-
-## Diagnostic
-
-- **Hallucination ≠ aléatoire** : symptôme de défauts **amont** (retrieval, prompt, data) → diagnostiquer le pipeline, pas « patcher » l'output.
-- **Tool-call plausible mais faux** (si agentique) : l'appel *a l'air* correct mais fait la mauvaise chose → invisible aux asserts classiques, le détecter par eval de l'effet.
-
-## Règles strictes
-
-- **Ne jamais** valider une feature LLM « ça a marché 3 fois » → **à la place** exiger un golden set + un seuil. *Pourquoi :* 3 succès ne disent rien sur la distribution probabiliste.
-- **Ne jamais** asserter l'égalité exacte d'un output LLM → **à la place** métrique + seuil ou LLM-judge. *Pourquoi :* test fragile qui casse au moindre re-phrasing non significatif.
-- **Ne jamais** mettre un LLM là où une étape déterministe est *assez bonne* → **à la place** `../_shared/llm-decision-grid.md`. *Pourquoi :* coût/latence/imprévisibilité à chaque exécution.
-- **Ne jamais** laisser une sortie LLM non validée atteindre un effet de bord → **à la place** schéma + garde-fou + fallback. *Pourquoi :* no-silent-degradation.
-
-## Format de sortie
-
-```
-**Comportement métier visé** : [ce qu'on évalue, pas l'implémentation]
-**Stratégie d'éval** : [golden set / LLM-judge / online — + métrique & seuil]
-**Garde-fous** : [validation sortie, temp=0, version pinning]
-**Coût/risque accepté** : [trade-off]
-**Signal de révision** : [score < baseline, drift modèle, …]
-**Prochaine étape concrète** : [action immédiate]
+```mermaid
+flowchart TD
+  A[Étape LLM à fiabiliser] --> B{Le déterministe suffit ?}
+  B -- oui --> C[Remplacer l'étape par du code]
+  B -- non --> D[Nommer le comportement métier]
+  D --> E{Ground truth stable ?}
+  E -- oui --> F[Golden set offline]
+  E -- non --> G[Offline plus online, LLM-as-judge]
+  F --> H[Régression, garde-fous, observabilité]
+  G --> H
+  H --> I[Choix de modèle sur axes]
+  I --> J[Diagnostic des dérapages]
+  J --> K{Métrique et seuil chiffrés ?}
+  K -- non --> D
+  K -- oui --> L[Reco rendue]
 ```
 
-## Sources
+## Process
 
-Panorama vérifié sur 9 sources : taxonomies arxiv, golden dataset, LLM-as-judge, LLMOps/CI, hallucination root-cause.
+1. **Garde.** Charger `../_shared/llm-decision-grid.md` et trancher si l'étape a vraiment besoin d'un LLM.
+   - Beaucoup de « problèmes de fiabilité LLM » se règlent en remplaçant l'étape par du code. Quand c'est le cas, le dire et s'arrêter là.
+2. **Nommer le comportement métier attendu.** C'est lui qu'on évalue, jamais l'implémentation.
+3. **Choisir la stratégie d'évaluation.** Elle se déduit de la stabilité du ground truth.
+   - **Ground truth stable** : golden set de cas réels, en visant 500 à 1 000 exemples dès qu'il faut juger un LLM-judge.
+   - **Tâche ouverte** : eval offline en dev et en CI, plus eval online en prod.
+   - **Pas de réponse exacte attendue** : LLM-as-judge, validé à 75-90 % d'accord avec des labels humains avant de le passer à l'échelle. Les humains restent arbitres sur échantillon.
+   - **Boucler** : lancer, ajuster, relancer. Piège connu, améliorer un prompt en régresse un autre, et seul un golden set le voit.
+4. **Verrouiller la régression de prompt et de modèle.**
+   - Un prompt est du code : il se versionne et se hashe.
+   - La CI rejoue l'eval sur le golden set, et le merge se bloque dès que le score passe sous la baseline.
+   - **Version drift** : le fournisseur met à jour le modèle en silence, donc la régression arrive sans le moindre changement de code. La réponse est de pinner la version, en test comme en prod, et de rejouer l'eval périodiquement.
+5. **Poser les garde-fous d'implémentation.**
+   - `temperature = 0` en test, pour la reproductibilité.
+   - Valider la sortie structurée contre un schéma JSON, avec retry puis fallback déterministe.
+   - Ne jamais logguer de PII (donnée personnelle identifiante) brute dans les prompts ni dans les traces.
+6. **Câbler l'observabilité et le coût.**
+   - Le monitoring classique ne suffit pas : un mauvais output ne produit aucune stack trace. Logguer entrée, sortie, tokens, latence et coût, puis tracer.
+   - Décomposer le coût par span, par trace et par outil. Un RAG (génération augmentée par la recherche) fait fortement varier le nombre de tokens.
+7. **Arbitrer le choix de modèle sur des axes, jamais sur un classement daté.**
+   - **Précision** : le modèle atteint-il le seuil métier sur ton propre golden set ?
+   - **Coût** : les tokens multipliés par le volume restent-ils tenables à l'échelle ?
+   - **Latence** : le budget temps par requête.
+   - **Privacy et souveraineté** : une donnée sensible pousse vers le local plutôt que vers une API.
+   - **Local ou API** : infra et contrôle d'un côté, simplicité et capacité de l'autre. Cet axe est orthogonal à l'agentivité.
+   - Récupérer les chiffres du jour par la recherche de doc et la recherche web natives, jamais de mémoire. **POURQUOI** : benchmarks et prix pourrissent en semaines, donc un chiffre daté affirmé fait décider sur du faux.
+   - Les critères de cette étape et des précédentes viennent d'un panorama vérifié sur 9 sources : taxonomies arxiv, golden dataset, LLM-as-judge, LLMOps et CI, root-cause d'hallucination.
+8. **Diagnostiquer quand la sortie dérape.**
+   - Une hallucination n'est pas de l'aléatoire. C'est le symptôme d'un défaut en amont, dans le retrieval, dans le prompt ou dans la donnée. Diagnostiquer le pipeline au lieu de patcher la sortie.
+   - **Tool-call plausible mais faux**, quand l'app est agentique : l'appel a l'air correct et fait la mauvaise chose. Il reste invisible aux asserts classiques, et se détecte par une eval de son effet.
+9. **Garde.** Ne pas rendre la reco tant que la stratégie d'éval ne nomme pas une métrique **et** un seuil chiffré.
+   - **POURQUOI** : une stratégie sans seuil ne peut jamais échouer, donc elle n'évalue rien.
+10. **Rendre la reco** sur ce format, les six champs remplis.
 
-## Contrôle de sortie
+```
+**Comportement métier visé** : ce qu'on évalue, pas l'implémentation
+**Stratégie d'éval** : golden set, LLM-judge ou online, avec sa métrique et son seuil
+**Garde-fous** : validation de sortie, température, version pinnée
+**Coût/risque accepté** : le trade-off assumé
+**Signal de révision** : score sous la baseline, drift de modèle
+**Prochaine étape concrète** : l'action immédiate
+```
 
-Avant de rendre la reco, vérifier et corriger si besoin :
+## Transversal rules
 
-- Les six champs du format sont présents : comportement métier visé, stratégie d'éval, garde-fous, coût/risque accepté, signal de révision, prochaine étape concrète.
-- La stratégie d'éval nomme une métrique **et** un seuil chiffré. Une stratégie sans seuil ne peut jamais échouer, donc elle n'évalue rien.
+- La sortie d'un LLM est probabiliste. On ne la répare pas, on construit un système qui marche malgré elle.
+- Ne jamais valider une feature LLM sur « ça a marché trois fois ». Exiger un golden set et un seuil. **POURQUOI** : trois succès ne disent rien de la distribution.
+- Ne jamais asserter l'égalité exacte d'une sortie LLM. Passer par une métrique et un seuil, ou par un LLM-judge. **POURQUOI** : le test casse à la première reformulation non significative.
+- Ne jamais mettre un LLM là où une étape déterministe est assez bonne. **POURQUOI** : coût, latence et imprévisibilité se paient à chaque exécution.
+- Ne jamais laisser une sortie LLM non validée atteindre un effet de bord. **POURQUOI** : la dégradation passe alors en silence, sans rien à observer après coup.
+- La fiabilité d'une sortie LLM est orthogonale à l'agentique. Ce skill est la fondation, `agentic-architect` traite la structure posée au-dessus.
 
 ## Test
 
-Scénarios dans `evals/eval.json`. Ils portent les cas où le skill doit refuser de valider une preuve insuffisante.
+Le déclenchement se joue par `evals/eval.json`, outils coupés. La dernière ligne est une relecture humaine de la reco rendue.
+
+| Cas | Preuve |
+| --- | --- |
+| jouer le cas positif d'`evals/eval.json` | le skill s'ouvre sur une mise en prod appuyée sur trois essais |
+| jouer les trois cas négatifs d'`evals/eval.json` | le skill reste fermé, orchestration, fuite de secret et review de code partant chez leur frère |
+| relire la reco rendue | les six champs du format sont présents |

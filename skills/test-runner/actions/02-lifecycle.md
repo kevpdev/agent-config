@@ -1,23 +1,38 @@
-# 02 — lifecycle : start / status / stop
+# 02 - Tenir l'app en vie
 
-Tient l'app en vie pour la validation. Consomme la `recipe` de `01-discover`.
+Démarre l'app, la sonde, puis l'arrête. Idempotent d'un bout à l'autre.
 
-## start
+## Input
 
-- **Idempotent** : si l'app tourne déjà (health OK sur `readyUrl`), réutiliser l'existant, ne pas relancer.
-- Démarrer avec la `startCmd` + les `env` découverts, attendre le **signal « prête »** avant de rendre la main.
-- Rendre : `{ up: bool, url, pid|handle, logs }`.
+La `recipe` de `01-discover`, et le scope d'exécution du caller (parent ou subagent).
 
-## status
+## Output
 
-- Rendre ce qui tourne, l'URL, où sont les logs. Lecture seule.
+L'état de l'app : `{ up: bool, url, pid|handle, logs }`, avec l'emplacement des logs pour le
+diagnostic.
 
-## stop
+## Process
 
-- Arrêter **uniquement** ce que `start` a lancé (ne pas tuer un process que l'humain tenait déjà).
+1. **Démarrer.** Lancer la `startCmd` avec les `env` découverts, puis attendre le signal « prête »
+   sur `readyUrl` avant de rendre la main.
+   - **Locus.** Porter le process côté **parent** quand l'app doit survivre à une boucle de debug,
+     pour ne pas la rebooter à chaque tour. Sinon **subagent one-shot**, qui démarre, teste, arrête
+     et rend le rapport. *Pourquoi le locus se décide avant de lancer : un serveur meurt avec le
+     subagent qui l'a lancé, donc le choix ne se rattrape pas après coup.*
+   - **Idempotence.** Si le health de `readyUrl` répond déjà, réutiliser l'existant au lieu de
+     relancer.
+2. **Sonder.** Rendre ce qui tourne, l'URL et l'emplacement des logs. Lecture seule, aucun effet sur
+   le process.
+3. **Arrêter.** Tuer uniquement ce que l'étape 1 a lancé, jamais un process que l'humain tenait
+   déjà.
+   - **Garde.** Un process Bash orphelin se tue explicitement, donc toujours un arrêt en fin de
+     scope subagent.
 
-## Locus — qui exécute
+## Test
 
-- **Parent** si l'app doit **survivre** à une boucle debug (éviter de rebooter à chaque tour).
-- **Subagent one-shot** sinon (démarre → teste → arrête → rend le rapport).
-- Garde-fou : un process Bash orphelin doit être **tué explicitement** — toujours un `stop` en fin de scope subagent.
+| Cas | Preuve |
+| --- | --- |
+| lancer le démarrage deux fois de suite | le second réutilise le process du premier, aucun second port ouvert |
+| lancer le démarrage sur une app déjà tenue à la main par l'humain | l'arrêt la laisse vivante, seul ce que l'étape 1 a lancé est tué |
+| `ps` après la fin d'un scope subagent | aucun process du run ne survit |
+| relire ce que rend le démarrage | `up`, `url` et l'emplacement des logs sont tous les trois renseignés |

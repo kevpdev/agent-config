@@ -15,5 +15,11 @@
     "id": "negatif-vers-security-reviewer",
     "expect_trigger": false,
     "query": "Mon endpoint qui appelle l'API du fournisseur LLM expose-t-il ma clé ? Je crains une fuite de secret."
+  },
+  {
+    "skill": "ai-engineering",
+    "id": "negatif-vers-aidd-dev-05-review",
+    "expect_trigger": false,
+    "query": "Relis le diff de ma dernière branche et dis-moi si la qualité du code tient la route avant que je merge."
   }
 ]

@@ -24,30 +24,46 @@ Prend une ébauche de demande et rend un prompt cadré. Le gabarit des trois for
 > *Pourquoi : détourner une demande normale en questionnaire remplace la réponse attendue par du
 > travail administratif, et c'est le seul vrai risque de ce skill.*
 
-## Le diagnostic, avant le gabarit
+```mermaid
+flowchart TD
+  A[ébauche soumise] --> B{soumise comme ébauche ?}
+  B -->|non| Z[répondre à la demande, ne pas cadrer]
+  B -->|oui| C{combien de types ?}
+  C -->|deux| D[scinder en deux prompts]
+  C -->|un| E[récolter le contexte de session]
+  D --> E
+  E --> F[combler les trous en hypothèses marquées]
+  F --> G[une question au maximum]
+  G --> H[rédiger le prompt depuis son gabarit]
+  H --> I{gardes : contenu du type, zéro conclusion ?}
+  I -->|non| H
+  I -->|oui| J{--chat, ou vault absent ?}
+  J -->|non| K[capturer par vault-capture, confirmer le chemin]
+  J -->|oui| L[rendre le prompt dans la réponse]
+```
 
-L'objectif est presque toujours présent dans une ébauche. Ce qui manque, c'est **où ça s'arrête et
-ce qu'on fait du résultat**, et ça dépend du type de demande.
+## Process
 
-| Type | Ce qui le reconnaît | Ce qui manque presque toujours | Ce que le prompt gagne |
-|---|---|---|---|
-| **Exécution** | un verbe d'action sur un objet identifié | de quoi savoir que c'est fini | des critères d'acceptation vérifiables, et ce qu'on ne touche pas |
-| **Analyse** | une ou plusieurs questions dont la réponse est un document | la borne | un contrat de questions figé, son hors-périmètre, et le livrable nommé |
-| **Exploration** | des questions ouvertes empilées, sans dire ce qu'on en fera | la condition d'arrêt | un budget, un « ne conclus pas », et la consigne de capturer les découvertes hors contrat |
+1. **Vérifier le déclencheur.** L'utilisateur soumet-il un texte *comme* ébauche à cadrer ?
+   - Si non, ne pas cadrer, répondre à sa demande.
+2. **Détecter le type.** L'objectif est presque toujours présent dans une ébauche, ce qui manque est
+   **où ça s'arrête et ce qu'on fait du résultat**.
+   - Le type se reconnaît à ce tableau, et il décide de ce que le prompt doit gagner.
 
-**L'exploration est le type qu'on n'écrit jamais, et le plus coûteux.** Une règle de réponse saine
-demande à l'agent de ne pas freiner pendant une exploration. Sans borne déclarée, il ne s'arrête donc
-pas, et l'échange part en tunnel. *Pourquoi le nommer explicitement : le manque n'est pas une
-maladresse d'écriture, c'est une borne absente, et aucune relecture de style ne la fait apparaître.*
+     | Type | Ce qui le reconnaît | Ce qui manque presque toujours | Ce que le prompt gagne |
+     |---|---|---|---|
+     | **Exécution** | un verbe d'action sur un objet identifié | de quoi savoir que c'est fini | des critères d'acceptation vérifiables, et ce qu'on ne touche pas |
+     | **Analyse** | une ou plusieurs questions dont la réponse est un document | la borne | un contrat de questions figé, son hors-périmètre, et le livrable nommé |
+     | **Exploration** | des questions ouvertes empilées, sans dire ce qu'on en fera | la condition d'arrêt | un budget, un « ne conclus pas », et la consigne de capturer les découvertes hors contrat |
 
-**Deux types dans une même ébauche se scindent, ils ne s'arbitrent pas.** Rendre deux prompts.
-*Pourquoi : un prompt mixte fait exécuter pendant l'exploration, ou explorer pendant l'exécution.*
-
-## Méthode
-
-1. **Vérifier le déclencheur.** L'utilisateur soumet-il un texte *comme* ébauche à cadrer ? Si non,
-   ne pas cadrer, répondre à sa demande.
-2. **Détecter le type** avec le tableau ci-dessus. Si deux types cohabitent, scinder.
+   - **L'exploration est le type qu'on n'écrit jamais, et le plus coûteux.** Une règle de réponse
+     saine demande à l'agent de ne pas freiner pendant une exploration. Sans borne déclarée, il ne
+     s'arrête donc pas, et l'échange part en tunnel. *Pourquoi le nommer explicitement : le manque
+     n'est pas une maladresse d'écriture, c'est une borne absente, et aucune relecture de style ne
+     la fait apparaître.*
+   - **Deux types dans une même ébauche se scindent, ils ne s'arbitrent pas.** Rendre deux prompts.
+     *Pourquoi : un prompt mixte fait exécuter pendant l'exploration, ou explorer pendant
+     l'exécution.*
 3. **Récolter le contexte de session**, seulement s'il y en a. Deux natures, et une seule interdite.
    - Les **faits mesurés**, chacun avec la commande ou la source qui l'a produit.
    - Les **prémisses fausses** rencontrées, y compris et surtout les erreurs de l'agent lui-même.
@@ -61,6 +77,12 @@ maladresse d'écriture, c'est une borne absente, et aucune relecture de style ne
    *Pourquoi : le budget d'attention de l'utilisateur est la ressource rare de l'échange, et un
    questionnaire le dépense avant que le travail commence.*
 6. **Rédiger le prompt** à partir du gabarit de son type, en bloc de code copiable.
+   - **Garde.** Un type « exploration » porte une condition d'arrêt explicite, un type « analyse » un
+     hors-périmètre non vide, un type « exécution » des critères d'acceptation vérifiables. Il
+     manque l'un des trois, retourner à la rédaction.
+   - **Garde.** Relire la sortie en cherchant les verbes de décision (« il faut », « je propose »,
+     « donc on »), et retirer ce qu'ils portent. Aucune conclusion de la session en cours n'entre
+     dans le prompt.
 7. **Capturer**, une fois le prompt rédigé et pas avant. Trois branches, et la première est le défaut.
    *Pourquoi cet ordre : le repli garde ainsi toujours un prompt à afficher, au lieu de perdre le
    travail avec la délégation.*
@@ -70,7 +92,7 @@ maladresse d'écriture, c'est une borne absente, et aucune relecture de style ne
    - **`vault-capture` s'arrête sur son garde-fou** (vault absent) → rendre le prompt dans la réponse,
      en disant que la capture n'a pas eu lieu.
 
-## Règles transverses
+## Transversal rules
 
 - **Le prompt part dans l'inbox du vault par défaut, et l'écriture appartient à `vault-capture`.** Ce
   skill ne l'écrit jamais lui-même. *Pourquoi : la résolution de la racine absolue et le garde-fou
@@ -85,27 +107,25 @@ maladresse d'écriture, c'est une borne absente, et aucune relecture de style ne
   une analyse qui conclura sur des modifications. *Pourquoi : sans lui, l'agent enchaîne sur les
   éditions au lieu de faire valider l'approche.*
 
-## Contrôle de sortie
+## Assets
 
-- Le prompt produit porte les sections du gabarit de son type, aux conditions d'omission que le
-  gabarit énonce.
-- Chaque hypothèse est préfixée `⚠️ supposé :`. Un grep du préfixe rend autant de lignes que la
-  section finale en compte.
-- Une question au maximum accompagne la sortie. Deux questions ou plus sont un échec de l'étape 5.
-- Aucune recommandation, conclusion ni arbitrage de la session en cours n'apparaît dans le prompt.
-  Relire la sortie en cherchant les verbes de décision (« il faut », « je propose », « donc on »).
-- Un type « exploration » porte une condition d'arrêt explicite. Un type « analyse » porte un
-  hors-périmètre non vide. Un type « exécution » porte des critères d'acceptation vérifiables.
-- Le prompt est rendu en bloc de code, copiable d'un seul geste.
-- Le chemin absolu du fichier d'inbox est confirmé à l'utilisateur. En `--chat` ou sur repli, le
-  prompt est dans la réponse et la raison de l'absence de capture est dite.
-- Rien n'a été écrit dans le repo courant, quelle que soit la branche.
+- [`assets/squelette-prompt.md`](assets/squelette-prompt.md) — les trois gabarits de prompt, un par
+  type de demande, avec leurs conditions d'omission
 
 ## Test
 
 Scénarios dans [`evals/eval.json`](evals/eval.json), tous négatifs : le skill étant à invocation
-manuelle, le contrat qui compte pour lui est de ne jamais partir tout seul.
+manuelle, le contrat qui compte pour lui est de ne jamais partir tout seul. Le reste se constate sur
+la sortie d'un run.
 
-Ce qui **échoue ouvert** ne s'y teste pas, et se relit à la main : la passation en fin de session
+| Cas | Preuve |
+| --- | --- |
+| les cas d'`evals/eval.json`, joués outils coupés | aucun des trois frères cités en clause NE PAS n'ouvre `cadre-prompt` |
+| grep du préfixe `⚠️ supposé :` sur le prompt rendu | autant de lignes que la section finale compte d'hypothèses |
+| compter les questions qui accompagnent la sortie | une au maximum, deux ou plus est un échec de l'étape 5 |
+| comparer les sections du prompt à celles du gabarit de son type | toutes présentes, aux seules omissions que le gabarit autorise |
+| `git status` dans le repo courant après un run, quelle que soit la branche | vide, l'écriture n'ayant lieu que par `vault-capture` |
+
+Ce qui **échoue ouvert** ne se teste pas, et se relit à la main : la passation en fin de session
 riche, où le skill transporte volontiers les conclusions de la session en produisant une sortie
 parfaitement plausible. Relire la sortie contre le ⛔ de l'étape 3 avant de capturer.
