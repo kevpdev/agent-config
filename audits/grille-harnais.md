@@ -12,12 +12,12 @@ Crible d'admission au contexte permanent : chaque instruction du harnais y passe
 
 - **Un audit = un domaine, contrat figé.** Les questions de l'audit sont les critères de cette grille, rien d'autre. Une découverte hors grille se capture en une ligne et ne se creuse pas. La grille se révise **entre** deux audits, jamais pendant.
 - **Ordre** : `agent-config` (socle) → vault pro → vault perso → projets (qui héritent du socle). Dans chaque domaine, par sous-domaine : `rules/`, `skills/`, `agents/`, `scripts`/hooks, `CLAUDE.md`/output-styles, `settings.json` (bindings, permissions), memory auto. Un sous-agent passe le même crible qu'un skill, pas celui d'un script : il porte de la prose normative et hérite du contexte permanent.
-- **Une passe = un sous-domaine.** Le scope concentre le contexte (les fichiers d'un même sous-domaine se comparent entre eux) et borne le coût d'une session d'audit ; un domaine entier se couvre en plusieurs passes, jamais en une. Un hook n'est pas un sous-domaine à part : c'est un script (contraintes du **garde déterministe**, axe B) plus une ligne de trigger dans `settings.json`, chacun audité dans sa passe.
+- **Une passe = un sous-domaine.** Le scope concentre le contexte (les fichiers d'un même sous-domaine se comparent entre eux) et borne le coût d'une session d'audit ; un domaine entier se couvre en plusieurs passes, jamais en une. Un hook n'est pas un sous-domaine à part : c'est un script (contraintes du **garde déterministe**, axe B) plus sa ligne de déclenchement dans la config du runtime (`settings.json` sous Claude Code), chacun audité dans sa passe.
 - **Horodatage** : un rapport d'audit est un instantané immuable, nommé `audits/AAAA-MM-JJ-audit-<domaine>.md` ; l'audit suivant du même domaine est un nouveau fichier, jamais un edit. La grille, elle, est vivante et non horodatée — git porte son historique (`git log --oneline -- audits/grille-harnais.md`), pas de champ `version:` manuel qui divergerait au premier edit oublié. Chaque rapport cite en en-tête le commit de la grille contre laquelle il a tourné.
 - **Traçabilité** : chaque constat du rapport cite sa mesure (commande + sortie) ou porte « supposé ». Un chiffre repris de la note d'inbox est un chiffre du 2026-08-10 : le remesurer avant de décider.
-- **Une règle ne se valide pas en usage courant.** Une observation tirée du travail normal n'a pas de bras de contrôle : on ne sait pas ce que la même tâche aurait donné sans la règle, et l'usage courant ne produit jamais ce contrefactuel. Éprouver une règle demande donc une **session de runs bornée** — périmètre fixé, deux bras, critères de réussite écrits **avant** de lire les réponses. Hors de ce cadre, une observation se consigne comme **observation**, jamais comme preuve, et ne promeut ni ne supprime rien. *Ce point gouverne l'A/B de l'axe A et le test comportemental du relevé de formulation, qui le supposaient tous deux sans le dire.*
+- **Une règle ne se valide pas en usage courant**, qui ne produit aucun contrefactuel : on ne sait pas ce que la même tâche aurait donné sans elle. Éprouver une règle demande une **session de runs bornée** — périmètre fixé, deux bras, critères de réussite écrits **avant** de lire les réponses. Hors de ce cadre, une observation se consigne comme **observation**, jamais comme preuve, et ne promeut ni ne supprime rien. *Ce point gouverne l'A/B de l'axe A et le test comportemental du relevé de formulation.*
 
-  **POURQUOI** : l'usage courant ne rend que des anecdotes favorables — celui qui a écrit la règle est celui qui remarque qu'elle a joué. Et une date de mise en test donne l'illusion que la preuve s'accumule, alors que rien ne s'accumule entre cette date et le premier run borné. *Mesuré le 2026-08-11 : cinq pratiques « en test depuis » fin juillet, **zéro observation concluante** — douze jours d'usage courant n'avaient produit aucune preuve, et le label laissait croire le contraire.*
+  **POURQUOI** : l'usage courant ne rend que des anecdotes favorables, celui qui a écrit la règle étant celui qui remarque qu'elle a joué. Et une date de mise en test donne l'illusion que la preuve s'accumule. *Cinq pratiques « en test depuis » fin juillet, **zéro observation concluante** douze jours plus tard, 2026-08-11.*
 
 ---
 
@@ -27,27 +27,24 @@ Chaque instruction reçoit **une valeur sur chaque axe**, et le croisement rend 
 contrôles se rendent après, une fois toutes les instructions d'un fichier criblées. Les deux relevés
 ne rendent aucun verdict, ils publient une mesure.
 
-**Il n'y a plus de cascade, et ce n'est pas un choix de forme.** Les huit passes rendaient déjà des
-verdicts multi-critères sur une même instruction (« C5 + C4 » le 2026-08-25, « C7 + C1 + C2 » sur une
-même description le 2026-08-11), alors que la cascade prescrivait de sortir au premier critère
-disqualifiant. Le profil décrit ce que les passes font ; la cascade décrivait ce qu'elles étaient
-censées faire. *Refonte décidée le 2026-08-26, base de preuve dans
-`audits/2026-08-26-cadrage-grille-cible.md`.*
+**Pas de cascade** : les huit passes rendaient déjà des verdicts multi-critères sur une même
+instruction, alors que la cascade prescrivait de sortir au premier critère disqualifiant. *Base de
+preuve : `audits/2026-08-26-cadrage-grille-cible.md`.*
 
-**Correspondance avec l'ancienne nomenclature**, parce que les huit rapports horodatés citent C1 à C8
-par leur nom et qu'un rapport immuable ne se réécrit pas :
+**Correspondance**, parce que les huit rapports horodatés citent C1 à C8 par leur nom et qu'un
+rapport immuable ne se réécrit pas. *Motif de chaque bascule : cadrage du 2026-08-26.*
 
-| Ancien | Devenu | Pourquoi |
-|---|---|---|
-| C1a — inférable | valeur *reconstructible du repo* de l'axe A | c'est une origine parmi cinq, pas une question à part |
-| C1b — déjà natif | valeurs *natif du modèle* / *natif du harnais* de l'axe A | son A/B n'a jamais tourné en 8 passes : c'est un contrôle documentaire |
-| C2 — déterminisable | valeur *garde déterministe* de l'axe B | le mécanisme est une destination, pas un critère |
-| C3 — falsifiable | **contrôle 1, testabilité** | mécanisable de bout en bout, il n'a pas sa place dans un jugement de présence |
-| C4 — unique | axe A entier | « existe-t-il déjà ailleurs » est la même question, seul l'ailleurs change |
-| C5 — scopée | axe B entier | ses trois lignes étaient trois destinations |
-| C6 — budget | **relevé 1, poids** | zéro instruction disqualifiée en 8 passes |
-| C7 — rentable | **relevé 2, formulation** | il ne juge jamais la présence, seulement l'écriture |
-| C8 — cohérent | **contrôle 2, cohérence** | élargi au groupe, sa portée s'arrêtait au fichier |
+| Ancien | Devenu |
+|---|---|
+| C1a — inférable | valeur *reconstructible du repo* de l'axe A |
+| C1b — déjà natif | valeurs *natif du modèle* / *natif du harnais* de l'axe A |
+| C2 — déterminisable | valeur *garde déterministe* de l'axe B |
+| C3 — falsifiable | **contrôle 1, testabilité** |
+| C4 — unique | axe A entier |
+| C5 — scopée | axe B entier |
+| C6 — budget | **relevé 1, poids** |
+| C7 — rentable | **relevé 2, formulation** |
+| C8 — cohérent | **contrôle 2, cohérence**, élargi au groupe |
 
 ---
 
@@ -63,43 +60,33 @@ Une seule valeur, testée dans cet ordre. La première qui répond ferme l'axe.
 | **reconstructible du repo** | sondage d'un contexte neuf, compté en appels d'outil |
 | **nulle part** | aucune des quatre |
 
-**Commencer par lire la page de prompting du modèle courant** (table des sources plus bas). Elle
-tranche gratuitement une partie des cas — « *Claude Opus 5 verifies its own work without being told
-to. If your prompt contains explicit verification instructions […] remove them* » (vérifié le
-2026-08-11). Noter dans le rapport contre quel modèle la passe a tourné : c'est ce qui datera ses
-verdicts quand le modèle changera.
+**Commencer par la page de prompting du modèle courant** (table des sources plus bas), et **noter
+dans le rapport contre quel modèle la passe a tourné** : c'est ce qui datera ses verdicts.
 
-**La distinction qui a décidé une passe entière** : la page vise la re-vérification de sa **propre
-sortie**, jamais le **grounding** — consulter une source externe avant d'affirmer. Une règle qui ne
-fait que du grounding ne relève pas du natif. *`audits/2026-08-11-…-rules-reasoning-c1b.md`.*
+**La page vise la re-vérification de sa propre sortie, jamais le grounding.** Une règle qui ne fait que
+consulter une source externe avant d'affirmer ne relève pas du natif. *Cette distinction a décidé une
+passe entière, `2026-08-11-…-rules-reasoning-c1b.md`.*
 
-**Le piège du natif, à lire avant de conclure.** Un suivi irrégulier n'est pas une preuve que
-l'instruction est nécessaire. C'est aussi le symptôme documenté d'une couche trop longue : « *If
-Claude keeps doing something you don't want **despite having a rule against it**, the file is
-probably too long and the rule is getting lost* » (vérifié le 2026-08-11). Les deux hypothèses
-prédisent la même observation, et l'intuition va vers la mauvaise. **À LA PLACE de** renforcer
-l'instruction, monter l'A/B : le bras sans-instruction tourne sur une couche plus courte, donc un
-comportement **meilleur** sans la règle dit qu'elle était une victime de la longueur.
+**Le piège du natif.** Un suivi irrégulier n'est pas une preuve que l'instruction est nécessaire :
+c'est aussi le symptôme d'une couche trop longue, où la règle se perd. Les deux hypothèses prédisent
+la même observation. **À LA PLACE de** renforcer l'instruction, monter l'A/B — un comportement
+**meilleur** sans la règle dit qu'elle était une victime de la longueur.
 
-**Le grep ne couvre pas la valeur « natif du harnais », par construction.** La couche la plus lourde
-du contexte permanent n'est dans aucun fichier du repo. Trois occurrences mesurées, chacune invisible
-à tout grep du domaine : « déléguer par défaut » contre « *Do not call the AgentTool unless the user
-requested it* », AP4 contre la section *Delivering work*, et l'instruction #2 de `reasoning.md`
-contre la section *Corrections*. **Aucun instrument n'existe pour cette valeur**, et une passe qui
-l'invoque cite le system prompt tel qu'injecté dans sa session, en le disant.
+**Le grep ne couvre pas « natif du harnais », par construction** : la couche la plus lourde du
+permanent n'est dans aucun fichier du repo, et **aucun instrument n'existe pour elle**. Une passe qui
+l'invoque cite le system prompt tel qu'injecté dans sa session, en le disant. *Trois occurrences
+mesurées, `2026-08-11-…-rules-reasoning-c1b.md`.*
 
-**Le doublon par conséquence, invisible au grep.** Deux instructions peuvent prescrire le même
-comportement sans partager un mot : elles partagent un **effet**, pas un motif. **À LA PLACE de**
-chercher des formulations voisines, énumérer les autres instructions du harnais qui produisent le
-même geste. *Cinq instructions dans trois fichiers supprimaient chacune le filtre « vérifier
-seulement en cas de doute », dont trois qu'aucun grep ne pouvait voir — `2026-08-10-…-rules.md`.*
+**Le doublon par conséquence, invisible au grep.** Deux instructions partagent un **effet** sans
+partager un mot. **À LA PLACE de** chercher des formulations voisines, énumérer les instructions qui
+produisent le même geste. *Cinq dans trois fichiers tuaient le même filtre, dont trois invisibles au
+grep — `2026-08-10-…-rules.md`.*
 
 **Le seuil de sondage** : moins de 3 appels d'outil, c'est reconstructible à coût faible. *Seuil
 conventionnel, aucune source ne le porte.* **Il ne décide pas seul**, voir le dosage sous l'axe B.
 
-**Ce que le sondage ne peut pas faire, et il faut le dire dans le verdict** : un sous-agent hérite
-des règles globales, donc son contexte n'est jamais neuf. Le résultat est une approximation, marquée
-telle quelle. *Mesuré le 2026-08-10, deux passes, `-c1-c4.md:32`.*
+**Le sondage rend une approximation, à marquer telle quelle** : un sous-agent hérite des règles
+globales, donc son contexte n'est jamais neuf. *`2026-08-10-…-c1-c4.md:32`.*
 
 ---
 
@@ -116,22 +103,24 @@ Une seule valeur. C'est un axe de **placement**, pas de portée.
 
 #### Le garde déterministe
 
+Le mécanisme se nomme par **ce qu'il intercepte** : la fonction survit au changement d'agent, le nom
+que lui donne un runtime non.
+
 | L'invariant porte sur | Mécanisme |
 |---|---|
 | un artefact versionné (message de commit, fichier) | hook git `core.hooksPath` + check CI |
-| une action éphémère de l'agent (commande tapée, écriture réseau) | hook harnais `PreToolUse` — **seul mécanisme possible** |
-| le **routage** d'un skill à effet de bord | `disable-model-invocation: true`, un champ de frontmatter |
-| un raisonnement (aucun appel d'outil observable) | aucun — le hook ne voit que les tool calls |
+| une action éphémère de l'agent (commande tapée, écriture réseau) | **interception avant l'appel d'outil** — seul mécanisme possible. *Claude Code : hook `PreToolUse`.* |
+| le **routage** d'un skill à effet de bord | **couper l'invocation par le modèle**, un champ déclaratif du skill. *Claude Code : `disable-model-invocation: true`.* |
+| un raisonnement (aucun appel d'outil observable) | aucun — l'interception ne voit que les appels d'outil |
 
 **Contraintes du mécanisme, non renégociables** : échoue fermé, aucun chemin absolu en dur, calibré
 sur un cas positif fabriqué à la main. *Les cinq cas mesurés qui les fondent : vault,
 `3_KNOWLEDGE/Patterns/deterministic-guards-failure-modes.md`.* **Séparation logique/binding** : la
 logique vit dans un script autonome testable hors agent, le binding propriétaire fait ≤ 10 lignes.
 
-**La couverture partielle est le cas courant, pas l'exception.** Un linter prend souvent la
-**présence** d'un invariant en laissant le **jugement** à la prose (checkstyle sur la Javadoc,
-`eslint-plugin-testing-library` sur le rôle avant `testId`). Le verdict est alors « réduire à
-l'increment », jamais « sortir ». *Trois cas, `2026-08-10-…-rules.md`.*
+**La couverture partielle est le cas courant.** Un linter prend la **présence** d'un invariant en
+laissant le **jugement** à la prose : verdict « réduire à l'increment », jamais « sortir ». *Trois
+cas, `2026-08-10-…-rules.md`.*
 
 #### Le permanent, et le dosage qui l'ouvre
 
@@ -146,29 +135,25 @@ re-dérivation ne se paie que quand son déclencheur tombe. Le dosage est le pro
 
 #### La couche chargée à la demande
 
-**Le test qui la sépare du permanent** : le déclencheur est-il un **fichier**, un **événement**, ou
-un **niveau** ?
+**Le test qui la sépare du permanent** : le déclencheur est-il un fichier, un événement, ou un
+niveau ?
 
-- Un **fichier** se nomme dans un frontmatter `paths:`. Attention, `paths:` conditionne l'activation
-  à un fichier ouvert : l'appliquer à une instruction qui se déclenche sur une intention la rend
-  inerte la plupart du temps. *Aucune des 26 descriptions de skills n'y gagnait, mesuré le
-  2026-08-11.*
-- Un **événement** n'a aucun chemin. L'instruction qui l'attend se fait facturer à chaque session
-  pour servir quelques fois par mois. Exemples rencontrés : un comptage qui rend « zéro », un
-  diagramme à dessiner, un échec de build, une analyse dont la conclusion appellera des edits.
-- Un **niveau** est le cas d'un corps de skill : l'instruction est au bon endroit du harnais mais au
-  mauvais étage — de la logique métier dans un routeur, un critère dans une action au lieu d'une
-  référence. *Quatre verdicts le 2026-08-25, sur `doc-sync`.*
+- **Fichier** — un frontmatter `paths:`. Il conditionne l'activation à un fichier *ouvert*, donc
+  l'appliquer à une instruction déclenchée par une **intention** la rend inerte. *Aucune des 26
+  descriptions de skills n'y gagnait, 2026-08-11.*
+- **Événement** — aucun chemin. L'instruction se fait facturer à chaque session pour servir quelques
+  fois par mois : un diagramme à dessiner, un échec de build.
+- **Niveau** — bon endroit, mauvais étage : de la logique métier dans un routeur, un critère dans une
+  action au lieu d'une référence. *Quatre verdicts sur `doc-sync`, 2026-08-25.*
 
 **La part gardée au permanent doit suffire à savoir qu'il faut charger le reste, jamais à faire le
 travail.** Modèles existants : `mermaid.md` renvoie au skill `mermaid-craft`, `ponctuation.md` à
 `ref-ponctuation.md`.
 
-**Ce qui descend est la preuve, jamais le critère**, quand le critère est lui-même indéduisible. Une
-référence non chargée est un bon home pour six corpus et 1 019 occurrences. C'en est un mauvais pour
-la règle de décision, qu'un contexte neuf devra appliquer sans l'avoir lue. **« C'est déjà écrit
-ailleurs » n'est une raison de supprimer que si cet ailleurs est chargé.** *Mesuré sur #16 de
-`reasoning.md` le 2026-08-11, par le renversement d'une reco.*
+**Ce qui descend est la preuve, jamais le critère.** Une référence non chargée est un bon home pour
+un corpus de cas, un mauvais home pour la règle de décision qu'un contexte neuf devra appliquer sans
+l'avoir lue. **« C'est déjà écrit ailleurs » n'est une raison de supprimer que si cet ailleurs est
+chargé.** *Renversement d'une reco sur #16 de `reasoning.md`, 2026-08-11.*
 
 ---
 
@@ -180,29 +165,24 @@ ailleurs » n'est une raison de supprimer que si cet ailleurs est chargé.** *Me
 | **réduire à l'increment** | l'axe A la donne partiellement portée : seul ce que la source ne couvre pas survit |
 | **sortir** | l'axe A la donne portée **entièrement**, au même moment de chargement que l'axe B désigne |
 
-**Le terme du milieu est celui qui manquait.** Neuf verdicts des passes précédentes l'ont réclamé
-sans jamais l'obtenir, tous sur la même forme : le natif porte l'impératif, l'instruction porte un
-piège mesuré ou une asymétrie que le natif ignore. **Écrire l'increment gardé**, en mots, dans le
-verdict : sans lui la réduction est une intention, pas une action.
+**Écrire l'increment gardé**, en mots, dans le verdict : sans lui la réduction est une intention,
+pas une action. *Neuf verdicts l'ont réclamé sans l'obtenir, tous sur la même forme — le natif porte
+l'impératif, l'instruction porte un piège mesuré que le natif ignore.*
 
-**Deux instructions de même contenu mais d'axe B différent ne sont pas des copies.** Le contenu se
-répète, la fonction non. *Mesuré le 2026-08-11 : la clause `NE PAS` du frontmatter **route**, la
-liste de frères du corps **retient**. Couper la seconde comme un doublon fait tomber les redirections
-correctes de 7/9 à 5/9, et le verdict a été abandonné sur cette mesure.* C'est le seul verdict de
-tout le corpus qu'une mesure externe a réfuté, et il vient d'une comparaison de contenus sans
-comparaison de moments.
+**Deux instructions de même contenu mais d'axe B différent ne sont pas des copies** : l'une
+**route**, l'autre **retient**. *Couper la seconde fait tomber les redirections correctes de **7/9 à
+5/9** — seul verdict du corpus qu'une mesure externe a réfuté,
+`2026-08-11-…-annexe-declenchement.md`.*
 
-**Quand deux instructions partagent contenu **et** moment, une seule survit, et elle ne se
-hiérarchise pas.** Le foyer se désigne par **où le geste se fait**, pas par l'ancienneté ni par le
-niveau. La couche qui perd se déclare délibérément partielle. Un doublon statique est bénin, un
-doublon volatil diverge au premier edit.
+**Contenu et moment tous deux partagés, une seule survit.** Le foyer se désigne par **où le geste se
+fait**, pas par l'ancienneté ni par le niveau, et la couche qui perd se déclare délibérément
+partielle. Un doublon statique est bénin, un doublon volatil diverge au premier edit.
 
 ---
 
 ### Contrôle 1 — testabilité
 
-Rendu par instruction, après les deux axes. **La règle gardée en prose porte-t-elle une condition de
-violation observable ?**
+**La règle gardée en prose porte-t-elle une condition de violation observable ?**
 
 | Niveau | Ce qu'il vaut |
 |---|---|
@@ -211,22 +191,20 @@ violation observable ?**
 | 3 | impératif court non ambigu — suivi probabiliste |
 | 4 | prose vague ou de style — **supprimer ou reformuler en 2/3** |
 
-**Sur un contrat de routage, la commande de vérification est un cas d'éval**, et le verdict reste un
-comptage : le corpus porte un cas positif, **et un cas `expect_trigger: false` par frère cité en
-clause NE PAS**. Sans ce cas négatif, l'instruction retombe au niveau 3. *Vérifier qu'un skill part
-ne vérifie pas qu'il ne part pas à tort, et c'est l'autre moitié du contrat.*
+**Sur un contrat de routage, la commande de vérification est un cas d'éval** : un cas positif, **et
+un cas `expect_trigger: false` par frère cité en clause NE PAS**. Sans le cas négatif, niveau 3 —
+vérifier qu'un skill part ne vérifie pas qu'il ne part pas à tort.
 
-**Un corpus d'éval ne suffit pas s'il ne discrimine rien.** Trois évals sur neuf étaient vertes alors
-que le modèle **nu**, privé du skill, passait les mêmes critères. Le niveau 2 exige donc qu'au moins
-un critère soit **échoué par le bras nu**. *Mesuré le 2026-08-11, annexe de déclenchement.*
+**Un corpus d'éval ne suffit pas s'il ne discrimine rien.** Le niveau 2 exige qu'au moins un critère
+soit **échoué par le bras nu**, privé du skill. *Trois évals vertes sur neuf ne discriminaient rien,
+2026-08-11.*
 
-**Une règle de jugement se teste par ses calibrages.** Un critère non mécanisable n'est ni un hook,
-ni une commande, ni un impératif court, et il n'était donc nulle part. Ses cas de calibrage, avec
-leur verdict attendu, **sont** sa commande de vérification. *Cas R13 de `doc-sync`, 2026-08-25.*
+**Une règle de jugement se teste par ses calibrages** : ses cas, avec leur verdict attendu,
+**sont** sa commande de vérification. *Cas R13 de `doc-sync`, 2026-08-25.*
 
-**Deux angles morts, à dire dans le verdict plutôt qu'à ignorer** : l'instrument compte les cas
-négatifs, il ne juge pas s'ils sont bien choisis. Et un frère cité en clause NE PAS mais archivé ne
-peut pas recevoir de cas — le noter, au lieu de compter un manque.
+**Deux angles morts, à dire dans le verdict** : l'instrument compte les cas négatifs, il ne juge pas
+s'ils sont bien choisis ; et un frère archivé ne peut pas recevoir de cas, donc le noter au lieu de
+compter un manque.
 
 **Exception assumée** : `ai-principles.md` ne prescrit rien donc n'est pas falsifiable, mais il est
 le repli quand une règle concrète est muette. Il se **réduit** (titres + une ligne de pourquoi), il
@@ -252,18 +230,17 @@ défauts que ce contrôle a manqués venaient d'une portée trop étroite.
 | **un moule appliqué partiellement** — une case que la moitié du groupe remplit | **groupe** | trancher dans un sens, et le porter dans la convention pour que le suivant ne re-tranche pas |
 | deux sources **extérieures** au fichier prescrivent des défauts opposés | groupe | nommer le conflit dans la règle qui revendique l'autorité |
 
-**POURQUOI la portée de groupe** : le prénom présent dans 5 corps d'experts sur 9, et la sortie en
-`references/` faite par 8 sur 9, sont des incohérences réelles qui ne vivent dans **aucun** fichier.
-Un verdict par instruction ne les voit pas, un verdict par fichier non plus. *Mesuré le 2026-08-11.*
+**POURQUOI la portée de groupe** : une incohérence de moule ne vit dans **aucun** fichier, donc ni un
+verdict par instruction ni un verdict par fichier ne la voit. *Deux mesurées le 2026-08-11, dont le
+prénom présent dans 5 corps d'experts sur 9.*
 
 ---
 
 ### Relevé 1 — le poids
 
-**Aucun verdict de dépassement.** Décidé par l'humain le 2026-08-21, et confirmé par le cadrage du
-2026-08-26 : un plafond chiffré fabrique un dilemme que rien ne tranche, puisqu'il met une
-instruction survivante en concurrence avec un nombre, alors que la grille interdit par ailleurs de
-couper l'une pour tenir l'autre.
+**Aucun verdict de dépassement** : un plafond chiffré met une instruction survivante en concurrence
+avec un nombre, alors que la grille interdit ailleurs de couper l'une pour tenir l'autre. *Décidé le
+2026-08-21, confirmé par le cadrage du 2026-08-26.*
 
 **À LA PLACE de** demander « la couche tient-elle sous N mots », demander **« qu'est-ce que la couche
 a acheté avec sa croissance »**. Une couche qui grossit de 400 mots de fait indéduisible est saine.
@@ -290,13 +267,13 @@ print(sum(len(yaml.safe_load(re.match(r'---\n(.*?)\n---\n',open(f,encoding='utf-
 **Ce que le relevé rend** : la somme, sa trajectoire depuis la passe précédente, le `wc -w` par
 fichier trié, et pour chaque fichier qui a grossi, la **nature** de ce qui l'a fait grossir.
 
-**Remesurer en ouverture de passe, ne jamais reprendre le chiffre du rapport précédent.** Une couche
-auditée grossit pendant l'audit, et une cible touchée n'est pas un état acquis : la couche a regagné
-295 mots après avoir atteint sa cible le 2026-08-11, par une promotion justifiée.
+**Remesurer en ouverture de passe, ne jamais reprendre le chiffre du rapport précédent** : une cible
+touchée n'est pas un état acquis. *La couche a regagné 295 mots après avoir atteint la sienne le
+2026-08-11, par une promotion justifiée.*
 
-*Le seul plafond dur qui existe est mécanique et il est ailleurs : 1 536 caractères par entrée de
-description, et un budget de listing à 1 % de la fenêtre au-delà duquel Claude Code **supprime** les
-descriptions des skills les moins invoqués (doc vérifiée le 2026-08-11).*
+*Le seul plafond dur est mécanique — **fait propriétaire Claude Code**, à ne pas généraliser :
+1 536 caractères par description, et un budget de listing à 1 % de la fenêtre au-delà duquel les
+descriptions les moins invoquées sont **supprimées** (doc vérifiée le 2026-08-11).*
 
 ---
 
@@ -314,13 +291,13 @@ d'écriture** :
 | preuve, cas vécu, méta-commentaire | **compressible** — sort vers une référence chargée à la demande |
 
 **Le seuil se remesure par corpus, il ne s'hérite jamais.** Alerte à 2× la médiane des blocs
-normatifs du corpus courant. **Les médianes déjà mesurées vivent dans `audits/axes-protocole.md`, qui en est le seul
-foyer** — les recopier ici les ferait diverger, et c'est déjà arrivé une fois.
+normatifs du corpus courant. **Les médianes déjà mesurées vivent dans `audits/axes-protocole.md`, qui
+en est le seul foyer** — les recopier ici les ferait diverger, et c'est déjà arrivé une fois.
 
-**Sur un contrat de routage, la quatrième part n'existe pas.** L'impératif est le « quoi », le seuil
-est la liste de termes déclencheurs, l'exception est la clause « NE PAS utiliser pour → frère ». Un
-terme déclencheur est un seuil, donc porteur **s'il est couvert par un cas d'éval** ; sans éval, il
-n'est pas une précision mais une assertion non testée, et c'est lui qui est compressible.
+**Sur un contrat de routage, la quatrième part n'existe pas.** Le seuil est la liste de termes
+déclencheurs, l'exception la clause « NE PAS utiliser pour → frère ». Un terme déclencheur est
+porteur **s'il est couvert par un cas d'éval** ; sans éval c'est une assertion non testée, donc
+compressible.
 
 | Cas | Lecture |
 |---|---|
@@ -332,11 +309,10 @@ n'est pas une précision mais une assertion non testée, et c'est lui qui est co
 | impératif plus court que pourquoi + preuve | **red flag** — l'instruction argumente plus qu'elle ne prescrit |
 | dépassement porté par du **décoratif** (persona, prénom, teaser) | il n'achète aucun comportement observable. Trancher au niveau du groupe |
 
-**Deux artefacts d'instrument à connaître avant de lire un chiffre.** Un découpage automatique compte
-des paquets, pas des instructions : il fusionne une section avec son tableau, et empile deux
-impératifs sous un seul trigger. **Le découpage manuel du cadrage fait foi.** Et l'alerte dérive de
-la médiane du corpus qu'elle juge, donc elle se desserre quand le corpus grossit — 32 à 36 mots en
-dix jours, mesuré le 2026-08-21.
+**Deux artefacts d'instrument, avant de lire un chiffre.** Un découpage automatique compte des
+paquets, pas des instructions, donc **le découpage manuel du cadrage fait foi**. Et l'alerte dérive
+de la médiane du corpus qu'elle juge, donc elle se desserre quand le corpus grossit. *32 à 36 mots en
+dix jours, 2026-08-21.*
 
 ```bash
 # Mots d'une instruction — plage de lignes issue du découpage du cadrage
@@ -348,10 +324,10 @@ for f in $(grep -L '^paths:' rules/*.md) wrappers/claude/rules/*.md; do
 done
 ```
 
-**Test comportemental, échantillonné** : retirer la part jugée compressible, donner à un contexte
-neuf une tâche qui déclenche l'instruction, comparer. S'il change, la part était porteuse. Un test
-coûte une session, donc le réserver aux instructions au-dessus de l'alerte. Les autres se marquent
-« jugé sur pièce ». *Ce test n'a jamais été joué en 8 passes, et chaque rapport le dit.*
+**Test comportemental, échantillonné** : retirer la part compressible, donner à un contexte neuf une
+tâche qui déclenche l'instruction, comparer. S'il change, la part était porteuse. Un test coûte une
+session, donc le réserver au-dessus de l'alerte ; les autres se marquent « jugé sur pièce ». *Jamais
+joué en 8 passes.*
 
 ---
 
