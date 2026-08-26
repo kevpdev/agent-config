@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Lint mécanique des skills de `skills/` : lit les fichiers, n'exécute rien.
 
-Six vérifications, toutes sans interprétation — un skill conforme passe en une
+Sept vérifications, toutes sans interprétation — un skill conforme passe en une
 seconde et sans appel LLM :
 
 1. le frontmatter parse en YAML strict et porte `name`, `description`, `argument-hint`
@@ -11,6 +11,8 @@ seconde et sans appel LLM :
    aucune en trop, dans l'ordre
 5. aucun placeholder `<...>` oublié
 6. aucun lien markdown relatif mort
+7. un skill qui porte `disable-model-invocation: true` ne promet pas de déclenchement
+   ailleurs : ni phrase déclencheuse dans sa description (R5), ni cas d'éval positif (R7)
 
 **La liste de sections n'est pas codée ici.** Elle est dérivée des deux gabarits de
 `skills/skill-craft/assets/`, qui font foi. Une liste décrite à deux endroits diverge
@@ -21,6 +23,10 @@ le skill *fait*. Un comptage de « push » ou « commit » attrape `security-rev
 qui cite ces mots pour décrire du code qu'il relit sans rien exécuter. Un lint qui
 refuse du travail valide finit désactivé, et on perd aussi ses refus justes.
 
+C'est la moitié de R13 que la vérification 7 laisse dehors : elle ne sait pas dire
+qu'un skill qui écrit aurait dû porter le champ, seulement qu'un skill qui le porte
+se contredit ailleurs. Détecter l'effet de bord reste à `skill-craft:02-validate`.
+
 Échec fermé : tout ce qui empêche de conclure rend 2 (racine douteuse, gabarit
 absent ou illisible, PyYAML manquant). Un défaut mesuré rend 1. Tout au vert rend 0.
 
@@ -30,12 +36,18 @@ Décidé par `audits/2026-08-24-cadrage-refonte-skills-cible.md`, sections 2 et 
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import sys
 
 DESCRIPTION_MAX = 1536
 FRONTMATTER_KEYS = ("name", "description", "argument-hint")
+
+# Les tournures par lesquelles une description promet un déclenchement automatique.
+# Deux suffisent : R5 impose « Utiliser quand » comme forme unique de la liste de
+# phrases, et « Utiliser AUSSI » est sa variante proactive.
+TRIGGER_PHRASES = ("Utiliser quand", "Utiliser AUSSI")
 
 # Les sections que la refonte supprime, et où va leur contenu (note de cadrage,
 # section 2). Le message de l'échec les nomme, pour que le lint dise quoi faire au
@@ -57,6 +69,13 @@ HOMES = {
     "Garde-fou": "la première étape du `## Process`",
     "Contexte": "`## Input`",
     "Méthode": "`## Process`",
+    "Instructions": "`## Process`",
+    "Notes": (
+        "par nature : une règle qui vaut pour tout le skill va en "
+        "`## Transversal rules`, un repli ou un cas particulier va en sous-puce "
+        "de son étape du `## Process`, un renvoi vers un frère va en clause NE PAS "
+        "de la `description`"
+    ),
     "Sortie": "`## Output`",
     "Verdict": "`## Output`",
     "Délégation": "une étape du `## Process`",
@@ -70,8 +89,15 @@ HOMES = {
 }
 
 HOME_DEFAULT = (
-    "aucun équivalent au gabarit — son contenu a un home parmi `## Input`, "
-    "`## Output`, `## Process` et `## Test`"
+    "aucun équivalent nommé. Ranger par la NATURE du contenu, jamais par son "
+    "titre : connaissance (table de choix, corpus de critères, patterns) → "
+    "sous-puce de l'étape du `## Process` qui l'utilise, tant que le fichier "
+    "tient sous le seuil de R4 ; portée du skill → la phrase sous le titre ; "
+    "liste de délégations vers des frères → la clause NE PAS de la "
+    "`description` ; règle qui vaut pour tout le skill → `## Transversal "
+    "rules` ; opération appelable → une étape du `## Process`, l'ordre étant "
+    "celui de l'appel naturel ; le reste → `## Input`, `## Output`, "
+    "`## Process` ou `## Test`"
 )
 
 
@@ -236,10 +262,85 @@ def check_frontmatter(path: str, raw: str | None, folder: str) -> list[Defect]:
     return found
 
 
-def home_of(name: str) -> str:
+def check_invocation(path: str, raw: str | None, skill_dir: str) -> list[Defect]:
+    """Vérification 7 : la cohérence interne d'un skill à invocation manuelle (R13).
+
+    Ne cherche pas à savoir si le skill a un effet de bord, ce que le docstring du
+    module explique. Une fois le champ posé, deux promesses de déclenchement se
+    lisent mécaniquement, et R5 comme R7 les interdisent nommément.
+    """
+    if raw is None:
+        return []
+    import yaml  # check_frontmatter a déjà tranché l'absence de PyYAML
+
+    try:
+        data = yaml.safe_load(raw)
+    except yaml.YAMLError:
+        return []  # check_frontmatter porte déjà ce défaut, ne pas le doubler
+    if not isinstance(data, dict) or data.get("disable-model-invocation") is not True:
+        return []
+
+    found = []
+    description = data.get("description")
+    if isinstance(description, str):
+        for phrase in TRIGGER_PHRASES:
+            if phrase in description:
+                found.append(
+                    Defect(
+                        path,
+                        "invocation",
+                        f"`disable-model-invocation: true` et « {phrase} » dans la "
+                        "description : un skill manuel ne promet aucun déclenchement, "
+                        "il dit par quoi on l'appelle (R5)",
+                    )
+                )
+
+    eval_path = os.path.join(skill_dir, "evals", "eval.json")
+    if os.path.isfile(eval_path):
+        try:
+            cases = json.loads(read(eval_path))
+        except json.JSONDecodeError:
+            return found  # un corpus illisible n'est pas un défaut d'invocation
+        if isinstance(cases, dict):
+            cases = cases.get("cases", [])
+        if isinstance(cases, list):
+            positives = [
+                case.get("id", "cas sans `id`")
+                for case in cases
+                if isinstance(case, dict) and case.get("expect_trigger", True)
+            ]
+            if positives:
+                found.append(
+                    Defect(
+                        eval_path,
+                        "invocation",
+                        f"{len(positives)} cas positif(s) sur un skill manuel "
+                        f"({', '.join(positives)}) : son corpus n'a que des négatifs, "
+                        "le contrat qui compte pour lui étant qu'il ne parte jamais "
+                        "tout seul (R7)",
+                    )
+                )
+    return found
+
+
+def sections_named(home: str) -> list[str]:
+    """Les sections `## X` que cette destination nomme, s'il y en a."""
+    return [part.split("`")[0] for part in home.split("`## ")[1:]]
+
+
+def home_of(name: str, allowed: set[str]) -> str:
+    """La destination d'une section hors gabarit, bornée aux sections que
+    le gabarit du fichier autorise vraiment.
+
+    `allowed` évite d'envoyer un `SKILL.md` vers `## Input`, qui n'existe que
+    dans `action-template.md` — le correcteur y créerait un nouveau défaut.
+    Mesuré le 2026-08-26 sur `vault-capture-projet`, section `## Contexte`.
+    """
     for prefix, home in HOMES.items():
         if name == prefix or name.startswith(prefix + " ") or name.startswith(prefix + " ("):
-            return home
+            if all(section in allowed for section in sections_named(home)):
+                return home
+            break
     return HOME_DEFAULT
 
 
@@ -255,7 +356,7 @@ def check_sections(path: str, body: str, slots: list[Slot]) -> list[Defect]:
                 Defect(
                     path,
                     "sections",
-                    f"`## {name}` est hors gabarit → {home_of(name)}",
+                    f"`## {name}` est hors gabarit → {home_of(name, set(known))}",
                 )
             )
 
@@ -346,6 +447,7 @@ def lint_skill(skill_dir: str, templates: dict[str, list[Slot]]) -> list[Defect]
 
     raw, body = split_frontmatter(read(skill_md))
     found += check_frontmatter(skill_md, raw, folder)
+    found += check_invocation(skill_md, raw, skill_dir)
     found += check_sections(skill_md, body, templates["skill"])
     found += check_placeholders(skill_md, body)
     found += check_links(skill_md, body)

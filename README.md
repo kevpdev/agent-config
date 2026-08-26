@@ -137,17 +137,19 @@ trompeur sur des silences.
 
 ### Linter les skills
 
-Le lint lit les fichiers et n'exécute rien : six vérifications mécaniques sur les 24 skills, en une seconde et sans appel LLM. Le frontmatter parse et porte ses trois clés, `name` égale le dossier, la `description` tient sous le plafond, les `##` correspondent à ceux du gabarit, aucun placeholder ne survit, aucun lien relatif n'est mort.
+Le lint lit les fichiers et n'exécute rien : sept vérifications mécaniques sur les 24 skills, en une seconde et sans appel LLM. Le frontmatter parse et porte ses trois clés, `name` égale le dossier, la `description` tient sous le plafond, les `##` correspondent à ceux du gabarit, aucun placeholder ne survit, aucun lien relatif n'est mort, et un skill qui porte `disable-model-invocation: true` ne promet de déclenchement nulle part ailleurs.
 
 ```bash
 python3 wrappers/claude/scripts/lint-skills.py                      # tous les skills
 python3 wrappers/claude/scripts/lint-skills.py --skill skill-craft   # un seul
-python3 wrappers/claude/scripts/tests/test-lint-skills.py            # calibre les six vérifications
+python3 wrappers/claude/scripts/tests/test-lint-skills.py            # calibre les sept vérifications
 ```
 
 **La liste des sections n'est pas dans le script.** Elle est dérivée des deux gabarits de `skills/skill-craft/assets/`, qui font foi pour l'humain comme pour le lint. Une liste décrite en prose et une liste vérifiée par un script divergent au premier edit de l'une des deux.
 
 **Rien n'y grep ce que le skill fait.** Un comptage de « push » ou « commit » attrape `security-reviewer`, qui cite ces mots pour décrire du code qu'il relit sans rien exécuter. Ce qui demande de comprendre le skill reste à la relecture de `skill-craft:02-validate`.
+
+C'est la moitié de R13 que la septième vérification laisse dehors. Elle ne sait pas dire qu'un skill qui écrit aurait dû porter le champ, seulement qu'un skill qui le porte se contredit ailleurs, dans sa description ou dans ses évals.
 
 ### Jouer les évals des skills
 

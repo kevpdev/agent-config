@@ -38,6 +38,18 @@ Fork français des 19 règles d'AIDD (`aidd-context:04-skill-generate`, fichier 
 
 - **R1. SKILL.md est un routeur pur** : portée, flux, table d'actions, règles transverses. Zéro logique métier. Il ne porte rien qu'une action ou une référence pourrait porter, parce qu'il se charge à chaque invocation quand une action ne se charge qu'à son tour.
   - **Exception mono-fichier.** Un skill à responsabilité unique vit en `SKILL.md` seul, sa méthode sous `## Process` à la place de la table d'actions. Ce n'est pas une violation, et le moule ne change pas. On découpe quand apparaissent plusieurs actions distinctes, ou de la connaissance de référence à charger à la demande (R7).
+  - **Où atterrit une section que le gabarit ne nomme pas.** Se ranger par la **nature** du contenu, jamais par son titre.
+
+    | Nature | Home |
+    | --- | --- |
+    | connaissance : table de choix, corpus de critères, jeu de patterns | sous-puce de l'étape du `## Process` qui l'utilise, tant que le fichier tient sous le seuil de R4 |
+    | portée du skill | la phrase sous le titre |
+    | liste de délégations vers des frères | la clause NE PAS de la `description` |
+    | règle qui vaut pour tout le skill | `## Transversal rules` |
+    | opération appelable | une étape du `## Process`, l'ordre étant celui de l'appel naturel |
+
+    - **POURQUOI par nature et pas par titre, mesuré le 2026-08-26** : sur une passe de 18 skills, 8 se sont arrêtés faute de savoir où ranger une section perso, chacun proposant trois destinations également défendables. Les titres sont idiosyncratiques et ne se listent pas, les natures se comptent sur une main.
+    - **POURQUOI un seuil sur la connaissance** : sortir plus tôt en `references/` ajoute un saut de lecture, et le routeur garderait de toute façon une ligne par entrée pour savoir quoi charger.
 - **R2. Un skill = un domaine.** Domaine-outil, un nom singulier (`jira`). Domaine-activité, un verbe (`review`).
 - **R3. Références à un seul niveau.** Une référence n'en appelle jamais une autre. Elle nomme une sœur en backticks et ne la lie jamais.
 - **R4. Pas de plafond de lignes sur un routeur.** R1 et le lint le bornent déjà. Seule alerte : au-delà de ~150 lignes, un mono-fichier se demande ce qui peut sortir en actions ou en références.

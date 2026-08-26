@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Calibre `lint-skills.py` sur des skills fabriqués, un conforme et un par défaut.
 
-N'ouvre aucun skill réel et n'appelle aucun LLM : ne teste que les six vérifications,
+N'ouvre aucun skill réel et n'appelle aucun LLM : ne teste que les sept vérifications,
 qui sont déterministes et donc les seules choses qu'une batterie peut trancher.
 
 Pourquoi cette batterie existe : un lint se comporte exactement pareil qu'il mesure
@@ -98,7 +98,14 @@ def swap(text: str, old: str, new: str) -> str:
     return text.replace(old, new, 1)
 
 
-# (nom du cas, SKILL.md, action, règles attendues, fragment attendu dans un message)
+MANUEL = swap(
+    SKILL_OK,
+    "argument-hint: la démo voulue",
+    "argument-hint: la démo voulue\ndisable-model-invocation: true",
+)
+
+# (nom du cas, SKILL.md, action, règles attendues, fragment attendu, [evals/eval.json])
+# Le sixième membre est optionnel : sans lui, le skill fabriqué n'a pas d'`evals/`.
 CASES = [
     (
         "positif — tout conforme",
@@ -143,6 +150,20 @@ CASES = [
         "`**Garde.**` du `## Process`",
     ),
     (
+        "sections — un home nommé que le gabarit du fichier n'a pas",
+        SKILL_OK + "\n## Contexte\n\n- la racine du vault\n",
+        ACTION_OK,
+        {"sections"},
+        "Ranger par la NATURE",
+    ),
+    (
+        "sections — le même home, valide dans une action",
+        SKILL_OK,
+        ACTION_OK + "\n## Contexte\n\n- la racine du vault\n",
+        {"sections"},
+        "`## Input`",
+    ),
+    (
         "sections — une obligatoire manquante",
         swap(SKILL_OK, "## Transversal rules\n\n- Ne rien inventer.\n", ""),
         ACTION_OK,
@@ -170,6 +191,29 @@ CASES = [
         ACTION_OK,
         {"sections"},
         "s'excluent",
+    ),
+    (
+        "invocation — un skill manuel qui promet un déclenchement",
+        MANUEL,
+        ACTION_OK,
+        {"invocation"},
+        "un skill manuel ne promet aucun déclenchement",
+    ),
+    (
+        "invocation — un skill manuel avec un cas d'éval positif",
+        swap(MANUEL, "Utiliser quand l'utilisateur veut calibrer le lint.", "S'appelle par /demo."),
+        ACTION_OK,
+        {"invocation"},
+        "cas positif(s) sur un skill manuel",
+        '[{"skill": "demo", "id": "positif-demo", "query": "fais la démo"}]',
+    ),
+    (
+        "invocation — le champ absent laisse les phrases déclencheuses tranquilles",
+        SKILL_OK,
+        ACTION_OK,
+        set(),
+        None,
+        '[{"skill": "demo", "id": "positif-demo", "query": "fais la démo"}]',
     ),
     (
         "placeholder — un chevron du gabarit resté",
@@ -203,7 +247,7 @@ CASES = [
 ]
 
 
-def build(tmp: str, skill_md: str, action_md: str) -> str:
+def build(tmp: str, skill_md: str, action_md: str, eval_json: str | None = None) -> str:
     skill_dir = os.path.join(tmp, "demo")
     os.makedirs(os.path.join(skill_dir, "actions"), exist_ok=True)
     with open(os.path.join(skill_dir, "SKILL.md"), "w", encoding="utf-8") as handle:
@@ -212,6 +256,12 @@ def build(tmp: str, skill_md: str, action_md: str) -> str:
         os.path.join(skill_dir, "actions", "01-faire.md"), "w", encoding="utf-8"
     ) as handle:
         handle.write(action_md)
+    if eval_json is not None:
+        os.makedirs(os.path.join(skill_dir, "evals"), exist_ok=True)
+        with open(
+            os.path.join(skill_dir, "evals", "eval.json"), "w", encoding="utf-8"
+        ) as handle:
+            handle.write(eval_json)
     return skill_dir
 
 
@@ -220,9 +270,12 @@ def main() -> int:
     templates = linter.load_templates(linter.derive_root())
 
     failures = 0
-    for name, skill_md, action_md, expected, fragment in CASES:
+    for case in CASES:
+        name, skill_md, action_md, expected, fragment = case[:5]
+        eval_json = case[5] if len(case) > 5 else None
         with tempfile.TemporaryDirectory() as tmp:
-            defects = linter.lint_skill(build(tmp, skill_md, action_md), templates)
+            skill_dir = build(tmp, skill_md, action_md, eval_json)
+            defects = linter.lint_skill(skill_dir, templates)
         rules = {defect.rule for defect in defects}
         messages = " | ".join(defect.message for defect in defects)
 
