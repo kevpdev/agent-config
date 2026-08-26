@@ -1,0 +1,14 @@
+[
+  {
+    "skill": "memory-bootstrap",
+    "id": "negatif-vers-aidd-context-02-project-memory",
+    "expect_trigger": false,
+    "query": "Mon repo est un mono-repo classique, un seul projet, un seul build. Mets-moi en place la memory AIDD dessus."
+  },
+  {
+    "skill": "memory-bootstrap",
+    "id": "negatif-vers-doc-sync",
+    "expect_trigger": false,
+    "query": "La memory du parent existe déjà et elle décrit l'ancienne commande de test. On a changé le runner la semaine dernière, remets la doc au niveau du code."
+  }
+]

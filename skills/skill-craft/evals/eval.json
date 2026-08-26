@@ -1,15 +1,6 @@
 [
   {
     "skill": "skill-craft",
-    "id": "positif-echafaudage-d-un-skill-neuf",
-    "query": "Crée un skill perso `git-hygiene` : il contrôle l'état d'un repo avant un commit. Deux actions, une qui mesure l'état, une qui rend un verdict.",
-    "artifact": {
-      "path": "skills/git-hygiene/SKILL.md",
-      "template": "skill"
-    }
-  },
-  {
-    "skill": "skill-craft",
     "id": "negatif-vers-aidd-context-04-skill-generate",
     "expect_trigger": false,
     "query": "Génère un skill pour l'équipe, en anglais, qu'on partagera dans le repo commun et que les autres devs vont lire."

@@ -5,51 +5,54 @@ description: >
   maintient l'index racine `aidd_docs/memory/coding-assertions.md` que `aidd-dev:03-assert` lit par
   chemin codé en dur. Détecte les enfants orphelins (pas de dossier memory) et les entrées périmées
   (dossier memory sans repo), affiche la preuve d'outillage de chacun, puis n'écrit que ce qui est
-  confirmé. Utiliser quand l'utilisateur dit "j'ai cloné un nouveau repo dans le parent", "rattache
-  cet enfant à la memory", "mes enfants ne sont pas dans la memory", "amorce la memory du parent",
-  "il manque le fichier d'assertions", "un coéquipier veut utiliser le parent comme orchestrateur",
-  ou "/memory-bootstrap". NE PAS utiliser pour un mono-repo (→ `aidd-context:02-project-memory`, qui
+  confirmé. Invocation manuelle uniquement, par `/memory-bootstrap` : le skill écrit les fiches
+  `aidd_docs/memory/<enfant>/tooling.md` du parent et amende son index racine, deux effets de bord
+  qu'un déclenchement probabiliste ne doit pas pouvoir provoquer.
+  NE PAS utiliser pour un mono-repo (→ `aidd-context:02-project-memory`, qui
   y est chez lui), ni pour resynchroniser une doc que le code a fait dériver (→ `doc-sync`), ni pour
   écrire quoi que ce soit dans un repo enfant.
+argument-hint: "rien pour scanner tout le parent, ou le nom d'un enfant pour restreindre le scan à celui-là"
+disable-model-invocation: true
 ---
 
 # memory-bootstrap
 
-Amorce la memory AIDD d'un **orchestrateur parent** : un repo sans code applicatif propre, qui héberge la memory de N repos enfants autonomes. Il produit deux choses par enfant rattaché — un `aidd_docs/memory/<enfant>/tooling.md` qui décrit son outillage réel, et une ligne dans l'index racine qui dit quelles commandes font **porte**.
+Amorce la memory AIDD d'un **orchestrateur parent**, un repo sans code applicatif propre qui héberge la memory de N repos enfants autonomes. Il produit deux choses par enfant rattaché : un `aidd_docs/memory/<enfant>/tooling.md` qui décrit son outillage réel, et une ligne dans l'index racine qui dit quelles commandes font **porte**.
 
-> [!important] Pourquoi un index à la racine, et pas seulement des dossiers par enfant
-> Le hook `update_memory.js` ne scanne que la **racine** de `aidd_docs/memory/`, plus `internal/` et `external/`. Un `<enfant>/tooling.md` n'apparaît donc **jamais** dans le bloc `<aidd_project_memory>` : le fichier existe, mais rien ne dit qu'il existe. L'index racine, lui, est chargé en `@`-référence et nomme les chemins enfants — c'est lui qui les rend atteignables. Il sert aussi de contrat à `aidd-dev:03-assert`, qui lit `aidd_docs/memory/coding-assertions.md` par chemin codé en dur (`03-assert/actions/01-assert.md`).
-
-## Pourquoi pas `aidd-context:02-project-memory`
-
-Il couvre le même besoin, en mono-repo seulement. Deux obstacles vérifiés, aucun contournable :
-
-- Son `02-generate` porte le Test `find aidd_docs/memory -mindepth 2 -name '*.md'` returns nothing outside `internal/` and `external/`. Une memory par enfant **viole son propre contrat**.
-- Il refuse de calculer un chemin : *« The destination is the one the table names. Never derive a path. »* On ne peut donc pas le rediriger vers `<enfant>/`.
-
-Ce skill lui emprunte en revanche deux choses : la **forme** de ses templates (`assets/templates/memory/core/`) et son protocole de confirmation — montrer chaque candidat avec sa preuve, demander d'ajouter ou d'écarter, attendre la réponse.
-
-## Le flux
-
+```mermaid
+flowchart TD
+  entree([un clone isolé, ou le parent entier]) --> scan[scan]
+  scan --> verdict{des orphelins à rattacher ?}
+  verdict -->|aucun| releve([relevé rendu, rien écrit])
+  verdict -->|l'humain confirme lesquels| attach[attach]
+  attach --> ecrit([fiches écrites au parent, lignes d'index soumises])
 ```
-01-scan  →  (tu confirmes)  →  02-attach
-```
-
-Il n'y a **pas** de mode « un enfant » distinct d'un mode « tous les enfants ». Le scan trouve ce qui manque, tu confirmes ce qui mérite d'être rattaché, l'attache boucle dessus. Un clone isolé et un amorçage complet suivent le même chemin. *Pourquoi : deux modes séparés dupliqueraient la même logique, donc le même bug à deux endroits.*
-
-`01-scan` seul est utile : il audite le parent sans rien écrire.
 
 ## Actions
 
-| Étape | Fichier | Rôle | Écrit |
-|---|---|---|---|
-| Scan | `actions/01-scan.md` | détecte les enfants, les orphelins, les entrées périmées, et la preuve d'outillage de chacun | rien |
-| Attache | `actions/02-attach.md` | écrit `<enfant>/tooling.md`, propose sa ligne d'index, applique ce qui est validé | oui, au parent |
+Dérouler le flux. Ne lire que la prochaine action.
 
-## Règles transverses
+| Action | Fait |
+| --- | --- |
+| scan | détecte les enfants, les orphelins, les entrées périmées, et la preuve d'outillage de chacun |
+| attach | écrit la fiche d'outillage de chaque enfant confirmé, puis soumet sa ligne d'index |
 
-- **Ne jamais écrire dans un repo enfant.** Toute sortie atterrit sous `aidd_docs/memory/` du parent. *Pourquoi : les enfants sont des repos d'équipe ; y déposer un `aidd_docs/` est un problème de gouvernance, pas une commodité technique.*
+## Transversal rules
+
+- **L'index racine est ce qui rend les fiches atteignables.** Le hook `update_memory.js` ne scanne que la **racine** de `aidd_docs/memory/`, plus `internal/` et `external/`. Un `<enfant>/tooling.md` n'apparaît donc jamais dans le bloc `<aidd_project_memory>` : le fichier existe, et rien ne dit qu'il existe. L'index, lui, est chargé en `@`-référence et nomme les chemins enfants. Il sert aussi de contrat à `aidd-dev:03-assert`, qui lit `aidd_docs/memory/coding-assertions.md` par chemin codé en dur (`03-assert/actions/01-assert.md`).
+- **Ne jamais écrire dans un repo enfant.** Toute sortie atterrit sous `aidd_docs/memory/` du parent. *Pourquoi : les enfants sont des repos d'équipe, et y déposer un `aidd_docs/` est un problème de gouvernance et non une commodité technique.*
 - **L'index pointe vers les enfants, jamais l'inverse.** Un `tooling.md` ne référence pas l'index. *Pourquoi : une back-référence est un doublon à maintenir, donc un doublon qui divergera.*
 - **Ne rien committer.** Le skill laisse le working tree au parent. *Pourquoi : le rattachement se relit avant d'entrer dans l'historique.*
+- **Un seul chemin, pas de mode « un enfant » distinct d'un mode « tous les enfants ».** Le scan trouve ce qui manque, l'humain confirme ce qui mérite d'être rattaché, l'attache boucle dessus. *Pourquoi : deux modes séparés dupliqueraient la même logique, donc le même bug à deux endroits.* Le scan seul est utile, il audite le parent sans rien écrire.
+- **Deux règles gouvernent l'écriture et vivent là où elle a lieu**, dans `actions/02-attach.md` : le partage d'autorité entre ce qui s'écrit seul et ce qui se propose (étapes 3 et 4), et la provenance des gabarits (étape 1).
 
-Deux règles gouvernent l'écriture et vivent là où elle a lieu, dans `actions/02-attach.md` : le partage d'autorité entre ce qui s'écrit seul et ce qui se propose (étapes 3 et 4), et la provenance des gabarits (étape 1).
+## Test
+
+Relecture humaine du run déroulé : les vérifications par action vivent dans leurs fichiers, celles-ci portent sur le flux entier.
+
+| Cas | Preuve |
+| --- | --- |
+| un clone isolé, puis un amorçage complet | les deux runs passent par les mêmes deux actions, aucune branche propre à l'un des deux |
+| le scan rend des orphelins et personne ne répond | rien n'est écrit, l'attache n'est pas lancée |
+| un run complet accepté | tous les fichiers touchés sont sous `aidd_docs/memory/` du parent |
+| un run complet accepté | `git log -1 --format=%H` rend le même hash avant et après, au parent comme chez chaque enfant |
