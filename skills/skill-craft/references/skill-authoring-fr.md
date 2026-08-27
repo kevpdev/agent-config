@@ -87,7 +87,9 @@ Fork français des 19 règles d'AIDD (`aidd-context:04-skill-generate`, fichier 
   - Une valeur arbitraire (seuil, constante, délai) se justifie toujours : sans sa raison, personne ne sait comment la recalculer.
   - Le pourquoi tient en une ligne. Ce n'est pas une permission de rallonger, R11 tient toujours.
   - `rules/reasoning.md`, section « Méta-règle », fait foi.
-- **R13. Mode d'invocation déclaré.** Un skill à effet de bord porte `disable-model-invocation: true` et s'appelle par `/<nom>`. Sans effet de bord, le champ est omis et le skill reste auto-déclenchable.
+- **R13. Mode d'invocation déclaré.** Un skill à effet de bord porte `disable-model-invocation: true` et s'appelle par `/<nom>`. Sans effet de bord, le champ est omis et le skill reste auto-déclenchable, sauf au second motif ci-dessous.
+  - **SECOND MOTIF, le contrôle du moment.** Un skill sans effet de bord porte quand même le champ quand son déclenchement au flair serait faux. Il **écrit alors sa raison** dans ses règles transverses, et le contrôle porte sur la présence de cette raison, jamais sur son bien-fondé. `cadre-prompt` est ce cas.
+    - **POURQUOI il existe, mesuré le 2026-08-27 sur `code.claude.com/docs/en/skills`** : la doc dit « workflows with side effects **or that you want to control timing** ». R13 ne reprenait que le premier des deux.
   - Compte comme effet de bord : écrire un fichier versionné, committer, pousser, supprimer, déplacer, envoyer sur le réseau. Lire, analyser et conseiller n'en sont pas.
   - **EXCEPTION, le maillon de pipeline.** Un skill à effet de bord dont la `description` annonce un appelant autre que l'humain, un skill voisin ou un orchestrateur, **n'a pas le droit de porter le champ**. Son effet de bord est alors couvert par un garde déterministe **nommé dans ses règles transverses**. `test-runner` est ce cas, et son garde est `wrappers/claude/scripts/hooks/guard-no-remote-write.py`.
     - **La condition se mesure, elle ne se juge pas** : la `description` nomme-t-elle un appelant non humain ? Un `grep` la tranche. **À LA PLACE de** demander « est-ce sensible », qui est un jugement, donc deux validateurs rendront deux verdicts.

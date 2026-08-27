@@ -4,9 +4,9 @@ description: >-
   Transforme une ébauche de demande en prompt cadré, structuré selon le type de demande détecté
   (exécution, analyse, exploration) : ajoute les critères d'acceptation, le contrat de questions et
   son hors-périmètre, ou la condition d'arrêt, selon ce qui manque. Rend un prompt rédigé
-  immédiatement, trous comblés par des hypothèses marquées, une question au maximum, puis le capture
-  dans l'inbox du vault. S'appelle par "/cadre-prompt" en tête de message, l'ébauche à la suite ;
-  "--chat" sort le prompt dans la conversation au lieu du vault. NE PAS utiliser
+  immédiatement, trous comblés par des hypothèses marquées, une question au maximum, puis propose de
+  le poser dans l'inbox du vault par "/vault-capture". S'appelle par "/cadre-prompt" en tête de
+  message, l'ébauche à la suite. "--chat" rend le prompt seul, sans proposer la capture. NE PAS utiliser
   pour dérouler le développement depuis une note de cadrage (→ aidd-orchestrator:01-sdlc), pour fiabiliser une
   application qui appelle un LLM et mesurer une régression de prompt (→ ai-engineering), ni pour un
   snapshot visuel de l'avancement destiné à l'humain (→ vault-recap-raisonnement).
@@ -37,9 +37,9 @@ flowchart TD
   G --> H[rédiger le prompt depuis son gabarit]
   H --> I{gardes : contenu du type, zéro conclusion ?}
   I -->|non| H
-  I -->|oui| J{--chat, ou vault absent ?}
-  J -->|non| K[capturer par vault-capture, confirmer le chemin]
-  J -->|oui| L[rendre le prompt dans la réponse]
+  I -->|oui| J{--chat ?}
+  J -->|non| K[rendre le prompt, puis proposer /vault-capture]
+  J -->|oui| L[rendre le prompt seul]
 ```
 
 ## Process
@@ -83,22 +83,28 @@ flowchart TD
    - **Garde.** Relire la sortie en cherchant les verbes de décision (« il faut », « je propose »,
      « donc on »), et retirer ce qu'ils portent. Aucune conclusion de la session en cours n'entre
      dans le prompt.
-7. **Capturer**, une fois le prompt rédigé et pas avant. Trois branches, et la première est le défaut.
-   *Pourquoi cet ordre : le repli garde ainsi toujours un prompt à afficher, au lieu de perdre le
-   travail avec la délégation.*
-   - Ouvrir `vault-capture` avec le prompt et un titre court, puis confirmer le chemin absolu créé.
-   - **`--chat` dans les arguments** → sauter la capture, rendre le prompt dans la réponse. Pour un
+7. **Rendre**, une fois le prompt rédigé et pas avant. Deux branches, et la première est le défaut.
+   - Afficher le prompt, puis proposer un titre court et dire de lancer `/vault-capture` pour le poser
+     dans l'inbox.
+   - **`--chat` dans les arguments** → afficher le prompt seul, sans proposer la capture. Pour un
      petit prompt qu'on relance tout de suite.
-   - **`vault-capture` s'arrête sur son garde-fou** (vault absent) → rendre le prompt dans la réponse,
-     en disant que la capture n'a pas eu lieu.
+   - **Ce skill n'ouvre pas `vault-capture` lui-même, et la proposition n'est pas une politesse.**
+     *Pourquoi, tranché le 2026-08-27 : les deux skills sont à invocation manuelle, et un skill manuel
+     n'est ouvrable que par l'humain. La R13 de `skill-craft` porte la mesure. La délégation que cette
+     étape promettait ne pouvait donc pas avoir lieu.*
 
 ## Transversal rules
 
-- **Le prompt part dans l'inbox du vault par défaut, et l'écriture appartient à `vault-capture`.** Ce
+- **L'inbox du vault est la destination par défaut, et l'écriture appartient à `vault-capture`.** Ce
   skill ne l'écrit jamais lui-même. *Pourquoi : la résolution de la racine absolue et le garde-fou
   « vault absent » vivent là-bas. Les recopier ici serait le doublon qu'interdit la R6 de
   `skill-craft`, et c'est la dérive que sa convention annonce comme invisible au lint.*
-- **`--chat` n'écrit rien.** Le prompt sort dans la conversation, et le vault n'est pas touché.
+- **Ce skill n'écrit jamais, quelle que soit la branche.** Le prompt sort dans la conversation, et le
+  vault n'est touché que par l'invocation suivante, celle de l'utilisateur.
+- **Il reste à invocation manuelle bien qu'il n'écrive rien.** *Pourquoi : une demande vague ressemble
+  à une ébauche, donc un déclenchement au flair cadrerait ce que l'utilisateur voulait voir exécuté.
+  L'étape 1 porte déjà cette garde en prose, et le champ la rend déterministe. C'est le motif
+  « contrôle du moment » de la R13 de `skill-craft`.*
 - **Le prompt cite des chemins, jamais des résumés de fichiers.** *Pourquoi : un résumé périme sans
   le dire, un chemin se relit.*
 - **Ce qui est mesuré et ce qui est supposé restent visuellement distincts** dans le prompt produit.
