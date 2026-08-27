@@ -178,28 +178,24 @@ Chaque cas rend deux verdicts, tous deux déterministes et sans juge LLM. Le **d
 
 ### `SKILLS_ROOT` — le contrat entre un skill et son agent
 
-Plusieurs skills appellent un script partagé de `skills/_shared/`. Ils le désignent par `$SKILLS_ROOT/_shared/<script>.sh`, jamais par le chemin d'un agent précis. À déclarer dans le bloc `env` de `~/.claude/settings.local.json`, à côté de `OBSIDIAN_VAULT_PRO` :
+Plusieurs skills appellent un script partagé de `skills/_shared/`. Ils le désignent par `$SKILLS_ROOT/_shared/<script>.sh`, jamais par le chemin d'un agent précis. À exporter depuis le profil du shell de lancement, à côté de `OBSIDIAN_VAULT_PRO` :
 
-```json
-{
-  "env": {
-    "SKILLS_ROOT": "/chemin/absolu/vers/agent-config/skills"
-  }
-}
+```sh
+export SKILLS_ROOT="/chemin/absolu/vers/agent-config/skills"
 ```
 
-**Pourquoi une variable** : un `~/.claude/skills/…` écrit dans un skill le rend inutilisable sous un autre agent, alors que le script visé est au même endroit relatif partout. Le skill dit quoi appeler, le wrapper dit où. Sans la variable, l'appel échoue bruyamment — il ne dégrade pas en silence.
+**Le bloc `env` de `~/.claude/settings.local.json` ne suffit pas, mesuré le 2026-08-27.** La variable y était déclarée depuis le 2026-08-20, et `echo "[$SKILLS_ROOT]"` rendait `[]` dans l'outil Bash, en shell simple comme en `bash -lc`. `OBSIDIAN_VAULT_PRO`, déclarée dans le même bloc, était peuplée — mais par une ligne d'export du `.zshrc`, pas par le bloc. **La preuve de la config est donc `echo "[$SKILLS_ROOT]"` non vide dans une session neuve**, jamais la présence de la clé dans le JSON.
+
+**Pourquoi une variable** : un `~/.claude/skills/…` écrit dans un skill le rend inutilisable sous un autre agent, alors que le script visé est au même endroit relatif partout. Le skill dit quoi appeler, le wrapper dit où. Cet argument tient toujours : il justifie la variable, pas le mécanisme qui la peuple.
+
+**Sans elle, l'appel échoue de façon trompeuse.** `bash "$SKILLS_ROOT/_shared/check-vault-bridge.sh"` devient `bash "/_shared/…"`, donc un `exit 127` qui accuse le script au lieu de la config — un agent est parti chercher le fichier par un `find /`.
 
 ## Dépendance externe
 
-Les skills `vault-*` sont des passerelles vers un vault Obsidian : ils délèguent aux skills canoniques situés sous `$OBSIDIAN_VAULT_PRO/.agents/skills/`. Pour les activer, déclarer la variable dans le bloc `env` de `~/.claude/settings.local.json` (fichier local, non versionné) — Claude Code l'injecte alors dans chaque session, sans dépendre du shell de lancement :
+Les skills `vault-*` sont des passerelles vers un vault Obsidian : ils délèguent aux skills canoniques situés sous `$OBSIDIAN_VAULT_PRO/.agents/skills/`. Pour les activer, exporter la variable depuis le profil du shell de lancement, comme `SKILLS_ROOT` et pour la même raison mesurée :
 
-```json
-{
-  "env": {
-    "OBSIDIAN_VAULT_PRO": "/chemin/absolu/vers/le/vault"
-  }
-}
+```sh
+export OBSIDIAN_VAULT_PRO="/chemin/absolu/vers/le/vault"
 ```
 
 Sans cette variable, chaque `vault-*` dégrade sans casse (garde-fou en tête du SKILL.md : message « vault non configuré » puis arrêt, jamais d'écriture dans le repo courant).

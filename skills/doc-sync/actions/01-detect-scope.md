@@ -24,7 +24,7 @@ Détecte où vit le code et la doc, propose un scope, et le fait confirmer avant
    - Commandes de détection :
      ```
      # enfants + home memory de chacun, en une passe (implémentation unique)
-     bash /home/kevin/projects/agent-config/skills/_shared/detect-children.sh --long
+     bash "$SKILLS_ROOT/_shared/detect-children.sh" --long
      # candidats contrat partagé au parent (pas de nom figé) — top-level only
      ls aidd_docs/memory/*.md 2>/dev/null
      ```
@@ -33,12 +33,11 @@ Détecte où vit le code et la doc, propose un scope, et le fait confirmer avant
      `aucun enfant : topologie mono-projet` — un **faux zéro silencieux** sur la commande que cette
      action désigne comme faisant autorité. Vérifié le 2026-08-21 : 31 enfants depuis la racine,
      « mono-projet » depuis `aidd_docs/memory/`.
-   - **Chemin absolu, pas `$SKILLS_ROOT`.** La variable est déclarée dans `~/.claude/settings.local.json`
-     mais n'atteint pas le shell : mesuré le 2026-08-21, `echo "[$SKILLS_ROOT]"` rend `[]` en shell
-     simple **et** en `bash -lc`. La forme avec variable s'exécute donc en `bash "/_shared/…"` et
-     échoue, ce qui a envoyé un sous-agent chercher le script par un `find /`. *Pourquoi ne pas réparer
-     l'injection : la cause n'est pas tranchée, probablement le filtrage d'environnement du sandbox,
-     **supposé** et non testé. Un chemin absolu marche sans dépendre de la réponse.*
+   - **Si `$SKILLS_ROOT` est vide, s'arrêter au lieu de chercher le script.** La commande devient
+     `bash "/_shared/…"` et sort en 127, ce qui accuse le script au lieu de la config — un sous-agent
+     est parti le chercher par un `find /`. *La cause a été tranchée le 2026-08-27 : le bloc `env` de
+     `~/.claude/settings.local.json` n'atteint pas le shell, la variable s'exporte depuis le profil du
+     shell de lancement. `README.md`, section `SKILLS_ROOT`, porte la mesure et la preuve de config.*
    - **Ne pas réimplémenter la détection ici.** La règle, ses trois contre-exemples mesurés et le `basename` du home memory vivent dans les commentaires du script — un seul home (R6). Une copie locale dériverait sans que rien ne le signale, et c'est précisément ce qui s'est produit : la version recopiée cherchait un `.git` sur deux niveaux, donc voyait **0** enfant sur un monorepo et ratait un enfant rangé plus profond.
    - Sortie utile ici : la colonne **MEMORY** donne directement le verdict par enfant (`distribué` / `centralisé (memory/<nom>)` / `aucune`). La colonne **VCS** dit si l'enfant peut porter son propre commit — décisif pour l'étape de commit ci-dessous : en monorepo (`parent`), memory et README atterrissent dans le **même** repo, il n'y a pas deux commits à répartir.
 2. **Confirmer le contrat.** Le contrat partagé n'a **pas de nom de fichier conventionné** — ne pas grep un `shared-contract.md` en dur. Repérer le/les candidat(s) (souvent `shared-contract.md`, mais ça peut être `contract.md`, `api-contract.md`, une section d'un doc…), puis **faire confirmer à l'utilisateur quelle(s) doc(s) du parent tiennent le rôle de contrat partagé** avant de les traiter en régime décision.
@@ -65,10 +64,10 @@ Détecte où vit le code et la doc, propose un scope, et le fait confirmer avant
 ## Test
 
 - La topologie est explicite : mono-projet, ou coordinateur avec la liste d'enfants **produite par `_shared/detect-children.sh --long`** — jamais par une commande recopiée sur place. Trois symptômes signalent que la détection a été réimplémentée à côté : un coordinateur dont les enfants sont groupés (`backend/<x>`) qui ressort « mono-repo », un monorepo dont les projets ne ressortent pas du tout, ou tous les enfants classés « sans memory ».
-- **Aucune commande de ce fichier ne porte de variable d'environnement** : `grep -nE '^[[:space:]]*bash .*\$' ` ne rend rien. La prose peut nommer `$SKILLS_ROOT` pour dire de ne pas s'en servir, une commande non. Une variable vide fait échouer la détection sans le dire.
+- **`$SKILLS_ROOT` est peuplée avant de croire la détection** : `echo "[$SKILLS_ROOT]"` rend un chemin, pas `[]`. Vide, la commande sort en 127 et accuse le script au lieu de la config.
 - Le script tourne et rend un résultat non vide sur un coordinateur. Contrôle à jouer depuis la racine du parent :
   ```
-  bash /home/kevin/projects/agent-config/skills/_shared/detect-children.sh --long
+  bash "$SKILLS_ROOT/_shared/detect-children.sh" --long
   ```
   Chaque ligne porte ses trois attributs. `VCS` vaut `propre` ou `parent` ; `BUILD` nomme le manifeste trouvé ou `aucun` ; `MEMORY` vaut `distribué`, `centralisé (memory/<nom>)` ou `aucune`. Un enfant à `BUILD = aucun` est normal (dépôt de doc ou de config) et n'est pas une erreur de détection.
   **Contrôle calibré** : la même commande lancée depuis un sous-dossier doit rendre « mono-projet ». Si elle rend des enfants des deux endroits, le script a changé et ce prérequis est à réécrire ; si elle rend « mono-projet » des deux, le `cwd` était faux.
