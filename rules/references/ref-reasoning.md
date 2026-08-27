@@ -36,7 +36,7 @@ Zéro point-virgule fautif annoncé sur six corpus. Faux deux fois, le même jou
 
 **GESTE 2 — un comptage qui rend « zéro » ne prouve pas l'absence du défaut.** **À LA PLACE de** conclure, recompter sur un **corpus témoin que personne ne relit**. Un corpus déjà corrigé ne mesure que ce qui a survécu à la correction, jamais la propension qui l'a produit, et une correction faite en cours de rédaction ne laisse aucune trace dans git.
 
-**Où ça s'applique** : les comptages de ce repo, ceux de `mesure-reponses.py`, la commande de `ref-ponctuation.md`, les mesures C4 et C7 du skill `audit-harnais`. Autrement dit chaque fois qu'un chiffre de style ou de conformité sert de verdict.
+**Où ça s'applique** : les comptages de ce repo, ceux de `mesure-reponses.py`, la commande de `ref-ponctuation.md`, les comptages de `wrappers/claude/scripts/lint-skills.py`. Autrement dit chaque fois qu'un chiffre de style ou de conformité sert de verdict.
 
 ## Le pourquoi quand il porte une information — deux prescriptions de doc en apparence opposées (2026-08-11)
 

@@ -1,5 +1,10 @@
 # Grille d'audit du harnais
 
+> **Le protocole qui alimentait ce fichier n'existe plus.** Le skill `audit-harnais` a été supprimé le
+> 2026-08-27 : les critères de validation d'un artefact vivent désormais dans l'action `02-validate` de
+> son skill de craft. La matière ci-dessous attend sa récolte dans un futur `rules-craft`. Rien ici ne
+> se rejoue en session ordinaire.
+
 Crible d'admission au contexte permanent : chaque instruction du harnais y passe, une par une. L'objectif est la **stabilité**, pas la perfection — un harnais qui repose le moins possible sur la discipline du modèle dépend le moins possible du modèle.
 
 **Source de vérité** : le harnais lui-même (ce repo). Le vault alimente et optimise, il ne fait pas foi. *(Décidé le 2026-08-10, appliqué à `ai-principles.md` le 2026-08-11.)*

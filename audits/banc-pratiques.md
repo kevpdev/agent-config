@@ -1,5 +1,10 @@
 # Banc d'essai — pratiques en test
 
+> **Le protocole qui alimentait ce fichier n'existe plus.** Le skill `audit-harnais` a été supprimé le
+> 2026-08-27 : les critères de validation d'un artefact vivent désormais dans l'action `02-validate` de
+> son skill de craft. La matière ci-dessous attend sa récolte dans un futur `rules-craft`. Rien ici ne
+> se rejoue en session ordinaire.
+
 Compagnon vivant de `grille-harnais.md`, comme elle non horodaté : git porte son historique. Cinq pratiques **non validées**, candidates à devenir des règles. **La promotion comme la suppression se décident ici, à la passe `/audit-harnais`** — une pratique promue monte dans `rules/ai-principles.md`, une pratique démentie disparaît.
 
 **Jamais chargé en contexte permanent, et c'est un changement du 2026-08-11.** Ce banc vivait dans `rules/ai-practices.md` (988 mots, 25 % de la couche chargée) au motif qu'« une pratique jamais chargée n'est jamais exercée, donc jamais validable ». **Cet argument est mort le jour où les seuils sont passés à la qualité de preuve** : les cinq exigent désormais un bras de contrôle, donc une expérience montée exprès, et aucun ne peut être satisfait par « la pratique a joué pendant le travail normal ». Charger le banc n'achetait donc plus sa promotion — seulement de la dilution des règles validées.

@@ -1,5 +1,10 @@
 # Axes d'amélioration du protocole d'audit
 
+> **Le protocole qui alimentait ce fichier n'existe plus.** Le skill `audit-harnais` a été supprimé le
+> 2026-08-27 : les critères de validation d'un artefact vivent désormais dans l'action `02-validate` de
+> son skill de craft. La matière ci-dessous attend sa récolte dans un futur `rules-craft`. Rien ici ne
+> se rejoue en session ordinaire.
+
 Registre vivant, alimenté par chaque passe du skill `audit-harnais`, jamais par une session ordinaire. Il porte deux choses de nature différente : les **conventions déjà figées**, qu'une passe lit et applique sans les rouvrir, et les **axes observés**, qui attendent une porte avant d'être appliqués.
 
 Compagnon de `grille-harnais.md`, sur le modèle de `banc-pratiques.md`. La grille dit ce qu'un audit mesure, ce fichier dit ce que les audits ont appris de leur propre instrument.
