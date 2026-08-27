@@ -69,6 +69,7 @@ Fork français des 19 règles d'AIDD (`aidd-context:04-skill-generate`, fichier 
   - **Le champ `artifact` choisit le mode d'exécution, et c'est mécanique.** Sans lui, le cas tourne **outils coupés** : le skill part sans rien pouvoir exécuter, donc un skill à effet de bord se teste sans risque. Avec lui, le cas tourne outils ouverts dans un worktree jetable, seul moyen de constater un fichier.
   - **Un cas positif par skill, et un cas négatif par frère vivant cité en clause NE PAS.** Vérifier qu'un skill part ne vérifie pas qu'il ne part pas à tort, et c'est l'autre moitié que mesurent les collisions de déclencheurs.
   - **Un skill à invocation manuelle (R13) n'a pas de cas positif mesurable, et n'en écrit pas.** Son corpus n'a que des cas négatifs, ce qui est le contrat qui compte pour lui : il ne doit jamais partir tout seul.
+    - **Un skill de l'exception R13 n'est pas un skill manuel**, puisqu'il ne porte pas le champ. Il reste auto-déclenchable, donc son cas positif lui est dû par la voie normale.
     - **Il en porte au moins un, même sans clause NE PAS.** Le cas prend une requête de son propre domaine, celle qui l'ouvrirait s'il était auto-déclenchable. Le comptage par frère est un plancher qui s'ajoute à celui-là, jamais le total.
     - **POURQUOI le trancher, mesuré le 2026-08-27** : trois validateurs indépendants ont lu cette sous-puce et la règle de comptage au-dessus, et rendu deux verdicts opposés sur des skills sans clause NE PAS, deux « zéro cas dû » contre un « FAIL ». Une convention qui rend deux verdicts sur le même objet n'en est pas une.
     - **Aucune `query` de cas positif ne commence par `/`.** Mesuré deux fois le 2026-08-21 puis deux fois de plus le 2026-08-24, `claude -p "/<nom> …"` **n'ouvre pas le skill** : aucun appel à l'outil qui l'ouvre, aucune ligne du `SKILL.md` dans le transcript. Un cas positif préfixé sortirait rouge en mesurant le harnais, pas le skill. L'exécuteur le refuse.
@@ -88,7 +89,11 @@ Fork français des 19 règles d'AIDD (`aidd-context:04-skill-generate`, fichier 
   - `rules/reasoning.md`, section « Méta-règle », fait foi.
 - **R13. Mode d'invocation déclaré.** Un skill à effet de bord porte `disable-model-invocation: true` et s'appelle par `/<nom>`. Sans effet de bord, le champ est omis et le skill reste auto-déclenchable.
   - Compte comme effet de bord : écrire un fichier versionné, committer, pousser, supprimer, déplacer, envoyer sur le réseau. Lire, analyser et conseiller n'en sont pas.
-  - **POURQUOI le champ et pas une meilleure description** : le déclenchement par phrase est probabiliste, donc il se trompera. Sur une action réversible ça coûte un paragraphe inutile, sur un `git push` ça coûte un commit non voulu. Le champ est le seul mécanisme déterministe disponible.
+  - **EXCEPTION, le maillon de pipeline.** Un skill à effet de bord dont la `description` annonce un appelant autre que l'humain, un skill voisin ou un orchestrateur, **n'a pas le droit de porter le champ**. Son effet de bord est alors couvert par un garde déterministe **nommé dans ses règles transverses**. `test-runner` est ce cas, et son garde est `wrappers/claude/scripts/hooks/guard-no-remote-write.py`.
+    - **La condition se mesure, elle ne se juge pas** : la `description` nomme-t-elle un appelant non humain ? Un `grep` la tranche. **À LA PLACE de** demander « est-ce sensible », qui est un jugement, donc deux validateurs rendront deux verdicts.
+    - **Sans garde nommé, l'exception est une porte de sortie gratuite.** Le déterminisme ne se perd pas, il change de niveau : le hook garde l'appel d'outil, là où le champ gardait le déclenchement.
+  - **POURQUOI le champ sur la branche 1, et pas une meilleure description** : le déclenchement par phrase est probabiliste, donc il se trompera. Sur une action réversible ça coûte un paragraphe inutile, sur un `git push` ça coûte un commit non voulu.
+  - **POURQUOI l'exception interdit le champ au lieu de le déconseiller, mesuré le 2026-08-27 sur `code.claude.com/docs/en/skills`** : le champ ne rend pas l'appel improbable, il le supprime. La doc dit « Claude can invoke : No », « Description not in context », « Claude Code blocks the call », et « Also prevents the skill from being preloaded into subagents ». Aucun skill, aucun orchestrateur, aucun sous-agent ne peut donc ouvrir un skill manuel.
 
 ## Ce qui se vérifie tout seul, et ce qui se refuse
 
@@ -153,9 +158,10 @@ Avant de créer un skill, lister les skills installés et chercher un recouvreme
 
 ## Ce que le lint ne voit pas
 
-Deux dérives échappent à tout contrôle mécanique, ici comme chez AIDD. Ce sont les deux plus fréquentes, et elles se relisent à la main au moment de la refonte.
+Trois dérives échappent à tout contrôle mécanique, ici comme chez AIDD. Ce sont les plus fréquentes, et elles se relisent à la main au moment de la refonte.
 
 | Dérive | Ce qu'elle donne |
 | --- | --- |
 | **R1** | un `SKILL.md` qui regonfle en logique métier au lieu de router |
 | **R6** | un même fait recopié à deux endroits, dont la copie périmée survit. Entre deux skills, un `grep -rl` ou un `md5sum` de bloc rattrape le cas où le texte est repris tel quel |
+| **R13** | un mode d'invocation posé au flair. Le lint ne juge jamais l'effet de bord, sa vérification 7 ne relisant que la cohérence d'un skill **déjà** déclaré manuel. Mesuré le 2026-08-27, `test-runner` sortait vert au lint et rouge au jugement |

@@ -2,7 +2,7 @@
 name: <nom-du-skill>
 description: <ce qu'il produit>. Utiliser quand l'utilisateur veut <intentions>. NE PAS utiliser pour <X> (→ <frère>).
 argument-hint: <ce que l'utilisateur apporte : ses cas, ou l'artefact consommé>
-disable-model-invocation: true # <OPTIONNEL. Garder si et seulement si le skill a un effet de bord, supprimer la ligne sinon.>
+disable-model-invocation: true # <OPTIONNEL. Garder si le skill a un effet de bord ET que seul l'humain l'ouvre. Supprimer la ligne sinon, y compris quand un skill ou un orchestrateur l'appelle : R13 l'interdit alors, et exige un garde nommé.>
 ---
 
 # <Nom du skill>
