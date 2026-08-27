@@ -66,6 +66,13 @@ Dérouler le flux. Ne lire que la prochaine action.
   d'une confirmation d'opération payante. *Pourquoi : un subagent n'a aucun canal pour la poser, sa
   question part dans son rapport de fin et arrive trop tard.*
 - **Ce skill exécute, il ne juge pas la feature.** Il rend des faits, le caller conclut.
+- **Son effet de bord est gardé par un hook, et pas par son mode d'invocation.**
+  `wrappers/claude/scripts/hooks/guard-no-remote-write.py`, câblé en `PreToolUse` dans
+  `wrappers/claude/settings.json`, refuse toute écriture vers preprod et prod, `curl` compris dès
+  qu'il porte un corps ou un verbe autre que `GET`. Le local reste ouvert, ce dont un testeur a
+  besoin. *Pourquoi ce mécanisme et non `disable-model-invocation` : le champ supprimerait la voie
+  d'appel que la description promet à un orchestrateur. C'est la branche « maillon de pipeline » de la
+  R13 de `skill-craft`, qui porte la mesure.*
 
 ## References
 
