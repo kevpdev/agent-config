@@ -39,6 +39,15 @@ Aucune édition de mémoire.
    `aidd-context/skills/02-project-memory/references/review-protocol.md`, qui couvre ce que le critère
    ne voit pas : la revendication que le code contredit, le chemin ou la commande qui n'existe pas, le
    « pourquoi » que le code et l'historique ne soutiennent pas.
+   - **Lui écrire son instrument dans le prompt, pas seulement le nom de l'outil.** « La revendication
+     que le code contredit » est une question de code, donc elle se tranche avec l'outil de symboles du
+     projet quand elle porte sur une classe ou une méthode, et avec un **grep** quand elle porte sur du
+     SQL, une clé de properties ou un template CI. Ajouter aussi qu'un zéro rendu par un graphe se
+     calibre sur un symbole connu présent avant d'être lu comme une absence.
+     - *Pourquoi le prompt et pas l'outil : le harnais n'injecte au sous-agent que les **noms** des
+       outils MCP, jamais leurs descriptions — vérifié le 2026-08-27. Le checker verra donc qu'un outil
+       de symboles existe, et rien de ce que sa description interdit. Un checker qui interroge un
+       graphe de symboles sur une migration Flyway obtient zéro résultat, et déclare la doc fausse.*
 4. **Ne pas déléguer l'audit en bloc à `02-project-memory:03-check`.** Réutiliser son **protocole de
    revue** (étape 2), son **gabarit de rapport** et sa table « Duplicated facts ». Sauter son étape de
    correspondance structurelle.
@@ -103,6 +112,8 @@ Aucune édition de mémoire.
 - Le rapport existe au chemin attendu, et le résumé imprimé le nomme.
 - Le prompt de dispatch cite le chemin absolu de `references/memory-criteria.md` en extension de
   checklist. Sans cette citation, l'action n'a pas tourné.
+- Le prompt de dispatch porte la règle « symbole ou texte ? » en clair. Nommer l'outil sans sa règle
+  ne compte pas : sa description ne traverse pas jusqu'au sous-agent.
 - Chaque doublon relevé nomme les **deux** chemins et lequel garde le fait.
 - Chaque constat porte l'action qui le répare, une seule.
 - Le rapport ouvre sur `Passe <n> sur 3` et liste les constats déjà déclarés réparés. Un rapport sans

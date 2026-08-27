@@ -20,7 +20,19 @@ Une classification par fichier : `chemin → impact → régime → cible doc`. 
    | `*Controller*`, `*Dto*`, `*Request*`, `*Response*` | contrat API | reflet côté repo, **décision** côté contrat partagé | memory `api-docs.md` + README (section API) + **signaler** l'écart au contrat partagé (→ action 07) |
    | `*Service*`, `*Config*`, `*Orchestrator*` | archi/comportement | reflet | memory `codebase-map.md` + README (section archi/pipeline) |
 
-   **En `--audit`, sauter cette table.** Elle classe du **code** par son chemin, et un fichier de mémoire ne matche aucun de ses patterns. Classer alors chaque fichier du scope directement par la **table des régimes** de [regimes-de-doc.md](../references/regimes-de-doc.md), que l'étape 3 désigne déjà comme la source unique. La cible doc **est** le fichier lui-même, il n'y a pas de cible à déduire.
+   - **Choisir l'instrument avant de chercher, la question est « symbole ou texte ? »**
+
+     | Ce qu'on va vérifier | Instrument |
+     |---|---|
+     | une classe, une méthode, qui appelle quoi, ce qu'un changement casse | l'**outil de symboles** que le projet déclare, s'il en déclare un |
+     | la même question **à travers plusieurs dépôts** | l'outil **inter-dépôts** du projet, quand il en expose un |
+     | une clé de properties, du SQL, une migration, un template CI, une URL littérale | **grep**, scopé sur les dossiers d'enfants et jamais lancé depuis la racine du parent |
+
+     Appliqué aux trois lignes de la table ci-dessus : `.sql` et `migration/` sont du **texte**, `*Entity*`/`*Repository*` demandent les deux (l'outil de symboles pour la classe, grep pour le SQL), `*Controller*`/`*Service*`/`*Config*` sont du **symbole** — l'URL de l'endpoint restant du texte.
+     - **Où sont les noms concrets de ces outils** : dans la memory du projet, jamais ici. Ce skill sert plusieurs projets, donc il nomme des rôles et pas des outils. Chez Winggy-v3, c'est `aidd_docs/memory/codebase-map.md`, encadré « Pour une question de symbole, il existe un graphe ».
+     - **Un zéro rendu par un outil de graphe ne se lit pas comme une absence** sans l'avoir calibré sur un symbole dont on sait qu'il est là. *Pourquoi : un index périmé répond « aucun résultat » exactement comme un symbole qui n'existe pas. Mesuré le 2026-08-26 chez Winggy-v3, un symbole ajouté une seconde plus tôt ressortait absent.*
+
+   **En `--audit`, sauter la table d'impact ci-dessus** — pas celle de l'instrument, qui vaut dans les deux entrées. Elle classe du **code** par son chemin, et un fichier de mémoire ne matche aucun de ses patterns. Classer alors chaque fichier du scope directement par la **table des régimes** de [regimes-de-doc.md](../references/regimes-de-doc.md), que l'étape 3 désigne déjà comme la source unique. La cible doc **est** le fichier lui-même, il n'y a pas de cible à déduire.
    - *Pourquoi le dire au lieu de laisser déduire : sans cette ligne, la table ne rend aucune correspondance et l'audit ressort en « aucune surface impactée » — un arrêt sur un faux négatif, sur une action dont c'est précisément l'étape 4.*
 
 2. **Cibler.** Les **noms de sections README ne sont pas figés** : viser « la section qui couvre X ». La structure réelle du README (lue au préalable, cf. action 06) fait foi.

@@ -6,7 +6,7 @@ Détecte où vit le code et la doc, propose un scope, et le fait confirmer avant
 
 - Le CWD (repo courant).
 - Opt-in éventuel « WIP non commité » — réservé au cas rare où le code est figé mais pas encore commité, et toujours averti (« tu documentes du non-validé »).
-- Mode **`--audit`** éventuel : l'entrée est le **banc de mémoire** au home résolu, pas un diff de commits. Les étapes 1 et 2 ci-dessous ne changent pas, les étapes 3 et 4 prennent leur branche d'audit.
+- Mode **`--audit`** éventuel : l'entrée est le **banc de mémoire** au home résolu, pas un diff de commits. Les étapes 1 à 3 ci-dessous ne changent pas, les étapes 4 et 5 prennent leur branche d'audit.
 
 ## Output
 
@@ -42,20 +42,35 @@ Détecte où vit le code et la doc, propose un scope, et le fait confirmer avant
    - Sortie utile ici : la colonne **MEMORY** donne directement le verdict par enfant (`distribué` / `centralisé (memory/<nom>)` / `aucune`). La colonne **VCS** dit si l'enfant peut porter son propre commit — décisif pour l'étape de commit ci-dessous : en monorepo (`parent`), memory et README atterrissent dans le **même** repo, il n'y a pas deux commits à répartir.
 2. **Confirmer le contrat.** Le contrat partagé n'a **pas de nom de fichier conventionné** — ne pas grep un `shared-contract.md` en dur. Repérer le/les candidat(s) (souvent `shared-contract.md`, mais ça peut être `contract.md`, `api-contract.md`, une section d'un doc…), puis **faire confirmer à l'utilisateur quelle(s) doc(s) du parent tiennent le rôle de contrat partagé** avant de les traiter en régime décision.
    - Si aucune ne joue ce rôle, le coordinateur se réduit au Boulot 1 (chaque enfant chez lui) et il n'y a pas de contrat à traiter en décision.
-3. **Ancrer.** Par repo concerné, déterminer le point de référence. Git ne connaît pas les frontières de tâche : un range capture tout ce qui a bougé dedans, d'où l'élagage humain de l'étape 4. Déterminer la branche principale (`git symbolic-ref refs/remotes/origin/HEAD`, fallback `main`), puis choisir le scope :
+3. **Pré-voler.** Avant de calculer quoi que ce soit, **poser chaque dépôt du run sur sa branche par défaut et l'aligner sur le remote**. La doc reflète le code d'un environnement, pas celui d'une branche de passage.
+   - **Le périmètre du pré-vol** : les enfants visés, plus le parent s'il héberge la memory (centralisé) ou le contrat partagé. **Pas tous les dépôts du workspace** — aligner 33 dépôts pour documenter un enfant coûte sans rien apporter.
+   - **Un seul appel, et le skill ne tape aucune commande git lui-même.** Le geste est déterministe, il appartient à un script du projet, pas à cette action :
+     ```
+     bash scripts/git-sync.sh --repo backend/<enfant> --repo . --checkout-default
+     ```
+     *Le nom du script est celui du projet Winggy-v3. Sur un projet qui n'expose pas d'équivalent, lire d'abord son dossier de scripts (cf. la règle « lire `scripts/` avant d'agir » du `CLAUDE.md` projet) ; à défaut, dérouler à la main les quatre gestes du script — résoudre `git symbolic-ref refs/remotes/origin/HEAD`, refuser de bouger si l'arbre porte des modifications suivies ou si une opération git est en cours, `git checkout <défaut>`, puis `git merge --ff-only origin/<défaut>` — et **s'arrêter au premier refus de git**.*
+   - **Lire le code de sortie, il porte le verdict** : `0` → continuer ; `1` → **rendre la main**, le rapport nomme ce qui bloque (divergence, upstream disparu, ff refusé, bascule sautée) ; `2` → mesure invalide, ne **rien** conclure.
+   - **Garder le bloc `=== ÉTAT APRÈS PRÉ-VOL`.** Ses lignes (`dépôt`, `défaut`, `branche quittée`, `SHA`, `action`) sont le **tampon de provenance** de tout ce que le run va écrire : la doc dit « reflète `preprod@6cffe53` ». Sans lui, un lecteur ne peut pas savoir si la memory décrit un état qui existe encore.
+   - **La branche quittée se nomme, elle ne se restitue pas.** Le run finira sur une branche de doc (action 06), donc y revenir abandonnerait l'endroit où le travail a atterri. Rendre son nom à l'utilisateur en fin de run.
+   - **Les anomalies hors périmètre se capturent en une ligne, elles ne se traitent pas.** Une branche de feature divergente n'est pas le métier de cette action : « `develop2` diverge, hors périmètre, voir `git-sync.sh` », et on continue.
+   - **Le pré-vol tourne aussi en `--audit`.** L'audit n'a pas d'ancre git, mais les actions `05` et `07` vérifient toujours des affirmations contre le code **à HEAD** : un HEAD posé ailleurs leur fait juger la doc contre une branche que personne ne sert.
+   - *Pourquoi une étape à part et non une ligne dans l'ancrage, mesuré le 2026-08-27 sur les 32 enfants de Winggy-v3 : **11 dépôts** étaient posés sur une branche feature ou review, et rien dans la sortie du skill ne l'aurait trahi. Le défaut n'est pas qu'on lise une mauvaise branche, c'est que la doc produite soit indiscernable d'une doc juste.*
+
+4. **Ancrer.** Par repo concerné, déterminer le point de référence. Git ne connaît pas les frontières de tâche : un range capture tout ce qui a bougé dedans, d'où l'élagage humain de l'étape 5. La branche de référence est celle que le pré-vol a rendue en colonne `défaut` — **ne jamais écrire un nom de branche en dur**, et notamment pas `main` :
 
    | Situation | Scope proposé |
    |---|---|
-   | Branche feature ≠ main | `git diff --name-only $(git merge-base main HEAD)...HEAD` (commits only) |
-   | Dev direct sur main, commité | depuis le dernier commit doc : `base=$(git log -1 --format=%H -- README.md aidd_docs/memory/)` puis `git diff --name-only $base...HEAD` |
+   | HEAD ≠ le défaut, malgré le pré-vol (opt-in averti) | `git diff --name-only $(git merge-base "$defaut" HEAD)...HEAD` (commits only) |
+   | Dev direct sur le défaut, commité — **le cas normal après pré-vol** | depuis le dernier commit doc : `base=$(git log -1 --format=%H -- README.md aidd_docs/memory/)` puis `git diff --name-only $base...HEAD` |
    | Features mergées, doc oubliée | mode `--reconcile` (→ action 07), l'ancre git est non fiable |
    | WIP figé non commité (opt-in averti) | `git diff --name-only HEAD` + avertir que c'est du non-validé |
    | **Contrat partagé (coordinateur)** | **toujours `--reconcile`** (→ action 07) : le contrat est une décision, on le compare au code des enfants à HEAD |
    | **Audit du banc (`--audit`)** | **pas d'ancre git** : le scope est le banc au home résolu à l'étape 1, énuméré avec son **décompte de mots par fichier** |
 
    - **En `--audit`, ne pas chercher de base.** Il n'y a rien à comparer entre deux états : l'audit juge ce que le banc porte, pas ce qu'une tâche a changé. Un `merge-base` calculé là ne sert à rien et fait croire à un périmètre qui n'existe pas.
+   - *Pourquoi le nom de branche ne peut pas être écrit en dur, mesuré le 2026-08-27 : sur les 32 enfants de Winggy-v3, les défauts sont `preprod` ×13, `main` ×11, `develop` ×5 et `master` ×3. Un `main` en dur est faux sur **21** d'entre eux — 14 où la branche n'existe pas, donc `merge-base` plante, et **7 où elle existe sans être le défaut**, donc le `merge-base` sort faux sans que rien ne le signale (`comments`, `doc-forge`, `pinggy`, `reporting`, `esg-front-2`, `next-ui`, `i18n-library`). Le second groupe est le plus coûteux des deux.*
 
-4. **Confirmer.** Lister **commits + fichiers** du scope retenu, par repo (`git log --oneline $base...HEAD`), et demander de **confirmer ou élaguer** (par commit, ou filtre de chemin) — surtout sur main où des commits de plusieurs tâches se mélangent. N'avancer qu'avec le scope validé.
+5. **Confirmer.** Lister **commits + fichiers** du scope retenu, par repo (`git log --oneline $base...HEAD`), et demander de **confirmer ou élaguer** (par commit, ou filtre de chemin) — surtout sur la branche par défaut, où des commits de plusieurs tâches se mélangent. N'avancer qu'avec le scope validé.
    - **En `--audit`, l'élagage n'est plus une précaution, c'est la condition d'entrée.** Rendre le décompte **fichier par fichier** du home résolu (`wc -w <home>/*.md`), puis proposer par défaut **un seul fichier**, le plus lourd de la racine @-importée. Les suivants passent en runs séparés. Élargir reste possible, **nommément**, mais c'est l'humain qui décide de payer.
      - *Pourquoi un fichier et non la racine entière, mesuré le 2026-08-21 : un scope de 5 fichiers (10 226 mots) a rendu **31 constats** à la passe 1, à couverture partielle (~85 %). Le cycle de l'action 05 en tolère trois passes, il n'en efface pas 31 — l'audit rend alors un backlog au lieu d'un banc à jour. Le seul `architecture.md` en a rendu 15, ce qui est déjà la limite haute de ce qu'une passe répare.*
      - *Pourquoi le décompte d'abord, avant même la proposition : c'est lui qui dit quel fichier passe en premier, et il permet d'élaguer sur un fait au lieu du ressenti. Un scope proposé sans chiffre se valide en bloc.*
@@ -73,6 +88,6 @@ Détecte où vit le code et la doc, propose un scope, et le fait confirmer avant
   **Contrôle calibré** : la même commande lancée depuis un sous-dossier doit rendre « mono-projet ». Si elle rend des enfants des deux endroits, le script a changé et ce prérequis est à réécrire ; si elle rend « mono-projet » des deux, le `cwd` était faux.
 - En coordinateur, aucune doc n'est traitée en contrat partagé sans confirmation utilisateur explicite.
 - Le scope présenté est un range de commits (`base...HEAD`), jamais le working tree — sauf opt-in WIP averti.
-- **En `--audit`, aucun range de commits n'apparaît dans la sortie.** Un `base...HEAD` affiché signifie que l'étape 3 a pris la branche du diff au lieu de celle de l'audit.
+- **En `--audit`, aucun range de commits n'apparaît dans la sortie.** Un `base...HEAD` affiché signifie que l'étape 4 a pris la branche du diff au lieu de celle de l'audit.
 - **En `--audit`, le scope validé porte un décompte de mots par fichier**, et le défaut proposé était **un seul fichier**. Un scope d'audit sans chiffre par fichier n'a pas été présenté, il a été supposé ; un scope d'audit qui propose d'office plusieurs fichiers n'a pas été borné.
 - Aucune édition n'a eu lieu à ce stade : la sortie est seulement la topologie + le scope confirmé.
