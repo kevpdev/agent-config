@@ -71,6 +71,8 @@ Dérouler le flux. Ne lire que la prochaine action.
   ticket, et pourquoi ce champ gèle le brouillon
 - `references/rendu-jira.md` — ce que devient le markdown envoyé au connecteur, mesuré par
   aller-retour sur un ticket d'essai
+- `references/redaction-chiffres.md` — pourquoi l'intention prime sur le compte dans un ticket,
+  et à quelles conditions une liste chiffrée y a sa place
 
 ## Assets
 

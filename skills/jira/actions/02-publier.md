@@ -35,6 +35,10 @@ l'URL et les champs envoyés. Si l'humain n'a pas autorisé l'écriture, une pro
      ne nourrit pas se remplit en le disant, jamais en inventant sa matière.
 5. **Mettre le texte en forme** selon [rendu-jira](../references/rendu-jira.md). C'est l'étape que
    personne ne pense à faire, et son oubli se voit dans le ticket publié.
+   - **Contrôler les chiffres** selon [redaction-chiffres](../references/redaction-chiffres.md) :
+     l'intention à la place d'un état du parc, et au plus une liste chiffrée, datée et portant son
+     alerte de péremption. *Pourquoi ici : un compte est vrai le jour où on l'écrit, et c'est le
+     dernier moment où il peut encore être remplacé par ce qu'il voulait dire.*
 6. **Demander l'autorisation, sous le titre littéral `## Autorisation requise`, en une seule question
    qui porte tout** : le projet et le type visés, le résumé exact, la liste des champs envoyés, et le
    fait que la création est définitive.
@@ -60,6 +64,7 @@ l'URL et les champs envoyés. Si l'humain n'a pas autorisé l'écriture, une pro
 | --- | --- |
 | une publication complète, de bout en bout | aucun appel d'écriture n'a précédé la question portant le titre `## Autorisation requise`, et le projet visé figure dans la liste que la mémoire du dépôt autorise |
 | la description envoyée | elle porte toutes les sections du gabarit résolu, et aucune autre |
+| les chiffres de la description envoyée | aucun compte ne décrit l'état courant du parc, et la liste chiffrée éventuelle apparaît une seule fois, datée et suivie de son alerte de péremption |
 | un brouillon dont la mémoire déclare une surcharge de gabarit illisible | l'action s'arrête, aucun appel d'écriture n'a lieu |
 | le texte envoyé, relu dans le ticket | aucun paragraphe replié à la main, et les puces, titres, tableaux et blocs de code gardent leurs retours, comme [rendu-jira](../references/rendu-jira.md) le mesure |
 | le brouillon après succès | son frontmatter porte la clé du ticket, son corps est inchangé, et aucun champ du ticket n'y est recopié au-delà de la clé |
