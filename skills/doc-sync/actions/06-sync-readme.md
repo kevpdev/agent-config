@@ -21,7 +21,8 @@ Les README impactés patchés par edits ciblés (jamais de réécriture complèt
      | plusieurs tickets mêlés, ou mode `--audit` | `docs/sync-<yyyy-mm-dd>` |
 
      Le ticket se déduit des messages de commit du scope validé. Le préfixe `docs/` et la forme `type/<ticket>` viennent de la convention du projet — la lire, ne pas l'inventer : chez Winggy-v3 c'est `aidd_docs/memory/vcs.md`, § Branch Naming Convention.
-   - **En coordinateur centralisé, deux dépôts reçoivent un commit, donc deux branches** : la memory au parent, le README chez l'enfant. Les créer séparément, avec le même nom de branche pour que la paire se retrouve.
+   - **Qui reçoit une branche se lit dans la convention du projet, pas ici.** En coordinateur centralisé, deux dépôts reçoivent un commit — la memory au parent, le README chez l'enfant — et il ne s'ensuit pas deux branches. Chez Winggy-v3, `aidd_docs/memory/vcs.md` § Branch Naming Convention borne la convention aux **dépôts enfants**, « là où le code est committé, pas au parent orchestrateur » : la memory se commite alors sur le **défaut** du parent, et seul l'enfant reçoit sa branche `docs/…`. Quand la convention ne borne rien, créer les deux séparément, avec le même nom de branche pour que la paire se retrouve.
+     - *Pourquoi la convention du repo passe devant cette page : elle vit dans le repo après le run et lie tous ceux qui y touchent, quand la règle de ce skill n'est qu'un défaut. Mesuré le 2026-08-28 sur le run VW3-3220 de `backend/calculator` : appliquer « deux branches » aurait sorti le parent de `main` sous une autre session qui y travaillait, pour un commit que la convention y attend.*
    - *Pourquoi cette étape est ici et pas à l'action 01 : le pré-vol doit laisser le dépôt sur son défaut, sinon les actions 02 à 05 liraient le code de la branche de doc. La bascule n'a lieu qu'au moment où on va écrire.*
 1. **Ordonner.** Memory d'abord (source relue par `/plan`), README ensuite — donc cette action suit toujours 03.
 2. **Analyser (délégué).** Déléguer lecture + analyse à un sous-agent pour préserver le contexte parent :
@@ -41,5 +42,5 @@ Les README impactés patchés par edits ciblés (jamais de réécriture complèt
 - En coordinateur, un README par enfant impacté est traité, plus le parent pour le cross-cutting.
 - La structure/conventions du README ont été relevées (via le sous-agent) avant tout edit.
 - Le commit doc est seulement proposé, par repo, **et la proposition nomme sa branche** ; aucun `git commit` n'est lancé sans go-ahead explicite.
-- **Aucune édition n'a eu lieu sur une branche par défaut.** `git rev-parse --abbrev-ref HEAD` sur chaque dépôt touché rend une branche `docs/…`, jamais le défaut que le pré-vol avait résolu. Une édition commitée sur le défaut est un défaut de cette action, pas un raccourci.
+- **Aucun dépôt à qui la convention du projet demande une branche n'a été édité sur son défaut.** `git rev-parse --abbrev-ref HEAD` rend une branche `docs/…` sur chacun d'eux. Un dépôt que cette convention exclut nommément — le parent orchestrateur chez Winggy-v3 — fait exception, et l'exception se **cite** en rendant la ligne qui la porte. Une édition commitée sur un défaut sans cette citation est un défaut de cette action, pas un raccourci.
 - La clôture rend, par dépôt, la branche de doc **et** la branche quittée par le pré-vol.
