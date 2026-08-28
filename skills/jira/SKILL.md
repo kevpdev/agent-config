@@ -42,17 +42,28 @@ Dérouler le flux. Ne lire que la prochaine action.
   donc aucune donnée d'un client n'y entre. Et c'est le mécanisme prévu par le framework, dont
   `01-ticket-info/references/tool-detection.md` place l'outil de ticketing dans la mémoire projet.*
 - **Rien ne part vers Jira sans une demande explicite à l'humain**, nommant le ticket visé et ce que
-  l'appel va écrire. *Pourquoi : un ticket créé ne se supprime pas forcément, le droit de suppression
-  n'étant ni acquis pour l'humain ni exposé par le connecteur MCP. Une écriture est donc définitive.*
+  l'appel va écrire. Vaut pour une création, un commentaire, un lien **et une édition**. Attendre sa
+  réponse, ne jamais la déduire d'un accord donné plus tôt sur autre chose. *Pourquoi : un ticket créé
+  ne se supprime pas forcément, le droit de suppression n'étant ni acquis pour l'humain ni exposé par
+  le connecteur MCP. Une écriture est donc définitive.*
+  **Demander reste une consigne tant qu'un garde ne l'adosse pas.** Un harnais permissif saute les
+  invites ordinaires, donc cette règle ne tient rien toute seule. Quand le harnais sait rendre une
+  invite qui survit à ce mode, l'adosser à ce mécanisme plutôt que compter sur ma discipline : ça
+  transforme la même demande en porte. *Mesuré sur Claude Code 2.1.250 : une règle `permissions.ask`
+  prompte même en `bypassPermissions`, et un hook rendant `"allow"` ne l'écrase pas.*
 - **Un garde déterministe peut tenir la porte, et il a le dernier mot.** Si le dépôt en déclare un, son
   refus n'est pas un obstacle à contourner mais la réponse : demander à l'humain ce que le message du
   garde réclame. *Pourquoi : réessayer un appel refusé transforme un garde en ralentisseur.*
 - **Jira fait foi après publication, le dépôt garde le raisonnement.** Le brouillon devient un
   instantané de ce qui a été soumis, jamais le miroir du ticket vivant. *Pourquoi : l'équipe corrige
   les tickets publiés, donc une copie dans le dépôt divergerait en silence.*
-- **Aucune modification d'un ticket existant.** Ce skill crée, commente et relie. Éditer, transitionner
-  ou pointer du temps appartient à l'humain. *Pourquoi : qui déplace un ticket en répond, et
-  l'historique dit qui a décidé, pas quel outil a tapé.*
+- **Éditer un ticket existant demande deux conditions, jamais une.** La confirmation ci-dessus, et
+  **l'humain doit être le rapporteur du ticket** — lu par un appel sur le champ `reporter` *avant*
+  l'édition, jamais supposé. Rapporteur différent, on s'arrête et on rend le texte à coller.
+  *Pourquoi la vérification et pas la confiance : un garde déterministe n'a ni réseau ni credentials,
+  il ne peut pas lire ce champ. La borne n'existe que si ce skill la mesure.*
+- **Transitionner un ticket ou y pointer du temps reste à l'humain**, même confirmé. *Pourquoi : qui
+  déplace un ticket en répond, et l'historique dit qui a décidé, pas quel outil a tapé.*
 
 ## References
 
