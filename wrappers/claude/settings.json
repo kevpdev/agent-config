@@ -54,5 +54,6 @@
   "outputStyle": "chat-style",
   "effortLevel": "high",
   "skipDangerousModePermissionPrompt": false,
+  "model": "opus",
   "autoMemoryEnabled": false
 }
