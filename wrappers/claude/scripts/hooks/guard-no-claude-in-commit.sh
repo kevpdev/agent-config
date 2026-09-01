@@ -49,10 +49,22 @@ print('yes' if is_git_commit(toks) else 'no')
 " 2>/dev/null || echo "no")
 [ "$is_commit" != "yes" ] && exit 0
 
-# Block staging the personal bypass risk-ack into the tracked team settings.json.
+# Block staging the personal bypass risk-ack into the TRACKED USER-LEVEL settings.
 # Claude Code re-injects "skipDangerousModePermissionPrompt": true into
-# ~/.claude/settings.json on bypass launch; it belongs in settings.local.json,
-# never in the team file. Only acts when the commit targets the ~/.claude repo.
+# ~/.claude/settings.json on bypass launch, and that file is a symlink into this
+# repo, so the ack lands in a commit unless something stops it.
+#
+# WHAT PASSES, AND WHY IT MUST — measured in the binary on 2026-09-01:
+#   function lA(){return!!(_e("userSettings")?.skipDangerousModePermissionPrompt
+#     ||_e("localSettings")?....||_e("flagSettings")?....||_e("policySettings")?....)}
+#   Two facts follow. projectSettings is ABSENT, so the key is inert in a
+#   .claude/settings.json and only works from .claude/settings.local.json. And it
+#   is an OR, not a precedence chain, so a `false` cannot turn anything off — it
+#   is a sentinel that makes the tool's re-injection visible in `git diff`.
+#   Blocking `false`, or blocking a per-project opt-in, would therefore refuse
+#   valid work. A guard that refuses valid work gets switched off.
+#
+# Only acts when the commit targets the repo holding the user-level file.
 #
 # Resolve the repo ACTUALLY targeted — independent of command shape or where
 # git is run from: honor an explicit `-C <path>`, else a leading `cd <path>`,
@@ -70,16 +82,26 @@ target="${target//\$\{HOME\}/$HOME}"
 target="${target//\$HOME/$HOME}"
 case "$target" in /*) ;; *) target="$cwd/$target" ;; esac
 
-# Matched by FILENAME in the targeted repo, not by repo path. The file used to
-# live in ~/.claude and now lives in agent-config (wrappers/claude/settings.json,
-# reached by symlink); gating on "$HOME/.claude" meant the guard silently stopped
-# covering it the day it moved. Same failure mode as listing hosts instead of
-# resolving them: an enumeration of homes drifts, a property does not.
+# Identify the user-level file by RESOLVING ~/.claude/settings.json, not by
+# listing paths. The file used to live in ~/.claude and now lives in agent-config
+# (wrappers/claude/settings.json, reached by symlink); an enumeration of homes
+# drifts, a property does not. The suffix test below is the fallback for a
+# machine where the symlink is not deployed yet — there the repo path is all
+# there is to go on.
+user_settings=$(readlink -f "$HOME/.claude/settings.json" 2>/dev/null || true)
+toplevel=$(git -C "$target" rev-parse --show-toplevel 2>/dev/null || true)
+
 offender=""
 while IFS= read -r f; do
   [ -z "$f" ] && continue
+  [ -z "$toplevel" ] && continue
+  abs=$(readlink -f "$toplevel/$f" 2>/dev/null || echo "$toplevel/$f")
+  # Not the user-level file → a per-project setting, which is the owner's call.
+  if [ "$abs" != "$user_settings" ] && [[ "$abs" != */wrappers/claude/settings.json ]]; then
+    continue
+  fi
   if git -C "$target" diff --cached -- "$f" 2>/dev/null \
-       | grep -qE "^\+.*skipDangerousModePermissionPrompt"; then
+       | grep -qE '^\+.*"skipDangerousModePermissionPrompt"[[:space:]]*:[[:space:]]*true'; then
     offender="$f"
     break
   fi
@@ -92,7 +114,7 @@ import json, sys
 p = sys.argv[1]
 print(json.dumps({
     'decision': 'block',
-    'reason': 'Staged file ' + p + ' adds skipDangerousModePermissionPrompt (a personal bypass risk-ack). It must never land in a tracked settings file. Unstage it with: git restore --staged ' + p + '  — keep your worktree copy, this key belongs in settings.local.json.'
+    'reason': 'Staged file ' + p + ' sets skipDangerousModePermissionPrompt to true in the user-level settings (the target of ~/.claude/settings.json). That is a personal bypass risk-ack the tool re-injects on every bypass launch; it must never land in a tracked user-level file. Unstage it with: git restore --staged ' + p + '  — keep your worktree copy. To opt a project in, put the key in that project\'s .claude/settings.local.json instead: the key is read from localSettings, and is inert in a .claude/settings.json.'
 }))
 " "$offender"
   exit 0

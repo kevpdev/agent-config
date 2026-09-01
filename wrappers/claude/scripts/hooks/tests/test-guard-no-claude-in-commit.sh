@@ -204,6 +204,71 @@ verifier "cd via variable puis -F relatif"   BLOQUE 'G=/tmp/x && cd "$G" && git 
 # Meme forme, mais le dossier est litteral : la resolution aboutit, donc on juge.
 verifier "cd litteral puis -F relatif"       BLOQUE "cd $TMP && git commit -q -F mauvais.txt"
 
+
+# ---------------------------------------------------------------------------
+# BYPASS RISK-ACK — les seuls cas de ce fichier qui montent un depot reel.
+#
+# POURQUOI ils en ont besoin : le garde ne juge plus la commande, il juge le
+# DIFF STAGE. Sans index, il n'y a rien a lire, et la branche restait donc
+# entierement non testee depuis qu'elle existe.
+#
+# CE QUE LA BATTERIE FIGE : la clé se bloque sur un couple, sa VALEUR et le
+# FICHIER. `true` dans le fichier de niveau user est refuse ; tout le reste
+# passe. Mesure du 2026-09-01 dans le binaire, `lA()` lit la clé depuis
+# userSettings, localSettings, flagSettings et policySettings — jamais depuis
+# projectSettings, et par un OU. Donc un `false` n'eteint rien (c'est une
+# sentinelle qui rend visible la reinjection de l'outil) et l'opt-in d'un projet
+# ne vit que dans son `.claude/settings.local.json`. Bloquer l'un ou l'autre
+# refuserait du travail valide.
+DEPOT=$(mktemp -d)
+git -C "$DEPOT" init -q
+git -C "$DEPOT" config user.email t@t.t
+git -C "$DEPOT" config user.name t
+mkdir -p "$DEPOT/wrappers/claude" "$DEPOT/.claude"
+printf '{\n  "effortLevel": "high"\n}\n' > "$DEPOT/wrappers/claude/settings.json"
+printf '{}\n' > "$DEPOT/.claude/settings.json"
+printf '{}\n' > "$DEPOT/.claude/settings.local.json"
+git -C "$DEPOT" add -A
+git -C "$DEPOT" commit -qm "base"
+
+# Le chemin du wrapper suffit a identifier le fichier de niveau user : le garde
+# resout d'abord le symlink ~/.claude/settings.json, et retombe sur le suffixe
+# quand il ne pointe pas la (machine ou le harnais n'est pas encore deploye).
+verifier_ack() {
+  local nom="$1" fichier="$2" valeur="$3" attendu="$4"
+  local obtenu
+  git -C "$DEPOT" checkout -q -- . 2>/dev/null
+  git -C "$DEPOT" reset -q
+  python3 - "$DEPOT/$fichier" "$valeur" <<'PY'
+import json, sys
+chemin, valeur = sys.argv[1], sys.argv[2] == "true"
+d = json.load(open(chemin))
+d["skipDangerousModePermissionPrompt"] = valeur
+open(chemin, "w").write(json.dumps(d, indent=2) + "\n")
+PY
+  git -C "$DEPOT" add "$fichier"
+  obtenu=$(python3 -c "
+import json, sys
+print(json.dumps({'tool_name':'Bash','tool_input':{'command':sys.argv[1]},'cwd':sys.argv[2]}))
+" "git -C $DEPOT commit -m 'chore(x): y'" "$DEPOT" | bash "$HOOK" | python3 -c "
+import sys, json
+brut = sys.stdin.read().strip()
+print('BLOQUE' if brut and json.loads(brut).get('decision') == 'block' else 'PASSE')
+")
+  if [ "$obtenu" = "$attendu" ]; then
+    printf 'OK    %-42s %s\n' "$nom" "$obtenu"
+  else
+    printf 'ECHEC %-42s obtenu=%s attendu=%s\n' "$nom" "$obtenu" "$attendu"
+    ECHECS=$((ECHECS + 1))
+  fi
+}
+
+verifier_ack "user-level + true"            wrappers/claude/settings.json true       BLOQUE
+verifier_ack "user-level + false sentinelle" wrappers/claude/settings.json false      PASSE
+verifier_ack "projet settings.json + true"  .claude/settings.json         true       PASSE
+verifier_ack "projet settings.local + true" .claude/settings.local.json   true       PASSE
+
+rm -rf "$DEPOT"
 echo
 if [ "$ECHECS" -eq 0 ]; then
   echo "TOUS LES CAS PASSENT"
