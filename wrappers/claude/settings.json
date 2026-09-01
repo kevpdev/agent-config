@@ -52,5 +52,6 @@
     }
   },
   "outputStyle": "chat-style",
-  "effortLevel": "high"
+  "effortLevel": "high",
+  "autoMemoryEnabled": false
 }
