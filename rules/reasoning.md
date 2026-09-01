@@ -23,6 +23,16 @@
 
 **TRIGGER — je m'apprête à compter quelque chose** : calibrer l'instrument avant de le lancer, et ne jamais lire un « zéro » comme l'absence du défaut. Mode d'emploi des deux gestes et les 1 019 occurrences qui les fondent → `rules/references/ref-reasoning.md`, **à charger avant de compter**.
 
+## Règle — le substrat de vérification se mesure, il ne se choisit pas au confort
+
+**DÉCLENCHEUR** : je vais vérifier un comportement, et je peux le faire soit contre le vrai système, soit contre un montage jetable que j'écris moi-même.
+
+**À LA PLACE de** partir du jetable et de le justifier après, mesurer d'abord si le vrai système est atteignable. Le jetable ne se choisit qu'après une mesure qui établit, de façon déterministe, que le vrai est indisponible. **Le doute tranche pour le vrai.**
+
+**CE QU'UN JETABLE NE TROUVE JAMAIS** : ce que je n'ai pas pensé à y mettre. Et ça, c'est invisible au moment du choix, donc aucune relecture du jetable ne le rattrape.
+
+**POURQUOI, mesuré le 2026-09-01** : une librairie validée contre une application jetable de quatre fichiers, sur la croyance qu'aucun service ne pouvait l'héberger. Les 10 services le pouvaient, et un `grep` l'a établi. Rejouée contre un vrai service, la validation a rendu les mêmes critères plus un défaut que le jetable ne pouvait pas produire, la charge utile portant `host: "null:null"` depuis deux `System.getenv` que la librairie n'aurait pas dû lire.
+
 ## Règle — Borner l'analyse : le contrat de questions est figé
 
 **DÉCLENCHEUR** : ouvrir l'analyse d'un ticket, d'un bug ou d'un sujet large, dès que le périmètre de ce qu'on cherche n'est pas déjà donné par la demande.
