@@ -3,3 +3,7 @@
 # not when it runs as the hook entry point.
 __pycache__/
 *.pyc
+
+# Override perso par machine (model, skipDangerousModePermissionPrompt...) —
+# chaque clone garde le sien, jamais partagé.
+.claude/settings.local.json

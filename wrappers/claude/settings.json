@@ -54,6 +54,6 @@
   "outputStyle": "chat-style",
   "effortLevel": "high",
   "skipDangerousModePermissionPrompt": false,
-  "model": "opus",
+  "model": "sonnet",
   "autoMemoryEnabled": false
 }
