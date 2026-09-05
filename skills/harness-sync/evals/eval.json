@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "id": "not-doc-sync",
+      "skill": "harness-sync",
+      "query": "la doc du README a divergé du code, remets-la à jour",
+      "expect_trigger": false
+    },
+    {
+      "id": "not-update-config",
+      "skill": "harness-sync",
+      "query": "ajoute une permission pour les commandes npm dans mon settings.json",
+      "expect_trigger": false
+    },
+    {
+      "id": "not-aidd-vcs-commit",
+      "skill": "harness-sync",
+      "query": "committe les changements du fichier UserService.java avec un message conventionnel",
+      "expect_trigger": false
+    },
+    {
+      "id": "own-domain-floor",
+      "skill": "harness-sync",
+      "query": "vérifie que ce repo est bien synchronisé avec le harnais Claude Code déployé sur ce poste",
+      "expect_trigger": false
+    }
+  ]
+}
