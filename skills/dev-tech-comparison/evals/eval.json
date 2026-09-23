@@ -1,0 +1,20 @@
+[
+  {
+    "skill": "dev-tech-comparison",
+    "id": "negatif-domaine-propre",
+    "expect_trigger": false,
+    "query": "Fais-moi un comparatif HTML entre Mistral OCR 3 et OCR 4.1 pour extraire nos factures de consommables."
+  },
+  {
+    "skill": "dev-tech-comparison",
+    "id": "negatif-vers-artifact-design",
+    "expect_trigger": false,
+    "query": "Publie-moi une page sur claude.ai qui présente notre roadmap du trimestre."
+  },
+  {
+    "skill": "dev-tech-comparison",
+    "id": "negatif-vers-anthropic-skills-docs",
+    "expect_trigger": false,
+    "query": "Crée un doc partagé où l'équipe pourra commenter la spec de l'API de paiement."
+  }
+]
