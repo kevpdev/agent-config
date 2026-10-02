@@ -63,7 +63,7 @@ Ces règles sont des frontières dures : elles ne dépendent ni de la profondeur
 
 **V3.** Privilégie les sources primaires. Compte les sources indépendantes : dix pages qui citent la même étude comptent pour une.
 
-**V4. Fraîcheur.** Sujet stable : pas de limite. Sujet évolutif : source de moins de 12 mois. Sujet temps réel : moins de 3 mois. Une source sans date est étiquetée *Non vérifié* pour tout sujet évolutif.
+**V4. Fraîcheur.** Sujet stable : pas de limite. Sujet évolutif : source de moins de 12 mois. Sujet temps réel : moins de 3 mois. Une source sans date est étiquetée *Non vérifié* pour tout sujet évolutif. Une affirmation qui rapporte une étude datée en écrivant son année (« un essai de 2025 trouve… ») est exemptée de la fenêtre, à condition qu'au moins une source dans la fenêtre décrive l'état actuel.
 
 **V5.** Au moins une recherche vise à réfuter l'hypothèse, pas à la confirmer.
 

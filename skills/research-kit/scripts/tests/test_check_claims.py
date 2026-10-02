@@ -123,7 +123,38 @@ def cas_hors_ligne():
     L.append(("fr. et en.wikipedia comptés comme un seul domaine",
               variante(lambda c, t: (c[0].update(source_url="https://en.wikipedia.org/wiki/HTTP"),
                                      t[3]["pages_ouvertes"].append("https://en.wikipedia.org/wiki/HTTP"))),
-              "1 domaine(s)"))
+              "1 origine(s)"))
+
+    # Session de test du 2026-10-02 : revues lues via PubMed, sites des revues en 403.
+    PUBMED = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id="
+
+    def via_pubmed(prefixe2):
+        def modif(c, t):
+            c.pop(2)
+            c[0].update(source_url=PUBMED + "1", doi="10.1136/bmj-2024-082007")
+            c[1].update(source_url=PUBMED + "2", doi=f"{prefixe2}/nutrit/nuaf001")
+            t[3]["pages_ouvertes"] = [PUBMED + "1", PUBMED + "2"]
+        return modif
+    L.append(("deux revues lues via PubMed : deux origines par DOI",
+              variante(via_pubmed("10.1093")), None))
+    L.append(("deux DOI du même éditeur : une seule origine",
+              variante(via_pubmed("10.1136")), "1 origine(s)"))
+
+    def evolutif(c, t):
+        t[0].update(fraicheur="evolutif")
+        c[0].update(claim="un essai de 2022 trouve que HTTP est sans état", constat_date=True)
+    L.append(("constat daté avec l'année, autre source récente",
+              variante(evolutif), None))
+    L.append(("constat daté sans l'année dans l'affirmation",
+              variante(lambda c, t: (evolutif(c, t), c[0].update(claim="HTTP est sans état"))),
+              "sans l'année 2022"))
+    L.append(("constats datés seulement",
+              variante(lambda c, t: (evolutif(c, t),
+                                     c[1].update(claim="avis de 2026", constat_date=True))),
+              "aucune source récente"))
+    L.append(("url_verification lue, source_url pour l'humain",
+              variante(lambda c, t: c[0].update(source_url="https://doi.org/10.17487/RFC9110",
+                                                url_verification=RFC)), None))
     return [(n, v, a, ()) for n, v, a in L]
 
 

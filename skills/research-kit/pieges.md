@@ -15,8 +15,8 @@ Catalogue des pièges, converti en grille de vérification. Il est consulté à 
 | ID | Piège | Comment le détecter | Règle |
 |---|---|---|---|
 | SRC1 | Source non fiable (blog SEO, forum, agrégateur) retenue alors qu'une primaire existe | une source primaire a-t-elle été cherchée, et si elle manque, le motif est-il consigné ? | V3 **(lite)** |
-| SRC2 | Source périmée ou sans date | date de publication présente, et dans la fenêtre de fraîcheur du sujet | V4 **(lite)** |
-| SRC3 | Fausse pluralité : dix pages qui citent la même étude | remonter la chaîne de citations, compter les origines distinctes | V3 |
+| SRC2 | Source périmée ou sans date | date de publication présente, et dans la fenêtre de fraîcheur du sujet, sauf constat daté qui écrit son année | V4 **(lite)** |
+| SRC3 | Fausse pluralité : dix pages qui citent la même étude | remonter la chaîne de citations, compter les origines distinctes (script : préfixe DOI, sinon domaine) | V3 |
 | SRC4 | Conflit d'intérêts non signalé (étude financée par l'acteur concerné) | producteur, financeur et intérêt selon la conclusion sont-ils notés ? | P6 |
 | SRC5 | Prépublication ou communiqué présenté comme résultat établi | statut de la publication (relue par des pairs ou non) écrit à côté de l'étiquette | V3 |
 | SRC6 | Source jamais ouverte, citée à partir de l'aperçu d'un résultat de recherche | l'URL figure-t-elle parmi les pages ouvertes de la trace, et son `extrait` se retrouve-t-il dans la page ? (script : `--trace`, `--en-ligne`) | V2 **(lite)** |
@@ -79,7 +79,7 @@ Catalogue des pièges, converti en grille de vérification. Il est consulté à 
 |---|---|---|---|
 | AGT1 | Arrêt trop précoce, ou recherche sans fin | l'arrêt vient-il d'une saturation constatée ou d'un budget atteint, pas d'une lassitude ? | B5, B6 |
 | AGT2 | Injection de prompt via une page : une instruction trouvée dans une page a été suivie | aucune action de la trace ne découle d'une instruction lue dans une page, et toute tentative est consignée | B3 **(lite)** |
-| AGT3 | Dépassement de budget « pour bien faire » | compteurs réels de la trace comparés aux budgets de `pipeline.md` §3 | B5 **(lite)** |
+| AGT3 | Dépassement de budget « pour bien faire » | compteurs réels de la trace comparés aux budgets de `pipeline.md` §3, chaque requête à une base comptée comme recherche (`pipeline.md` §4) | B5 **(lite)** |
 | AGT4 | Extension de périmètre silencieuse | le livrable couvre-t-il uniquement ce que l'étape 1 a fixé ? | B1 |
 | AGT5 | Action hors lecture seule sans accord : écriture, envoi, installation | la trace liste-t-elle une action hors du dossier de travail ? | B2 |
 | AGT6 | Moyen déclaré utilisé sans résultat réel (script « exécuté » sans sortie rapportée) | la sortie réelle du script ou le oui/non écrit par critère figure-t-il dans la trace ? | `guardrails.md` §5 |

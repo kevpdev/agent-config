@@ -119,6 +119,8 @@ Trace : <la ligne JSON à écrire>
 
 Toute requête lancée et toute page ouverte figurent dans la trace, quelle que soit l'étape qui les produit : ce sont elles que le script compte contre les budgets.
 
+Une **recherche** est toute requête envoyée à un moteur ou à une base : moteur web, API bibliographique, recherche interne à un site. Elle compte quel que soit le moyen qui l'envoie. Une récupération par identifiant exact (URL, DOI, PMID) est une **page ouverte**. Le script ne voit que la trace, donc l'étape 7 contrôle que la trace n'oublie aucune recherche.
+
 ## 5. Les étapes
 
 ### Étape 1 : Cadrage
@@ -190,8 +192,8 @@ Sortie : pour chaque source retenue, type (primaire, secondaire, tertiaire), pro
 
 Critères déterministes
 - [ ] chaque source retenue porte une date
-- [ ] sujet évolutif : source de moins de 12 mois. Temps réel : moins de 3 mois (V4)
-- [ ] nombre de domaines indépendants ≥ 2 en L2, ≥ 3 en L3 (valeurs de départ), citations en chaîne comptées pour une (V3)
+- [ ] sujet évolutif : source de moins de 12 mois. Temps réel : moins de 3 mois. Un constat daté en est exempté (V4)
+- [ ] nombre d'origines indépendantes ≥ 2 en L2, ≥ 3 en L3 (valeurs de départ), citations en chaîne comptées pour une (V3). L'origine est le préfixe DOI quand il est connu, sinon le domaine
 
 Critères probabilistes
 - [ ] la source est-elle primaire et fiable ?
@@ -334,7 +336,13 @@ Un champ obligatoire absent est un échec déterministe de l'étape 5. Trois exc
 
 L'`extrait` est ce qui transforme une déclaration en constat : `"opened": true` est écrit par l'agent, alors que la présence de l'extrait dans la page se vérifie sans lui. Une page qui ne se télécharge pas, un PDF ou une page rendue par script donnent « non vérifiable », qui n'est pas un échec mais se déclare.
 
-Le champ optionnel `sources_supplementaires` (liste d'URL) permet à une affirmation *Établi* de s'appuyer sur deux domaines indépendants quand sa source principale n'est pas primaire.
+Le champ optionnel `sources_supplementaires` (liste d'URL) permet à une affirmation *Établi* de s'appuyer sur deux origines indépendantes quand sa source principale n'est pas primaire.
+
+Trois autres champs sont optionnels :
+
+- `doi` : l'identifiant de la publication. L'indépendance se compte alors par préfixe DOI, qui désigne l'éditeur, et non par le site où la page a été lue. Quatre revues lues sur une même base comptent pour quatre.
+- `url_verification` : l'URL réellement lue, par exemple une version en texte brut servie par une API. Le script la télécharge et la cherche dans les pages ouvertes. `source_url` reste alors la page qu'un humain peut ouvrir (site de la revue, `https://doi.org/…`, notice).
+- `constat_date` : `true` quand l'affirmation rapporte une étude datée (« un essai de 2025 trouve… ») au lieu de décrire l'état actuel. L'année de la source doit figurer dans le texte de `claim`. L'affirmation sort de la fenêtre de fraîcheur, à condition qu'au moins une autre affirmation y reste (V4).
 
 Le script `scripts/check_claims.py` lit ce registre. Il accepte une liste JSON, un objet `{"claims": [...]}` ou un fichier JSON Lines.
 

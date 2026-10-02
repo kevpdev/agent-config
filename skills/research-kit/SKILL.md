@@ -1,6 +1,6 @@
 ---
 name: research-kit
-description: Recherche sourcée et vérifiable sur le web. Décompose la question, cherche, évalue les sources, étiquette chaque affirmation (Établi, Probable, Contesté, Non vérifié) et annonce le niveau de garantie atteint. Utiliser quand l'utilisateur veut rechercher, analyser, comparer, expliquer, vérifier une affirmation au fil d'une recherche, ou rédiger un contenu sourcé. NE PAS utiliser pour vérifier un document ou une thèse entière (→ fact-checker), pour un comparatif technique rédigé en HTML (→ dev-tech-comparison), ni pour chercher dans du code ou des fichiers locaux.
+description: Recherche sourcée et vérifiable sur le web. Décompose la question, cherche, évalue les sources, étiquette chaque affirmation (Établi, Probable, Contesté, Non vérifié) et annonce le niveau de garantie atteint. Utiliser quand l'utilisateur veut rechercher, analyser, comparer, expliquer, vérifier une affirmation au fil d'une recherche, ou rédiger un contenu sourcé. À utiliser d'office pour une question de santé, de droit, d'argent ou de sécurité, et pour savoir si une option fait plus ou mieux qu'une autre. NE PAS utiliser pour vérifier un document ou une thèse entière (→ fact-checker), pour un comparatif technique rédigé en HTML (→ dev-tech-comparison), ni pour chercher dans du code ou des fichiers locaux.
 argument-hint: la question, l'affirmation à vérifier ou le sujet à traiter
 ---
 
@@ -60,6 +60,6 @@ Jouable seul pour le script, relecture humaine pour le comportement de l'agent.
 
 | Cas | Preuve |
 | --- | --- |
-| `python3 scripts/tests/test_check_claims.py` | « 15/15 cas », code 0 |
-| `python3 scripts/tests/test_check_claims.py --reseau` | « 18/18 cas », dont l'extrait retrouvé dans la RFC 9110 |
+| `python3 scripts/tests/test_check_claims.py` | « 21/21 cas », code 0 |
+| `python3 scripts/tests/test_check_claims.py --reseau` | « 24/24 cas », dont l'extrait retrouvé dans la RFC 9110 |
 | les 15 cas de `tests-adverses.md`, sur chaque environnement utilisé | la matrice de conformité remplie, sans « non » |

@@ -14,6 +14,29 @@ de la réponse. Quand la trace existe, ses valeurs priment sur la ligne de comma
 --en-ligne télécharge chaque source et cherche l'extrait verbatim dans la page.
 Ce contrôle demande un accès réseau. Sans lui, faire la même vérification à la main.
 
+Registre (liste JSON, objet {"claims": [...]} ou JSON Lines), un objet par affirmation :
+    obligatoires : id, claim, source_url, source_date (AAAA, AAAA-MM ou AAAA-MM-JJ),
+        source_type (primaire, secondaire, tertiaire), requete, opened (true), label
+        (Établi, Probable, Contesté, Non vérifié, Hypothèse à tester), interet_source
+    extrait : phrase verbatim de 25 mots au plus, exigée en L2 et L3
+    verifie_par : exigé avec --apres-verification
+    optionnels :
+        doi : identifiant de la publication. L'indépendance se compte par préfixe DOI
+            (l'éditeur), sinon par domaine de source_url.
+        url_verification : URL réellement lue (texte brut, API). --en-ligne la télécharge
+            à la place de source_url, qui reste la page lisible par un humain.
+        constat_date : true si l'affirmation rapporte une étude datée. L'année de
+            source_date doit figurer dans claim. Exempte de la fenêtre de fraîcheur,
+            tant qu'une autre affirmation reste dans la fenêtre.
+        sources_supplementaires : liste d'URL, comptées pour l'indépendance.
+    Une affirmation « Non vérifié » peut omettre source_url, source_date, source_type, extrait.
+
+Trace (JSON Lines), champs lus :
+    étape 0 : verbe, profil, fraicheur (stable, evolutif, temps reel), risque,
+        profondeur (L0 à L3), lentilles, date_du_jour
+    étapes 1 à 8 : statut (executee ou sautee), raison si sautée
+    toute étape : requetes [{"q": ..., "refutation": true/false}], pages_ouvertes [URL]
+
 Code de sortie : 0 si tous les contrôles passent, 1 sinon, 2 si un fichier est illisible.
 La sortie imprimée est la preuve à rapporter dans la trace : « contrôles : script ».
 """
@@ -79,6 +102,25 @@ def domaine(url):
     if len(labels) >= 3 and len(labels[-1]) == 2 and labels[-2] in SECONDS_NIVEAUX:
         return ".".join(labels[-3:])
     return ".".join(labels[-2:])
+
+
+def origine(url, doi=None):
+    """Préfixe DOI (l'éditeur) quand on le connaît, sinon le domaine de l'URL."""
+    m = re.search(r"\b(10\.\d{4,9})/", str(doi or ""))
+    if not m and (urlparse(str(url)).hostname or "").lower() in ("doi.org", "dx.doi.org"):
+        m = re.search(r"\b(10\.\d{4,9})/", urlparse(str(url)).path)
+    return f"doi:{m.group(1)}" if m else domaine(url)
+
+
+def origines(c):
+    o = {origine(c.get("source_url", ""), c.get("doi"))}
+    o |= {origine(u) for u in c.get("sources_supplementaires", [])}
+    o.discard("")
+    return o
+
+
+def url_lue(c):
+    return c.get("url_verification") or c.get("source_url")
 
 
 def est_non_verifie(c):
@@ -223,12 +265,9 @@ def controles_registre(claims, args, ctx, rap):
     for c in claims:
         if norm(c.get("label", "")) != "etabli":
             continue
-        doms = {domaine(c.get("source_url", ""))}
-        doms |= {domaine(u) for u in c.get("sources_supplementaires", [])}
-        doms.discard("")
-        if norm(c.get("source_type", "")) != "primaire" and len(doms) < 2:
+        if norm(c.get("source_type", "")) != "primaire" and len(origines(c)) < 2:
             faibles.append(f"#{c.get('id')} : « Établi » sans source primaire "
-                           "ni deuxième domaine indépendant")
+                           "ni deuxième origine indépendante")
     rap.critere("aucun « Établi » sur une seule source non primaire (V3)", faibles)
 
     fraicheur = norm(ctx["fraicheur"] or "")
@@ -237,7 +276,7 @@ def controles_registre(claims, args, ctx, rap):
         if ctx["date_inconnue"]:
             rap.non_verifiable.append(f"fraîcheur ≤ {limite} mois : date du jour inconnue")
         else:
-            echecs = []
+            echecs, exemptees, recentes = [], 0, 0
             for c in claims:
                 if est_non_verifie(c):
                     continue
@@ -245,21 +284,30 @@ def controles_registre(claims, args, ctx, rap):
                 if d is None:
                     echecs.append(f"#{c.get('id')} : date absente ou illisible "
                                   f"« {c.get('source_date') or ''} »")
+                elif c.get("constat_date") is True:
+                    if str(d[0]) not in str(c.get("claim", "")):
+                        echecs.append(f"#{c.get('id')} : constat daté sans l'année {d[0]} "
+                                      "dans l'affirmation")
+                    exemptees += 1
                 elif mois_ecoules(d, ctx["aujourdhui"]) > limite:
                     echecs.append(f"#{c.get('id')} : source datée {c.get('source_date')}, "
                                   f"plus de {limite} mois")
-            rap.critere(f"fraîcheur ≤ {limite} mois (V4)", echecs)
+                else:
+                    recentes += 1
+            if exemptees and not recentes:
+                echecs.append("constats datés seulement : aucune source récente "
+                              "sur l'état actuel")
+            rap.critere(f"fraîcheur ≤ {limite} mois (V4)", echecs,
+                        f"{exemptees} constat(s) daté(s) exempté(s)" if exemptees else "")
 
     doms = set()
     for c in claims:
         if est_non_verifie(c) or not c.get("source_url"):
             continue
-        doms.add(domaine(c["source_url"]))
-        doms |= {domaine(u) for u in c.get("sources_supplementaires", [])}
-    doms.discard("")
+        doms |= origines(c)
     mini = MIN_DOMAINES[prof]
-    rap.critere(f"domaines indépendants ≥ {mini} (V3)",
-                [] if len(doms) >= mini else [f"{len(doms)} domaine(s) : {sorted(doms)}"],
+    rap.critere(f"origines indépendantes ≥ {mini} (V3)",
+                [] if len(doms) >= mini else [f"{len(doms)} origine(s) : {sorted(doms)}"],
                 f"{len(doms)} : {', '.join(sorted(doms))}")
     rap.note("les citations en chaîne ne se détectent pas par script, à juger à l'étape 7")
 
@@ -315,7 +363,7 @@ def controles_trace(claims, trace, ctx, rap):
     for c in claims:
         if est_non_verifie(c) or not c.get("source_url"):
             continue
-        urls = [c["source_url"]] + list(c.get("sources_supplementaires", []))
+        urls = [url_lue(c)] + list(c.get("sources_supplementaires", []))
         hors_trace += [f"#{c.get('id')} : {u} absente des pages ouvertes"
                        for u in urls if norm_url(u) not in pages]
     rap.critere("chaque source du registre est une page ouverte de la trace (T3)", hors_trace)
@@ -379,7 +427,7 @@ def texte_de_page(url, cache):
 def controles_en_ligne(claims, rap):
     cache, echecs, trouves = {}, [], 0
     for c in claims:
-        url = c.get("source_url")
+        url = url_lue(c)
         if est_non_verifie(c) or not url:
             continue
         page, verdict = texte_de_page(url, cache)
@@ -441,7 +489,8 @@ def controles_reponse(texte, rap):
 # ---------- programme ----------
 
 def main():
-    p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    p = argparse.ArgumentParser(description=__doc__,
+                                formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("registre")
     p.add_argument("--trace", help="trace.jsonl, ou réponse contenant le bloc ```jsonl")
     p.add_argument("--reponse", help="fichier de la réponse livrée")
