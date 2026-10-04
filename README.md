@@ -178,7 +178,7 @@ Chaque cas rend deux verdicts, tous deux déterministes et sans juge LLM. Le **d
 
 ### `SKILLS_ROOT` — le contrat entre un skill et son agent
 
-Plusieurs skills appellent un script partagé de `skills/_shared/`. Ils le désignent par `$SKILLS_ROOT/_shared/<script>.sh`, jamais par le chemin d'un agent précis. À exporter depuis le profil du shell de lancement, à côté de `OBSIDIAN_VAULT_PRO` :
+Plusieurs skills appellent un script partagé de `skills/_shared/`. Ils le désignent par `$SKILLS_ROOT/_shared/<script>.sh`, jamais par le chemin d'un agent précis. À exporter depuis le profil du shell de lancement, à côté de `OBSIDIAN_VAULT_PRO` ou `OBSIDIAN_VAULT_PERSO` :
 
 ```sh
 export SKILLS_ROOT="/chemin/absolu/vers/agent-config/skills"
@@ -192,13 +192,16 @@ export SKILLS_ROOT="/chemin/absolu/vers/agent-config/skills"
 
 ## Dépendance externe
 
-Les skills `vault-*` sont des passerelles vers un vault Obsidian : ils délèguent aux skills canoniques situés sous `$OBSIDIAN_VAULT_PRO/.agents/skills/`. Pour les activer, exporter la variable depuis le profil du shell de lancement, comme `SKILLS_ROOT` et pour la même raison mesurée :
+Les skills `vault-*` sont des passerelles vers un vault Obsidian : ils délèguent aux skills canoniques situés sous `<vault>/.agents/skills/`. Le vault se résout par `skills/_shared/resolve-vault.sh`, qui ne lit que deux variables, `OBSIDIAN_VAULT_PRO` et `OBSIDIAN_VAULT_PERSO`. À exporter depuis le profil du shell de lancement, comme `SKILLS_ROOT` et pour la même raison mesurée :
 
 ```sh
-export OBSIDIAN_VAULT_PRO="/chemin/absolu/vers/le/vault"
+export OBSIDIAN_VAULT_PRO="/chemin/absolu/vers/le/vault/pro"
+export OBSIDIAN_VAULT_PERSO="/chemin/absolu/vers/le/vault/perso"
 ```
 
-Sans cette variable, chaque `vault-*` dégrade sans casse (garde-fou en tête du SKILL.md : message « vault non configuré » puis arrêt, jamais d'écriture dans le repo courant).
+Un poste n'en exporte qu'une ou les deux. Avec un seul vault, le skill le prend sans poser de question. Avec les deux, il propose une liste numérotée et l'utilisateur répond par le numéro. Sans aucune des deux, chaque `vault-*` dégrade sans casse : message « aucun vault configuré » puis arrêt, jamais d'écriture dans le repo courant.
+
+**Les deux vaults n'ont pas la même structure.** Seuls `vault-capture` et `vault-save` ont leur skill canonique dans le vault perso, mesuré le 2026-10-04 avec `check-vault-bridge.sh`. Les autres échouent sur un vault dont la cible canonique manque.
 
 ## Reprendre ce repo
 

@@ -13,7 +13,7 @@ Passerelle vers le vault Obsidian : le CWD est un repo de dev et jamais le vault
 
 ```mermaid
 flowchart TD
-  entree([invocation depuis un repo de dev]) --> garde{vault configuré}
+  entree([invocation depuis un repo de dev]) --> garde{vault résolu, choisi si plusieurs}
   garde -->|non| arret([arrêt annoncé, rien n'est chargé])
   garde -->|oui| canonique[lire le skill canonique du vault]
   canonique --> mode{argument reçu}
@@ -26,19 +26,21 @@ flowchart TD
 
 ## Process
 
-1. **Garde.** Vérifier que le vault existe avant toute autre chose.
-   - `bash -lc '[ -n "$OBSIDIAN_VAULT_PRO" ] && [ -d "$OBSIDIAN_VAULT_PRO" ] && echo OK'`
-   - Sortie autre que `OK` → dire « Vault non configuré (`$OBSIDIAN_VAULT_PRO` absent). J'arrête. » et s'arrêter là.
-   - *Pourquoi une garde et pas une hypothèse : cette config tourne aussi sur des postes sans vault.*
-2. **Délégation.** Lire et suivre les instructions du skill canonique, `$OBSIDIAN_VAULT_PRO/.agents/skills/load/SKILL.md`.
+1. **Garde et choix du vault.** Lister les vaults avant toute autre chose, sans supposer lequel existe.
+   - `bash -lc 'bash "$SKILLS_ROOT/_shared/resolve-vault.sh"'`
+   - `exit 0` → la sortie est le chemin du vault, noté `<vault>` plus bas.
+   - `exit 3` → plusieurs vaults. Les proposer à l'utilisateur sous forme numérotée (une ligne `1 PERSO`, `2 PRO`, sans le chemin), lui demander de répondre par le numéro, puis relancer `resolve-vault.sh <numéro>` pour obtenir `<vault>`.
+   - `exit 1` → dire « Aucun vault Obsidian configuré (`OBSIDIAN_VAULT_PRO` et `OBSIDIAN_VAULT_PERSO` absents). J'arrête. » et s'arrêter là.
+   - *Pourquoi une liste et pas un vault câblé : le même repo tourne sur un poste pro, un poste perso, ou les deux, et chaque poste n'a pas les mêmes vaults.*
+2. **Délégation.** Lire et suivre les instructions du skill canonique, `<vault>/.agents/skills/load/SKILL.md`.
 3. **Lancement.** Lancer le script depuis la racine du vault, jamais depuis le repo.
-   - Mode global : `bash -lc 'cd "$OBSIDIAN_VAULT_PRO" && bash scripts/load.sh'`
-   - Mode task-scoped : `bash -lc 'cd "$OBSIDIAN_VAULT_PRO" && bash scripts/load.sh <task-id>'`
+   - Mode global : `bash -lc 'cd "<vault>" && bash scripts/load.sh'`
+   - Mode task-scoped : `bash -lc 'cd "<vault>" && bash scripts/load.sh <task-id>'`
 4. **Résumé.** Rendre à l'utilisateur le contexte chargé : sprint et priorités en mode global, tâche, statut, blockers et next en mode task-scoped.
 
 ## Transversal rules
 
-- **Tout chemin se résout contre `$OBSIDIAN_VAULT_PRO`.** Le CWD étant un repo de dev, un chemin relatif pointerait dans le repo et non dans le vault.
+- **Tout chemin se résout contre `<vault>`.** Le CWD étant un repo de dev, un chemin relatif pointerait dans le repo et non dans le vault.
 - **Aucune dégradation silencieuse.** Identifiant introuvable, lien cassé, script muet : l'anomalie se dit à l'utilisateur au lieu d'être avalée dans le résumé.
 - **Le skill ne fait que lire.** Il n'écrit ni dans le vault ni dans le repo courant, d'où l'absence de `disable-model-invocation`.
 
@@ -51,4 +53,6 @@ Jouable seul, sauf la dernière ligne qui se relit à la main.
 | `bash "$SKILLS_ROOT/_shared/check-vault-bridge.sh" vault-load`, vault en place | `exit 0` : la cible canonique citée au `## Process` résout réellement |
 | la même commande, cible canonique renommée ou déplacée | `exit 1` |
 | la même commande, vault absent ou `SKILL.md` illisible | `exit 2`, jamais un succès silencieux |
-| invocation du skill avec `$OBSIDIAN_VAULT_PRO` vidé | l'arrêt annoncé par la garde, pas un repli sur le repo courant |
+| invocation sans `OBSIDIAN_VAULT_PRO` ni `OBSIDIAN_VAULT_PERSO` | l'arrêt annoncé par la garde, rien n'est écrit dans le repo courant |
+| invocation avec un seul vault exporté | aucune question posée, le skill travaille dans ce vault |
+| invocation avec les deux vaults exportés | la liste numérotée est proposée, et le skill travaille dans celui choisi |

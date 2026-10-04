@@ -19,7 +19,7 @@ Passerelle vers le vault Obsidian : le CWD est un repo de dev et jamais le vault
 
 ```mermaid
 flowchart TD
-  entree([invocation depuis un repo de dev]) --> garde{vault configuré}
+  entree([invocation depuis un repo de dev]) --> garde{vault résolu, choisi si plusieurs}
   garde -->|non| arret([arrêt annoncé, rien n'est écrit])
   garde -->|oui| collecte[collecter repo, projets du vault et contenu]
   collecte --> devine[deviner le projet, puis la zone]
@@ -34,13 +34,15 @@ flowchart TD
 
 ## Process
 
-1. **Garde.** Vérifier que le vault existe avant toute autre chose.
-   - `bash -lc '[ -n "$OBSIDIAN_VAULT_PRO" ] && [ -d "$OBSIDIAN_VAULT_PRO" ] && echo OK'`
-   - Sortie autre que `OK` → dire « Vault non configuré (`$OBSIDIAN_VAULT_PRO` absent). J'arrête. » et s'arrêter là.
-   - *Pourquoi une garde et pas une hypothèse : cette config tourne aussi sur des postes sans vault.*
+1. **Garde et choix du vault.** Lister les vaults avant toute autre chose, sans supposer lequel existe.
+   - `bash -lc 'bash "$SKILLS_ROOT/_shared/resolve-vault.sh"'`
+   - `exit 0` → la sortie est le chemin du vault, noté `<vault>` plus bas.
+   - `exit 3` → plusieurs vaults. Les proposer à l'utilisateur sous forme numérotée (une ligne `1 PERSO`, `2 PRO`, sans le chemin), lui demander de répondre par le numéro, puis relancer `resolve-vault.sh <numéro>` pour obtenir `<vault>`.
+   - `exit 1` → dire « Aucun vault Obsidian configuré (`OBSIDIAN_VAULT_PRO` et `OBSIDIAN_VAULT_PERSO` absents). J'arrête. » et s'arrêter là.
+   - *Pourquoi une liste et pas un vault câblé : le même repo tourne sur un poste pro, un poste perso, ou les deux, et chaque poste n'a pas les mêmes vaults.*
 2. **Collecte.** Réunir les trois entrées de la devinette.
    - Nom du repo courant : `bash -lc 'basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"'`
-   - Projets existants : `bash -lc 'ls -1 "$OBSIDIAN_VAULT_PRO/2_PROJECTS"'`
+   - Projets existants : `bash -lc 'ls -1 "<vault>/2_PROJECTS"'`
    - Le contenu de la note, dicté par l'utilisateur.
 3. **Devine le projet.** Croiser le nom du repo et le thème de la note avec les noms de projets, et retenir le plus probable, un seul.
    - `git rev-parse` en échec, donc hors repo : deviner sur le seul contenu de la note.
@@ -53,14 +55,14 @@ flowchart TD
    - La ligne : « Projet `<PROJET>`, zone `<zone>` ? [Y / autre projet / inbox] »
    - Réponse `Y` : la suggestion est retenue.
    - L'utilisateur nomme un autre projet ou une autre zone : c'est cette cible qui gagne.
-   - Réponse `inbox`, ou aucun projet retenu à l'étape 3 : repli sur `$OBSIDIAN_VAULT_PRO/0_INBOX/`, la capture brute classique.
-6. **Style.** Lire `$OBSIDIAN_VAULT_PRO/conventions/notes.md` et en appliquer le ton, la structure et la densité, dès que la note est composée ou restructurée.
+   - Réponse `inbox`, ou aucun projet retenu à l'étape 3 : repli sur `<vault>/0_INBOX/`, la capture brute classique.
+6. **Style.** Lire `<vault>/conventions/notes.md` et en appliquer le ton, la structure et la densité, dès que la note est composée ou restructurée.
    - *Pourquoi lire ce fichier ici : l'output style `vault-notes.md` ne s'active que quand le CWD est le vault, or le CWD est un repo de dev.*
    - Exception, le dump brut verbatim : ne pas reformater.
 7. **Écriture.** Créer le fichier daté dans la cible validée.
    - Date et nom de fichier : `bash -lc 'date +%F'`, puis `YYYY-MM-DD-titre-court.md`.
-   - Cible projet : `$OBSIDIAN_VAULT_PRO/2_PROJECTS/<PROJET>/<zone>/`
-   - Cible de repli : `$OBSIDIAN_VAULT_PRO/0_INBOX/`
+   - Cible projet : `<vault>/2_PROJECTS/<PROJET>/<zone>/`
+   - Cible de repli : `<vault>/0_INBOX/`
    - Frontmatter de la note, la clé `project` étant omise sur le repli :
 
      ```
@@ -77,7 +79,7 @@ flowchart TD
 
 ## Transversal rules
 
-- **Tout chemin se résout contre `$OBSIDIAN_VAULT_PRO`.** Le CWD étant un repo de dev, un chemin relatif écrirait la note dans le repo et non dans le vault.
+- **Tout chemin se résout contre `<vault>`.** Le CWD étant un repo de dev, un chemin relatif écrirait la note dans le repo et non dans le vault.
 - **Jamais d'écriture de repli dans le repo courant.** Une note posée là est une capture perdue : elle n'entre pas dans le vault et pollue un diff de code.
 - **L'orientation est probabiliste, la validation est humaine.** On devine, on propose, l'utilisateur tranche, et rien ne s'écrit avant sa réponse. C'est ce qui dispense d'entretenir une table de correspondance entre repos et projets.
 - **Aucune dégradation silencieuse.** `2_PROJECTS/` introuvable, convention illisible, écriture refusée : l'anomalie se dit à l'utilisateur au lieu d'être avalée dans la confirmation.
@@ -92,4 +94,6 @@ Jouable seul, sauf la dernière ligne qui se relit à la main.
 | `bash "$SKILLS_ROOT/_shared/check-vault-bridge.sh" vault-capture-projet`, vault en place | `exit 0` : les cibles citées au `## Process` résolvent réellement, dont `conventions/notes.md` dont dépend l'étape 6 |
 | la même commande, cible renommée ou déplacée | `exit 1` |
 | la même commande, vault absent ou `SKILL.md` illisible | `exit 2`, jamais un succès silencieux |
-| invocation du skill avec `$OBSIDIAN_VAULT_PRO` vidé | l'arrêt annoncé par la garde, pas une écriture dans le repo courant |
+| invocation sans `OBSIDIAN_VAULT_PRO` ni `OBSIDIAN_VAULT_PERSO` | l'arrêt annoncé par la garde, rien n'est écrit dans le repo courant |
+| invocation avec un seul vault exporté | aucune question posée, le skill travaille dans ce vault |
+| invocation avec les deux vaults exportés | la liste numérotée est proposée, et le skill travaille dans celui choisi |

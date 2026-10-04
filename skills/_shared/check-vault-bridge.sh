@@ -31,15 +31,19 @@ if [ ! -r "$md" ]; then
   exit 2
 fi
 
-if [ -z "${OBSIDIAN_VAULT_PRO:-}" ] || [ ! -d "${OBSIDIAN_VAULT_PRO:-}" ]; then
-  echo "FAIL $skill : vault absent, \$OBSIDIAN_VAULT_PRO=${OBSIDIAN_VAULT_PRO:-<vide>}"
+# Les vaults se lisent comme `resolve-vault.sh` les lit : OBSIDIAN_VAULT_PRO ou OBSIDIAN_VAULT_PERSO, si elle
+# pointe un dossier. Un pont écrit avec `<vault>/` est contrôlé contre chacun d'eux.
+mapfile -t vaults < <(env | grep -E '^OBSIDIAN_VAULT_(PRO|PERSO)=' | cut -d= -f2- | while read -r v; do [ -d "$v" ] && echo "$v"; done)
+if [ ${#vaults[@]} -eq 0 ]; then
+  echo "FAIL $skill : vault absent, ni \$OBSIDIAN_VAULT_PRO ni \$OBSIDIAN_VAULT_PERSO ne pointe un dossier"
   exit 2
 fi
 
 # Les chemins porteurs d'un placeholder (<date>, <sujet>, <PROJET>) sont des gabarits, pas des
-# cibles. On les écarte du contrôle, sans les compter comme cible trouvée.
-mapfile -t refs < <(grep -oE '\$OBSIDIAN_VAULT_[A-Z]+/[^`" )]*' "$md" \
-  | grep -v '<' | sed 's:/*$::' | sort -u)
+# cibles. On les écarte du contrôle, sans les compter comme cible trouvée. `<vault>/` est le
+# seul placeholder accepté, en tête de chemin.
+mapfile -t refs < <(grep -oE '(\$OBSIDIAN_VAULT_[A-Z]+|<vault>)/[^`" )]*' "$md" \
+  | grep -vE '/.*<' | sed 's:/*$::' | sort -u)
 
 if [ ${#refs[@]} -eq 0 ]; then
   echo "FAIL $skill : aucune cible canonique détectable dans SKILL.md"
@@ -48,12 +52,30 @@ fi
 
 fail=0
 for ref in "${refs[@]}"; do
-  real=$(eval "echo $ref")
-  if [ -e "$real" ]; then
-    echo "PASS $skill : $ref"
+  if [[ "$ref" == "<vault>/"* ]]; then
+    for v in "${vaults[@]}"; do
+      real="$v/${ref#<vault>/}"
+      if [ -e "$real" ]; then
+        echo "PASS $skill : $ref ($v)"
+      else
+        echo "FAIL $skill : $ref ne résout pas ($real)"
+        fail=1
+      fi
+    done
   else
-    echo "FAIL $skill : $ref ne résout pas ($real)"
-    fail=1
+    var=${ref%%/*}
+    var=${var#\$}
+    if [ -z "${!var:-}" ] || [ ! -d "${!var:-}" ]; then
+      echo "FAIL $skill : vault absent, \$$var=${!var:-<vide>}"
+      exit 2
+    fi
+    real=$(eval "echo $ref")
+    if [ -e "$real" ]; then
+      echo "PASS $skill : $ref"
+    else
+      echo "FAIL $skill : $ref ne résout pas ($real)"
+      fail=1
+    fi
   fi
 done
 
