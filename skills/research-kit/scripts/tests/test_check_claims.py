@@ -5,6 +5,7 @@ Usage :
     python3 test_check_claims.py            # cas hors ligne
     python3 test_check_claims.py --reseau   # ajoute les cas --en-ligne (accès réseau requis)
 
+Un `attendu` préfixé par « + » exige le succès et la présence du texte dans la sortie.
 Les fichiers d'essai sont écrits dans un dossier temporaire, jamais dans le kit.
 Code de sortie : 0 si tous les cas passent, 1 sinon.
 """
@@ -16,6 +17,11 @@ import sys
 import tempfile
 
 SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "check_claims.py")
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+import pages  # noqa: E402
+
+# URL jamais servie : le cas réussit seulement si la copie en cache est relue sans réseau.
+EN_CACHE = "http://127.0.0.1:9/page-en-cache"
 
 # Page stable et phrase relevée le 2026-10-02 dans son résumé.
 RFC = "https://www.rfc-editor.org/rfc/rfc9110.html"
@@ -155,7 +161,28 @@ def cas_hors_ligne():
     L.append(("url_verification lue, source_url pour l'humain",
               variante(lambda c, t: c[0].update(source_url="https://doi.org/10.17487/RFC9110",
                                                 url_verification=RFC)), None))
-    return [(n, v, a, ()) for n, v, a in L]
+    L = [(n, v, a, ()) for n, v, a in L]
+
+    def depuis_cache(c, t):
+        c.pop(1)
+        c[0].update(source_url=EN_CACHE)
+        t[0].update(profondeur="L1")
+        t[3]["pages_ouvertes"].append(EN_CACHE)
+    L.append(("extrait relu dans la copie en cache, sans réseau",
+              variante(depuis_cache), "+vérifiés sur copie du 2026-10-04",
+              ("--en-ligne", "--cache", "cache")))
+    L.append(("extrait absent de la copie en cache",
+              variante(lambda c, t: (depuis_cache(c, t),
+                                     c[0].update(extrait="HTTP is a stateful protocol"))),
+              "extrait absent de la page", ("--en-ligne", "--cache", "cache")))
+    return L
+
+
+def preparer_cache(dossier):
+    texte = "Introduction. " + EXTRAIT + " that enables distributed systems. " * 10
+    pages.Cache(os.path.join(dossier, "cache")).ecrire(
+        {"url": EN_CACHE, "statut": pages.OK, "http": 200, "type": "text/html",
+         "date_acces": "2026-10-04", "note": ""}, texte)
 
 
 def cas_en_ligne():
@@ -176,11 +203,15 @@ def main():
     cas = cas_hors_ligne() + (cas_en_ligne() if "--reseau" in sys.argv else [])
     passes = 0
     with tempfile.TemporaryDirectory() as dossier:
+        preparer_cache(dossier)
         for nom, (c, t, r), attendu, options in cas:
             out = lancer(dossier, c, t, r, options)
             lignes = out.stdout.splitlines()
             if attendu is None:
                 ok = out.returncode == 0
+            elif attendu.startswith("+"):
+                # succès attendu, et la preuve que le bon chemin a été pris
+                ok = out.returncode == 0 and any(attendu[1:] in l for l in lignes)
             else:
                 ok = out.returncode == 1 and any(attendu in l for l in lignes)
             passes += ok

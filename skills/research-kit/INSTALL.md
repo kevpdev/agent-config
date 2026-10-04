@@ -26,9 +26,12 @@ Trois points sont **doc-vérifiés le 2026-10-02** sur la page « Agent Skills �
 Une seule source de vérité, `agent-config/skills/research-kit/`, versionnée avec le reste du dépôt. Chaque outil y pointe par lien symbolique quand il lit le disque, ou reçoit un zip du dossier quand il ne le lit pas. Après une modification, rejouer :
 
 ```bash
-python3 scripts/tests/test_check_claims.py            # 21 cas hors ligne
+python3 scripts/tests/test_check_claims.py            # 23 cas hors ligne
 python3 scripts/tests/test_check_claims.py --reseau   # + 3 cas en ligne
+python3 scripts/tests/test_fetch_page.py              # 13 cas, serveur local
 ```
+
+`pdftotext` (paquet poppler-utils) est facultatif. `fetch_page.py` s'en sert pour lire les PDF. Sans lui, un PDF sort en « non vérifiable », code 5.
 
 Les sous-agents et les hooks diffèrent d'un outil à l'autre : le kit n'en dépend pas, et ne les utilise que s'ils existent.
 

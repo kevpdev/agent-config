@@ -19,7 +19,7 @@ rows = [
  ("guardrails.md", "posture, bornes B1 à B7, sources, trace", "lu en entier à chaque tâche", "m"),
  ("Étape 0 : triage", "verbe, profondeur L0 à L3, lentilles", "date du jour lue dans l'environnement", "n"),
  ("Étapes 1 et 2 : cadrage, plan", "prémisse testée, périmètre figé (B1)", "une requête vise à réfuter", "n"),
- ("Étape 3 : collecte", "rôle researcher, lecture seule (B2)", "chaque page ouverte avant citation", "n"),
+ ("Étape 3 : collecte", "chaque page lue une fois (fetch_page.py)", "403 écarté, jamais relancé", "n"),
  ("Étapes 4 et 5 : sources, registre", "qui produit, qui finance, quelle date", "une ligne par affirmation clé", "n"),
  ("Étape 6 : synthèse", "la réponse d'abord, courte", "faits, interprétations, recommandations", "n"),
  ("Étape 7 : vérification", "rôle verifier, relecture contradictoire", "échec : une relance, puis dégradé", "key"),

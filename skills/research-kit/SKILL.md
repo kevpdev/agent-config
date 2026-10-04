@@ -27,6 +27,7 @@ flowchart TD
 3. **Charger la lentille du domaine** avant de chercher, `lenses/<domaine>.md`, deux au maximum.
    - Affirmation technique (version, norme, performance, calcul) : charger aussi `lenses/_technique.md`.
 4. **Suivre `pipeline.md`** étape par étape selon la profondeur, chaque étape écrivant sa ligne de trace au moment où elle s'exécute.
+   - Avec l'exécution de code, ouvrir chaque page par `scripts/fetch_page.py`, une seule fois, et appliquer son code de sortie sans relancer un 403 (`pipeline.md`, étape 3).
 5. **Vérifier à l'étape 7** avec `scripts/check_claims.py` si l'exécution de code est possible, puis avec la grille de `pieges.md`.
    - Sans exécution de code : parcourir les mêmes critères à la main, avec un oui/non écrit pour chacun.
 6. **Livrer** sous les intitulés exacts de `guardrails.md` §7.
@@ -49,7 +50,8 @@ flowchart TD
 - `pieges.md` — grille de vérification, consultée à l'étape 7
 - `lite.md` — profil rapide pour contexte limité, autonome
 - `lenses/` — `lenses/_technique.md` (transversal) et huit lentilles de domaine, chargées à la demande
-- `scripts/check_claims.py` — contrôles déterministes du registre, de la trace, de la réponse et des extraits
+- `scripts/fetch_page.py` — lecture unique d'une page, cache, passages ciblés et politique d'échec par code de sortie
+- `scripts/check_claims.py` — contrôles déterministes du registre, de la trace, de la réponse et des extraits, relus en cache avec `--cache`
 - `tests-adverses.md` — batterie de 15 tests et matrice de conformité, pour l'humain
 - `INSTALL.md` — installation par environnement, pour l'humain
 - `docs/flux.html` — schéma du parcours d'une demande, pour l'humain, regénéré par `docs/flux-src/gen_flux.py` après toute modification du flux
@@ -60,6 +62,7 @@ Jouable seul pour le script, relecture humaine pour le comportement de l'agent.
 
 | Cas | Preuve |
 | --- | --- |
-| `python3 scripts/tests/test_check_claims.py` | « 21/21 cas », code 0 |
-| `python3 scripts/tests/test_check_claims.py --reseau` | « 24/24 cas », dont l'extrait retrouvé dans la RFC 9110 |
+| `python3 scripts/tests/test_check_claims.py` | « 23/23 cas », code 0 |
+| `python3 scripts/tests/test_check_claims.py --reseau` | « 26/26 cas », dont l'extrait retrouvé dans la RFC 9110 |
+| `python3 scripts/tests/test_fetch_page.py` | « 13/13 cas », code 0, serveur local, hors ligne |
 | les 15 cas de `tests-adverses.md`, sur chaque environnement utilisé | la matrice de conformité remplie, sans « non » |

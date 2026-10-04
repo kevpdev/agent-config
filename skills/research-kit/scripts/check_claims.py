@@ -2,7 +2,7 @@
 """Contrôles déterministes du registre, de la trace et de la réponse (pipeline.md, étapes 5, 7 et 8).
 
 Usage :
-    python3 check_claims.py claims.json [--trace trace.jsonl] [--reponse reponse.md] [--en-ligne]
+    python3 check_claims.py claims.json [--trace trace.jsonl] [--reponse reponse.md] [--en-ligne [--cache D]]
         [--apres-verification]
 
     Sans trace, les paramètres viennent de la ligne de commande :
@@ -13,6 +13,8 @@ de la réponse. Quand la trace existe, ses valeurs priment sur la ligne de comma
 
 --en-ligne télécharge chaque source et cherche l'extrait verbatim dans la page.
 Ce contrôle demande un accès réseau. Sans lui, faire la même vérification à la main.
+Avec --cache DOSSIER (le dossier passé à fetch_page.py), une page déjà lue à la collecte
+est relue dans sa copie, sans réseau. Seule une URL absente du cache se télécharge.
 
 Registre (liste JSON, objet {"claims": [...]} ou JSON Lines), un objet par affirmation :
     obligatoires : id, claim, source_url, source_date (AAAA, AAAA-MM ou AAAA-MM-JJ),
@@ -41,15 +43,14 @@ Code de sortie : 0 si tous les contrôles passent, 1 sinon, 2 si un fichier est 
 La sortie imprimée est la preuve à rapporter dans la trace : « contrôles : script ».
 """
 import argparse
-import html
 import json
 import re
 import sys
-import unicodedata
-import urllib.error
-import urllib.request
 from datetime import date
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse
+
+import pages
+from pages import norm, norm_url
 
 LABELS = {"etabli", "probable", "conteste", "non verifie", "hypothese a tester"}
 SOURCE_TYPES = {"primaire", "secondaire", "tertiaire"}
@@ -80,20 +81,6 @@ SOUS_SECTIONS = ["Faits", "Interprétations", "Recommandations"]
 # sous un domaine national à deux lettres (bbc.co.uk, service-public.gouv.fr).
 SECONDS_NIVEAUX = {"co", "com", "org", "net", "gov", "gouv", "ac", "edu",
                    "ne", "or", "go", "asso", "nic"}
-
-
-def norm(text):
-    text = unicodedata.normalize("NFD", str(text))
-    text = "".join(c for c in text if unicodedata.category(c) != "Mn")
-    text = re.sub(r"[’‘`´ʼ]", "'", text)
-    text = re.sub(r"[«»“”„]", '"', text)
-    return re.sub(r"\s+", " ", text).casefold().strip()
-
-
-def norm_url(url):
-    p = urlparse(str(url).strip())
-    path = p.path.rstrip("/") or "/"
-    return urlunparse((p.scheme.lower(), (p.hostname or "").lower(), path, "", p.query, ""))
 
 
 def domaine(url):
@@ -395,42 +382,30 @@ def controles_budgets_cli(claims, args, ctx, rap):
 
 # ---------- contrôle en ligne : URL vivante et extrait verbatim ----------
 
-def texte_de_page(url, cache):
-    """Renvoie (texte normalisé, None) ou (None, verdict)."""
-    if url in cache:
-        return cache[url]
-    req = urllib.request.Request(url, headers={
-        "User-Agent": "Mozilla/5.0 (research-kit check_claims)",
-        "Accept": "text/html,text/plain;q=0.9"})
-    try:
-        with urllib.request.urlopen(req, timeout=10) as r:
-            ctype = r.headers.get("Content-Type", "")
-            if "html" not in ctype and "text/plain" not in ctype:
-                res = (None, f"non vérifiable : contenu « {ctype or 'inconnu'} »")
-            else:
-                brut = r.read(5_000_000)
-                charset = r.headers.get_content_charset() or "utf-8"
-                page = brut.decode(charset, errors="replace")
-                page = re.sub(r"(?is)<(script|style|noscript)\b.*?</\1>", " ", page)
-                page = html.unescape(re.sub(r"(?s)<[^>]+>", " ", page))
-                page = norm(page)
-                res = (page, None) if len(page) >= 200 else \
-                    (None, "non vérifiable : page sans texte (rendue par script ?)")
-    except urllib.error.HTTPError as e:
-        res = (None, "URL morte" if e.code in (404, 410) else f"non vérifiable : HTTP {e.code}")
-    except (urllib.error.URLError, TimeoutError, OSError) as e:
-        res = (None, f"non vérifiable : {getattr(e, 'reason', e)}")
-    cache[url] = res
+def texte_de_page(url, memo, cache):
+    """Renvoie (texte normalisé, None, date de lecture en cache) ou (None, verdict, None)."""
+    if url in memo:
+        return memo[url]
+    entree, texte, depuis_cache = pages.lire_page(url, cache)
+    if entree["statut"] == pages.OK:
+        res = (norm(texte), None, entree["date_acces"] if depuis_cache else None)
+    elif entree["statut"] == pages.MORTE_STATUT:
+        res = (None, "URL morte", None)
+    else:
+        res = (None, f"non vérifiable : {entree['note']}", None)
+    memo[url] = res
     return res
 
 
-def controles_en_ligne(claims, rap):
-    cache, echecs, trouves = {}, [], 0
+def controles_en_ligne(claims, rap, cache=None):
+    memo, echecs, trouves, copies = {}, [], 0, set()
     for c in claims:
         url = url_lue(c)
         if est_non_verifie(c) or not url:
             continue
-        page, verdict = texte_de_page(url, cache)
+        page, verdict, lu_le = texte_de_page(url, memo, cache)
+        if lu_le:
+            copies.add(lu_le)
         if verdict == "URL morte":
             echecs.append(f"#{c.get('id')} : URL morte ({url})")
         elif verdict:
@@ -440,8 +415,10 @@ def controles_en_ligne(claims, rap):
                 trouves += 1
             else:
                 echecs.append(f"#{c.get('id')} : extrait absent de la page ({url})")
-    rap.critere("URL vivantes et extraits présents dans la page (V2, V6, V7)", echecs,
-                f"{trouves} extrait(s) trouvé(s)")
+    detail = f"{trouves} extrait(s) trouvé(s)"
+    if copies:
+        detail += f", vérifiés sur copie du {', '.join(sorted(copies))}"
+    rap.critere("URL vivantes et extraits présents dans la page (V2, V6, V7)", echecs, detail)
 
 
 # ---------- contrôle de la réponse ----------
@@ -496,6 +473,8 @@ def main():
     p.add_argument("--reponse", help="fichier de la réponse livrée")
     p.add_argument("--en-ligne", action="store_true",
                    help="télécharge les sources pour vérifier URL et extraits")
+    p.add_argument("--cache", metavar="DOSSIER",
+                   help="avec --en-ligne : relit les copies de fetch_page.py au lieu de retélécharger")
     p.add_argument("--apres-verification", action="store_true",
                    help="exige le champ verifie_par (étape 7)")
     p.add_argument("--profondeur", choices=list(BUDGETS), default="L2")
@@ -528,7 +507,7 @@ def main():
     if reponse is not None:
         controles_reponse(reponse, rap)
     if args.en_ligne:
-        controles_en_ligne(claims, rap)
+        controles_en_ligne(claims, rap, pages.Cache(args.cache) if args.cache else None)
     else:
         rap.note("sans --en-ligne : URL et extraits à vérifier à la main")
 

@@ -168,6 +168,21 @@ Sortie : pages ouvertes avec URL, date de publication, date d'accès, et pour ch
 
 Rôle : researcher (voir §6).
 
+**Trier avant d'ouvrir.** Les extraits des résultats de recherche servent à choisir, jamais à citer (V2). On n'ouvre que les pages qui porteront une affirmation, en commençant par des requêtes larges, puis en resserrant. Une page ouverte « pour voir » coûte une lecture et n'apporte rien au registre.
+
+**Ouvrir une seule fois.** Avec l'exécution de code, ouvrir chaque page par `scripts/fetch_page.py <url> --dossier <D> --cherche "<motif>"`. Le script lit la page une fois, la garde en cache dans `<D>/pages/` et n'affiche que les passages qui contiennent le motif. On y relève l'`extrait` verbatim sans relire la page. L'étape 7 relit ensuite la même copie (`--cache <D>`). Sans exécution de code, on utilise l'outil de lecture web de l'environnement, comme avant.
+
+**Politique d'échec, tranchée d'avance.** Le code de sortie de `fetch_page.py` dit quoi faire, et le même tableau vaut pour une lecture sans script :
+
+| Résultat | Code | Ce qu'on fait |
+|---|---|---|
+| page lue | 0 | relever l'extrait |
+| HTTP 401, 403, 429 ou paywall | 3 | ne jamais relancer, ni avec un autre outil ni avec un autre en-tête. La source va dans `ecartees` avec son motif, et on passe à une autre source |
+| HTTP 404 ou 410 | 4 | URL morte, elle va dans `ecartees` |
+| page sans texte (rendue en JS), contenu non textuel, PDF illisible, erreur réseau | 5 | une seule autre tentative est permise, par une version texte de la même source (PDF, API, page imprimable). Sinon, `ecartees` |
+
+Une erreur de certificat est relancée une fois par le script, sans vérification TLS, et la sortie le signale. **Pourquoi relancer un 403 ne sert à rien** : mesuré le 2026-10-04 sur 4 pages en 403, un User-Agent de navigateur n'en a débloqué aucune. Ce sont des protections anti-robots côté serveur.
+
 Critères déterministes
 - [ ] chaque page citée a été ouverte, pas seulement vue en extrait (V2), et figure dans `pages_ouvertes`
 - [ ] compteurs de recherches et de pages dans le budget (B5)
@@ -258,7 +273,7 @@ Rôle : verifier (voir §6). Ordre : le script déterministe d'abord, puis le ju
 Échantillon L2 : les 3 affirmations les plus importantes ou les plus risquées.
 
 Critères déterministes
-- [ ] `scripts/check_claims.py claims.json --trace trace.jsonl --reponse <réponse> --en-ligne` exécuté et sa sortie réelle rapportée. Sinon, la même liste parcourue à la main avec un oui/non écrit par critère, et chaque extrait cherché dans sa page rouverte
+- [ ] `scripts/check_claims.py claims.json --trace trace.jsonl --reponse <réponse> --en-ligne --cache <D>` exécuté et sa sortie réelle rapportée. `--cache` relit les copies faites à l'étape 3, sans les retélécharger. Sinon, la même liste parcourue à la main avec un oui/non écrit par critère, et chaque extrait cherché dans sa page rouverte
 - [ ] la trace est cohérente avec la sortie : recherches, pages ouvertes et sources citées concordent. Un écart est un incident (T3)
 - [ ] ce que le script déclare « non vérifiable » est reporté dans « Ce que je n'ai pas pu vérifier »
 
