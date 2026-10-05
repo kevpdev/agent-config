@@ -16,7 +16,8 @@ disable-model-invocation: true
 
 # cadre-prompt
 
-Prend une ébauche de demande et rend un prompt cadré. Le gabarit des trois formes vit dans
+Prend une ébauche de demande et rend un prompt cadré. Le gabarit unique, six briques (contexte, effet,
+périmètre, contraintes, libre, fini quand), vit dans
 [`assets/squelette-prompt.md`](assets/squelette-prompt.md), le corps ci-dessous porte la méthode.
 
 > [!important] Ne jamais cadrer une demande qui n'a pas été soumise comme ébauche
@@ -28,13 +29,14 @@ Prend une ébauche de demande et rend un prompt cadré. Le gabarit des trois for
 flowchart TD
   A[ébauche soumise] --> B{soumise comme ébauche ?}
   B -->|non| Z[répondre à la demande, ne pas cadrer]
-  B -->|oui| C{combien de types ?}
-  C -->|deux| D[scinder en deux prompts]
-  C -->|un| E[récolter le contexte de session]
+  B -->|oui| C{combien de types, combien d'effets vérifiables ?}
+  C -->|plusieurs| D[scinder en autant de prompts]
+  C -->|un type, un effet| E[récolter le contexte de session]
   D --> E
   E --> F[combler les trous en hypothèses marquées]
   F --> G[une question au maximum]
-  G --> H[rédiger le prompt depuis son gabarit]
+  G --> V[classer le verbe : lire, écrire, exécuter]
+  V --> H[rédiger le prompt depuis le gabarit]
   H --> I{gardes : contenu du type, zéro conclusion ?}
   I -->|non| H
   I -->|oui| J{--chat, ou vault absent ?}
@@ -48,7 +50,8 @@ flowchart TD
    - Si non, ne pas cadrer, répondre à sa demande.
 2. **Détecter le type.** L'objectif est presque toujours présent dans une ébauche, ce qui manque est
    **où ça s'arrête et ce qu'on fait du résultat**.
-   - Le type se reconnaît à ce tableau, et il décide de ce que le prompt doit gagner.
+   - Le type se reconnaît à ce tableau. Il ne choisit pas un gabarit, il décide de ce que chaque
+     brique du gabarit unique porte (tableau « par type » de `squelette-prompt.md`).
 
      | Type | Ce qui le reconnaît | Ce qui manque presque toujours | Ce que le prompt gagne |
      |---|---|---|---|
@@ -64,6 +67,10 @@ flowchart TD
    - **Deux types dans une même ébauche se scindent, ils ne s'arbitrent pas.** Rendre deux prompts.
      *Pourquoi : un prompt mixte fait exécuter pendant l'exploration, ou explorer pendant
      l'exécution.*
+   - **Même chose pour deux effets vérifiables dans un seul type** : une tâche, une session, un effet.
+     « Une application de réservation » devient un prompt par morceau (comptes, agenda, paiement).
+     *Pourquoi : une demande trop grosse laisse l'IA choisir seule le découpage, et ce choix ne se
+     relit pas.*
 3. **Récolter le contexte de session**, seulement s'il y en a. Deux natures, et une seule interdite.
    - Les **faits mesurés**, chacun avec la commande ou la source qui l'a produit.
    - Les **prémisses fausses** rencontrées, y compris et surtout les erreurs de l'agent lui-même.
@@ -76,14 +83,28 @@ flowchart TD
 5. **Poser une question, au maximum, et seulement si la réponse change la sortie.** Sinon aucune.
    *Pourquoi : le budget d'attention de l'utilisateur est la ressource rare de l'échange, et un
    questionnaire le dépense avant que le travail commence.*
-6. **Rédiger le prompt** à partir du gabarit de son type, en bloc de code copiable.
+6. **Classer le verbe** de l'ébauche, il fixe ce que l'IA a le droit de faire.
+   - **Lire** (expliquer, analyser, comparer) : aucun risque.
+   - **Écrire** (proposer, modifier, corriger) : annulable avec git.
+   - **Exécuter** (supprimer, déployer, migrer) : parfois sans retour, le prompt demande un commit avant.
+   - Le verbe retenu ouvre le prompt. Un verbe d'écriture sur une ébauche qui voulait comprendre se
+     corrige en verbe de lecture (« ne modifie rien »). *Pourquoi : « corrige le calcul » quand on
+     voulait d'abord comprendre le bug fait écrire à l'agent ce qu'on ne lui avait pas demandé.*
+7. **Rédiger le prompt** à partir du gabarit, en bloc de code copiable.
    - **Garde.** Un type « exploration » porte une condition d'arrêt explicite, un type « analyse » un
-     hors-périmètre non vide, un type « exécution » des critères d'acceptation vérifiables. Il
-     manque l'un des trois, retourner à la rédaction.
+     hors-périmètre non vide, un type « exécution » des critères d'acceptation vérifiables et la
+     boucle « teste, compare, recommence ». Il manque l'un des trois, retourner à la rédaction.
+   - **Garde.** La brique « Libre » est écrite. Elle ne porte que ce que l'utilisateur n'a pas défini :
+     l'IA choisit librairies et procédure seulement là où il n'a rien dit.
+   - **Garde.** La stack, les conventions et la procédure que l'utilisateur a nommées passent en
+     « Contraintes », telles quelles, sans les assouplir. Le skill n'en invente aucune : pas de
+     librairie, de signature ou de numéro de ligne que l'ébauche ne donne pas. *Pourquoi : un profil
+     technique ou un projet à stack imposée a besoin de contrôler le comment, et trop de contraintes
+     inventées font obéir l'agent sans réfléchir, puis casser au premier imprévu.*
    - **Garde.** Relire la sortie en cherchant les verbes de décision (« il faut », « je propose »,
      « donc on »), et retirer ce qu'ils portent. Aucune conclusion de la session en cours n'entre
      dans le prompt.
-7. **Capturer**, une fois le prompt rédigé et pas avant. Trois branches, et la première est le défaut.
+8. **Capturer**, une fois le prompt rédigé et pas avant. Trois branches, et la première est le défaut.
    *Pourquoi cet ordre : le repli garde ainsi toujours un prompt à afficher, au lieu de perdre le
    travail avec la délégation.*
    - Ouvrir `vault-capture` avec le prompt et un titre court, puis confirmer le chemin absolu créé.
@@ -103,14 +124,17 @@ flowchart TD
   le dire, un chemin se relit.*
 - **Ce qui est mesuré et ce qui est supposé restent visuellement distincts** dans le prompt produit.
   *Pourquoi : un doute non signalé se lit comme une affirmation, et la session neuve le propagera.*
+- **Une information qui revient d'une ébauche à l'autre se propose en une ligne dans la réponse**
+  pour descendre au fichier projet ou au `CLAUDE.md`, jamais dans le prompt. *Pourquoi : les trois
+  étages du contexte (tâche, projet, permanent) évitent de la réécrire à chaque prompt.*
 - **Le prompt nomme le mode d'exécution attendu** quand il en dépend, par exemple le plan mode pour
   une analyse qui conclura sur des modifications. *Pourquoi : sans lui, l'agent enchaîne sur les
   éditions au lieu de faire valider l'approche.*
 
 ## Assets
 
-- [`assets/squelette-prompt.md`](assets/squelette-prompt.md) — les trois gabarits de prompt, un par
-  type de demande, avec leurs conditions d'omission
+- [`assets/squelette-prompt.md`](assets/squelette-prompt.md) — le gabarit unique à six briques, avec
+  ce que chaque brique porte selon le type, et ses conditions d'omission
 
 ## Test
 
@@ -123,7 +147,10 @@ la sortie d'un run.
 | les cas d'`evals/eval.json`, joués outils coupés | aucun des trois frères cités en clause NE PAS n'ouvre `cadre-prompt` |
 | grep du préfixe `⚠️ supposé :` sur le prompt rendu | autant de lignes que la section finale compte d'hypothèses |
 | compter les questions qui accompagnent la sortie | une au maximum, deux ou plus est un échec de l'étape 5 |
-| comparer les sections du prompt à celles du gabarit de son type | toutes présentes, aux seules omissions que le gabarit autorise |
+| comparer les sections du prompt aux six briques du gabarit | toutes présentes, aux seules omissions que le gabarit autorise |
+| chercher `## Libre` dans le prompt rendu | présente, jamais omise |
+| lire la première ligne du prompt rendu | un mode lire, écrire ou exécuter, et « commit avant » si exécuter |
+| ébauche à deux effets vérifiables | deux prompts rendus, pas un |
 | `git status` dans le repo courant après un run, quelle que soit la branche | vide, l'écriture n'ayant lieu que par `vault-capture` |
 
 Ce qui **échoue ouvert** ne se teste pas, et se relit à la main : la passation en fin de session

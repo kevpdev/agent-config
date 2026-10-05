@@ -1,67 +1,78 @@
-# Gabarits de prompt, un par type
+# Gabarit de prompt, six briques
 
-Trois squelettes à injecter dans la réponse. Le type se détecte avec le tableau du `SKILL.md`.
+Un seul squelette. Le type détecté avec le tableau du `SKILL.md` ne change pas les briques, il change
+ce que chacune contient.
 
-**Règles communes aux trois.** Une section sans contenu s'omet, jamais de placeholder. La section
-`## Ce qui est supposé` se place en dernier et n'apparaît que si une hypothèse a été posée. Les
-sections `## Faits déjà mesurés` et `## Prémisses fausses à ne pas hériter` n'existent que si la
+**Règles communes.** Une section sans contenu s'omet, jamais de placeholder. Exception : `## Libre`
+s'écrit toujours, pour que l'absence de choix soit un choix visible. L'IA ne choisit librement que ce
+que l'utilisateur n'a pas défini, et ce qu'il a défini (stack, conventions, procédure) va en
+`## Contraintes`.
+La section `## Ce qui est supposé` se place en dernier et n'apparaît que si une hypothèse a été posée.
+Les sections `## Faits déjà mesurés` et `## Prémisses fausses à ne pas hériter` n'existent que si la
 session en cours a réellement mesuré quelque chose.
 
----
+## Ce que chaque brique porte, par type
 
-## Type 1 — Exécution
+| Brique | Exécution | Analyse | Exploration |
+|---|---|---|---|
+| **Contexte** | où on en est, ce qui existe déjà | ce qui a amené la demande, au passé, factuel, plus les sources de vérité | d'où vient le flou |
+| **Effet** | ce qu'on voit à la fin, ce qu'on vérifie | la décision ou le document attendu, et ce qu'on en fera | le flou à lever, tel quel (une question fermée changerait de type) |
+| **Périmètre** | ce qu'elle fait, ce qu'elle demande, ce qu'elle ne touche pas | le contrat de questions figé et son hors-périmètre non vide | pas de conclusion, pas de reco, pas de plan, découvertes hors sujet capturées en une ligne |
+| **Contraintes** | règles non négociables, dont la stack, les conventions et la procédure que l'utilisateur a définies | idem | idem |
+| **Libre** | ce que l'utilisateur n'a pas défini, l'IA y choisit seule (librairie, mise en page, noms) | la méthode, sauf mention | les pistes qu'elle ouvre |
+| **Fini quand** | critères cochables, avec la commande ou l'artefact qui prouve, et la boucle « teste, compare, recommence » | le livrable nommé | une condition d'arrêt, une seule des trois formes ci-dessous |
 
-```markdown
-<Mode d'exécution attendu, si la demande en dépend.>
-
-## Ce qu'il faut faire
-
-<Le verbe, l'objet, le périmètre. Repris de l'ébauche, resserré.>
-
-## Critères d'acceptation
-
-- <Un critère vérifiable, avec la commande ou l'artefact qui le prouve.>
-- <Un autre.>
-
-## Ce qu'on ne touche pas
-
-- <Fichier, dossier ou comportement explicitement hors périmètre.>
-
-## Contraintes
-
-- <Contrainte d'outillage, de convention ou d'environnement, une par ligne.>
-
-## Ce qui est supposé
-
-- ⚠️ supposé : <l'hypothèse, et ce qui change si elle est fausse.>
-```
-
----
-
-## Type 2 — Analyse
+## Squelette
 
 ```markdown
-<Mode d'exécution attendu. Une analyse qui conclura sur des modifications se mène en plan mode.>
-Livrable attendu : <le document ou la décision, nommé>.
+<Mode : lire, écrire ou exécuter. Pour « exécuter » : « commit avant ». Une analyse qui conclura sur
+des modifications se mène en plan mode.>
 
 ## Contexte
 
-<Ce qui a amené la demande, au passé, factuel. Pas de justification.>
+<Selon la colonne du type.>
 
-## Ce que je veux
+## Effet
 
-<Le résultat visé, et ce qu'on en fera ensuite.>
+<Selon la colonne du type. Ce qui doit être vrai à la fin, pas la marche à suivre.>
 
-## Contrat de questions — figé, ne pas l'élargir en cours d'analyse
+## Périmètre
 
-Une découverte hors de ces questions se capture en une ligne et on continue.
+<Exécution : fait / demande / ne touche pas.>
+<Analyse : contrat figé, une découverte hors questions se capture en une ligne et on continue.>
 
 - **Q1** — <question fermée, dont la réponse est vérifiable>
-- **Q2** — <…>
 
 **Hors périmètre** : <ce qu'on ne creuse pas, et pourquoi en trois mots>.
 
-## Sources de vérité — à lire avant de mesurer
+<Exploration : pas de conclusion, pas de reco, pas de plan d'exécution, même partiel. On ouvre, on ne
+referme pas.>
+
+## Contraintes
+
+- <Une par ligne. La stack, les conventions et la procédure que l'utilisateur a nommées, reprises
+  telles quelles.>
+
+## Libre
+
+<Ce que l'utilisateur n'a pas défini, et que l'IA choisit seule. Si tout est défini : « rien, tout est
+fixé ci-dessus ». Si rien ne l'est : « tout le reste ».>
+
+## Fini quand
+
+<Exécution : un critère cochable par ligne. Teste, compare au résultat attendu, corrige, recommence
+jusqu'à ce que ça passe.>
+
+<Analyse : « Livrable : <le document ou la décision, nommé>. »>
+
+<Exploration : une seule des trois formes.>
+- Quand <fait observable> est établi.
+- Après <n> échanges, on fait le point même si rien n'est tranché.
+- Quand j'ai de quoi <décision à prendre>, sans aller plus loin.
+
+## Sources de vérité
+
+<Analyse seulement, à lire avant de mesurer.>
 
 | Chemin | Ce qu'il porte |
 | --- | --- |
@@ -79,7 +90,7 @@ Une découverte hors de ces questions se capture en une ligne et on continue.
 
 ## Méthode attendue
 
-<Section à omettre quand le prompt vise un agent dont les règles globales portent déjà ces
+<Analyse seulement. À omettre quand le prompt vise un agent dont les règles globales portent déjà ces
 consignes. À garder quand il part vers un autre outil, un autre modèle, ou un lecteur humain.>
 
 - Mesurer avant de raisonner, calibrer chaque comptage sur un cas positif avant de croire un « zéro ».
@@ -92,34 +103,4 @@ consignes. À garder quand il part vers un autre outil, un autre modèle, ou un 
 - ⚠️ supposé : <l'hypothèse, et ce qui change si elle est fausse.>
 ```
 
----
-
-## Type 3 — Exploration
-
-```markdown
-Phase exploration. <Le sujet, en une phrase.>
-
-## Ce que je cherche à comprendre
-
-<Le flou à lever, tel quel. Ne pas le transformer en question fermée : ce serait changer de type.>
-
-## Condition d'arrêt
-
-<L'une des trois formes, une seule.>
-- Quand <fait observable> est établi.
-- Après <n> échanges, on fait le point même si rien n'est tranché.
-- Quand j'ai de quoi <décision à prendre>, sans aller plus loin.
-
-## Ce que je ne veux pas encore
-
-- Pas de conclusion, pas de reco, pas de découpage en tickets. On ouvre, on ne referme pas.
-- Pas de plan d'exécution, même partiel.
-
-## Ce qu'on fait des découvertes hors sujet
-
-Les capturer en une ligne et continuer. Ne pas les creuser.
-
-## Ce qui est supposé
-
-- ⚠️ supposé : <l'hypothèse, et ce qui change si elle est fausse.>
-```
+Exploration : ouvrir le prompt par « Phase exploration. <le sujet, en une phrase.> » à la place du mode.
