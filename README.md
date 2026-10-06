@@ -61,11 +61,10 @@ Claude Code découvre ces dossiers automatiquement, sans rien déclarer. Aucun `
 | `wrappers/claude/output-styles/` | `~/.claude/output-styles/` |
 | `wrappers/claude/rules/` | `~/.claude/rules/` |
 | `wrappers/claude/scripts/` | `~/.claude/scripts/` |
-| `wrappers/claude/settings.json` | `~/.claude/settings.json` |
 
 Les symlinks sont supportés — lier plutôt que copier garde le repo comme source unique.
 
-**`~/.claude/rules/` est le seul cas particulier.** Deux dossiers de ce repo s'y déversent, et un lien de dossier ne fusionne pas : il faut donc un lien **par fichier**. Un fichier de règle neuf reste donc inerte jusqu'à ce que son lien existe, sans qu'aucun signal ne le dise. Les cinq autres cibles sont des liens uniques et ne peuvent pas dériver.
+**`~/.claude/rules/` est le seul cas particulier.** Deux dossiers de ce repo s'y déversent, et un lien de dossier ne fusionne pas : il faut donc un lien **par fichier**. Un fichier de règle neuf reste donc inerte jusqu'à ce que son lien existe, sans qu'aucun signal ne le dise.
 
 ```bash
 bash wrappers/claude/scripts/sync-rules.sh          # vérifie, échoue sur tout écart
@@ -73,6 +72,17 @@ bash wrappers/claude/scripts/sync-rules.sh --fix    # crée, répare, retire les
 ```
 
 À lancer après tout ajout, renommage ou suppression dans `rules/` ou `wrappers/claude/rules/`.
+
+Un lien de dossier n'est pas garanti non plus. Sur la machine de référence, `skills/`, `agents/`, `output-styles/` et `scripts/` sont de vrais dossiers remplis de liens par entrée (constaté le 2026-10-06). Un skill ou un script neuf y reste donc inerte tant que son lien n'existe pas.
+
+**`settings.json` ne se lie pas.** Claude Code y écrit lui-même : permissions accordées, plugins installés, `/config`. Un lien ferait entrer ces écritures dans le repo, ou serait remplacé par un fichier normal sans signal. C'est ce qui s'est produit, et le `"model": "sonnet"` du wrapper a cessé de s'appliquer. Le wrapper ne porte donc que les clés que le repo possède, et un script les applique sans toucher aux clés de la machine :
+
+```bash
+python3 wrappers/claude/scripts/sync-settings.py          # vérifie, échoue sur tout écart
+python3 wrappers/claude/scripts/sync-settings.py --fix    # applique, ancienne version en settings.json.bak
+```
+
+À lancer après toute modification de `wrappers/claude/settings.json`. `skipDangerousModePermissionPrompt` n'est pas appliqué : la clé se lit en OU entre les couches, donc un `false` écrit au niveau user ferait revenir l'avertissement du mode bypass dans tous les repos.
 
 ### Les gardes déterministes
 

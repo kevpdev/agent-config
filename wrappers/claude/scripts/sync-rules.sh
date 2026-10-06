@@ -7,9 +7,11 @@
 #   `wrappers/claude/rules/`) se déversent au même endroit, et un lien de dossier
 #   ne fusionne pas. Il faut donc un lien PAR FICHIER, créé à la main.
 #
-#   Les cinq autres cibles (`skills`, `agents`, `output-styles`, `scripts`,
-#   `settings.json`) sont des liens de dossier ou de fichier uniques, donc elles
-#   ne peuvent pas dériver — vérifié le 2026-08-05. Ce périmètre est complet.
+#   Ce script ne couvre que `rules/`. Les autres cibles (`skills`, `agents`,
+#   `output-styles`, `scripts`) se sont révélées être de vrais dossiers remplis
+#   de liens par entrée, pas des liens de dossier (constaté le 2026-10-06).
+#   `settings.json` ne se lie pas, parce que Claude Code y écrit. Il passe par
+#   `sync-settings.py`.
 #
 #   Le geste manuel a échoué deux fois le 2026-08-05. Un fichier de règle
 #   committé et relu ne se chargeait pas, faute de lien. Puis, en le supprimant,
