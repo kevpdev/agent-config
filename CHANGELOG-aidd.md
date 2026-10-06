@@ -22,6 +22,33 @@ est décrite dans [`README.md`](README.md#la-veille-des-plugins-aidd).
 
 ---
 
+## aidd-refine 2.x → 3.x, et browser-qa sorti d'aidd-dev
+
+*Constaté le 2026-10-06, en montant jusqu'au marketplace v5.11.0 (`6e30640`, 24/09).*
+
+Transitions de version : `aidd-refine` 2.2.3 → 3.1.0 · `aidd-dev` 2.4.0 → 2.6.0 · `aidd-context` 2.6.0 → 2.8.1 · `aidd-orchestrator` 2.2.0 → 2.3.1 · `aidd-pm` 2.4.0 → 2.5.0 · `aidd-vcs` 2.3.0 → 2.4.0. Nouveau plugin `aidd-qa` 1.0.0.
+
+### Renommages — cassants
+
+| Avant | Après |
+| --- | --- |
+| `aidd-refine:03-condense` | **supprimé** avec son hook, le plugin ne livre plus de dossier `hooks/` |
+| `aidd-refine:04-shadow-areas` | `aidd-refine:03-shadow-areas` |
+| `aidd-refine:05-fact-check` | `aidd-refine:04-fact-check` |
+| `aidd-dev:11-browser-qa` | sorti d'aidd-dev, remplacé par `aidd-qa:01-acceptance-qa` dans un plugin à installer à part |
+
+**Le second cas n'est pas déclaré cassant.** Le changelog d'aidd-dev 2.6.0 le range en « Features » (#917). Il ne se voit qu'en comparant la liste des skills upstream à celle du cache installé. `claude plugin update` n'installe pas `aidd-qa`, il faut `claude plugin install aidd-qa@aidd-framework`.
+
+### Nouveautés
+
+`aidd-refine:05-improve` (amélioration d'une conversation, rapport interactif). `aidd-context:10-learn` gagne une lentille rétrospective, et `02-project-memory` montre ce qu'il changerait avant d'écrire. `aidd-vcs:01-commit` se rattrape après l'échec d'un hook de commit scopé. aidd-dev refuse un edit IA qui casse une règle d'architecture nommée. Les skills et orchestrations signalent leur fin pour la télémétrie.
+
+### Impact sur les skills de ce repo
+
+Aucun. Les anciens noms ne sont cités nulle part dans le repo, grep à l'appui. La seule ligne trouvée est l'exemple de `skills/aidd-updates/assets/gabarit-plan.md`, qui porte déjà le nouveau nom en cible.
+
+---
+
 ## 1.x → 2.x
 
 *Constaté le 2026-07-29, en montant de `3f63ae2` (16/06) à `be83f25` (marketplace v5.5.6) — 131 commits.*
