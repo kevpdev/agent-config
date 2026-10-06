@@ -51,7 +51,7 @@
       }
     }
   },
-  "outputStyle": "chat-style",
+  "outputStyle": "Concise",
   "effortLevel": "high",
   "skipDangerousModePermissionPrompt": false,
   "model": "sonnet",
