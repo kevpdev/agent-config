@@ -105,6 +105,30 @@ bash wrappers/claude/scripts/hooks/tests/test-guard-aidd-skill-lookup.sh
 
 **Calibrer sur du trafic réel, pas seulement sur ses propres cas.** `guard-bash-tooling.py` a été confronté aux 987 commandes du périmètre extraites des transcripts de sessions (`~/.claude/projects/*/*.jsonl`) : sa première conception, qui refusait tout ce qu'elle ne pouvait pas tokeniser, y produisait 5 faux positifs sur des `git commit` ordinaires. Une batterie écrite par l'auteur du garde ne les aurait jamais montrés.
 
+### CodeGraph sur les projets AIDD
+
+[CodeGraph](https://github.com/colbymchenry/codegraph) donne à l'agent un graphe local des symboles, des appels et des dépendances. Il est déployé sur tous les projets AIDD, sans mesure de gain par projet : un projet grossit avec le temps, et mesurer chacun pour décider ne tient pas.
+
+Trois couches, de la plus rare à la plus fréquente.
+
+| Couche | Geste | Fréquence |
+|---|---|---|
+| Machine | `npm i -g @colbymchenry/codegraph`, puis `codegraph install -t claude -l global -y`, puis `codegraph telemetry off` | une fois par poste |
+| Projet existant | `codegraph init` à la racine, puis `.codegraph/` dans le `.gitignore` | une fois par dépôt, à la main |
+| Projet neuf | `hooks/init-codegraph.py`, hook `SessionStart` | automatique |
+
+**Ce que `install` écrit hors du repo** : le serveur MCP `codegraph` dans `~/.claude.json`, la permission `mcp__codegraph__*` et un hook `UserPromptSubmit` (`codegraph prompt-hook`) dans `~/.claude/settings.json`, et une section balisée dans `~/.claude/CLAUDE.md`. Rien de cela n'est dans le repo : `~/.claude/settings.json` n'est pas lié, et `sync-settings.py` ne retire jamais un hook de la machine. Un poste neuf rejoue donc la ligne « Machine ».
+
+**Ce que fait le hook** : il agit quand le `cwd` porte un `aidd_docs/`, pas de `.codegraph/`, et que `codegraph` est dans le PATH. Il ajoute `.codegraph/` au `.gitignore` racine, puis lance `codegraph init` détaché, pour qu'un gros dépôt ne retarde pas la session. Il échoue ouvert. Les dépôts existants ne sont pas indexés par lui, volontairement : ils reçoivent un passage explicite, pas un index surprise à la prochaine session.
+
+**Pourquoi `.codegraph/` est ignoré à la racine** : `.codegraph/` porte son propre `.gitignore` (`*` sauf lui-même), donc la base ne se versionne jamais. Il reste alors un seul fichier non suivi, ce qui salit `git status`. La ligne racine l'évite sans qu'aucun projet n'ait à committer ce fichier.
+
+```bash
+bash wrappers/claude/scripts/hooks/tests/test-init-codegraph.sh
+```
+
+La batterie tourne contre le vrai `codegraph`, pas un faux binaire.
+
 ### La veille des plugins AIDD
 
 Claude Code sait appliquer une mise à jour de plugin, pas dire ce qu'elle va casser. Son auto-update
