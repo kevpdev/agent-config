@@ -5,22 +5,30 @@ paths:
 
 # Conventions front — React / TypeScript
 
-## Documentation
-- Tout export **public** (composant, hook, util) porte un bloc **TSDoc/JSDoc** : rôle, puis `@param` et `@returns` quand non trivial.
-- Props d'un composant : documentées via le type/interface (commentaire au-dessus de chaque champ non évident), pas en double dans le TSDoc.
+Défauts qui comblent les trous : une règle ne s'applique que si la convention du repo (config lint, `aidd_docs/`, code existant) ne couvre pas le sujet (`autorite-des-conventions.md`).
 
-**POURQUOI** : le type est déjà lu par l'IDE et vérifié par le compilateur. Redocumenter les props en TSDoc crée une seconde source de vérité que rien ne contrôle, et elle dérive dès la première modification du type.
+## Contrôles
+- Lancer lint, typecheck et tests du projet (scripts de `package.json`), corriger jusqu'au vert : le CI et la review remontent ce que ces commandes détectent déjà.
+- Corriger la cause plutôt que `eslint-disable` / `@ts-ignore`, sinon commenter l'exception en une ligne.
 
-## Tests
-- Vitest + React Testing Library. Tester le **comportement** (ce que voit l'utilisateur), pas l'implémentation.
-- Requêtes par rôle/label (`getByRole`, `getByLabelText`) avant `getByTestId` (dernier recours).
-- Fichier de test colocalisé : `Xxx.test.tsx` à côté du composant.
-
-**POURQUOI** : une requête par rôle ou label échoue quand l'accessibilité casse, donc le test couvre l'a11y sans test dédié. `getByTestId` passe même sur un composant inutilisable au clavier ou au lecteur d'écran, d'où le dernier recours.
+## Pièges lint et sécurité
+- Hooks : règles des hooks respectées et dépendances d'`useEffect` complètes. Pas d'effet pour dériver une valeur calculable au rendu.
+- Pas de `any` ni de `as` pour taire le compilateur : typer, ou `unknown` puis une garde.
+- Pas de `dangerouslySetInnerHTML` ni d'URL construite depuis une entrée utilisateur. Si besoin, assainir d'abord.
+- Aucun secret ni token dans le code ou dans les variables exposées au client (`VITE_*`, `NEXT_PUBLIC_*`).
+- Listes avec une `key` stable, jamais l'index.
+- Éléments sémantiques (`button`, `a`, `label`), pas de `div` cliquable.
+- Pas de `catch` vide : afficher l'état d'erreur et de chargement.
 
 ## Nommage
 - Composants : **PascalCase**, le fichier porte le nom du composant (`InvoiceCard.tsx`).
 - Hooks : préfixe `use` (`useInvoiceList`). Utils/non-composants : **camelCase** (`formatAmount.ts`).
 - Types/interfaces en PascalCase. Pas de préfixe `I`.
 
-**POURQUOI** : la casse porte l'information. PascalCase signale à React qu'il s'agit d'un composant et non d'une balise HTML, le préfixe `use` déclenche la vérification des règles des hooks par le linter. Ce ne sont pas des conventions cosmétiques mais des contrats outillés. Le préfixe `I` est un vestige C# qui n'apporte rien là où le compilateur connaît déjà la nature du type.
+## Tests
+- Vitest + React Testing Library, sauf runner existant.
+- Tester le comportement. Requêtes par rôle/label avant `getByTestId`.
+- Test colocalisé : `Xxx.test.tsx`.
+
+## Documentation
+- TSDoc sur tout export public. Props documentées via le type, pas en double.
