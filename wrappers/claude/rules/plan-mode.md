@@ -26,6 +26,8 @@ Ne pas appeler `EnterPlanMode` quand le travail est piloté par un skill AIDD, q
 
 **POURQUOI, mesuré le 2026-08-19** : le corps de `aidd-orchestrator:01-sdlc` dit « decide and act without confirmation », quand cette page dit qu'aucune demande détaillée ne vaut accord sur une approche. Les deux textes se contredisent mot pour mot, et une instruction utilisateur passe devant celle d'un skill. Sans cette exception, le harnais refuse structurellement d'héberger un SDLC autonome.
 
+**Ce que l'exception autorise aussi** : commit, push et PR draft pendant le run, voir la section « Git pendant un run AIDD » de `rules/aidd.md`.
+
 **POURQUOI la condition ne rouvre pas la décision** : « un skill AIDD pilote-t-il ? » se tranche au premier tour et ne se rejoue pas ensuite. C'est la même forme que la règle au-dessus, pas une vigilance à tenir sur la durée.
 
 **POURQUOI ce n'est pas un `paths:`** : le scope `paths:` porte sur le fichier édité, jamais sur le repo (`back-spring.md` sur `**/*.java`, `front-react.md` sur `**/*.{ts,tsx}`). Un repo AIDD mêlant Java et TypeScript matcherait les deux, donc aucun glob n'exprime cette exception.

@@ -27,3 +27,13 @@ Foyer des décisions qui valent pour tout repo portant un `aidd_docs/`. Une déc
 **HORS PÉRIMÈTRE** : les textes affichés à l'utilisateur final (messages d'erreur, interface), dont la langue relève du produit. C'est de la forme au sens de `autorite-des-conventions.md` : un repo qui déclare autre chose garde la priorité, et migrer l'existant est un `refactor` séparé.
 
 **POURQUOI**, constaté le 2026-10-07 sur `yt-transcriber` : 14 fichiers de code mêlaient français et anglais, et le choix n'était écrit nulle part. Les titres de plan en anglais viennent du gabarit du skill, et le corps suit la langue de la conversation, sans règle qui les garantisse. Le contenu des documents est en français pour épargner au lecteur une traduction mentale, le gabarit reste en anglais parce que c'est le contrat du skill.
+
+## Git pendant un run AIDD
+
+**DÉCLENCHEUR** : l'utilisateur lance `aidd-orchestrator:01-sdlc` ou un `/aidd-dev:*`.
+
+**PERMIS pour ce run** : commit, push de la branche de travail et PR **draft**, y compris si le repo écrit « never » (`vcs.md`, `CLAUDE.md`).
+
+**HORS PÉRIMÈTRE** : push sur `main`, merge, force-push, tag, et toute action hors du run. `guard-no-claude-in-commit.sh` continue de s'appliquer.
+
+**POURQUOI** : lancer le skill est l'accord durable sur ce run, et s'arrêter avant chaque commit contredit « decide and act without confirmation » (`plan-mode.md`).
