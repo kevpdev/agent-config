@@ -6,22 +6,30 @@ paths:
 
 # Conventions back — Java / Spring Boot
 
-## Documentation
-- Toute classe et méthode **publique** porte une Javadoc complète : `@param`, `@return`, `@throws`.
-- Pas de Javadoc qui paraphrase le nom (`/** Gets the name */`), à la place documenter le *pourquoi* et les invariants, pas l'évident.
+Défauts qui comblent les trous : une règle ne s'applique que si la convention du repo (`aidd_docs/`, code existant) ne couvre pas le sujet (`autorite-des-conventions.md`).
 
-**POURQUOI** : le public est le contrat, c'est-à-dire ce que l'appelant ne peut pas déduire en lisant le corps. Une Javadoc qui paraphrase le nom coûte de la maintenance sans ajouter d'information, et devient fausse au premier renommage.
+## Contrôles
+- Lancer build et tests du projet (`mvnw verify`, cf. `tooling.md`), corriger jusqu'au vert : le CI et la review remontent ce que ces commandes détectent déjà.
+- Corriger la cause plutôt que `@SuppressWarnings` / `// NOSONAR`, sinon commenter l'exception en une ligne.
+
+## Erreurs et API
+- Erreurs en `ProblemDetail` via un `@ControllerAdvice` qui étend `ResponseEntityExceptionHandler`.
+- `@Valid` sur les corps de requête.
+- Actuator : jamais `management.endpoints.web.exposure.include=*`.
 
 ## Tests
-- **Principe directeur** : tester le **comportement métier**, pas l'implémentation. Robuste au refactor, maintenance réduite, le test sert de doc. Exception : cas critiques où l'implémentation *est* le contrat (algo de sécurité, calcul réglementaire).
-- **Outside-in** : test d'acceptation (slice use-case / controller) d'abord, puis descente en unitaires sur le domaine (double boucle ATDD + TDD).
-- JUnit 5 + Mockito. Un test suit **AAA** (Arrange / Act / Assert), nom `should_<effet>_when_<condition>` (ex. `should_throwNotFound_when_idUnknown`).
-- Mock **uniquement les I/O** (DB, API externe, LLM, fichiers), jamais les collaborateurs internes : exercer le chemin métier complet avec les vrais objets.
+- Tester le **comportement métier**, pas l'implémentation. Exception : quand l'implémentation *est* le contrat (algo de sécurité, calcul réglementaire).
+- **Outside-in** : test d'acceptation (use-case ou controller) d'abord, puis unitaires sur le domaine.
+- JUnit + Mockito. Structure AAA, nom `should_<effet>_when_<condition>` (`should_throwNotFound_when_idUnknown`).
+- Mock **uniquement les I/O** (DB, API externe, LLM, fichiers), jamais les collaborateurs internes.
 - Peu de tests à forte valeur. Minimiser les tests d'intégration lents.
 
 ## Nommage
-- Suffixe par rôle : `XxxController`, `XxxService`, `XxxRepository`, `XxxDto`.
-- Un type public par fichier. Le nom du fichier est celui du type.
-- Packages en minuscules. Le découpage par domaine relève du **DDD stratégique** : un bounded context correspond à un microservice. À l'intérieur d'un module, organisation **par couche** (`controllers/`, `services/`, `repositories/`, `models/`), sans DDD tactique (hexagonal, agrégats) tant que le domaine reste du CRUD auto-exposé. Ne pas subdiviser un domaine unique en sous-packages par feature, même s'il grossit. Un module qui grossit parce qu'il agrège plusieurs domaines appelle l'extraction du domaine surnuméraire dans son propre microservice.
+- Suffixe par rôle : `XxxController`, `XxxService`, `XxxRepository`, `XxxDto`. Un type public par fichier.
+- Un bounded context correspond à un microservice (DDD stratégique). Dans un module, organisation par couche (`controllers/`, `services/`, `repositories/`, `models/`), sans DDD tactique ni sous-packages par feature.
+- Un module qui agrège plusieurs domaines appelle l'extraction du domaine surnuméraire dans son propre microservice.
 
-**POURQUOI** : la frontière qui porte du sens est le bounded context, matérialisé par le microservice (DDD stratégique), pas la feature interne. Le suffixe de couche situe un type sans ouvrir le fichier. Le DDD tactique se paie sur des invariants métier riches, et l'imposer à du CRUD référentiel est de la sur-ingénierie. Le signal de séparation est la pluralité de domaines (un bloc consommé de façon autonome), jamais le seul nombre de classes.
+**POURQUOI** : la frontière utile est le bounded context, pas la feature interne. Le DDD tactique se paie sur des invariants métier riches, et l'imposer à du CRUD est de la sur-ingénierie.
+
+## Documentation
+- Javadoc complète sur tout public (`@param`, `@return`, `@throws`), qui documente le pourquoi et les invariants, pas le nom.
