@@ -20,8 +20,10 @@ Foyer des décisions qui valent pour tout repo portant un `aidd_docs/`. Une déc
 
 **DÉCLENCHEUR** : j'écris ou modifie du code, un commentaire, un nom de test ou un document, dans un repo qui porte un `aidd_docs/`.
 
-**À LA PLACE de** mélanger, tout ce qui est code est en **anglais** : identifiants, commentaires, docstrings, noms de test, scripts, Dockerfile. La documentation (README, `aidd_docs/`) peut rester en français. Dans un plan, les titres de section restent en anglais (ceux du gabarit du skill de plan) et le corps peut être en français.
+**À LA PLACE de** mélanger, tout ce qui est code est en **anglais** : identifiants, commentaires, docstrings, noms de test, scripts, Dockerfile. La documentation (README, `aidd_docs/`) est en français.
+
+**Documents produits par un skill AIDD** (plan, spec, PRD, issue, mémoire projet) : le gabarit reste en anglais, c'est-à-dire les titres de section et les noms de champ. Le contenu est en **français**. Les skills AIDD rédigent en anglais par défaut, donc ne pas laisser ce défaut passer : écrire ou réécrire le contenu en français.
 
 **HORS PÉRIMÈTRE** : les textes affichés à l'utilisateur final (messages d'erreur, interface), dont la langue relève du produit. C'est de la forme au sens de `autorite-des-conventions.md` : un repo qui déclare autre chose garde la priorité, et migrer l'existant est un `refactor` séparé.
 
-**POURQUOI**, constaté le 2026-10-07 sur `yt-transcriber` : 14 fichiers de code mêlaient français et anglais, et le choix n'était écrit nulle part. Les titres de plan en anglais viennent du gabarit du skill, et le corps suit la langue de la conversation, sans règle qui les garantisse.
+**POURQUOI**, constaté le 2026-10-07 sur `yt-transcriber` : 14 fichiers de code mêlaient français et anglais, et le choix n'était écrit nulle part. Les titres de plan en anglais viennent du gabarit du skill, et le corps suit la langue de la conversation, sans règle qui les garantisse. Le contenu des documents est en français pour épargner au lecteur une traduction mentale, le gabarit reste en anglais parce que c'est le contrat du skill.
