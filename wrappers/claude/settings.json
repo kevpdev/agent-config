@@ -30,6 +30,10 @@
           {
             "type": "command",
             "command": "python3 ~/.claude/scripts/aidd-updates.py --notify"
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/scripts/hooks/init-codegraph.py"
           }
         ]
       }
