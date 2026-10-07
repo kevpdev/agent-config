@@ -15,6 +15,10 @@
           {
             "type": "command",
             "command": "python3 ~/.claude/scripts/hooks/guard-bash-tooling.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/scripts/hooks/guard-aidd-skill-lookup.py"
           }
         ]
       }

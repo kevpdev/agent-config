@@ -93,10 +93,12 @@ Trois hooks `PreToolUse` refusent à l'appel ce qu'une règle de prose ne tenait
 | `guard-bash-tooling.py` | `java`/`mvnw` hors `bash -lc 'sh ./mvnw …'`, heredoc imbriqué | `rules/tooling.md` | `tests/test-guard-bash-tooling.sh` |
 | `guard-no-claude-in-commit.sh` | mention d'IA, format Conventional Commits | `rules/commit-convention.md` | `tests/test-guard-no-claude-in-commit.sh` |
 | `guard-no-remote-write.py` | écritures de l'agent sur preprod/prod | — | *aucune* |
+| `guard-aidd-skill-lookup.py` | `gh issue/pr/release create`, `git tag -a` à la main dans un repo `aidd_docs/` sans skill `aidd-` invoqué (sortie : `# aidd-skip: <raison>`) | `rules/aidd.md` | `tests/test-guard-aidd-skill-lookup.sh` |
 
 ```bash
 bash wrappers/claude/scripts/hooks/tests/test-guard-bash-tooling.sh
 bash wrappers/claude/scripts/hooks/tests/test-guard-no-claude-in-commit.sh
+bash wrappers/claude/scripts/hooks/tests/test-guard-aidd-skill-lookup.sh
 ```
 
 **Une batterie pèse autant que son garde.** Un garde sans cible vivante se comporte exactement pareil qu'il soit cassé ou intact ; et un garde qui refuse du travail valide finit désactivé, donc ne protège plus rien. Chaque batterie porte les deux : des cas positifs **fabriqués à la main**, et les formes légitimes qui doivent passer. Toute forme de commande nouvellement rencontrée s'y ajoute *avant* d'être corrigée dans le garde.
