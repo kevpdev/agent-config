@@ -26,9 +26,19 @@ Hors de ces trois noms, un workflow peut exister mais le ruleset ne l'exige pas.
 
 ## Ce que `check` doit couvrir
 
-Le job `check` ne se limite pas à compiler et lancer les tests. Il couvre le format, le lint, l'analyse statique et un seuil de couverture, du plus déterministe au plus lent, et s'arrête au premier échec. Le script de conformité ne le mesure pas, il ne lit que les workflows.
+Le job `check` ne se limite pas à compiler et lancer les tests. Il couvre quatre catégories, du plus déterministe au plus lent, et s'arrête au premier échec : **format, lint, analyse statique, couverture avec seuil**. Le script de conformité ne le mesure pas, il ne lit que les workflows.
 
-**Recette Maven** (appliquée à `kevpdev/swapi` le 2026-10-08, tout lié à `verify`, donc `sh ./mvnw -B verify` suffit en CI) :
+**Ces quatre catégories valent pour tout langage. Les outils, non.** Avant d'appliquer une recette, constater le langage réel du dépôt (`src/main/java`, `src/main/kotlin`, `*.kt`, `pyproject.toml`). Si la ligne du langage est marquée « non mesuré », garder les quatre catégories, choisir l'outil équivalent, calibrer chaque outil par une violation plantée et écrire « non mesuré » dans la PR. Ne jamais recopier la table d'un autre langage.
+
+| Stack | Statut | Outils |
+|---|---|---|
+| Python | mesuré (`yt-transcriber`) | ruff format, ruff check, pyright, pytest avec seuil de couverture, dans `scripts/check.sh` |
+| Java + Maven | mesuré le 2026-10-08 (`swapi`) | table ci-dessous |
+| Kotlin + Maven | **non mesuré** | pistes : Spotless avec `ktlint` ou `ktfmt` pour le format, detekt pour lint et analyse statique, JaCoCo inchangé. Checkstyle, PMD et SpotBugs ne lisent pas Kotlin. Les coordonnées Maven officielles de detekt ne sont pas vérifiées. |
+
+**POURQUOI**, constaté le 2026-10-08 : la recette n'a été mesurée que sur un projet Java, et son titre « Maven » laissait croire à une portée générale.
+
+**Recette Java + Maven** (appliquée à `kevpdev/swapi` le 2026-10-08, tout lié à `verify`, donc `sh ./mvnw -B verify` suffit en CI) :
 
 | Phase | Plugin | Rôle |
 |---|---|---|
