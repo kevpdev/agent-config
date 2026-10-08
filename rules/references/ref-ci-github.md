@@ -24,6 +24,25 @@ Hors de ces trois noms, un workflow peut exister mais le ruleset ne l'exige pas.
 - **Maven : Failsafe pour les `*IT`.** Surefire (actif par défaut) ne lance que `*Test`, `*Tests` et leurs voisins. Une classe `FooIT` est ignorée sans erreur tant que `maven-failsafe-plugin` n'est pas déclaré dans le `pom.xml`, donc `verify` reste vert sans l'avoir lancée (mesuré le 2026-10-08 sur `swapi`). Avec le parent Spring Boot, la déclaration seule suffit : sa version et ses exécutions sont déjà gérées. Le script de conformité refuse un dépôt qui a des `*IT` sans Failsafe.
 - **`check.sh` ou équivalent** : un script versionné que la CI et le poste local lancent à l'identique. Le workflow n'a pas d'autre logique que de l'appeler.
 
+## Ce que `check` doit couvrir
+
+Le job `check` ne se limite pas à compiler et lancer les tests. Il couvre le format, le lint, l'analyse statique et un seuil de couverture, du plus déterministe au plus lent, et s'arrête au premier échec. Le script de conformité ne le mesure pas, il ne lit que les workflows.
+
+**Recette Maven** (appliquée à `kevpdev/swapi` le 2026-10-08, tout lié à `verify`, donc `sh ./mvnw -B verify` suffit en CI) :
+
+| Phase | Plugin | Rôle |
+|---|---|---|
+| `validate` | Spotless (`googleJavaFormat`) | format |
+| `validate` | Checkstyle (`google_checks.xml`) | style, avec un fichier de suppressions pour ce que le projet refuse |
+| `process-classes` | PMD | mauvaises pratiques |
+| `process-classes` | SpotBugs | bugs probables dans le bytecode |
+| `verify` | JaCoCo (`report` puis `check`) | couverture, seuil fixé sur la valeur **mesurée** arrondie vers le bas |
+
+- Le seuil JaCoCo ne se pose pas au hasard. Sur `swapi` la couverture de lignes mesurée était de 43 %, le seuil est de 40 %.
+- Reformater tout le code avec Spotless se fait dans un commit à part, avant d'activer `check`.
+- Un outil qui rend zéro violation ne prouve rien tant qu'il n'a pas détecté une violation plantée. PMD a été calibré ainsi sur `swapi` (un champ privé inutilisé et un `catch` vide détectés).
+- Les règles Javadoc de `google_checks.xml` (49 des 103 premières violations de `swapi`) se suppriment par `suppressionsLocation`, le reste se corrige.
+
 ## CodeQL
 
 - `codeql.yml` à part, un job par langage, **non requis** par le ruleset tant que sa stabilité n'est pas mesurée.
