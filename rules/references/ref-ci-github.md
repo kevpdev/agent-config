@@ -36,6 +36,15 @@ Le job `check` ne se limite pas à compiler et lancer les tests. Il couvre quatr
 | Java + Maven | mesuré le 2026-10-08 (`swapi`) | table ci-dessous |
 | Kotlin + Maven | **non mesuré** | pistes : Spotless avec `ktlint` ou `ktfmt` pour le format, detekt pour lint et analyse statique, JaCoCo inchangé. Checkstyle, PMD et SpotBugs ne lisent pas Kotlin. Les coordonnées Maven officielles de detekt ne sont pas vérifiées. |
 
+**Évaluer la version avant de garder ou de choisir un outil.** Un outil peut être compromis sans devenir mauvais, la version épinglée est ce qui compte.
+
+1. Lire les avis de sécurité de l'outil (GitHub Advisories, OSV) et comparer la version épinglée aux versions touchées.
+2. Si la version est touchée, passer à la première version saine, sans changer d'outil.
+3. Ne chercher un remplaçant que si le dépôt est archivé, si aucune version saine n'existe, ou si l'outil n'est plus compatible avec le JDK ou le parent Maven du projet.
+4. Après tout changement d'outil ou de version : recalibrer par une violation plantée et remesurer le seuil de couverture. Le contrat ne bouge pas, il tient aux quatre catégories et au nom du job `check`.
+
+**POURQUOI**, constaté le 2026-10-08 : le 19 mars 2026, 76 des 77 tags de `trivy-action` ont été repointés et le binaire v0.69.4 publié avec un code malveillant (sources divergentes sur les plages exactes, vérifier l'avis GHSA-69fq-xp46-6x23). `swapi` et `yt-transcriber` épinglent `trivy-action` par SHA sur un commit du 2026-04-22 (v0.36.0), et le log d'un run montre le binaire v0.70.0, hors des versions citées. Le SHA protège d'un tag repointé, pas d'une version touchée.
+
 **POURQUOI**, constaté le 2026-10-08 : la recette n'a été mesurée que sur un projet Java, et son titre « Maven » laissait croire à une portée générale.
 
 **Recette Java + Maven** (appliquée à `kevpdev/swapi` le 2026-10-08, tout lié à `verify`, donc `sh ./mvnw -B verify` suffit en CI) :
