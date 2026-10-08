@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Mesure qu'un dépôt respecte le contrat CI de `rules/references/ref-ci-github.md`.
 
-Lit les fichiers, n'exécute rien et n'appelle pas GitHub. Cinq vérifications :
+Lit les fichiers, n'exécute rien et n'appelle pas GitHub. Six vérifications :
 
 1. les jobs `check` et `security` existent, chacun une seule fois, et `e2e` aussi
    quand le dépôt porte un dossier `e2e/`
@@ -9,6 +9,8 @@ Lit les fichiers, n'exécute rien et n'appelle pas GitHub. Cinq vérifications :
 3. chaque workflow a un bloc `permissions:` en tête
 4. ce bloc ne contient que `read` ou `none` (l'écriture se pose sur le job)
 5. `dependabot.yml` couvre l'écosystème `github-actions`
+6. une classe de test `*IT` (Maven) suppose `maven-failsafe-plugin` déclaré dans un
+   `pom.xml`, sinon Surefire l'ignore et `verify` reste vert sans la lancer
 
 Le nom d'un job est le contexte que le ruleset exige : on lit donc `name:` s'il existe,
 l'identifiant du job sinon. Un nom construit par matrice (`${{ ... }}`) n'est pas un
@@ -36,6 +38,7 @@ except ImportError:
 SHA = re.compile(r"^[0-9a-f]{40}$")
 USES = re.compile(r"^\s*(?:-\s*)?uses:\s*([^\s#]+)")
 ALWAYS = ("check", "security")
+SKIPPED_DIRS = {".git", "node_modules", "target", ".venv"}
 
 
 class Unreadable(Exception):
@@ -142,6 +145,35 @@ def check_dependabot(root: str) -> list[str]:
     return [".github/dependabot.yml: absent"]
 
 
+def find_files(root: str, matches) -> list[str]:
+    found = []
+    for folder, dirs, names in os.walk(root):
+        dirs[:] = [d for d in dirs if d not in SKIPPED_DIRS]
+        found += [os.path.join(folder, n) for n in names if matches(folder, n)]
+    return sorted(found)
+
+
+def check_failsafe(root: str) -> list[str]:
+    """Maven ignore en silence une classe `*IT` tant que Failsafe n'est pas déclaré."""
+    classes = find_files(
+        root,
+        lambda folder, name: name.endswith(".java")
+        and f"{os.sep}src{os.sep}test{os.sep}" in folder + os.sep
+        and name.endswith(("IT.java", "ITCase.java")),
+    )
+    if not classes:
+        return []
+    for pom in find_files(root, lambda _, name: name == "pom.xml"):
+        with open(pom, encoding="utf-8") as handle:
+            if "maven-failsafe-plugin" in handle.read():
+                return []
+    return [
+        f"{os.path.relpath(classes[0], root)}: {len(classes)} classe(s) de test d'intégration "
+        "(*IT) mais `maven-failsafe-plugin` n'est déclaré dans aucun pom.xml, "
+        "elles ne seraient jamais lancées"
+    ]
+
+
 def check(root: str) -> list[str]:
     if not os.path.isdir(root):
         raise Unreadable(f"{root}: dossier introuvable")
@@ -153,7 +185,7 @@ def check(root: str) -> list[str]:
     for path in files:
         problems += check_uses(root, path)
         problems += check_permissions(root, path, documents[path])
-    return problems + check_dependabot(root)
+    return problems + check_dependabot(root) + check_failsafe(root)
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -215,6 +215,58 @@ def main() -> int:
         lambda r: [os.remove(os.path.join(r, ".github/workflows", f)) for f in os.listdir(os.path.join(r, ".github/workflows"))],
     )
 
+    it_class = "src/test/java/fr/demo/FooIT.java"
+    pom_plain = "<project><build><plugins></plugins></build></project>\n"
+    pom_failsafe = (
+        "<project><build><plugins><plugin>"
+        "<artifactId>maven-failsafe-plugin</artifactId>"
+        "</plugin></plugins></build></project>\n"
+    )
+
+    def with_files(files: dict):
+        return lambda r: [write(r, path, content) for path, content in files.items()]
+
+    case(
+        "classe *IT sans pom",
+        "maven-failsafe-plugin",
+        with_files({it_class: "class FooIT {}\n"}),
+    )
+    case(
+        "classe *IT et pom sans Failsafe",
+        "elles ne seraient jamais lancées",
+        with_files({it_class: "class FooIT {}\n", "pom.xml": pom_plain}),
+    )
+    case(
+        "classe *ITCase et pom sans Failsafe",
+        "maven-failsafe-plugin",
+        with_files({"src/test/java/fr/demo/BarITCase.java": "class BarITCase {}\n", "pom.xml": pom_plain}),
+    )
+    case(
+        "classe *IT et Failsafe déclaré",
+        None,
+        with_files({it_class: "class FooIT {}\n", "pom.xml": pom_failsafe}),
+    )
+    case(
+        "classe *IT et Failsafe déclaré dans un sous-module",
+        None,
+        with_files({it_class: "class FooIT {}\n", "pom.xml": pom_plain, "app/pom.xml": pom_failsafe}),
+    )
+    case(
+        "classes *Test et *Tests seules, Failsafe non exigé",
+        None,
+        with_files({"src/test/java/fr/demo/FooTest.java": "class FooTest {}\n", "src/test/java/fr/demo/BarTests.java": "class BarTests {}\n", "pom.xml": pom_plain}),
+    )
+    case(
+        "classe *IT sous target/ ignorée",
+        None,
+        with_files({"target/src/test/java/FooIT.java": "class FooIT {}\n"}),
+    )
+    case(
+        "classe *IT hors de src/test ignorée",
+        None,
+        with_files({"src/main/java/fr/demo/FooIT.java": "class FooIT {}\n"}),
+    )
+
     with tempfile.TemporaryDirectory() as root:
         build(root)
         write(root, ".github/workflows/broken.yml", "jobs: [unclosed\n")

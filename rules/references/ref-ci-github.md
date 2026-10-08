@@ -21,6 +21,7 @@ Hors de ces trois noms, un workflow peut exister mais le ruleset ne l'exige pas.
 - **Actions épinglées par SHA** de 40 caractères (`uses: actions/checkout@<sha> # v7.0.1`). Un tag ou une branche se déplace sans qu'on le voie. Le tag en commentaire sert à Dependabot et au lecteur, le script ne le contrôle pas.
 - **Permissions minimales** : un bloc `permissions:` en tête de chaque workflow, qui ne contient que `read` ou `none`. Une permission d'écriture se pose sur le job qui en a besoin, jamais en tête.
 - **Dependabot** sur l'écosystème `github-actions`, avec l'écosystème du langage en plus. Sans lui, les SHA épinglés ne montent jamais.
+- **Maven : Failsafe pour les `*IT`.** Surefire (actif par défaut) ne lance que `*Test`, `*Tests` et leurs voisins. Une classe `FooIT` est ignorée sans erreur tant que `maven-failsafe-plugin` n'est pas déclaré dans le `pom.xml`, donc `verify` reste vert sans l'avoir lancée (mesuré le 2026-10-08 sur `swapi`). Avec le parent Spring Boot, la déclaration seule suffit : sa version et ses exécutions sont déjà gérées. Le script de conformité refuse un dépôt qui a des `*IT` sans Failsafe.
 - **`check.sh` ou équivalent** : un script versionné que la CI et le poste local lancent à l'identique. Le workflow n'a pas d'autre logique que de l'appeler.
 
 ## CodeQL
