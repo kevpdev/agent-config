@@ -35,6 +35,7 @@ Le job `check` ne se limite pas à compiler et lancer les tests. Il couvre quatr
 | Python | mesuré (`yt-transcriber`) | ruff format, ruff check, pyright, pytest avec seuil de couverture, dans `scripts/check.sh` |
 | Java + Maven | mesuré le 2026-10-08 (`swapi`) | table ci-dessous |
 | Kotlin + Maven | **non mesuré** | pistes : Spotless avec `ktlint` ou `ktfmt` pour le format, detekt pour lint et analyse statique, JaCoCo inchangé. Checkstyle, PMD et SpotBugs ne lisent pas Kotlin. Les coordonnées Maven officielles de detekt ne sont pas vérifiées. |
+| Node / TypeScript (backend) | **non mesuré** | le framework (Express, Fastify, NestJS) ne change pas les quatre catégories. À constater avant d'appliquer : JavaScript ou TypeScript (TypeScript ajoute `tsc --noEmit` pour les types), le gestionnaire de paquets (`pnpm`, `npm`) et le lanceur de tests (Jest, Vitest, `node:test`), qui fixent les commandes et le seuil de couverture. Aucun outil choisi tant qu'il n'a pas détecté une violation plantée. |
 
 **Évaluer la version avant de garder ou de choisir un outil.** Un outil peut être compromis sans devenir mauvais, la version épinglée est ce qui compte.
 
