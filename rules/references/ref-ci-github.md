@@ -26,9 +26,29 @@ Hors de ces trois noms, un workflow peut exister mais le ruleset ne l'exige pas.
 
 ## Ce que `check` doit couvrir
 
-Le job `check` ne se limite pas à compiler et lancer les tests. Il couvre le format, le lint, l'analyse statique et un seuil de couverture, du plus déterministe au plus lent, et s'arrête au premier échec. Le script de conformité ne le mesure pas, il ne lit que les workflows.
+Le job `check` ne se limite pas à compiler et lancer les tests. Il couvre quatre catégories, du plus déterministe au plus lent, et s'arrête au premier échec : **format, lint, analyse statique, couverture avec seuil**. Le script de conformité ne le mesure pas, il ne lit que les workflows.
 
-**Recette Maven** (appliquée à `kevpdev/swapi` le 2026-10-08, tout lié à `verify`, donc `sh ./mvnw -B verify` suffit en CI) :
+**Ces quatre catégories valent pour tout langage. Les outils, non.** Avant d'appliquer une recette, constater le langage réel du dépôt (`src/main/java`, `src/main/kotlin`, `*.kt`, `pyproject.toml`). Si la ligne du langage est marquée « non mesuré », garder les quatre catégories, choisir l'outil équivalent, calibrer chaque outil par une violation plantée et écrire « non mesuré » dans la PR. Ne jamais recopier la table d'un autre langage.
+
+| Stack | Statut | Outils |
+|---|---|---|
+| Python | mesuré (`yt-transcriber`) | ruff format, ruff check, pyright, pytest avec seuil de couverture, dans `scripts/check.sh` |
+| Java + Maven | mesuré le 2026-10-08 (`swapi`) | table ci-dessous |
+| Kotlin + Maven | **non mesuré** | pistes : Spotless avec `ktlint` ou `ktfmt` pour le format, detekt pour lint et analyse statique, JaCoCo inchangé. Checkstyle, PMD et SpotBugs ne lisent pas Kotlin. Les coordonnées Maven officielles de detekt ne sont pas vérifiées. |
+| Node / TypeScript (backend) | **non mesuré** | le framework (Express, Fastify, NestJS) ne change pas les quatre catégories. À constater avant d'appliquer : JavaScript ou TypeScript (TypeScript ajoute `tsc --noEmit` pour les types), le gestionnaire de paquets (`pnpm`, `npm`) et le lanceur de tests (Jest, Vitest, `node:test`), qui fixent les commandes et le seuil de couverture. Aucun outil choisi tant qu'il n'a pas détecté une violation plantée. |
+
+**Évaluer la version avant de garder ou de choisir un outil.** Un outil peut être compromis sans devenir mauvais, la version épinglée est ce qui compte.
+
+1. Lire les avis de sécurité de l'outil (GitHub Advisories, OSV) et comparer la version épinglée aux versions touchées.
+2. Si la version est touchée, passer à la première version saine, sans changer d'outil.
+3. Ne chercher un remplaçant que si le dépôt est archivé, si aucune version saine n'existe, ou si l'outil n'est plus compatible avec le JDK ou le parent Maven du projet.
+4. Après tout changement d'outil ou de version : recalibrer par une violation plantée et remesurer le seuil de couverture. Le contrat ne bouge pas, il tient aux quatre catégories et au nom du job `check`.
+
+**POURQUOI**, constaté le 2026-10-08 : le 19 mars 2026, 76 des 77 tags de `trivy-action` ont été repointés et le binaire v0.69.4 publié avec un code malveillant (sources divergentes sur les plages exactes, vérifier l'avis GHSA-69fq-xp46-6x23). `swapi` et `yt-transcriber` épinglent `trivy-action` par SHA sur un commit du 2026-04-22 (v0.36.0), et le log d'un run montre le binaire v0.70.0, hors des versions citées. Le SHA protège d'un tag repointé, pas d'une version touchée.
+
+**POURQUOI**, constaté le 2026-10-08 : la recette n'a été mesurée que sur un projet Java, et son titre « Maven » laissait croire à une portée générale.
+
+**Recette Java + Maven** (appliquée à `kevpdev/swapi` le 2026-10-08, tout lié à `verify`, donc `sh ./mvnw -B verify` suffit en CI) :
 
 | Phase | Plugin | Rôle |
 |---|---|---|
