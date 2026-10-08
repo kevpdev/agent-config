@@ -16,7 +16,7 @@ Le ruleset n'exige qu'**un** check : la porte `ci`. Elle attend tous les autres 
 
 **Nommer un job par ce qu'il vérifie** (`lint`, `unit-tests`, `integration-tests`, `e2e`, `security`, `build`), jamais par l'outil (`ruff`, `pytest`). **Ne pas découper contre le grain de l'outil** : séparer des étapes que la stack enchaîne (le cycle de vie cumulatif de Maven) fait recompiler chaque job.
 
-La porte, sous une forme minimale (pas encore validée sur un run réel, ce sera fait à la migration du premier témoin) :
+La porte, sous une forme minimale (validée le 2026-10-08 sur `yt-transcriber` : un test cassé rend `unit-tests` et `ci` rouges et la PR `BLOCKED`, kevpdev/yt-transcriber#45) :
 
 ```yaml
   ci:
