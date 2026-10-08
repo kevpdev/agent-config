@@ -42,8 +42,8 @@ Foyer des décisions qui valent pour tout repo portant un `aidd_docs/`. Une déc
 
 **DÉCLENCHEUR** : je crée ou modifie un fichier de `.github/workflows/`, `.github/dependabot.yml` ou le ruleset d'un dépôt.
 
-**À LA PLACE de** composer la CI de mémoire, lire `rules/references/ref-ci-github.md`, appliquer son contrat (trois jobs `check`, `security`, `e2e` conditionnel, actions épinglées par SHA, permissions minimales en tête), puis lancer `wrappers/claude/scripts/check-ci-contract.py` sur le dépôt avant de pousser.
+**À LA PLACE de** composer la CI de mémoire, lire `rules/references/ref-ci-github.md`, appliquer son contrat (une porte `ci`, seul check exigé, qui attend tous les jobs de son workflow dont Trivy, des jobs découpés au grain de la stack et nommés par ce qu'ils vérifient, actions épinglées par SHA, permissions minimales en tête), puis lancer `wrappers/claude/scripts/check-ci-contract.py` sur le dépôt avant de pousser.
 
 **Après le changement** : relire le README et la mémoire du projet (`aidd_docs/memory/`), corriger ce que la CI ou les commandes de build rendent faux, avec `sh ./mvnw` dans les commandes Maven. **Recette de la fiche** : constater le langage avant d'appliquer, une stack « non mesurée » ne reçoit pas la table d'une autre.
 
-**POURQUOI**, constaté le 2026-10-08 : la CI de `yt-transcriber` nommait ses jobs d'après ses outils (`check (ruff, pyright, pytest)`), donc le ruleset aurait changé avec chaque stack. Le contrat fixe les noms, et le script le mesure au lieu de laisser la relecture le deviner. Le README de `swapi` avait aussi été oublié dans la PR #1, relevé par l'utilisateur.
+**POURQUOI**, constaté le 2026-10-08 : la CI de `yt-transcriber` nommait ses jobs d'après ses outils (`check (ruff, pyright, pytest)`), donc le ruleset aurait changé avec chaque stack. Le contrat fixe les noms, et le script le mesure au lieu de laisser la relecture le deviner. Les trois noms fixes ont ensuite laissé place à une porte unique (issue `agent-config#8`) : `check` ne disait pas ce qu'il vérifiait et imposait le même découpage à toutes les stacks. Le README de `swapi` avait aussi été oublié dans la PR #1, relevé par l'utilisateur.

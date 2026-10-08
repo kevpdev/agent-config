@@ -107,12 +107,12 @@ bash wrappers/claude/scripts/hooks/tests/test-guard-aidd-skill-lookup.sh
 
 ### Le contrat CI GitHub
 
-Trois jobs aux noms fixes (`check`, `security`, `e2e` conditionnel), actions épinglées par SHA, permissions minimales. Le contrat est dans [`rules/references/ref-ci-github.md`](rules/references/ref-ci-github.md), la règle qui y renvoie dans `rules/aidd.md`.
+Une porte `ci`, seul check exigé par le ruleset, qui attend tous les jobs de son workflow, Trivy compris. Les autres jobs se découpent au grain de la stack. Actions épinglées par SHA, permissions minimales. Le contrat est dans [`rules/references/ref-ci-github.md`](rules/references/ref-ci-github.md), la règle qui y renvoie dans `rules/aidd.md`.
 
 ```bash
 python3 wrappers/claude/scripts/check-ci-contract.py <dépôt>             # mesure, 0 si conforme
 python3 wrappers/claude/scripts/tests/test-check-ci-contract.py          # calibre le script
-bash wrappers/claude/scripts/apply-ci-ruleset.sh OWNER/REPO [--e2e] [--dry-run]
+bash wrappers/claude/scripts/apply-ci-ruleset.sh OWNER/REPO [--dry-run]
 ```
 
 ### CodeGraph sur les projets AIDD

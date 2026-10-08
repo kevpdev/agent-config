@@ -3,8 +3,9 @@
 
 Lit les fichiers, n'exécute rien et n'appelle pas GitHub. Six vérifications :
 
-1. les jobs `check` et `security` existent, chacun une seule fois, et `e2e` aussi
-   quand le dépôt porte un dossier `e2e/`
+1. la porte : un seul job `ci`, le seul check que le ruleset exige. Elle a `if: always()`,
+   son `needs` couvre tous les autres jobs de son workflow, ses steps lisent leurs
+   résultats, et un job de ce workflow lance Trivy
 2. chaque `uses:` pointe un SHA de 40 caractères (hors action locale `./` et `docker://`)
 3. chaque workflow a un bloc `permissions:` en tête
 4. ce bloc ne contient que `read` ou `none` (l'écriture se pose sur le job)
@@ -16,8 +17,12 @@ Le nom d'un job est le contexte que le ruleset exige : on lit donc `name:` s'il 
 l'identifiant du job sinon. Un nom construit par matrice (`${{ ... }}`) n'est pas un
 contexte stable, il est ignoré.
 
-**Ce que ce script ne vérifie pas** : que `check` n'a qu'un job dont chaque outil est
-une étape (cela demande de comprendre le contenu), ni le tag en commentaire après le SHA.
+Pourquoi `if: always()` : GitHub compte un job sauté comme réussi. Sans lui, la porte est
+sautée dès qu'un job qu'elle attend échoue, et la fusion passe.
+
+**Ce que ce script ne vérifie pas** : le découpage des autres jobs, libre selon la stack,
+la sémantique du test des résultats (il constate que la porte les lit, pas qu'elle
+échoue au bon moment), ni le tag en commentaire après le SHA.
 
 Sortie : une ligne `fichier:ligne: message` par écart. Code 0 si conforme, 1 si un écart
 est mesuré, 2 si on ne peut pas conclure (dossier absent, YAML illisible, PyYAML manquant).
@@ -37,7 +42,9 @@ except ImportError:
 
 SHA = re.compile(r"^[0-9a-f]{40}$")
 USES = re.compile(r"^\s*(?:-\s*)?uses:\s*([^\s#]+)")
-ALWAYS = ("check", "security")
+GATE = "ci"
+TRIVY = "aquasecurity/trivy-action"
+READS_ALL_RESULTS = re.compile(r"needs\.\*\.result|tojson\(\s*needs\s*\)", re.IGNORECASE)
 SKIPPED_DIRS = {".git", "node_modules", "target", ".venv"}
 
 
@@ -64,34 +71,67 @@ def load(path: str):
         raise Unreadable(f"{path}: illisible ({error})") from error
 
 
-def job_contexts(document) -> list[str]:
+def jobs_of(document) -> dict:
     jobs = document.get("jobs") if isinstance(document, dict) else None
-    if not isinstance(jobs, dict):
-        return []
-    contexts = []
-    for job_id, job in jobs.items():
-        name = str(job.get("name", job_id)) if isinstance(job, dict) else str(job_id)
-        if "${{" not in name:
-            contexts.append(name)
-    return contexts
+    return {str(k): v for k, v in jobs.items()} if isinstance(jobs, dict) else {}
 
 
-def check_jobs(root: str, files: list[str], documents: dict) -> list[str]:
-    required = list(ALWAYS)
-    if os.path.isdir(os.path.join(root, "e2e")):
-        required.append("e2e")
-    found: dict[str, list[str]] = {}
-    for path in files:
-        for context in job_contexts(documents[path]):
-            found.setdefault(context, []).append(path)
+def context_of(job_id: str, job) -> str | None:
+    name = str(job.get("name", job_id)) if isinstance(job, dict) else job_id
+    return None if "${{" in name else name
+
+
+def as_list(value) -> list[str]:
+    if isinstance(value, str):
+        return [value]
+    return [str(v) for v in value] if isinstance(value, list) else []
+
+
+def check_gate(root: str, files: list[str], documents: dict) -> list[str]:
+    gates = [
+        (path, job_id, job)
+        for path in files
+        for job_id, job in jobs_of(documents[path]).items()
+        if context_of(job_id, job) == GATE
+    ]
+    if not gates:
+        return [f".github/workflows: job `{GATE}` manquant, c'est la porte que le ruleset exige"]
+    if len(gates) > 1:
+        where = ", ".join(os.path.relpath(path, root) for path, _, _ in gates)
+        return [f".github/workflows: job `{GATE}` défini {len(gates)} fois ({where})"]
+
+    path, gate_id, gate = gates[0]
+    relative = os.path.relpath(path, root)
+    gate = gate if isinstance(gate, dict) else {}
+    others = [job_id for job_id in jobs_of(documents[path]) if job_id != gate_id]
+    needs = as_list(gate.get("needs"))
     problems = []
-    for name in required:
-        count = len(found.get(name, []))
-        if count == 0:
-            problems.append(f".github/workflows: job `{name}` manquant")
-        elif count > 1:
-            where = ", ".join(os.path.relpath(p, root) for p in found[name])
-            problems.append(f".github/workflows: job `{name}` défini {count} fois ({where})")
+
+    if "always()" not in str(gate.get("if", "")):
+        problems.append(
+            f"{relative}: la porte `{GATE}` n'a pas `if: always()`, un job sauté compte comme réussi"
+        )
+    for job_id in others:
+        if job_id not in needs:
+            problems.append(f"{relative}: la porte `{GATE}` n'attend pas `{job_id}`")
+
+    steps = " ".join(
+        str(step.get("run", "")) + " " + str(step.get("with", ""))
+        for step in gate.get("steps") or []
+        if isinstance(step, dict)
+    )
+    reads_each = bool(needs) and all(f"needs.{job_id}.result" in steps for job_id in needs)
+    if not (READS_ALL_RESULTS.search(steps) or reads_each):
+        problems.append(f"{relative}: la porte `{GATE}` ne teste pas les résultats de ses jobs")
+
+    runs_trivy = any(
+        isinstance(step, dict) and str(step.get("uses", "")).startswith(TRIVY + "@")
+        for job in jobs_of(documents[path]).values()
+        if isinstance(job, dict)
+        for step in job.get("steps") or []
+    )
+    if not runs_trivy:
+        problems.append(f"{relative}: aucun job Trivy dans le workflow de la porte `{GATE}`")
     return problems
 
 
@@ -181,7 +221,7 @@ def check(root: str) -> list[str]:
     if not files:
         return [".github/workflows: aucun workflow"]
     documents = {path: load(path) for path in files}
-    problems = check_jobs(root, files, documents)
+    problems = check_gate(root, files, documents)
     for path in files:
         problems += check_uses(root, path)
         problems += check_permissions(root, path, documents[path])
