@@ -37,3 +37,11 @@ Foyer des décisions qui valent pour tout repo portant un `aidd_docs/`. Une déc
 **HORS PÉRIMÈTRE** : push sur `main`, merge, force-push, tag, et toute action hors du run. `guard-no-claude-in-commit.sh` continue de s'appliquer.
 
 **POURQUOI** : lancer le skill est l'accord durable sur ce run, et s'arrêter avant chaque commit contredit « decide and act without confirmation » (`plan-mode.md`).
+
+## CI GitHub
+
+**DÉCLENCHEUR** : je crée ou modifie un fichier de `.github/workflows/`, `.github/dependabot.yml` ou le ruleset d'un dépôt.
+
+**À LA PLACE de** composer la CI de mémoire, lire `rules/references/ref-ci-github.md`, appliquer son contrat (trois jobs `check`, `security`, `e2e` conditionnel, actions épinglées par SHA, permissions minimales en tête), puis lancer `wrappers/claude/scripts/check-ci-contract.py` sur le dépôt avant de pousser.
+
+**POURQUOI**, constaté le 2026-10-08 : la CI de `yt-transcriber` nommait ses jobs d'après ses outils (`check (ruff, pyright, pytest)`), donc le ruleset aurait changé avec chaque stack. Le contrat fixe les noms, et le script le mesure au lieu de laisser la relecture le deviner.

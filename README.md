@@ -105,6 +105,16 @@ bash wrappers/claude/scripts/hooks/tests/test-guard-aidd-skill-lookup.sh
 
 **Calibrer sur du trafic réel, pas seulement sur ses propres cas.** `guard-bash-tooling.py` a été confronté aux 987 commandes du périmètre extraites des transcripts de sessions (`~/.claude/projects/*/*.jsonl`) : sa première conception, qui refusait tout ce qu'elle ne pouvait pas tokeniser, y produisait 5 faux positifs sur des `git commit` ordinaires. Une batterie écrite par l'auteur du garde ne les aurait jamais montrés.
 
+### Le contrat CI GitHub
+
+Trois jobs aux noms fixes (`check`, `security`, `e2e` conditionnel), actions épinglées par SHA, permissions minimales. Le contrat est dans [`rules/references/ref-ci-github.md`](rules/references/ref-ci-github.md), la règle qui y renvoie dans `rules/aidd.md`.
+
+```bash
+python3 wrappers/claude/scripts/check-ci-contract.py <dépôt>             # mesure, 0 si conforme
+python3 wrappers/claude/scripts/tests/test-check-ci-contract.py          # calibre le script
+bash wrappers/claude/scripts/apply-ci-ruleset.sh OWNER/REPO [--e2e] [--dry-run]
+```
+
 ### CodeGraph sur les projets AIDD
 
 [CodeGraph](https://github.com/colbymchenry/codegraph) donne à l'agent un graphe local des symboles, des appels et des dépendances. Il est déployé sur tous les projets AIDD, sans mesure de gain par projet : un projet grossit avec le temps, et mesurer chacun pour décider ne tient pas.
