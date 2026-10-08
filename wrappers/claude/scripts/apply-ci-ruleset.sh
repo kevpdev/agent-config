@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 # apply-ci-ruleset.sh — pose, sur un dépôt GitHub, le ruleset du contrat CI.
 #
-# Le ruleset protège la branche par défaut et n'exige qu'un contexte, la porte `ci`
+# Le ruleset protège la branche par défaut, plus chaque branche passée par --branch, et n'exige qu'un contexte, la porte `ci`
 # (`rules/references/ref-ci-github.md`), qui attend tous les autres jobs de son workflow.
 # Il reprend les règles du ruleset de yt-transcriber : suppression et réécriture
 # d'historique interdites, pull request obligatoire sans relecteur imposé.
 #
 # Usage
-#   bash apply-ci-ruleset.sh OWNER/REPO [--dry-run]
+#   bash apply-ci-ruleset.sh OWNER/REPO [--branch NOM]... [--dry-run]
 #
+# --branch protège aussi une branche d'intégration, par exemple `develop` quand les pull
+# requests la visent au lieu de la branche par défaut. Répétable.
 # --dry-run affiche le JSON qui serait envoyé et n'écrit rien. Sans lui, le script
 # met à jour le ruleset du même nom s'il existe, sinon le crée.
 #
@@ -20,23 +22,29 @@ set -euo pipefail
 NAME="Protection de la branche par défaut"
 REPO=""
 DRY=0
-for arg in "$@"; do
-  case "$arg" in
+INCLUDE='["~DEFAULT_BRANCH"]'
+while [ $# -gt 0 ]; do
+  case "$1" in
     --dry-run) DRY=1 ;;
-    -*) echo "option inconnue : $arg" >&2; exit 2 ;;
-    *) REPO="$arg" ;;
+    --branch)
+      [ -n "${2:-}" ] || { echo "--branch demande un nom de branche" >&2; exit 2; }
+      INCLUDE=$(jq -c --arg ref "refs/heads/$2" '. + [$ref]' <<<"$INCLUDE")
+      shift ;;
+    -*) echo "option inconnue : $1" >&2; exit 2 ;;
+    *) REPO="$1" ;;
   esac
+  shift
 done
-[ -n "$REPO" ] || { echo "usage : $0 OWNER/REPO [--dry-run]" >&2; exit 2; }
+[ -n "$REPO" ] || { echo "usage : $0 OWNER/REPO [--branch NOM]... [--dry-run]" >&2; exit 2; }
 command -v jq >/dev/null || { echo "jq manquant" >&2; exit 2; }
 
 CONTEXTS='["ci"]'
 
-PAYLOAD=$(jq -n --arg name "$NAME" --argjson contexts "$CONTEXTS" '{
+PAYLOAD=$(jq -n --arg name "$NAME" --argjson contexts "$CONTEXTS" --argjson include "$INCLUDE" '{
   name: $name,
   target: "branch",
   enforcement: "active",
-  conditions: {ref_name: {include: ["~DEFAULT_BRANCH"], exclude: []}},
+  conditions: {ref_name: {include: $include, exclude: []}},
   rules: [
     {type: "deletion"},
     {type: "non_fast_forward"},
