@@ -18,7 +18,7 @@
 
 **À LA PLACE de** deviner le dossier ou lancer un `find` sur `~`, lire `$OBSIDIAN_VAULT_PERSO`. Si l'environnement du shell est vide, `grep OBSIDIAN_VAULT_PERSO ~/.zshrc` donne le chemin (définie à la ligne `export`, utilisée par les alias `ccvault` et `ccovault`). Les skills du vault sont dans `$OBSIDIAN_VAULT_PERSO/.agents/skills/`.
 
-**POURQUOI** : le nom du dossier se dérive et peut changer, la variable est la seule source qui suit un renommage. Constaté le 2026-10-08 : un `find` sur tout `~` pour retrouver `capture-video` a dépassé 120 s, alors que le chemin tenait en une ligne de `~/.zshrc`.
+**POURQUOI** : le nom du dossier se dérive et peut changer, la variable est la seule source qui suit un renommage.
 
 ## Déplacer un projet existant
 
