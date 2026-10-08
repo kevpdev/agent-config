@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # apply-ci-ruleset.sh — pose, sur un dépôt GitHub, le ruleset du contrat CI.
 #
-# Le ruleset protège la branche par défaut et n'exige que les contextes du contrat
-# (`rules/references/ref-ci-github.md`) : `check`, `security`, et `e2e` avec --e2e.
+# Le ruleset protège la branche par défaut et n'exige qu'un contexte, la porte `ci`
+# (`rules/references/ref-ci-github.md`), qui attend tous les autres jobs de son workflow.
 # Il reprend les règles du ruleset de yt-transcriber : suppression et réécriture
 # d'historique interdites, pull request obligatoire sans relecteur imposé.
 #
 # Usage
-#   bash apply-ci-ruleset.sh OWNER/REPO [--e2e] [--dry-run]
+#   bash apply-ci-ruleset.sh OWNER/REPO [--dry-run]
 #
 # --dry-run affiche le JSON qui serait envoyé et n'écrit rien. Sans lui, le script
 # met à jour le ruleset du même nom s'il existe, sinon le crée.
@@ -19,21 +19,18 @@ set -euo pipefail
 
 NAME="Protection de la branche par défaut"
 REPO=""
-E2E=0
 DRY=0
 for arg in "$@"; do
   case "$arg" in
-    --e2e) E2E=1 ;;
     --dry-run) DRY=1 ;;
     -*) echo "option inconnue : $arg" >&2; exit 2 ;;
     *) REPO="$arg" ;;
   esac
 done
-[ -n "$REPO" ] || { echo "usage : $0 OWNER/REPO [--e2e] [--dry-run]" >&2; exit 2; }
+[ -n "$REPO" ] || { echo "usage : $0 OWNER/REPO [--dry-run]" >&2; exit 2; }
 command -v jq >/dev/null || { echo "jq manquant" >&2; exit 2; }
 
-CONTEXTS='["check","security"]'
-[ "$E2E" = 1 ] && CONTEXTS='["check","security","e2e"]'
+CONTEXTS='["ci"]'
 
 PAYLOAD=$(jq -n --arg name "$NAME" --argjson contexts "$CONTEXTS" '{
   name: $name,

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Calibre `check-ci-contract.py` sur des dépôts fabriqués, un conforme et un par défaut.
 
-N'ouvre aucun dépôt réel et n'appelle pas GitHub : ne teste que les cinq vérifications,
+N'ouvre aucun dépôt réel et n'appelle pas GitHub : ne teste que les six vérifications,
 qui sont déterministes.
 
 Pourquoi cette batterie existe : un script de conformité se comporte pareil qu'il mesure
@@ -42,35 +42,38 @@ permissions:
   contents: read
 
 jobs:
-  check:
-    name: check
+  lint:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@{SHA} # v7.0.1
-      - run: scripts/check.sh
+      - run: scripts/lint.sh
+  unit-tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@{SHA} # v7.0.1
+      - run: scripts/test.sh
   e2e:
-    name: e2e
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@{SHA} # v7.0.1
       - uses: ./.github/actions/local
       - run: scripts/e2e.sh
-"""
-
-SECURITY = f"""name: security
-on:
-  pull_request:
-
-permissions:
-  contents: read
-
-jobs:
   security:
     runs-on: ubuntu-24.04
     permissions:
       security-events: write
     steps:
       - uses: actions/checkout@{SHA} # v7.0.1
+      - uses: aquasecurity/trivy-action@{SHA} # v0.36.0
+  ci:
+    if: always()
+    needs: [lint, unit-tests, e2e, security]
+    runs-on: ubuntu-24.04
+    steps:
+      - run: test "${{{{ contains(needs.*.result, 'failure') }}}}" = false
+"""
+
+GATE_RUN = """      - run: test "${{ contains(needs.*.result, 'failure') }}" = false
 """
 
 MATRIX = f"""name: codeql
@@ -107,13 +110,10 @@ def write(root: str, relative: str, content: str) -> None:
         handle.write(content)
 
 
-def build(root: str, *, e2e_dir: bool = True) -> None:
+def build(root: str) -> None:
     write(root, ".github/workflows/ci.yml", CI)
-    write(root, ".github/workflows/security.yml", SECURITY)
     write(root, ".github/workflows/codeql.yml", MATRIX)
     write(root, ".github/dependabot.yml", DEPENDABOT)
-    if e2e_dir:
-        os.makedirs(os.path.join(root, "e2e"))
 
 
 def mutate(root: str, relative: str, old: str, new: str) -> None:
@@ -128,10 +128,10 @@ def main() -> int:
     contract = load_script()
     failures = []
 
-    def case(label: str, expected_fragment: str | None, setup, **options) -> None:
+    def case(label: str, expected_fragment: str | None, setup) -> None:
         """Un cas passe si le dépôt est conforme (fragment None) ou si un écart cite le fragment."""
         with tempfile.TemporaryDirectory() as root:
-            build(root, **options)
+            build(root)
             setup(root)
             problems = contract.check(root)
         if expected_fragment is None:
@@ -163,32 +163,89 @@ def main() -> int:
         "n'est pas épinglé par SHA",
         lambda r: mutate(r, ".github/workflows/ci.yml", f"actions/checkout@{SHA}", "actions/checkout"),
     )
+    ci = ".github/workflows/ci.yml"
+    needs_all = "needs: [lint, unit-tests, e2e, security]"
+
+    case("porte absente", "job `ci` manquant", lambda r: mutate(r, ci, "  ci:\n", "  gate:\n"))
+    case("porte nommée par name:", None, lambda r: mutate(r, ci, "  ci:\n", "  gate:\n    name: ci\n"))
     case(
-        "job security manquant",
-        "job `security` manquant",
-        lambda r: os.remove(os.path.join(r, ".github/workflows/security.yml")),
-    )
-    case(
-        "job check au nom de stack",
-        "job `check` manquant",
-        lambda r: mutate(r, ".github/workflows/ci.yml", "name: check", "name: check (ruff, pyright)"),
-    )
-    case(
-        "job e2e manquant alors que e2e/ existe",
-        "job `e2e` manquant",
-        lambda r: mutate(r, ".github/workflows/ci.yml", "name: e2e", "name: end-to-end"),
-    )
-    case("job e2e non exigé sans dossier e2e/", None, lambda r: mutate(
-        r, ".github/workflows/ci.yml", "name: e2e", "name: end-to-end"), e2e_dir=False)
-    case(
-        "job check défini deux fois",
+        "porte définie deux fois",
         "défini 2 fois",
         lambda r: write(
             r,
             ".github/workflows/other.yml",
-            "name: other\npermissions:\n  contents: read\njobs:\n  check:\n    runs-on: x\n    steps:\n      - run: echo\n",
+            "name: other\npermissions:\n  contents: read\njobs:\n  ci:\n    runs-on: x\n    steps:\n      - run: echo\n",
         ),
     )
+    case("porte sans if: always()", "n'a pas `if: always()`", lambda r: mutate(r, ci, "    if: always()\n", ""))
+    case(
+        "porte avec if: success()",
+        "n'a pas `if: always()`",
+        lambda r: mutate(r, ci, "if: always()", "if: success()"),
+    )
+    case(
+        "porte en ${{ always() }}",
+        None,
+        lambda r: mutate(r, ci, "if: always()", "if: ${{ always() }}"),
+    )
+    case(
+        "porte qui oublie un job",
+        "n'attend pas `e2e`",
+        lambda r: mutate(r, ci, needs_all, "needs: [lint, unit-tests, security]"),
+    )
+    case(
+        "porte sans needs",
+        "n'attend pas `lint`",
+        lambda r: mutate(r, ci, f"    {needs_all}\n", ""),
+    )
+
+    def single_job(r):
+        write(r, ci, CI.split("  lint:")[0] + (
+            "  security:\n    runs-on: ubuntu-24.04\n    steps:\n"
+            f"      - uses: aquasecurity/trivy-action@{SHA} # v0.36.0\n"
+            "  ci:\n    if: always()\n    needs: security\n    runs-on: ubuntu-24.04\n    steps:\n"
+            + GATE_RUN
+        ))
+
+    case("needs en chaîne avec un seul autre job", None, single_job)
+    case(
+        "porte qui ne lit pas les résultats",
+        "ne teste pas les résultats",
+        lambda r: mutate(r, ci, GATE_RUN, "      - run: echo ok\n"),
+    )
+    case(
+        "porte qui lit toJSON(needs) via une action",
+        None,
+        lambda r: mutate(r, ci, GATE_RUN, (
+            f"      - uses: re-actors/alls-green@{SHA}\n"
+            "        with:\n          jobs: ${{ toJSON(needs) }}\n"
+        )),
+    )
+    each = " && ".join(f'test "${{{{ needs.{j}.result }}}}" = success' for j in ("lint", "unit-tests", "e2e", "security"))
+    case(
+        "porte qui lit le résultat de chaque job",
+        None,
+        lambda r: mutate(r, ci, GATE_RUN, f"      - run: {each}\n"),
+    )
+    case(
+        "porte qui ne lit le résultat que d'un job",
+        "ne teste pas les résultats",
+        lambda r: mutate(r, ci, GATE_RUN, '      - run: test "${{ needs.lint.result }}" = success\n'),
+    )
+    case(
+        "Trivy absent du workflow de la porte",
+        "aucun job Trivy",
+        lambda r: mutate(r, ci, f"      - uses: aquasecurity/trivy-action@{SHA} # v0.36.0\n", ""),
+    )
+
+    def trivy_elsewhere(r):
+        mutate(r, ci, f"      - uses: aquasecurity/trivy-action@{SHA} # v0.36.0\n", "")
+        write(r, ".github/workflows/trivy.yml", (
+            "name: trivy\npermissions:\n  contents: read\njobs:\n  scan:\n    runs-on: x\n    steps:\n"
+            f"      - uses: aquasecurity/trivy-action@{SHA} # v0.36.0\n"
+        ))
+
+    case("Trivy dans un autre workflow que la porte", "aucun job Trivy", trivy_elsewhere)
     case(
         "permissions absentes en tête",
         "bloc `permissions:` absent",
