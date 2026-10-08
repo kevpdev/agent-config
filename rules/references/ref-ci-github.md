@@ -67,7 +67,7 @@ La CI ne se limite pas à compiler et lancer les tests. Elle couvre quatre caté
 
 **POURQUOI**, constaté le 2026-10-08 : la recette n'a été mesurée que sur un projet Java, et son titre « Maven » laissait croire à une portée générale.
 
-**Recette Java + Maven** (appliquée à `kevpdev/swapi` le 2026-10-08, tout lié à `verify`, donc `sh ./mvnw -B verify` suffit en un seul job. Un découpage en plusieurs jobs reste à mesurer contre ce temps) :
+**Recette Java + Maven** (appliquée à `kevpdev/swapi` le 2026-10-08, tout lié à `verify`, donc `sh ./mvnw -B verify` suffit, **en un seul job**) :
 
 | Phase | Plugin | Rôle |
 |---|---|---|
@@ -77,6 +77,7 @@ La CI ne se limite pas à compiler et lancer les tests. Elle couvre quatre caté
 | `process-classes` | SpotBugs | bugs probables dans le bytecode |
 | `verify` | JaCoCo (`report` puis `check`) | couverture, seuil fixé sur la valeur **mesurée** arrondie vers le bas |
 
+- **Un seul job, mesuré le 2026-10-08** (kevpdev/swapi#7) : découpé en `lint` (`process-classes`) et `unit-tests` (`verify` avec les analyseurs en `skip`), le job le plus long passe de 47 s à 58 s pour un run complet identique (72 s). Maven charge encore les plugins sautés, environ 14 s. Appeler les goals un par un pour l'éviter sort du cycle de vie et oublie en silence un plugin ajouté plus tard au `pom.xml`.
 - Le seuil JaCoCo ne se pose pas au hasard. Sur `swapi` la couverture de lignes mesurée était de 43 %, le seuil est de 40 %.
 - Reformater tout le code avec Spotless se fait dans un commit à part, avant d'activer la porte `ci`.
 - Un outil qui rend zéro violation ne prouve rien tant qu'il n'a pas détecté une violation plantée. PMD a été calibré ainsi sur `swapi` (un champ privé inutilisé et un `catch` vide détectés).
