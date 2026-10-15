@@ -3,14 +3,16 @@ paths:
   - "**/SKILL.md"
 ---
 
-# Description d'un skill — la forme d'appel y figure, sans chevron
+# Description d'un skill — quoi et quand, sans chevron
 
 **DÉCLENCHEUR** : je crée ou modifie un `SKILL.md`, dans n'importe quel repo, skill AIDD compris.
 
-**À LA PLACE de** ranger les arguments dans `argument-hint` seul, ouvrir la `description` sur la forme d'appel : `Call /nom URL [--option].` Les arguments obligatoires sont en majuscules, les facultatifs entre crochets, puis vient le reste de la description.
+**La `description` dit ce que fait le skill et quand l'utiliser.** Troisième personne, le cas d'usage principal en premier, les mots que l'utilisateur dira pour le déclencher. Ni forme d'appel, ni syntaxe d'arguments : ils vont dans `argument-hint`, en `[crochets]` (`[issue-number]`, `[filename] [format]`).
 
-**Pas de `<`, `>` ni `->` dans la `description`.** Écrire `URL` et non `<url>`, `(voir x)` et non `(-> x)`. `argument-hint` peut garder ses chevrons.
+**Pas de `<` ni de `>` dans la `description`.** La doc de la plateforme interdit les balises XML dans ce champ (1 024 caractères au plus). Claude Code échappe les chevrons en `&lt;` `&gt;` dans la liste des skills (constaté en 2.1.300), donc écrire `URL` et non `<url>`.
 
-**POURQUOI, mesuré le 2026-10-15** : le menu `/` affiche la `description` en entier et n'affiche pas `argument-hint`. Les chevrons y sortaient en `&lt;url&gt;`, et les options n'étaient visibles nulle part. La `description` est donc le seul endroit où celui qui tape `/` voit comment appeler le skill.
+**POURQUOI, mesuré le 2026-10-15** : `/capture-video <url>` dans une `description` sortait en `&lt;url&gt;` dans la liste des skills. La doc range les arguments dans `argument-hint`, qui s'affiche à l'autocomplétion. Je ne sais pas si cette autocomplétion montre aussi la `description` : non mesuré.
+
+**Sources** : `platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices` (section « Writing effective descriptions ») et `code.claude.com/docs/en/skills` (champs `description` et `argument-hint`).
 
 **TEST** : `grep -rn '^description:.*[<>]' --include=SKILL.md .` ne renvoie rien. Une description en bloc YAML (`>-`) se lit sur ses lignes suivantes, le `grep` ne les couvre pas.
