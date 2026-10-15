@@ -1,11 +1,8 @@
----
-paths:
-  - "**/SKILL.md"
----
-
 # Description d'un skill — quoi et quand, sans chevron
 
-**DÉCLENCHEUR** : je crée ou modifie un `SKILL.md`, dans n'importe quel repo, skill AIDD compris.
+**DÉCLENCHEUR** : je crée, modifie ou **planifie la modification** d'un `SKILL.md`, dans n'importe quel repo, skill AIDD compris.
+
+**POURQUOI global et non scopé par `paths:`** : un `paths:` se déclenche à l'édition, et la planification vient avant. Constaté le 2026-10-15 : un plan d'extension de `video-brief` a été écrit sans que cette règle soit chargée, rattrapée seulement parce que l'utilisateur l'a citée. La règle est courte, la charger toujours coûte presque rien.
 
 **La `description` dit ce que fait le skill et quand l'utiliser.** Troisième personne, le cas d'usage principal en premier, les mots que l'utilisateur dira pour le déclencher. Ni forme d'appel, ni syntaxe d'arguments : ils vont dans `argument-hint`, en `[crochets]` (`[issue-number]`, `[filename] [format]`).
 
