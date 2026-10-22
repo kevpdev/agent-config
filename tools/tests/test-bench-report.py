@@ -39,15 +39,22 @@ def flux(skills=("mermaid-craft", "aidd-dev:01-plan"), init=True):
     return "\n".join(lignes) + "\n"
 
 
-def lancer(racine, texte_flux, texte_journal, banc):
+def reglages(commandes):
+    return json.dumps({"hooks": {"PreToolUse": [{"matcher": "", "hooks": [
+        {"type": "command", "command": c} for c in commandes]}]}})
+
+
+def lancer(racine, texte_flux, texte_journal, banc, texte_reglages=None):
     f = os.path.join(racine, "run.jsonl")
     j = os.path.join(racine, "instructions.log")
     ecrire(f, texte_flux)
     ecrire(j, texte_journal)
-    r = subprocess.run(
-        [sys.executable, SCRIPT, "--stream", f, "--log", j, "--bench", banc, "--repo", REPO],
-        capture_output=True, text=True,
-    )
+    cmd = [sys.executable, SCRIPT, "--stream", f, "--log", j, "--bench", banc, "--repo", REPO]
+    if texte_reglages is not None:
+        s = os.path.join(racine, "settings.json")
+        ecrire(s, texte_reglages)
+        cmd += ["--settings", s]
+    r = subprocess.run(cmd, capture_output=True, text=True)
     return r.returncode, r.stdout + r.stderr
 
 
@@ -109,6 +116,23 @@ def main() -> int:
         os.symlink(dehors, detour)
         code, sortie = lancer(racine, flux(), sain + f"x\tsession_start\t{detour}\n", banc)
         cas("lien sortant : marqué HORS BANC", code == 1 and "HORS BANC" in sortie and "detour.md" in sortie)
+
+        # Les hooks : chaque commande du settings.json du banc mène à un fichier du worktree,
+        # par un lien du banc comme après install.py.
+        os.makedirs(os.path.join(banc, "scripts"))
+        hook_lie = os.path.join(banc, "scripts", "garde.py")
+        os.symlink(os.path.join(REPO, "tools", "install.py"), hook_lie)
+        code, sortie = lancer(racine, flux(), sain, banc, reglages([f"python3 {hook_lie} --notify"]))
+        cas("hook résolu : sort en 0 et listé", code == 0 and "Hooks (1)" in sortie and "garde.py" in sortie)
+
+        absent = os.path.join(banc, "scripts", "absent.py")
+        code, sortie = lancer(racine, flux(), sain, banc, reglages([f"python3 {absent}"]))
+        cas("hook absent : sort en 1", code == 1 and "hook introuvable" in sortie and "absent.py" in sortie)
+
+        hook_sortant = os.path.join(banc, "scripts", "sortant.sh")
+        os.symlink(dehors, hook_sortant)
+        code, sortie = lancer(racine, flux(), sain, banc, reglages([f"bash {hook_sortant}"]))
+        cas("hook hors worktree : sort en 1", code == 1 and "hook introuvable" in sortie and "sortant.sh" in sortie)
 
     print(f"{'✓' if not echecs else '✗'} {echecs} échec(s).")
     return 1 if echecs else 0

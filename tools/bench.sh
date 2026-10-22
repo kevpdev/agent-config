@@ -55,16 +55,21 @@ if ! python3 "$REPO/tools/install.py" --agent claude --target "$BANC" --fix >/de
     exit 1
 fi
 
-# 2. Ajouter le hook de journal, clé propre au banc qu'install.py ne retire jamais.
+# 2. Poser le hook de journal, clé propre au banc qu'install.py ne retire jamais. Un hook
+#    de journal laissé par un autre worktree est remplacé, pas empilé : sa cible peut
+#    avoir disparu, et bench-report.py le compterait comme un hook introuvable.
 HOOK="bash $REPO/tools/bench/log-instructions.sh"
 python3 - "$BANC/settings.json" "$HOOK" <<'PY'
 import json, sys
 chemin, commande = sys.argv[1], sys.argv[2]
 with open(chemin, encoding="utf-8") as f:
     s = json.load(f)
-groupes = s.setdefault("hooks", {}).setdefault("InstructionsLoaded", [])
-if not any(h.get("command") == commande for g in groupes for h in g.get("hooks", [])):
-    groupes.append({"matcher": "*", "hooks": [{"type": "command", "command": commande}]})
+hooks = s.setdefault("hooks", {})
+groupes = [g for g in hooks.get("InstructionsLoaded", [])
+           if not any(str(h.get("command", "")).endswith("/tools/bench/log-instructions.sh") for h in g.get("hooks", []))]
+groupes.append({"matcher": "*", "hooks": [{"type": "command", "command": commande}]})
+if groupes != hooks.get("InstructionsLoaded"):
+    hooks["InstructionsLoaded"] = groupes
     with open(chemin, "w", encoding="utf-8") as f:
         json.dump(s, f, indent=2, ensure_ascii=False)
         f.write("\n")
@@ -96,7 +101,8 @@ rc_session=$?
 [ "$rc_session" -ne 0 ] && { echo "bench — session en code $rc_session :" >&2; tail -5 "$RUN/run.err" >&2; }
 
 # 5. Le rapport.
-python3 "$REPO/tools/bench-report.py" --stream "$RUN/run.jsonl" --log "$RUN/instructions.log" --bench "$BANC"
+python3 "$REPO/tools/bench-report.py" --stream "$RUN/run.jsonl" --log "$RUN/instructions.log" --bench "$BANC" \
+    --settings "$BANC/settings.json"
 rc=$?
 
 # 6. ~/.claude n'a pas bougé.

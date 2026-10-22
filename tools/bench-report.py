@@ -13,11 +13,12 @@ ORIGINE D'UNE RULE, par son chemin résolu
     HORS BANC  tout le reste, `~/.claude` compris : l'isolation a fui
 
 ÉCHOUE FERMÉ : code 1 si le flux n'a pas d'`init`, si le journal est vide ou porte
-une LOG-ERREUR, ou si une rule est HORS BANC. Un journal vide veut dire « le journal
-est cassé », jamais « aucune rule chargée ».
+une LOG-ERREUR, si une rule est HORS BANC, ou si un hook de `--settings` ne mène pas
+à un fichier du worktree. Un journal vide veut dire « le journal est cassé », jamais
+« aucune rule chargée ».
 
 Usage
-    python3 tools/bench-report.py --stream run.jsonl --log instructions.log --bench DIR [--repo DIR]
+    python3 tools/bench-report.py --stream run.jsonl --log instructions.log --bench DIR [--repo DIR] [--settings FILE]
 """
 
 from __future__ import annotations
@@ -88,12 +89,29 @@ def origine(chemin: str, banc: str, repo: str) -> str:
     return "HORS BANC"
 
 
+def scripts_de_hooks(chemin: str) -> list[tuple[str, str]]:
+    """Rend [(commande, script)] pour chaque hook du settings.json. Le script est le
+    premier mot de la commande qui porte un `/`, l'interpréteur (`bash`, `python3`) n'en
+    portant pas."""
+    with open(chemin, encoding="utf-8") as f:
+        s = json.load(f)
+    paires = []
+    for groupes in (s.get("hooks") or {}).values():
+        for g in groupes:
+            for h in g.get("hooks", []):
+                commande = str(h.get("command", ""))
+                mot = next((m for m in commande.split() if "/" in m), "")
+                paires.append((commande, os.path.expanduser(mot)))
+    return paires
+
+
 def main(argv: list[str]) -> int:
     p = argparse.ArgumentParser(description="Rapport de chargement d'une session du banc.")
     p.add_argument("--stream", required=True)
     p.add_argument("--log", required=True)
     p.add_argument("--bench", required=True)
     p.add_argument("--repo", default=REPO)
+    p.add_argument("--settings", help="settings.json du banc : chaque hook doit mener à un fichier du worktree")
     args = p.parse_args(argv)
     banc = os.path.abspath(os.path.expanduser(args.bench))
 
@@ -128,13 +146,24 @@ def main(argv: list[str]) -> int:
         if orig == "HORS BANC":
             problemes.append(f"HORS BANC  {chemin} → {os.path.realpath(chemin)}")
 
+    hooks = scripts_de_hooks(args.settings) if args.settings else []
+    if args.settings:
+        print(f"Hooks ({len(hooks)})")
+        for commande, script in hooks:
+            reel = os.path.realpath(script) if script else ""
+            ok = bool(script) and os.path.isfile(reel) and sous(reel, os.path.realpath(args.repo))
+            print(f"  {'ok' if ok else '✗ '}  {commande}")
+            if not ok:
+                problemes.append(f"hook introuvable dans le worktree : {commande} → {reel or '?'}")
+
     if problemes:
         for pb in problemes:
             print(f"  ✗ {pb}", file=sys.stderr)
         print(f"✗ {len(problemes)} problème(s).", file=sys.stderr)
         return 1
     n_plugins = sum(len(v) for v in par_plugin.values())
-    print(f"✓ {len(skills)} skills, {n_plugins} skills de plugins, {len(vus)} fichiers d'instructions, aucune fuite.")
+    print(f"✓ {len(skills)} skills, {n_plugins} skills de plugins, {len(vus)} fichiers d'instructions, "
+          f"{len(hooks)} hooks résolus, aucune fuite.")
     return 0
 
 
