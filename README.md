@@ -94,6 +94,75 @@ python3 tools/tests/test-install.py                                 # calibre l'
 
 `--repo DIR` change la racine des sources de liens : depuis un worktree, `--repo ~/Developpement/Workspaces/agent-config` vérifie la config vivante, qui vise le checkout principal.
 
+### Le banc isolé
+
+Le banc mesure ce qu'une session Claude charge de ce repo, sans toucher `~/.claude`. Tester directement dans `~/.claude` changerait les gardes de la session en cours.
+
+**Ce n'est pas une seconde installation de Claude.** Le binaire `claude` est unique. Ce qui est en double, c'est le dossier de config, choisi par la variable `CLAUDE_CONFIG_DIR`. Sans elle, Claude lit `~/.claude`. Avec elle, il lit `~/.claude-bench`.
+
+```
+                    un seul binaire : claude
+                              │
+          ┌───────────────────┴───────────────────┐
+   sans variable                       CLAUDE_CONFIG_DIR=~/.claude-bench
+          │                                       │
+     ~/.claude                             ~/.claude-bench
+   (session réelle)                        (banc)
+          │                                       │
+   liens vers le checkout                  liens vers le repo de tools/bench.sh
+   principal                               (un worktree, en refonte)
+```
+
+**Ce que contient le banc.** `tools/install.py --fix` le remplit à chaque lancement :
+
+```
+~/.claude-bench/
+├── rules/, skills/, agents/, output-styles/, scripts/   → liens vers le repo
+├── settings.json     → vrai fichier, fusionné depuis wrappers/claude/settings.json :
+│                         hooks qui visent ~/.claude-bench/scripts/…, jamais ~/.claude
+│                         + un hook InstructionsLoaded ajouté par bench.sh
+└── .credentials.json → la connexion, écrite par /login
+```
+
+**La connexion se fait une fois, à la main.** Sous `CLAUDE_CONFIG_DIR`, `.credentials.json` vit dans ce dossier (doc d'authentification de Claude Code). Le banc se comporte donc comme une machine neuve, même quand l'abonnement fonctionne dans `~/.claude`. Dans un terminal :
+
+```bash
+CLAUDE_CONFIG_DIR=~/.claude-bench claude    # session interactive sur le banc, puis /login et /exit
+```
+
+**Le lancement tient en une commande**, qui lance elle-même la session à mesurer :
+
+```bash
+bash tools/bench.sh claude                  # banc ~/.claude-bench
+bash tools/bench.sh claude --dir DIR        # autre dossier
+python3 tools/tests/test-bench-report.py    # calibre le rapport
+```
+
+```
+1. empreinte de ~/.claude  (liste des liens + sha256 de settings.json)
+        │
+2. install.py --fix sur le banc   (resynchronise depuis le repo)
+        │
+3. .credentials.json présent ?  ── non ──→ code 2, affiche la commande de connexion
+        │ oui
+4. depuis un dossier vide hors du home, pour qu'aucun CLAUDE.md de projet ne se mêle à la mesure
+   (sous $HOME, la remontée des dossiers parents charge ~/.claude/CLAUDE.md) :
+   CLAUDE_CONFIG_DIR=~/.claude-bench  BENCH_LOG=journal
+   claude -p "Réponds ok." --output-format stream-json --model haiku --max-turns 1
+        │
+        └─ le hook InstructionsLoaded écrit chaque fichier d'instructions chargé
+        │
+5. tools/bench-report.py lit deux sources (flux et journal gardés dans ~/.claude-bench/last-run/) :
+     - le flux de sortie : l'événement system/init donne les skills
+     - le journal : les rules, chacune avec son origine (worktree, banc, HORS BANC)
+        │
+6. seconde empreinte de ~/.claude  ── différente ──→ code 1
+        │ identique
+   ✓ rapport rendu, ~/.claude inchangé
+```
+
+Le script échoue en code 1 sur une rule chargée hors du banc et du repo, sur un journal vide, ou sur une empreinte de `~/.claude` qui a changé. Un journal vide veut dire que le hook ne s'est pas déclenché, jamais qu'aucune rule ne s'est chargée. Le banc OpenCode n'existe pas encore.
+
 ### Les gardes déterministes
 
 Trois hooks `PreToolUse` refusent à l'appel ce qu'une règle de prose ne tenait pas. Chacun est la couche déterministe d'une règle qui, du coup, ne répète pas ses critères.
