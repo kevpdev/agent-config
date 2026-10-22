@@ -204,6 +204,37 @@ verifier "cd via variable puis -F relatif"   BLOQUE 'G=/tmp/x && cd "$G" && git 
 # Meme forme, mais le dossier est litteral : la resolution aboutit, donc on juge.
 verifier "cd litteral puis -F relatif"       BLOQUE "cd $TMP && git commit -q -F mauvais.txt"
 
+echo
+echo "=== Mention d'IA : commits et PR, quel que soit le chemin du texte ==="
+# Mesure du 2026-10-22 : la PR #13 est partie avec « Generated with [Claude Code] ».
+# Trois trous a la fois. Le garde sortait sur tout ce qui n'est pas un `git commit`,
+# son motif ignorait cette signature, et il ne lisait jamais un message passe par
+# fichier pour chercher la mention. Sur 12 PR du repo, 3 la portaient.
+SIGNATURE='🤖 Generated with [Claude Code](https://claude.com/claude-code)'
+printf 'Corps de PR.\n\n%s\n' "$SIGNATURE"              > "$TMP/pr-signe.md"
+printf 'Corps de PR.\n'                                 > "$TMP/pr-propre.md"
+printf 'Le hook PreToolUse de Claude Code 2.1.308 refuse a l appel.\n' > "$TMP/pr-outil.md"
+printf 'feat(x): ok\n\nCo-Authored-By: Claude Opus 5 <noreply@anthropic.com>\n' > "$TMP/commit-signe.txt"
+
+# LA FORME REELLE de la #13, au caractere pres hormis le chemin du corps.
+verifier "PR #13 : --body-file signe"        BLOQUE "gh pr create --draft --base main --title \"docs(audits): frame the agnostic harness redesign\" --body-file $TMP/pr-signe.md"
+verifier "PR --body inline signe"            BLOQUE "gh pr create --title \"fix(x): y\" --body \"Corps.
+
+$SIGNATURE\""
+verifier "PR edit --body-file - heredoc"     BLOQUE "$(printf 'gh pr edit 13 --body-file - <<%sEOF%s\nCorps.\n\n%s\nEOF\n' "'" "'" "$SIGNATURE")"
+verifier "PR --body-file via variable"       BLOQUE 'S=/tmp/x && gh pr create --title "fix(x): y" --body-file "$S/body.md"'
+verifier "commit -m signe Generated with"    BLOQUE "git commit -m \"feat(x): ok
+
+$SIGNATURE\""
+verifier "commit -F fichier Co-Authored-By"  BLOQUE "git commit -F $TMP/commit-signe.txt"
+
+# Ce qui doit passer. Le repo parle de Claude Code comme d'un outil : nommer
+# l'outil n'est pas signer, et la #13 elle-meme le cite des dizaines de fois.
+verifier "PR qui cite l'outil Claude Code"   PASSE  "gh pr create --title \"docs(x): y\" --body-file $TMP/pr-outil.md"
+verifier "PR --body-file propre"             PASSE  "gh pr create --title \"docs(x): y\" --body-file $TMP/pr-propre.md"
+verifier "gh pr view"                        PASSE  'gh pr view 13 --json body'
+verifier "gh pr list"                        PASSE  'gh pr list --state all'
+
 
 # ---------------------------------------------------------------------------
 # BYPASS RISK-ACK — les seuls cas de ce fichier qui montent un depot reel.

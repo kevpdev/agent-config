@@ -3,6 +3,9 @@
 # Blocks git commit commands that:
 #   1. include "Claude" or co-authorship mentions
 #   2. do not follow Conventional Commits EN format
+# Blocks `gh pr create` / `gh pr edit` commands whose title or body carries an AI
+# attribution (check 1 only). The file keeps its name: renaming it would move
+# settings.json, the ~/.claude/scripts link and every README mention.
 #
 # SCOPE: this is a Claude Code hook, NOT a git hook. No repo carries a commit-msg
 # hook and core.hooksPath is unset (measured 2026-08-05), so a commit typed by
@@ -22,7 +25,11 @@ cwd=$(printf "%s" "$payload" | python3 -c "import sys,json; d=json.load(sys.stdi
 # Detect a real `git ... commit` invocation, tolerating global options between
 # `git` and the subcommand (e.g. `git -C <path> commit`, `git -c k=v commit`).
 # A plain grep for "git commit" missed those forms and let them bypass the guard.
-is_commit=$(printf "%s" "$cmd" | python3 -c "
+#
+# Also detect `gh pr create` / `gh pr edit`. Measured 2026-10-22: PR #13 went out
+# signed "Generated with [Claude Code]" because this guard exited on anything that
+# was not a commit. Only the mention check applies to a PR, not the format check.
+kind=$(printf "%s" "$cmd" | python3 -c "
 import sys, shlex
 cmd = sys.stdin.read()
 try:
@@ -45,9 +52,12 @@ def is_git_commit(t):
                 return True
         i += 1
     return False
-print('yes' if is_git_commit(toks) else 'no')
+def is_gh_pr_write(t):
+    return any(t[i] == 'gh' and t[i+1] == 'pr' and t[i+2] in ('create', 'edit')
+               for i in range(len(t) - 2))
+print('commit' if is_git_commit(toks) else 'pr' if is_gh_pr_write(toks) else 'no')
 " 2>/dev/null || echo "no")
-[ "$is_commit" != "yes" ] && exit 0
+[ "$kind" = "no" ] && exit 0
 
 # Block staging the personal bypass risk-ack into the TRACKED USER-LEVEL settings.
 # Claude Code re-injects "skipDangerousModePermissionPrompt": true into
@@ -95,6 +105,7 @@ offender=""
 while IFS= read -r f; do
   [ -z "$f" ] && continue
   [ -z "$toplevel" ] && continue
+  [ "$kind" != "commit" ] && continue   # a PR stages nothing
   abs=$(readlink -f "$toplevel/$f" 2>/dev/null || echo "$toplevel/$f")
   # Not the user-level file → a per-project setting, which is the owner's call.
   if [ "$abs" != "$user_settings" ] && [[ "$abs" != */wrappers/claude/settings.json ]]; then
@@ -120,16 +131,61 @@ print(json.dumps({
   exit 0
 fi
 
-# Block Claude co-authorship mentions
-if printf "%s" "$cmd" | grep -qiE "Co-Authored-By: Claude|claude sonnet|claude opus|claude haiku|noreply@anthropic"; then
+# Block AI attribution, in the command AND in any message file it names.
+#
+# The command text alone is not the message: `git commit -F msg.txt` and
+# `gh pr create --body-file body.md` carry only a file name. Measured 2026-10-22,
+# PR #13 went out through `--body-file`, so the signature never reached the grep.
+# Paths resolve against `target`, like the subject extractor below. A path built
+# from a shell variable cannot be resolved without evaluating untrusted input:
+# for a PR that fails closed here, for a commit the extractor below refuses it.
+#
+# Naming the tool is not signing: "Claude Code" alone passes, this repo talks
+# about it constantly. Only the attribution shapes block.
+mention_text=$(CMD="$cmd" TARGET="$target" python3 - <<'PY' 2>/dev/null || echo ""
+import os, re
+cmd = os.environ.get("CMD", "")
+out = [cmd]
+for m in re.finditer(r"(?:--body-file|--file|-F)(?:=|\s+)(\"[^\"]*\"|'[^']*'|[^\s;&|]+)", cmd):
+    path = m.group(1).strip("\"'")
+    if path == "-":
+        continue  # stdin: the heredoc body is already in the command text
+    if not os.path.isabs(path):
+        path = os.path.join(os.environ.get("TARGET", ""), path)
+    if "$" in path or "`" in path:
+        out.append("__GUARD_UNREADABLE_MESSAGE_FILE__")
+        continue
+    try:
+        with open(path, encoding="utf-8", errors="replace") as fh:
+            out.append(fh.read(65536))
+    except OSError:
+        pass  # absent file: the command itself will fail on it
+print("\n".join(out))
+PY
+)
+
+if printf "%s" "$mention_text" | grep -qiE "Co-Authored-By: Claude|claude (sonnet|opus|haiku|fable)|noreply@anthropic|Generated with \[?Claude Code|claude\.com/claude-code"; then
   python3 -c "
 import json
 print(json.dumps({
     'decision': 'block',
-    'reason': 'Claude mention detected in commit message. Convention: no Claude or Co-Authored-By references in commits. Remove and retry.'
+    'reason': 'AI attribution detected in the commit message or pull request text (Co-Authored-By: Claude, Generated with Claude Code, noreply@anthropic…). Convention: no AI or co-author mention in commits or PRs. Naming Claude Code as a tool is fine; signing with it is not. Remove and retry.'
 }))
 "
   exit 0
+fi
+
+if [ "$kind" = "pr" ]; then
+  if printf "%s" "$mention_text" | grep -q "__GUARD_UNREADABLE_MESSAGE_FILE__"; then
+    python3 -c "
+import json
+print(json.dumps({
+    'decision': 'block',
+    'reason': 'PR body file passed through a shell variable, which this guard cannot resolve without evaluating untrusted input, so the body would go unchecked. Use a literal path (--body-file /abs/path/body.md), a heredoc (--body-file - <<EOF), or --body.'
+}))
+"
+  fi
+  exit 0   # the format check below is for commit subjects only
 fi
 
 # Extract the subject of the message THIS `git commit` will actually use.
