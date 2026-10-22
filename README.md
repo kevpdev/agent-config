@@ -84,6 +84,16 @@ python3 wrappers/claude/scripts/sync-settings.py --fix    # applique, ancienne v
 
 À lancer après toute modification de `wrappers/claude/settings.json`. `skipDangerousModePermissionPrompt` n'est pas appliqué : la clé se lit en OU entre les couches, donc un `false` écrit au niveau user ferait revenir l'avertissement du mode bypass dans tous les repos.
 
+**`tools/install.py` fait les deux d'un coup, pour n'importe quelle cible.** Il pose les liens décrits par `tools/manifests/claude.json`, les 68 actuels avec leurs irrégularités, et fusionne `settings.json` par la logique de `sync-settings.py`. Les commandes de hooks visent les scripts de la cible : `~/.claude/scripts/…` pour `~/.claude`, un chemin absolu pour un dossier de test. Les deux scripts ci-dessus restent en place jusqu'à la bascule de la refonte.
+
+```bash
+python3 tools/install.py --agent claude --target ~/.claude          # vérifie, échoue sur tout écart
+python3 tools/install.py --agent claude --target ~/.claude --fix    # installe et répare
+python3 tools/tests/test-install.py                                 # calibre l'installateur
+```
+
+`--repo DIR` change la racine des sources de liens : depuis un worktree, `--repo ~/Developpement/Workspaces/agent-config` vérifie la config vivante, qui vise le checkout principal.
+
 ### Les gardes déterministes
 
 Trois hooks `PreToolUse` refusent à l'appel ce qu'une règle de prose ne tenait pas. Chacun est la couche déterministe d'une règle qui, du coup, ne répète pas ses critères.
