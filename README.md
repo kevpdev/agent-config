@@ -18,6 +18,12 @@ wrappers/
     scripts/        détecteur AIDD, statusline, anciens scripts de synchro
 ```
 
+Toutes les batteries se lancent d'une commande, qui échoue si une seule échoue :
+
+```bash
+bash tools/test-all.sh
+```
+
 ## La règle de placement
 
 Un fichier va dans `wrappers/<runtime>/` si et seulement si **il cesse de fonctionner sans ce runtime**.
