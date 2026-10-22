@@ -91,7 +91,7 @@ Trois hooks `PreToolUse` refusent à l'appel ce qu'une règle de prose ne tenait
 | Garde | Refuse | Règle allégée | Batterie |
 |---|---|---|---|
 | `guard-bash-tooling.py` | `java`/`mvnw` hors `bash -lc 'sh ./mvnw …'`, heredoc imbriqué | `rules/tooling.md` | `tests/test-guard-bash-tooling.sh` |
-| `guard-no-claude-in-commit.sh` | mention d'IA, format Conventional Commits | `rules/commit-convention.md` | `tests/test-guard-no-claude-in-commit.sh` |
+| `guard-no-claude-in-commit.sh` | mention d'IA (commits et PR, fichier de message compris), format Conventional Commits | `rules/commit-convention.md` | `tests/test-guard-no-claude-in-commit.sh` |
 | `guard-no-remote-write.py` | écritures de l'agent sur preprod/prod | — | *aucune* |
 | `guard-aidd-skill-lookup.py` | `gh issue/pr/release create`, `git tag -a` à la main dans un repo `aidd_docs/` sans skill `aidd-` invoqué (sortie : `# aidd-skip: <raison>`) | `rules/aidd.md` | `tests/test-guard-aidd-skill-lookup.sh` |
 
