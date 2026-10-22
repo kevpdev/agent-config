@@ -93,7 +93,7 @@ def main() -> int:
             os.readlink(regle) == os.path.join(REPO, "rules", "style.md"))
         cas("fix : lien de dossier pour hooks/tests",
             os.readlink(os.path.join(cible, "scripts", "hooks", "tests"))
-            == os.path.join(REPO, "wrappers", "claude", "scripts", "hooks", "tests"))
+            == os.path.join(REPO, "wrappers", "claude", "hooks", "tests"))
 
         # Rendu des chemins : hors du home, absolu.
         cmds = commandes(lire_settings(cible))

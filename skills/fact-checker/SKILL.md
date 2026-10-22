@@ -57,5 +57,5 @@ Le routeur se vérifie au lint, sa sortie par exécution réelle sur une entrée
 
 | Cas | Preuve |
 | --- | --- |
-| `python3 wrappers/claude/scripts/lint-skills.py --skill fact-checker` | rend 0, aucun défaut sur le routeur ni sur les trois actions |
+| `python3 tools/lint-skills.py --skill fact-checker` | rend 0, aucun défaut sur le routeur ni sur les trois actions |
 | une entrée mêlant un fait daté et une prise de position | le rapport range la prise de position en interprétation, et ne lui donne aucun verdict |

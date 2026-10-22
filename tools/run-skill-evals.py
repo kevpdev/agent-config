@@ -60,7 +60,7 @@ class CannotConclude(Exception):
 def derive_root() -> str:
     """Racine dérivée de l'emplacement du script, jamais un chemin en dur."""
     here = os.path.dirname(os.path.realpath(__file__))
-    root = os.path.abspath(os.path.join(here, "..", "..", ".."))
+    root = os.path.abspath(os.path.join(here, ".."))
     for marker in ("skills", "rules"):
         if not os.path.isdir(os.path.join(root, marker)):
             raise CannotConclude(
@@ -78,7 +78,7 @@ def require_tools() -> str:
 
 def load_linter(root: str):
     """Le lint est importé, pas recopié : il possède déjà la liste des sections."""
-    path = os.path.join(root, "wrappers", "claude", "scripts", "lint-skills.py")
+    path = os.path.join(root, "tools", "lint-skills.py")
     if not os.path.isfile(path):
         raise CannotConclude(f"lint-skills.py introuvable à {path}")
     spec = importlib.util.spec_from_file_location("linter", path)

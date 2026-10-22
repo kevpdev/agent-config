@@ -2,7 +2,7 @@
 
 Ce qu'aucun compteur ne remplace, et ce qui empêche de lire un chiffre de travers. Jamais chargé automatiquement.
 
-**Ce fichier n'est pas un journal.** Les baselines vivent dans le docstring de `wrappers/claude/scripts/mesure-reponses.py`, qui les imprime à chaque exécution. Les récits de session vivent dans `logs/sessions/` du vault. Ici, seulement ce qui sert à réappliquer une règle.
+**Ce fichier n'est pas un journal.** Les baselines vivent dans le docstring de `tools/mesure-reponses.py`, qui les imprime à chaque exécution. Les récits de session vivent dans `logs/sessions/` du vault. Ici, seulement ce qui sert à réappliquer une règle.
 
 ---
 

@@ -2,7 +2,7 @@
 
 Configuration centralisée pour agents de code : règles de comportement, skills experts, et le câblage propre à chaque runtime.
 
-Pas d'outils, pas de CLI — de l'instruction en markdown.
+L'essentiel est de l'instruction en markdown. L'outillage du harnais (installation, lint, CI, évals, banc) vit à part, dans `tools/`.
 
 ## Structure
 
@@ -10,8 +10,12 @@ Pas d'outils, pas de CLI — de l'instruction en markdown.
 rules/              règles chargées en contexte — neutres
 skills/             expertises chargées à la demande — neutres
   _shared/          références partagées entre plusieurs skills
+tools/              outillage du harnais, sans dépendance à un agent
+  tests/            ses batteries
 wrappers/
   claude/           tout ce qui ne fonctionne que sous Claude Code
+    hooks/          les gardes et leurs batteries
+    scripts/        détecteur AIDD, statusline, anciens scripts de synchro
 ```
 
 ## La règle de placement
@@ -61,6 +65,10 @@ Claude Code découvre ces dossiers automatiquement, sans rien déclarer. Aucun `
 | `wrappers/claude/output-styles/` | `~/.claude/output-styles/` |
 | `wrappers/claude/rules/` | `~/.claude/rules/` |
 | `wrappers/claude/scripts/` | `~/.claude/scripts/` |
+| `wrappers/claude/hooks/` | `~/.claude/scripts/hooks/` |
+| `tools/` (lint, CI, évals) | `~/.claude/scripts/` |
+
+`~/.claude/scripts/` garde la forme qu'il avait avant le rangement de `tools/` et `wrappers/claude/hooks/`, parce que `settings.json` et plusieurs skills appellent `~/.claude/scripts/…` en dur. La liste exacte des liens est dans `tools/manifests/claude.json`.
 
 Les symlinks sont supportés — lier plutôt que copier garde le repo comme source unique.
 
@@ -175,9 +183,9 @@ Trois hooks `PreToolUse` refusent à l'appel ce qu'une règle de prose ne tenait
 | `guard-aidd-skill-lookup.py` | `gh issue/pr/release create`, `git tag -a` à la main dans un repo `aidd_docs/` sans skill `aidd-` invoqué (sortie : `# aidd-skip: <raison>`) | `rules/aidd.md` | `tests/test-guard-aidd-skill-lookup.sh` |
 
 ```bash
-bash wrappers/claude/scripts/hooks/tests/test-guard-bash-tooling.sh
-bash wrappers/claude/scripts/hooks/tests/test-guard-no-claude-in-commit.sh
-bash wrappers/claude/scripts/hooks/tests/test-guard-aidd-skill-lookup.sh
+bash wrappers/claude/hooks/tests/test-guard-bash-tooling.sh
+bash wrappers/claude/hooks/tests/test-guard-no-claude-in-commit.sh
+bash wrappers/claude/hooks/tests/test-guard-aidd-skill-lookup.sh
 ```
 
 **Une batterie pèse autant que son garde.** Un garde sans cible vivante se comporte exactement pareil qu'il soit cassé ou intact ; et un garde qui refuse du travail valide finit désactivé, donc ne protège plus rien. Chaque batterie porte les deux : des cas positifs **fabriqués à la main**, et les formes légitimes qui doivent passer. Toute forme de commande nouvellement rencontrée s'y ajoute *avant* d'être corrigée dans le garde.
@@ -189,9 +197,9 @@ bash wrappers/claude/scripts/hooks/tests/test-guard-aidd-skill-lookup.sh
 Une porte `ci`, seul check exigé par le ruleset, qui attend tous les jobs de son workflow, Trivy compris. Les autres jobs se découpent au grain de la stack. Actions épinglées par SHA, permissions minimales. Le contrat est dans [`rules/references/ref-ci-github.md`](rules/references/ref-ci-github.md), la règle qui y renvoie dans `rules/aidd.md`.
 
 ```bash
-python3 wrappers/claude/scripts/check-ci-contract.py <dépôt>             # mesure, 0 si conforme
-python3 wrappers/claude/scripts/tests/test-check-ci-contract.py          # calibre le script
-bash wrappers/claude/scripts/apply-ci-ruleset.sh OWNER/REPO [--dry-run]
+python3 tools/check-ci-contract.py <dépôt>             # mesure, 0 si conforme
+python3 tools/tests/test-check-ci-contract.py          # calibre le script
+bash tools/apply-ci-ruleset.sh OWNER/REPO [--dry-run]
 ```
 
 ### CodeGraph sur les projets AIDD
@@ -213,7 +221,7 @@ Trois couches, de la plus rare à la plus fréquente.
 **Pourquoi `.codegraph/` est ignoré à la racine** : `.codegraph/` porte son propre `.gitignore` (`*` sauf lui-même), donc la base ne se versionne jamais. Il reste alors un seul fichier non suivi, ce qui salit `git status`. La ligne racine l'évite sans qu'aucun projet n'ait à committer ce fichier.
 
 ```bash
-bash wrappers/claude/scripts/hooks/tests/test-init-codegraph.sh
+bash wrappers/claude/hooks/tests/test-init-codegraph.sh
 ```
 
 La batterie tourne contre le vrai `codegraph`, pas un faux binaire.
@@ -265,10 +273,10 @@ trompeur sur des silences.
 Le lint lit les fichiers et n'exécute rien : sept vérifications mécaniques sur les 24 skills, en une seconde et sans appel LLM. Le frontmatter parse et porte ses trois clés, `name` égale le dossier, la `description` tient sous le plafond, les `##` correspondent à ceux du gabarit, aucun placeholder ne survit, aucun lien relatif n'est mort, et un skill qui porte `disable-model-invocation: true` ne promet de déclenchement nulle part ailleurs.
 
 ```bash
-python3 wrappers/claude/scripts/lint-skills.py                      # tous les skills
-python3 wrappers/claude/scripts/lint-skills.py --skill skill-craft   # un seul
-python3 wrappers/claude/scripts/lint-skills.py --corpus ~/projects/myvaultobsidian/.agents/skills
-python3 wrappers/claude/scripts/tests/test-lint-skills.py            # calibre les sept vérifications
+python3 tools/lint-skills.py                      # tous les skills
+python3 tools/lint-skills.py --skill skill-craft   # un seul
+python3 tools/lint-skills.py --corpus ~/projects/myvaultobsidian/.agents/skills
+python3 tools/tests/test-lint-skills.py            # calibre les sept vérifications
 ```
 
 **`--corpus` vise les skills d'un autre repo, et n'y joue que six vérifications sur sept.** La conformité au gabarit et la présence d'`argument-hint` sont de la **forme** : la portée d'une convention s'arrête à ce qu'un run crée, jamais à l'existant qu'il croise (`rules/autorite-des-conventions.md`). Le reste est du **fond** et casse dans n'importe quel repo : un `name` qui diverge du dossier empêche Claude Code de résoudre le skill, une description au-delà de 1 536 caractères est refusée par l'API, un lien mort est mort. La ligne de bilan nomme toujours le corpus visé et le nombre de vérifications jouées, pour qu'un « 0 défaut » à six ne se lise pas comme un « 0 défaut » à sept.
@@ -284,9 +292,9 @@ C'est la moitié de R13 que la septième vérification laisse dehors. Elle ne sa
 Un skill qui porte un `evals/eval.json` déclare ses cas en données pures : la requête, le déclenchement attendu, l'artefact attendu. Aucun nom d'outil, aucun nom d'agent — l'exécuteur est le seul à connaître Claude Code, ouvrir une session neuve passant par `claude -p`.
 
 ```bash
-python3 wrappers/claude/scripts/tests/test-run-skill-evals.py   # calibre les verdicts, ne joue aucun cas
-python3 wrappers/claude/scripts/run-skill-evals.py              # joue tout, rend un tableau de verdicts
-python3 wrappers/claude/scripts/run-skill-evals.py --skill mr-review
+python3 tools/tests/test-run-skill-evals.py   # calibre les verdicts, ne joue aucun cas
+python3 tools/run-skill-evals.py              # joue tout, rend un tableau de verdicts
+python3 tools/run-skill-evals.py --skill mr-review
 ```
 
 Chaque cas rend deux verdicts, tous deux déterministes et sans juge LLM. Le **déclenchement** se lit au registre de la session : un appel à l'outil `Skill` nomme le skill ouvert, et sur un cas négatif le verdict s'inverse. L'**artefact** se contrôle par script : le fichier annoncé existe et porte les sections de son gabarit.

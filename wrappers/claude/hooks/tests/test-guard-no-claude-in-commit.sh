@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Batterie de cas pour ../guard-no-claude-in-commit.sh
 #
-# Usage : bash wrappers/claude/scripts/hooks/tests/test-guard-no-claude-in-commit.sh
+# Usage : bash wrappers/claude/hooks/tests/test-guard-no-claude-in-commit.sh
 # Sortie 0 si tous les cas passent, 1 sinon. N'ecrit rien, ne touche aucun depot.
 #
 # POURQUOI CE FICHIER EXISTE

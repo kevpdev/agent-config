@@ -12,7 +12,7 @@ Un rapport en français, verdict global en tête puis une ligne par contrôle, `
 
 ## Process
 
-1. **Linter.** Lancer `python3 wrappers/claude/scripts/lint-skills.py --skill <nom>` et reporter sa sortie telle quelle, sans la réinterpréter. Elle couvre le frontmatter, le nom, la longueur de la description, la liste de sections, les placeholders, les liens morts et la cohérence interne d'un skill déjà déclaré manuel.
+1. **Linter.** Lancer `python3 tools/lint-skills.py --skill <nom>` et reporter sa sortie telle quelle, sans la réinterpréter. Elle couvre le frontmatter, le nom, la longueur de la description, la liste de sections, les placeholders, les liens morts et la cohérence interne d'un skill déjà déclaré manuel.
    - **Garde.** Sur un corpus étranger, ajouter `--corpus <dossier>`. Le lint coupe alors la conformité au gabarit et `argument-hint`, et sa ligne de bilan dit combien de vérifications ont tourné. Ne pas lire son « 0 défaut » comme un skill conforme à la convention d'ici.
    - **Garde.** Une sortie 2 n'est pas un défaut du skill mais un instrument hors service (gabarit absent, YAML illisible). S'arrêter là et remonter la cause : un lint qu'on ne peut pas croire ne rend pas de verdict.
 2. **Relire R1.** Un routeur ne porte que portée, flux, table d'actions et règles transverses. Des étapes numérotées de logique métier, ou du détail qui appartient à une action, sont une dérive à signaler. En mono-fichier, vérifier que l'inline reste justifié : responsabilité unique, sous ~150 lignes, aucune référence qui devrait sortir.
