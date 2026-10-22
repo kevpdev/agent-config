@@ -87,5 +87,5 @@ jamais depuis la session qui vient d'écrire le skill.
 
 | Cas | Preuve |
 | --- | --- |
-| `python3 wrappers/claude/scripts/lint-skills.py --skill jira` | rend 0, « 1/1 skills conformes » |
+| `python3 tools/lint-skills.py --skill jira` | rend 0, « 1/1 skills conformes » |
 | les deux cas négatifs d'`evals/eval.json`, joués outils coupés | le skill ne s'ouvre pas, le registre de la session ne le nomme pas |

@@ -4,7 +4,7 @@ Ce qui reste à décider quand les deux gabarits ont déjà répondu. À relire 
 
 ## Les gabarits font foi, pas cette page
 
-L'anatomie ne se raconte pas, elle se copie : [`skill-template.md`](../assets/skill-template.md) et [`action-template.md`](../assets/action-template.md). Ils portent la liste des sections, leur ordre et leur statut. `wrappers/claude/scripts/lint-skills.py` la dérive d'eux au lieu de la coder.
+L'anatomie ne se raconte pas, elle se copie : [`skill-template.md`](../assets/skill-template.md) et [`action-template.md`](../assets/action-template.md). Ils portent la liste des sections, leur ordre et leur statut. `tools/lint-skills.py` la dérive d'eux au lieu de la coder.
 
 **Aucune section hors de cette liste.** Une section perso n'apporte pas de valeur : son contenu a déjà un home, et l'inventer ailleurs le rend invisible à qui lit le gabarit.
 
@@ -63,7 +63,7 @@ Fork français des 19 règles d'AIDD (`aidd-context:04-skill-generate`, fichier 
 - **R6. Zéro doublon.** Un fait, un seul home. Les gabarits vivent dans `assets/`, les actions les citent. Une citation est un lien markdown relatif dans la phrase qui l'utilise, jamais un bloc à part ni un include `@`, que rien ne résout.
   - **La portée va jusqu'entre deux skills.** Un fait présent dans deux skills ou plus a son home dans `skills/_shared/<nom>.md`, que chacun pointe par un lien relatif. `skills/_shared/llm-decision-grid.md` est déjà celui d'`agentic-architect` et d'`ai-engineering`.
   - **POURQUOI le dire ici, mesuré le 2026-08-27** : sans portée écrite, la relecture de `02-validate` avait fixé la sienne à l'intérieur d'un skill. Le bloc `1. **Garde.**` des ponts vault est byte-identique, md5 `640459f6`, et deux validateurs indépendants ont rapporté qu'aucun contrôle ne pouvait le voir.
-- **R7. Rôle des dossiers.** `references/` se LIT. `assets/` se COPIE. `evals/` se JOUE par un exécuteur externe, et n'est jamais lu par le skill lui-même. Pas de `scripts/` par skill : l'exécutable partagé vit dans `skills/_shared/`, l'outillage dans `wrappers/claude/scripts/`.
+- **R7. Rôle des dossiers.** `references/` se LIT. `assets/` se COPIE. `evals/` se JOUE par un exécuteur externe, et n'est jamais lu par le skill lui-même. Pas de `scripts/` par skill : l'exécutable partagé vit dans `skills/_shared/`, l'outillage dans `tools/`.
   - **Un `evals/eval.json` ne porte que des données.** Aucun nom d'outil, aucun nom d'agent, aucune commande. L'exécuteur est forcément spécifique à l'agent et vit dans son wrapper. Un skill qui nomme un agent ne tourne plus sous un autre.
   - Champs d'un cas. `skill` et `query` sont requis. `id` nomme le cas, et sur un négatif il nomme le frère couvert. `expect_trigger` vaut `true` par défaut, `false` sur un négatif. `artifact` porte `path` (un glob) plus `template` ou `sections`, quand le cas produit un fichier. `files` liste des fixtures voisines sous `evals/fixtures/`, réservé aux cas à artefact.
   - **Le champ `artifact` choisit le mode d'exécution, et c'est mécanique.** Sans lui, le cas tourne **outils coupés** : le skill part sans rien pouvoir exécuter, donc un skill à effet de bord se teste sans risque. Avec lui, le cas tourne outils ouverts dans un worktree jetable, seul moyen de constater un fichier.

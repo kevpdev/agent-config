@@ -100,9 +100,9 @@ La CI ne se limite pas à compiler et lancer les tests. Elle couvre quatre caté
 
 | Geste | Commande |
 |---|---|
-| Mesurer qu'un dépôt respecte le contrat | `python3 wrappers/claude/scripts/check-ci-contract.py <dépôt>` |
-| Poser le ruleset (un seul contexte, `ci`, sur la branche par défaut et chaque `--branch`) | `bash wrappers/claude/scripts/apply-ci-ruleset.sh <owner/repo> [--branch develop]... [--dry-run]` |
-| Calibrer le script de conformité | `python3 wrappers/claude/scripts/tests/test-check-ci-contract.py` |
+| Mesurer qu'un dépôt respecte le contrat | `python3 tools/check-ci-contract.py <dépôt>` |
+| Poser le ruleset (un seul contexte, `ci`, sur la branche par défaut et chaque `--branch`) | `bash tools/apply-ci-ruleset.sh <owner/repo> [--branch develop]... [--dry-run]` |
+| Calibrer le script de conformité | `python3 tools/tests/test-check-ci-contract.py` |
 
 Le script rend 0 si le dépôt est conforme, 1 s'il mesure un écart (une ligne par écart, `fichier:ligne`), 2 s'il ne peut pas conclure.
 

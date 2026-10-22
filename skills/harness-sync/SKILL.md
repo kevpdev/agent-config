@@ -47,4 +47,4 @@ Jouable seul, sans session neuve : les trois actions tranchent sans jugement LLM
 | Cas | Preuve |
 | --- | --- |
 | dépôt et harnais déjà synchronisés | les trois couches rendent « conforme », aucune écriture |
-| `python3 wrappers/claude/scripts/lint-skills.py --skill harness-sync` | rend 0 |
+| `python3 tools/lint-skills.py --skill harness-sync` | rend 0 |

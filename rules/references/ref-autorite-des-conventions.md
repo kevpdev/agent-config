@@ -31,7 +31,7 @@ Imposer mon format personnel à une base partagée produit exactement l'hétéro
 
 ## Le niveau 0 n'est pas théorique — `vcs.md` contre le garde
 
-`Winggy-v3/aidd_docs/memory/vcs.md` déclare **dix** types de commit, dont `style` et `revert`. `wrappers/claude/scripts/hooks/guard-no-claude-in-commit.sh` n'accepte que `feat|fix|refactor|docs|test|chore|perf|ci`.
+`Winggy-v3/aidd_docs/memory/vcs.md` déclare **dix** types de commit, dont `style` et `revert`. `wrappers/claude/hooks/guard-no-claude-in-commit.sh` n'accepte que `feat|fix|refactor|docs|test|chore|perf|ci`.
 
 Un `style(...)` y est **refusé à l'appel**, quoi que dise la mémoire du repo.
 

@@ -40,7 +40,7 @@ Une arborescence sous `skills/<nom>/` : `SKILL.md`, un `actions/NN-<slug>.md` pa
 
 | Cas | Preuve |
 | --- | --- |
-| `python3 wrappers/claude/scripts/lint-skills.py --skill <nom>` sur le skill neuf | rend 0 |
+| `python3 tools/lint-skills.py --skill <nom>` sur le skill neuf | rend 0 |
 | `python3 -c "import json; json.load(open('skills/<nom>/evals/eval.json'))"` | parse, chaque cas portant `skill` et `query` |
 | relecture du corpus d'évals contre R7 | la composition attendue y est, exception des skills à invocation manuelle comprise |
 | `grep -rn "supprimer cette ligne" skills/<nom>/` | ne rend rien, la ligne d'instruction du gabarit n'a pas survécu |

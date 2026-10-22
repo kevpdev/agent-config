@@ -11,7 +11,7 @@ Par cible (`rules`, `skills`, `agents`, `output-styles`, `scripts`) : « conform
 1. **Déléguer `rules/`.** Lancer `bash wrappers/claude/scripts/sync-rules.sh`, sans `--fix` d'abord.
    - **Garde.** Code de sortie autre que 0 ou 1 → instrument hors service, pas un défaut du harnais : arrêter, remonter la cause brute.
    - Code 1 : lister les écarts qu'il rapporte (`ABSENT`, `PAS UN LIEN`, `MAUVAISE CIBLE`, `ORPHELIN`, `INTRUS`). Ne réparer que via son propre `--fix`, jamais en réimplémentant sa logique de diff (zéro doublon).
-2. **Parcourir les cibles à liens multiples.** Pour `skills/`, `wrappers/claude/agents/`, `wrappers/claude/output-styles/` et `wrappers/claude/scripts/` (récursif sur ses sous-dossiers `hooks/` et `tests/`), comparer chaque entrée source à son homologue dans `~/.claude/<cible>/`.
+2. **Parcourir les cibles à liens multiples.** Pour `skills/`, `wrappers/claude/agents/`, `wrappers/claude/output-styles/` et les liens de `~/.claude/scripts/` (sources dans `wrappers/claude/scripts/`, `wrappers/claude/hooks/` et `tools/`, liste exacte dans `tools/manifests/claude.json`), comparer chaque entrée source à son homologue dans `~/.claude/<cible>/`.
    - Rien à l'emplacement cible → créer le symlink (`ln -s`). Seul cas d'écriture automatique de cette action.
    - Symlink présent mais pointant ailleurs que la source attendue → arrêter pour cette entrée, la lister « mauvaise cible », jamais recréée seule.
    - Chemin cible occupé par un fichier ou un dossier réel, pas un symlink → la lister « conflit non-lien », jamais écrasée.

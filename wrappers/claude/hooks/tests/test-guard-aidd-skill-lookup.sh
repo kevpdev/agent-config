@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Batterie de cas pour ../guard-aidd-skill-lookup.py
 #
-# Usage : bash wrappers/claude/scripts/hooks/tests/test-guard-aidd-skill-lookup.sh
+# Usage : bash wrappers/claude/hooks/tests/test-guard-aidd-skill-lookup.sh
 # Sortie 0 si tous les cas passent, 1 sinon. Tout vit dans un dossier temporaire.
 #
 # Les cas POSITIFS sont fabriques : `gh issue create` n'apparait que dans 1 session

@@ -69,7 +69,7 @@ Relecture sur un run réel, plus deux commandes jouables seules.
 
 | Cas | Preuve |
 | --- | --- |
-| `python3 wrappers/claude/scripts/lint-skills.py --skill dev-tech-comparison` | rend 0, « 1/1 skills conformes » |
-| `python3 wrappers/claude/scripts/tests/test-lint-html-prose.py` | rend 0, tous les cas passent |
+| `python3 tools/lint-skills.py --skill dev-tech-comparison` | rend 0, « 1/1 skills conformes » |
+| `python3 tools/tests/test-lint-html-prose.py` | rend 0, tous les cas passent |
 | les cas d'[`evals/eval.json`](evals/eval.json), joués outils coupés | aucun n'ouvre `dev-tech-comparison` |
 | le lint de prose sur le fichier livré d'un run réel | rend 0, ou le compte rendu liste les interdits restants |

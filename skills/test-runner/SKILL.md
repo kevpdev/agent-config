@@ -78,7 +78,7 @@ Le lint se joue seul. Le reste se constate sur la sortie d'un run réel, jamais 
 
 | Cas | Preuve |
 | --- | --- |
-| `python3 wrappers/claude/scripts/lint-skills.py --skill test-runner` | rend 0, « 1/1 skills conformes » |
+| `python3 tools/lint-skills.py --skill test-runner` | rend 0, « 1/1 skills conformes » |
 | lancer le skill sur un repo dont aucune source ne porte un champ de la recette | le champ sort en `non couvert` dans `gaps`, aucune valeur inventée |
 | relever les process encore vivants après la fin d'un scope subagent | zéro orphelin, chaque démarrage a son arrêt |
 | lancer le skill sur un repo qui porte une opération payante | aucun appel payant avant une confirmation humaine explicite |

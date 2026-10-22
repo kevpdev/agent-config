@@ -88,7 +88,7 @@ sortie d'un run réel, jamais sur un mock.
 
 | Cas | Preuve |
 | --- | --- |
-| `python3 wrappers/claude/scripts/lint-skills.py --skill mr-review` | rend 0, « 1/1 skills conformes » |
+| `python3 tools/lint-skills.py --skill mr-review` | rend 0, « 1/1 skills conformes » |
 | les cas d'[`evals/eval.json`](evals/eval.json), joués outils coupés | le cas positif ouvre `mr-review`, aucun des trois frères cités en clause NE PAS ne l'ouvre |
 | chercher `glab mr note`, `approve`, `merge` et `update` dans les commandes lancées pendant un run | zéro appel |
 | comparer les blocs du commentaire rendu à ceux d'[`assets/commentaire-mr.md`](assets/commentaire-mr.md) | tous présents, dans l'ordre du gabarit |
