@@ -1,0 +1,57 @@
+# Suivi — refonte agnostique du harnais
+
+Fichier de reprise du chantier. Le cadrage, qui fait foi, est dans `audits/2026-10-22-cadrage-harnais-agnostique.md`, avec le découpage en 13 tâches dans sa dernière section. Ce fichier ne porte que l'état. Il se met à jour à la fin de chaque tâche.
+
+## Où vit le travail
+
+- Le worktree `~/Developpement/Workspaces/agent-config-v2` est sur la branche `harness-v2`. Le checkout principal `agent-config` reste sur `main`, et c'est lui que vise `~/.claude`.
+- Le tag `pre-v2` sur `d284502` est le point de retour arrière. La liste des 68 liens de `~/.claude` à cette date est dans `audits/2026-10-22-liens-pre-v2.txt`.
+- Le banc isolé est `~/.claude-bench`, connecté une fois par `/login`. Il sert à prouver ce que le worktree charge sans toucher `~/.claude`.
+
+## Le flux d'une tâche
+
+1. Cadrer la tâche, dire la recommandation, puis attendre l'accord. Ensuite, plan mode.
+2. Ouvrir l'issue par `aidd-vcs:04-issue-create`, avec un titre, un corps et un label validés avant création.
+3. Créer une branche depuis `harness-v2`, puis ouvrir une PR draft vers `harness-v2` par `aidd-vcs:02-pull-request`.
+4. Après le merge, fermer l'issue à la main. `Closes #` n'agit que sur la branche par défaut.
+
+Commits et PR suivent les Conventional Commits, sujet en anglais, sans aucune mention d'IA, PR comprise.
+
+## État au 2026-10-22
+
+| Tâche | Issue | PR | Merge dans `harness-v2` |
+|---|---|---|---|
+| 1. Worktree, tag, sauvegarde des liens | #15 | — | `7ab852b` |
+| 2. `tools/install.py` et manifeste Claude | #16 | #17 | `69b4751` |
+| 3. Banc isolé Claude | #18 | #19 | `8f1ee6a` |
+| 4. Rangement : `wrappers/claude/hooks/`, `tools/` | #21 | #22 | `1b1265b` |
+
+**Prochaine étape** : cadrer la tâche 5. La décision des gardes sort vers `hooks/` sur une entrée normalisée, et `wrappers/claude/hooks/` ne garde que les adaptateurs. Son critère : les batteries Claude restent vertes, et une batterie du cœur s'ajoute sur l'entrée normalisée.
+
+## La référence de parité
+
+Après chaque tâche, ces commandes doivent rendre ce qui suit :
+
+```bash
+cd ~/Developpement/Workspaces/agent-config-v2
+bash tools/test-all.sh          # 12 batteries, 0 en échec
+bash tools/bench.sh claude      # 17 rules d'origine worktree, 26 skills du repo, 6 plugins, 7 hooks résolus, aucune fuite
+```
+
+- Le banc rend 100 skills au total : 26 du repo, 17 intégrés, 47 des plugins AIDD et 10 `anthropic-skills:*` du compte. À la tâche 3, il en rendait 43, parce que `init` ne listait pas encore les skills préfixés. Relancé sur `8f1ee6a`, il rend aussi 100, donc l'écart ne vient pas du repo.
+- Les 4 rules qui portent un `paths:` (`back-spring`, `front-react`, `backend-api`, `frontend-design`) ne se chargent pas dans une session vide. C'est attendu.
+- Tant que la bascule (tâche 13) n'a pas eu lieu, `install.py --check` sur `~/.claude` rend 13 écarts avec le manifeste de `harness-v2`. Ce sont les liens dont la source a bougé à la tâche 4. Le vivant se contrôle en comparant ses liens à `audits/2026-10-22-liens-pre-v2.txt`.
+
+## Décisions prises en route
+
+- La disposition installée sous `~/.claude/scripts/` ne change pas avant la bascule. Ce sont les `source` du manifeste qui ont bougé, pas les cibles.
+- `sync-rules.sh` et `sync-settings.py` restent jusqu'à la tâche 13, parce que `install.py` importe `sync-settings.py`.
+- `wrappers/claude/settings.json` porte `model: "opus"`.
+- Le banc OpenCode est reporté à la tâche 6.
+
+## Fils ouverts, hors du chemin critique
+
+- #20 : ranger `skills/_shared/` en `scripts/` et `references/`, avec un README. À faire entre deux tâches.
+- Les plugins AIDD du banc sont plus récents que ceux du vivant, par exemple `aidd-vcs` 2.5.0 contre 2.4.0. C'est noté, pas corrigé.
+- Le garde de mention d'IA ne couvre ni `gh api …/pulls`, ni `gh pr comment`, ni le format du titre de PR.
+- Les branches mergées (`refactor/repo-layout`, `feat/claude-bench`, etc.) existent encore sur le dépôt distant.
