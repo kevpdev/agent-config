@@ -17,7 +17,7 @@ Fichier de reprise du chantier. Le cadrage, qui fait foi, est dans `audits/2026-
 
 Commits et PR suivent les Conventional Commits, sujet en anglais, sans aucune mention d'IA, PR comprise.
 
-## État au 2026-10-22
+## État au 2026-10-23
 
 | Tâche | Issue | PR | Merge dans `harness-v2` |
 |---|---|---|---|
@@ -25,8 +25,9 @@ Commits et PR suivent les Conventional Commits, sujet en anglais, sans aucune me
 | 2. `tools/install.py` et manifeste Claude | #16 | #17 | `69b4751` |
 | 3. Banc isolé Claude | #18 | #19 | `8f1ee6a` |
 | 4. Rangement : `wrappers/claude/hooks/`, `tools/` | #21 | #22 | `1b1265b` |
+| 5. Cœur des gardes dans `hooks/`, adaptateur Claude | #23 | branche `refactor/guard-core` | à merger |
 
-**Prochaine étape** : cadrer la tâche 5. La décision des gardes sort vers `hooks/` sur une entrée normalisée, et `wrappers/claude/hooks/` ne garde que les adaptateurs. Son critère : les batteries Claude restent vertes, et une batterie du cœur s'ajoute sur l'entrée normalisée.
+**Prochaine étape** : cadrer la tâche 6, le plugin OpenCode `harness-guards` sur `permission.evaluate`, qui appelle `hooks/check.py`. Elle ouvre aussi le banc OpenCode, reporté jusque-là.
 
 ## La référence de parité
 
@@ -34,7 +35,7 @@ Après chaque tâche, ces commandes doivent rendre ce qui suit :
 
 ```bash
 cd ~/Developpement/Workspaces/agent-config-v2
-bash tools/test-all.sh          # 12 batteries, 0 en échec
+bash tools/test-all.sh          # 13 batteries, 0 en échec
 bash tools/bench.sh claude      # 17 rules d'origine worktree, 26 skills du repo, 6 plugins, 7 hooks résolus, aucune fuite
 ```
 
@@ -48,6 +49,9 @@ bash tools/bench.sh claude      # 17 rules d'origine worktree, 26 skills du repo
 - `sync-rules.sh` et `sync-settings.py` restent jusqu'à la tâche 13, parce que `install.py` importe `sync-settings.py`.
 - `wrappers/claude/settings.json` porte `model: "opus"`.
 - Le banc OpenCode est reporté à la tâche 6.
+- Tâche 5 : le contrat du cœur est dans `hooks/check.py`. `exit 1` veut dire « entrée illisible », et chaque adaptateur décide quoi en faire. `skills_used: null` veut dire « inconnu », et le garde AIDD laisse alors passer.
+- Tâche 5 : la parité de l'adaptateur Claude a été mesurée sur 963 commandes réelles tirées des transcripts, rejouées contre l'ancien et le nouveau garde. Résultat : 0 écart, et 35 refus identiques des deux côtés. Pour rejouer, il faut reprendre les anciens gardes par `git show 5af25cd:wrappers/claude/hooks/<garde>`.
+- `git commit -m "fix: Claude"` **passe**, avant comme après la tâche 5 : nommer Claude n'est pas signer. Le critère de la tâche 6 dans le cadrage et la QA de l'issue #23 se testent donc avec `Co-Authored-By: Claude`.
 
 ## Fils ouverts, hors du chemin critique
 

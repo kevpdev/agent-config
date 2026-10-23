@@ -10,11 +10,13 @@ L'essentiel est de l'instruction en markdown. L'outillage du harnais (installati
 rules/              règles chargées en contexte — neutres
 skills/             expertises chargées à la demande — neutres
   _shared/          références partagées entre plusieurs skills
+hooks/              décision des gardes, sur une entrée neutre
+  tests/            sa batterie
 tools/              outillage du harnais, sans dépendance à un agent
   tests/            ses batteries
 wrappers/
   claude/           tout ce qui ne fonctionne que sous Claude Code
-    hooks/          les gardes et leurs batteries
+    hooks/          adaptateur Claude des gardes et leurs batteries
     scripts/        détecteur AIDD, statusline, anciens scripts de synchro
 ```
 
@@ -75,6 +77,8 @@ Claude Code découvre ces dossiers automatiquement, sans rien déclarer. Aucun `
 | `tools/` (lint, CI, évals) | `~/.claude/scripts/` |
 
 `~/.claude/scripts/` garde la forme qu'il avait avant le rangement de `tools/` et `wrappers/claude/hooks/`, parce que `settings.json` et plusieurs skills appellent `~/.claude/scripts/…` en dur. La liste exacte des liens est dans `tools/manifests/claude.json`.
+
+`hooks/` et `wrappers/claude/hooks/claude_adapter.py` n'ont pas de lien. Un garde lié résout son propre lien et les retrouve dans le repo, donc ils doivent rester où ils sont par rapport à lui.
 
 Les symlinks sont supportés — lier plutôt que copier garde le repo comme source unique.
 
@@ -179,16 +183,19 @@ Le script échoue en code 1 sur une rule chargée hors du banc et du repo, sur u
 
 ### Les gardes déterministes
 
-Trois hooks `PreToolUse` refusent à l'appel ce qu'une règle de prose ne tenait pas. Chacun est la couche déterministe d'une règle qui, du coup, ne répète pas ses critères.
+Quatre hooks `PreToolUse` refusent à l'appel ce qu'une règle de prose ne tenait pas. Chacun est la couche déterministe d'une règle qui, du coup, ne répète pas ses critères.
 
-| Garde | Refuse | Règle allégée | Batterie |
-|---|---|---|---|
-| `guard-bash-tooling.py` | `java`/`mvnw` hors `bash -lc 'sh ./mvnw …'`, heredoc imbriqué | `rules/tooling.md` | `tests/test-guard-bash-tooling.sh` |
-| `guard-no-claude-in-commit.sh` | mention d'IA (commits et PR, fichier de message compris), format Conventional Commits | `rules/commit-convention.md` | `tests/test-guard-no-claude-in-commit.sh` |
-| `guard-no-remote-write.py` | écritures de l'agent sur preprod/prod | — | *aucune* |
-| `guard-aidd-skill-lookup.py` | `gh issue/pr/release create`, `git tag -a` à la main dans un repo `aidd_docs/` sans skill `aidd-` invoqué (sortie : `# aidd-skip: <raison>`) | `rules/aidd.md` | `tests/test-guard-aidd-skill-lookup.sh` |
+| Garde (`wrappers/claude/hooks/`) | Décision (`hooks/`) | Refuse | Règle allégée | Batterie Claude |
+|---|---|---|---|---|
+| `guard-bash-tooling.py` | `bash_tooling.py` | `java`/`mvnw` hors `bash -lc 'sh ./mvnw …'`, heredoc imbriqué | `rules/tooling.md` | `tests/test-guard-bash-tooling.sh` |
+| `guard-no-claude-in-commit.sh` | `no_ai_in_commit.py` | mention d'IA (commits et PR, fichier de message compris), format Conventional Commits | `rules/commit-convention.md` | `tests/test-guard-no-claude-in-commit.sh` |
+| `guard-no-remote-write.py` | `no_remote_write.py` | écritures de l'agent sur preprod/prod | — | *aucune*, couvert par la batterie du cœur |
+| `guard-aidd-skill-lookup.py` | `aidd_skill_lookup.py` | `gh issue/pr/release create`, `git tag -a` à la main dans un repo `aidd_docs/` sans skill `aidd-` invoqué (sortie : `# aidd-skip: <raison>`) | `rules/aidd.md` | `tests/test-guard-aidd-skill-lookup.sh` |
+
+**La décision vit dans `hooks/`, la traduction dans le wrapper.** Chaque module de `hooks/` expose `decide(event)`, qui rend la raison du refus ou rien. L'événement est neutre : `{event, action: shell|edit|read, command, paths, cwd, session, skills_used}`. `hooks/check.py` lance les gardes sur un événement lu sur stdin et répond `exit 0` (passe), `exit 2` + raison sur stderr (refus) ou `exit 1` (entrée illisible). Les fichiers de `wrappers/claude/hooks/` gardent leur nom et ne font plus que passer par `claude_adapter.py` : payload Claude vers événement, refus vers les deux formes de décision de Claude. Ce qui n'existe que sous Claude reste dans l'adaptateur, c'est-à-dire la lecture du transcript pour `skills_used` et le contrôle de `skipDangerousModePermissionPrompt`.
 
 ```bash
+python3 hooks/tests/test-core.py                       # le cœur, sur l'entrée neutre
 bash wrappers/claude/hooks/tests/test-guard-bash-tooling.sh
 bash wrappers/claude/hooks/tests/test-guard-no-claude-in-commit.sh
 bash wrappers/claude/hooks/tests/test-guard-aidd-skill-lookup.sh
