@@ -64,6 +64,19 @@ paths:
 
 Un skill se déclenche sur sa `description` : la soigner, c'est tout ce qui décide s'il sera choisi ou ignoré.
 
+## Utilisation avec OpenCode
+
+OpenCode reçoit le harnais par les mêmes liens que Claude, posés par `tools/install.py --agent opencode` d'après `tools/manifests/opencode.json` :
+
+| Ce repo | Emplacement dans le dossier de config d'OpenCode |
+|---|---|
+| `skills/*` | `skills/` |
+| `wrappers/opencode/plugins/harness-guards/` | `plugins/harness-guards/` |
+
+Les skills ne passent pas par `skills: [...]` dans un `opencode.jsonc` : un lien sous `skills/` est découvert, mesuré dans le banc, et il n'y a alors aucun fichier de config à générer. Un skill qui porte `disable-model-invocation: true` n'est pas proposé au modèle, comme sous Claude.
+
+Le vivant `~/.config/opencode` n'est pas encore installé, cela viendra avec la bascule (tâche 13 de `audits/2026-10-22-cadrage-harnais-agnostique.md`).
+
 ## Utilisation avec Claude Code
 
 Claude Code découvre ces dossiers automatiquement, sans rien déclarer. Aucun `CLAUDE.md` global n'est nécessaire.
@@ -184,7 +197,7 @@ python3 tools/tests/test-bench-report.py    # calibre le rapport
 
 Le script échoue en code 1 sur une rule chargée hors du banc et du repo, sur un journal vide, ou sur une empreinte de `~/.claude` qui a changé. Un journal vide veut dire que le hook ne s'est pas déclenché, jamais qu'aucune rule ne s'est chargée.
 
-**Le banc OpenCode** vit dans `~/.opencode-bench`, visé par `OPENCODE_CONFIG_DIR`. Il ne prouve pour l'instant que les gardes : la session tente un commit dont le message porte une ligne de co-signature, puis un `ls`. Le rapport (`tools/bench/opencode-report.py`) lit dans `~/.local/share/opencode/opencode.db`, en lecture seule, que le commit a échoué en `permission.rejected` et que `ls` a abouti. Les identifiants d'OpenCode vivent dans cette base, donc le banc n'a pas de connexion à faire. En contrepartie, sa session reste dans l'historique du vivant.
+**Le banc OpenCode** vit dans `~/.opencode-bench`, visé par `OPENCODE_CONFIG_DIR`. La session tente un commit dont le message porte une ligne de co-signature, puis un `ls`. Le rapport (`tools/bench/opencode-report.py`, calibré par `tools/tests/test-opencode-report.py`) lit dans `~/.local/share/opencode/opencode.db`, en lecture seule, que le commit a échoué en `permission.rejected` et que `ls` a abouti. Il lit aussi la liste des skills proposés au modèle (`core/skill-guidance`) : tous les skills auto-invocables du repo doivent y être, et aucun de ceux qui portent `disable-model-invocation: true`. Les identifiants d'OpenCode vivent dans cette base, donc le banc n'a pas de connexion à faire. En contrepartie, sa session reste dans l'historique du vivant.
 
 ```bash
 bash tools/bench.sh opencode                # banc ~/.opencode-bench, ~/.config/opencode jamais touché
