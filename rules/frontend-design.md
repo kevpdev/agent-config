@@ -7,6 +7,8 @@ paths:
 
 # Frontend — bases de design par défaut
 
+**Portée** : ne s'applique qu'en travaillant sur des fichiers de style ou de vue (`.css`, `.scss`, `.html`, `.vue`, `.svelte`, `.tsx`, `.jsx`), des tests `*.spec.ts`, ou une config Tailwind ou Playwright.
+
 Ces règles comblent les trous. Une règle ne s'applique que si le design system ou la convention du repo ne couvre pas le sujet, et seulement si elle n'entre pas en conflit avec lui (`autorite-des-conventions.md`). Avant de choisir une stack ou une valeur, lire `package.json`, les fichiers de config et le design system existant. Agnostique du framework et de la méthode de style.
 
 ## Stack par défaut
