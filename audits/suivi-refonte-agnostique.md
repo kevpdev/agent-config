@@ -26,9 +26,10 @@ Commits et PR suivent les Conventional Commits, sujet en anglais, sans aucune me
 | 3. Banc isolé Claude | #18 | #19 | `8f1ee6a` |
 | 4. Rangement : `wrappers/claude/hooks/`, `tools/` | #21 | #22 | `1b1265b` |
 | 5. Cœur des gardes dans `hooks/`, adaptateur Claude | #23 | #24 | `73cab94` |
-| 6. Plugin OpenCode `harness-guards`, banc OpenCode | #25 | branche `feat/opencode-guards` | à merger |
+| 6. Plugin OpenCode `harness-guards`, banc OpenCode | #25 | #26 | `170bec3` |
+| 7. Skills du repo servis à OpenCode par liens | #27 | branche `feat/opencode-skills` | à merger |
 
-**Prochaine étape** : cadrer la tâche 7 du découpage du cadrage.
+**Prochaine étape** : cadrer la tâche 8, l'`AGENTS.md` global généré depuis `rules/`.
 
 ## La référence de parité
 
@@ -36,9 +37,9 @@ Après chaque tâche, ces commandes doivent rendre ce qui suit :
 
 ```bash
 cd ~/Developpement/Workspaces/agent-config-v2
-bash tools/test-all.sh          # 14 batteries, 0 en échec
+bash tools/test-all.sh          # 15 batteries, 0 en échec
 bash tools/bench.sh claude      # 17 rules d'origine worktree, 26 skills du repo, 6 plugins, 7 hooks résolus, aucune fuite
-bash tools/bench.sh opencode    # commit signé refusé en permission.rejected, ls passe, ~/.config/opencode inchangé
+bash tools/bench.sh opencode    # commit signé refusé en permission.rejected, ls passe, 12 skills auto exposés, 0 des 14 manuels, ~/.config/opencode inchangé
 ```
 
 - Le banc rend 100 skills au total : 26 du repo, 17 intégrés, 47 des plugins AIDD et 10 `anthropic-skills:*` du compte. À la tâche 3, il en rendait 43, parce que `init` ne listait pas encore les skills préfixés. Relancé sur `8f1ee6a`, il rend aussi 100, donc l'écart ne vient pas du repo.
@@ -52,6 +53,8 @@ bash tools/bench.sh opencode    # commit signé refusé en permission.rejected, 
 - `wrappers/claude/settings.json` porte `model: "opus"`.
 - Tâche 6 : le plugin écoute deux hooks. `permission.evaluate` refuse, et `tool.execute.before` lui fournit la commande entière et son `workdir`, que l'évaluation du shell ne porte pas. L'ordre et l'identifiant commun sont lus dans le source d'OpenCode (`packages/core/src/tool.ts`, l. 272, et `tool/plugin/shell.ts`, l. 118-140). Le banc les a confirmés au premier lancement.
 - Tâche 6 : `python3` sort en code 2 sur un script qu'il ne peut pas ouvrir, le même code que le refus de `check.py`. Le plugin vérifie donc que le script existe avant de le lancer. C'est la batterie du plugin qui l'a montré.
+- Tâche 7 : les skills passent à OpenCode par des liens sous `skills/` du dossier de config, pas par `skills: [...]` dans un `opencode.jsonc` comme le prévoyait le cadrage. Mesuré le 2026-10-23 : un skill lié dans `~/.opencode-bench/skills/` apparaît dans `core/skill-guidance`. La génération d'`opencode.jsonc` attend les tâches 9 et 10, qui en ont besoin.
+- Tâche 7, décision pour la bascule (tâche 13) : poser `OPENCODE_DISABLE_CLAUDE_CODE_SKILLS=1` dans `~/.zshrc`. Sans elle, OpenCode verrait les skills du repo deux fois, par `~/.claude/skills` et par ses liens (dédoublonnage supposé, pas mesuré). La coupure retire aussi les 10 skills claude.ai de `~/.claude/skills/synced/`, faits pour l'environnement de claude.ai.
 - Tâche 6 : `install.py --check` sur `~/.claude` rend les mêmes 14 écarts avant et après la tâche, donc la branche `settings` de Claude n'a pas bougé.
 - Tâche 5 : le contrat du cœur est dans `hooks/check.py`. `exit 1` veut dire « entrée illisible », et chaque adaptateur décide quoi en faire. `skills_used: null` veut dire « inconnu », et le garde AIDD laisse alors passer.
 - Tâche 5 : la parité de l'adaptateur Claude a été mesurée sur 963 commandes réelles tirées des transcripts, rejouées contre l'ancien et le nouveau garde. Résultat : 0 écart, et 35 refus identiques des deux côtés. Pour rejouer, il faut reprendre les anciens gardes par `git show 5af25cd:wrappers/claude/hooks/<garde>`.
