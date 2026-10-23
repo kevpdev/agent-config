@@ -66,14 +66,18 @@ Un skill se déclenche sur sa `description` : la soigner, c'est tout ce qui déc
 
 ## Utilisation avec OpenCode
 
-OpenCode reçoit le harnais par les mêmes liens que Claude, posés par `tools/install.py --agent opencode` d'après `tools/manifests/opencode.json` :
+OpenCode reçoit le harnais par `tools/install.py --agent opencode`, d'après `tools/manifests/opencode.json` :
 
-| Ce repo | Emplacement dans le dossier de config d'OpenCode |
+| Ce repo | Dans le dossier de config d'OpenCode |
 |---|---|
-| `skills/*` | `skills/` |
-| `wrappers/opencode/plugins/harness-guards/` | `plugins/harness-guards/` |
+| `skills/*` | liens sous `skills/` |
+| `wrappers/opencode/plugins/harness-guards/` | lien `plugins/harness-guards/` |
+| `rules/*.md` | lus sur place, par `instructions` dans `opencode.json` |
+| `wrappers/opencode/opencode.json` | fusionné dans `opencode.json`, `{repo}` remplacé par la racine du repo |
 
-Les skills ne passent pas par `skills: [...]` dans un `opencode.jsonc` : un lien sous `skills/` est découvert, mesuré dans le banc, et il n'y a alors aucun fichier de config à générer. Un skill qui porte `disable-model-invocation: true` n'est pas proposé au modèle, comme sous Claude.
+Les skills ne passent pas par `skills: [...]` : un lien sous `skills/` est découvert, mesuré dans le banc. Un skill qui porte `disable-model-invocation: true` n'est pas proposé au modèle, comme sous Claude.
+
+Les règles ne passent pas par un `AGENTS.md` généré. OpenCode ne lit ni `~/.claude/rules` ni aucun dossier de règles, mais son tableau `instructions` accepte un glob. Il lit donc `rules/*.md` dans le repo, et une règle modifiée s'applique sans rien régénérer. OpenCode n'a pas de scope par chemin, donc les 4 règles scopées par `paths:` se chargent toujours. Une ligne **Portée** en tête de chacune dit à quels fichiers elle s'applique. Les règles propres à Claude restent hors du glob, dans `wrappers/claude/rules/`.
 
 Le vivant `~/.config/opencode` n'est pas encore installé, cela viendra avec la bascule (tâche 13 de `audits/2026-10-22-cadrage-harnais-agnostique.md`).
 
@@ -197,7 +201,7 @@ python3 tools/tests/test-bench-report.py    # calibre le rapport
 
 Le script échoue en code 1 sur une rule chargée hors du banc et du repo, sur un journal vide, ou sur une empreinte de `~/.claude` qui a changé. Un journal vide veut dire que le hook ne s'est pas déclenché, jamais qu'aucune rule ne s'est chargée.
 
-**Le banc OpenCode** vit dans `~/.opencode-bench`, visé par `OPENCODE_CONFIG_DIR`. La session tente un commit dont le message porte une ligne de co-signature, puis un `ls`. Le rapport (`tools/bench/opencode-report.py`, calibré par `tools/tests/test-opencode-report.py`) lit dans `~/.local/share/opencode/opencode.db`, en lecture seule, que le commit a échoué en `permission.rejected` et que `ls` a abouti. Il lit aussi la liste des skills proposés au modèle (`core/skill-guidance`) : tous les skills auto-invocables du repo doivent y être, et aucun de ceux qui portent `disable-model-invocation: true`. Les identifiants d'OpenCode vivent dans cette base, donc le banc n'a pas de connexion à faire. En contrepartie, sa session reste dans l'historique du vivant.
+**Le banc OpenCode** vit dans `~/.opencode-bench`, visé par `OPENCODE_CONFIG_DIR`. La session tente un commit dont le message porte une ligne de co-signature, puis un `ls`. Le rapport (`tools/bench/opencode-report.py`, calibré par `tools/tests/test-opencode-report.py`) lit dans `~/.local/share/opencode/opencode.db`, en lecture seule, que le commit a échoué en `permission.rejected` et que `ls` a abouti. Il lit aussi la liste des skills proposés au modèle (`core/skill-guidance`) : tous les skills auto-invocables du repo doivent y être, et aucun de ceux qui portent `disable-model-invocation: true`. Il lit enfin les fichiers chargés (`core/instructions`) : chaque `rules/*.md` doit y être. Les identifiants d'OpenCode vivent dans cette base, donc le banc n'a pas de connexion à faire. En contrepartie, sa session reste dans l'historique du vivant.
 
 ```bash
 bash tools/bench.sh opencode                # banc ~/.opencode-bench, ~/.config/opencode jamais touché

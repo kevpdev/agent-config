@@ -39,7 +39,8 @@ def appel(commande: str, status: str, erreur: str | None = None) -> dict:
     return {"type": "tool", "name": "shell", "state": state}
 
 
-def base(tmp: str, appels: list[dict], skills: list[str], dossier: str = DOSSIER) -> str:
+def base(tmp: str, appels: list[dict], skills: list[str], dossier: str = DOSSIER,
+         regles: list[str] | None = None) -> str:
     db = os.path.join(tmp, "opencode.db")
     con = sqlite3.connect(db)
     con.executescript("""
@@ -51,9 +52,12 @@ def base(tmp: str, appels: list[dict], skills: list[str], dossier: str = DOSSIER
     con.execute("insert into session_v2 values ('s1', ?)", (dossier,))
     con.execute("insert into session_message values ('m1', 's1', 'assistant', 1, ?)",
                 (json.dumps({"content": appels}),))
-    con.execute("insert into instruction_state values ('s1', ?)", (json.dumps({"core/skill-guidance": "h1"}),))
+    con.execute("insert into instruction_state values ('s1', ?)",
+                (json.dumps({"core/skill-guidance": "h1", "core/instructions": "h2"}),))
     con.execute("insert into instruction_blob values ('h1', ?)",
                 (json.dumps([{"id": s, "name": s, "description": ""} for s in skills]),))
+    con.execute("insert into instruction_blob values ('h2', ?)",
+                (json.dumps([{"path": p, "content": "x"} for p in regles or []]),))
     con.commit()
     con.close()
     return db
@@ -70,8 +74,18 @@ def skills_du_repo(tmp: str) -> str:
     return racine
 
 
-def lancer(db: str, skills: str | None) -> tuple[int, str]:
+def regles_du_repo(tmp: str) -> str:
+    racine = os.path.join(tmp, "rules")
+    os.makedirs(os.path.join(racine, "references"))  # un dossier, pas une règle
+    for nom in ("style.md", "tooling.md"):
+        with open(os.path.join(racine, nom), "w", encoding="utf-8") as f:
+            f.write("# règle\n")
+    return racine
+
+
+def lancer(db: str, skills: str | None, rules: str | None = None) -> tuple[int, str]:
     argv = [sys.executable, RAPPORT, "--db", db, "--dir", DOSSIER] + (["--skills", skills] if skills else [])
+    argv += ["--rules", rules] if rules else []
     r = subprocess.run(argv, capture_output=True, text=True)
     return r.returncode, r.stdout + r.stderr
 
@@ -105,6 +119,19 @@ with tempfile.TemporaryDirectory() as tmp:
 
     code, sortie = rapport(BONS, ["auto-a", "auto-b"], dossier="/ailleurs")
     cas("aucune session pour le dossier : code 1", code == 1 and "aucune session" in sortie, sortie)
+
+    regles = regles_du_repo(tmp)
+    auto = ["auto-a", "auto-b"]
+
+    def avec_regles(chargees):
+        sous = tempfile.mkdtemp(dir=tmp)
+        return lancer(base(sous, BONS, auto, regles=chargees), racine, regles)
+
+    code, sortie = avec_regles([os.path.join(regles, "style.md"), os.path.join(regles, "tooling.md")])
+    cas("toutes les règles chargées : code 0", code == 0 and "2 règles" in sortie, sortie)
+
+    code, sortie = avec_regles([os.path.join(regles, "style.md")])
+    cas("règle manquante : nommée", code == 1 and "tooling.md" in sortie, sortie)
 
 print(f"{'✓' if not echecs else '✗'} {echecs} échec(s).")
 sys.exit(1 if echecs else 0)

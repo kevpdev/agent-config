@@ -39,8 +39,8 @@ def lancer(cible, *argv, home=None):
     return r.returncode, r.stdout + r.stderr
 
 
-def lire_settings(cible):
-    with open(os.path.join(cible, "settings.json"), encoding="utf-8") as f:
+def lire_settings(cible, nom="settings.json"):
+    with open(os.path.join(cible, nom), encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -181,14 +181,29 @@ def main() -> int:
     code, sortie = lancer("/nulle-part", "--list", "--agent", "inconnu")
     cas("agent inconnu : refusé", code != 0)
 
-    # Un manifeste sans `settings` (OpenCode) pose ses liens et n'écrit aucun settings.json.
+    # OpenCode : sa config s'appelle opencode.json, et `{repo}` y vise la racine des liens.
     with tempfile.TemporaryDirectory() as tmp:
         cible = os.path.join(tmp, "opencode")
         code, sortie = lancer(cible, "--fix", "--agent", "opencode")
-        cas("sans settings : liens posés", code == 0 and os.path.islink(os.path.join(cible, "plugins", "harness-guards")))
-        cas("sans settings : aucun settings.json", not os.path.exists(os.path.join(cible, "settings.json")))
+        cas("opencode : liens posés", code == 0 and os.path.islink(os.path.join(cible, "plugins", "harness-guards")))
+        cas("opencode : aucun settings.json", not os.path.exists(os.path.join(cible, "settings.json")))
+        config = os.path.join(cible, "opencode.json")
+        instructions = lire_settings(cible, "opencode.json").get("instructions") if os.path.exists(config) else None
+        cas("opencode : instructions vise rules/*.md du repo",
+            instructions == [os.path.join(REPO, "rules", "*.md")])
+        with open(config, encoding="utf-8") as f:
+            donnees = json.load(f)
+        donnees["model"] = "machine/choix"
+        with open(config, "w", encoding="utf-8") as f:
+            json.dump(donnees, f)
         code, sortie = lancer(cible, "--check", "--agent", "opencode")
-        cas("sans settings : --check sans écart", code == 0 and "settings.json" not in sortie)
+        cas("opencode : clé machine, --check sans écart", code == 0)
+        code, sortie = lancer(cible, "--fix", "--agent", "opencode")
+        cas("opencode : clé machine conservée après --fix",
+            lire_settings(cible, "opencode.json").get("model") == "machine/choix")
+        code, sortie = lancer(cible, "--check", "--agent", "opencode", "--repo", "/autre/repo")
+        cas("opencode : --repo déplace aussi instructions",
+            code == 1 and "/autre/repo/rules/*.md" in sortie)
 
     print(f"{'✓' if not echecs else '✗'} {echecs} échec(s).")
     return 1 if echecs else 0

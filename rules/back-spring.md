@@ -6,6 +6,8 @@ paths:
 
 # Conventions back — Java / Spring Boot
 
+**Portée** : ne s'applique qu'en travaillant sur des fichiers Java ou un `pom.xml`.
+
 Défauts qui comblent les trous : une règle ne s'applique que si la convention du repo (`aidd_docs/`, code existant) ne couvre pas le sujet (`autorite-des-conventions.md`).
 
 ## Contrôles
