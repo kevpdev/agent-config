@@ -17,11 +17,13 @@
 # Usage
 #   bash tools/bench.sh claude                 banc ~/.claude-bench
 #   bash tools/bench.sh claude --dir DIR       autre dossier
+#   bash tools/bench.sh opencode [--dir DIR]   banc ~/.opencode-bench, cf. tools/bench/opencode.sh
 set -uo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 AGENT="${1:-}"
 shift || true
+[ "$AGENT" = "opencode" ] && exec bash "$REPO/tools/bench/opencode.sh" "$@"
 BANC="$HOME/.claude-bench"
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -31,7 +33,7 @@ while [ $# -gt 0 ]; do
 done
 
 if [ "$AGENT" != "claude" ]; then
-    echo "bench — agent non pris en charge : « $AGENT ». Seul « claude » l'est, OpenCode arrive à la tâche 6." >&2
+    echo "bench — agent non pris en charge : « $AGENT ». Connus : claude, opencode." >&2
     exit 1
 fi
 
