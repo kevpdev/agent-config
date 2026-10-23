@@ -1,0 +1,6 @@
+{
+  "_doc": "Liens que tools/install.py pose dans un dossier de config d'OpenCode (OPENCODE_CONFIG_DIR). Pas de clé settings : OpenCode charge seul tout plugin placé sous plugins/, sans fichier de config à fusionner.",
+  "entrees": [
+    {"mode": "link", "source": "wrappers/opencode/plugins/harness-guards", "cible": "plugins/harness-guards"}
+  ]
+}

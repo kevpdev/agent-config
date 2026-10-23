@@ -178,8 +178,17 @@ def main() -> int:
         cas("--repo : les liens visent l'autre repo",
             code == 1 and "MAUVAISE CIBLE" in sortie and "/autre/repo/" in sortie)
 
-    code, sortie = lancer("/nulle-part", "--list", "--agent", "opencode")
+    code, sortie = lancer("/nulle-part", "--list", "--agent", "inconnu")
     cas("agent inconnu : refusé", code != 0)
+
+    # Un manifeste sans `settings` (OpenCode) pose ses liens et n'écrit aucun settings.json.
+    with tempfile.TemporaryDirectory() as tmp:
+        cible = os.path.join(tmp, "opencode")
+        code, sortie = lancer(cible, "--fix", "--agent", "opencode")
+        cas("sans settings : liens posés", code == 0 and os.path.islink(os.path.join(cible, "plugins", "harness-guards")))
+        cas("sans settings : aucun settings.json", not os.path.exists(os.path.join(cible, "settings.json")))
+        code, sortie = lancer(cible, "--check", "--agent", "opencode")
+        cas("sans settings : --check sans écart", code == 0 and "settings.json" not in sortie)
 
     print(f"{'✓' if not echecs else '✗'} {echecs} échec(s).")
     return 1 if echecs else 0
