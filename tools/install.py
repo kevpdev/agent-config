@@ -9,8 +9,11 @@ POURQUOI CE SCRIPT
     principal (audits/2026-10-22-cadrage-harnais-agnostique.md, Q0).
 
     Ce script lit le manifeste de l'agent (`tools/manifests/<agent>.json`), pose un
-    lien par entrée, et fusionne `settings.json` après avoir réécrit le préfixe
-    `~/.claude/` des commandes vers la cible.
+    lien par entrée, et fusionne le fichier de config déclaré par sa clé `settings`.
+    La cible porte le nom de la source : `settings.json` pour Claude, `opencode.json`
+    pour OpenCode. Avant la fusion, deux réécritures : le préfixe `~/.claude/` des
+    commandes vers la cible, et `{repo}` vers la racine des sources de liens. OpenCode
+    s'en sert pour lire `rules/*.md` dans le repo par `instructions`.
 
 ÉCARTS, avec les mots de `sync-rules.sh`
     ABSENT          le lien attendu n'existe pas
@@ -29,8 +32,8 @@ Usage
     python3 tools/install.py --agent claude --target ~/.claude --fix      installe
     python3 tools/install.py --agent claude --target DIR --list           liens attendus
 
---repo remplace la racine des sources de liens, et seulement elle. Le manifeste et
-settings.json se lisent toujours dans le repo du script. Sert à vérifier depuis un
+--repo remplace la racine des sources de liens, et `{repo}` avec elle. Le manifeste et
+le gabarit de config se lisent toujours dans le repo du script. Sert à vérifier depuis un
 worktree une config qui vise le checkout principal.
 """
 
@@ -149,6 +152,15 @@ def reecrire_chemins(valeur, prefixe: str):
     return valeur
 
 
+def reecrire_repo(valeur, repo: str):
+    """Remplace `{repo}` par la racine des sources de liens, dans toutes les chaînes."""
+    if isinstance(valeur, dict):
+        return {k: reecrire_repo(v, repo) for k, v in valeur.items()}
+    if isinstance(valeur, list):
+        return [reecrire_repo(v, repo) for v in valeur]
+    return valeur.replace("{repo}", repo) if isinstance(valeur, str) else valeur
+
+
 def charger_sync_settings():
     spec = importlib.util.spec_from_file_location("sync_settings", SYNC_SETTINGS)
     module = importlib.util.module_from_spec(spec)
@@ -156,22 +168,22 @@ def charger_sync_settings():
     return module
 
 
-def verifier_settings(cible: str, manifeste: dict, fix: bool):
-    # Un manifeste sans `settings` n'a rien à fusionner : OpenCode charge ses plugins
-    # depuis plugins/ sans fichier de config.
+def verifier_settings(cible: str, manifeste: dict, repo_liens: str, fix: bool):
+    # Un manifeste sans `settings` n'a rien à fusionner.
     if "settings" not in manifeste:
         return [], []
     sync = charger_sync_settings()
+    nom = os.path.basename(manifeste["settings"])
     repo = sync.charger(os.path.join(REPO, manifeste["settings"]))
-    repo = reecrire_chemins(repo, rendre_cible(cible) + "/")
-    fichier = os.path.join(cible, "settings.json")
+    repo = reecrire_repo(reecrire_chemins(repo, rendre_cible(cible) + "/"), repo_liens)
+    fichier = os.path.join(cible, nom)
     machine = sync.charger(fichier, absent_ok=True)
     resultat, ecarts = sync.fusionner(repo, machine)
     if fix and ecarts:
         os.makedirs(cible, exist_ok=True)
         sync.ecrire(fichier, resultat)
-        return [], [f"appliqué   settings.json {e}" for e in ecarts]
-    return [f"ÉCART  settings.json {e}" for e in ecarts], []
+        return [], [f"appliqué   {nom} {e}" for e in ecarts]
+    return [f"ÉCART  {nom} {e}" for e in ecarts], []
 
 
 def main(argv: list[str]) -> int:
@@ -196,14 +208,14 @@ def main(argv: list[str]) -> int:
         return 0
 
     ecarts, faits = verifier_liens(cible, manifeste, attendus, repo_liens, args.fix)
-    e_settings, f_settings = verifier_settings(cible, manifeste, args.fix)
+    e_settings, f_settings = verifier_settings(cible, manifeste, repo_liens, args.fix)
     ecarts += e_settings
     faits += f_settings
 
     for f in faits:
         print(f"  {f}")
     if not ecarts:
-        quoi = " et settings.json" if "settings" in manifeste else ""
+        quoi = f" et {os.path.basename(manifeste['settings'])}" if "settings" in manifeste else ""
         print(f"✓ {cible} : {len(attendus)} liens{quoi}, aucun écart.")
         return 0
     for e in ecarts:
