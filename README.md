@@ -18,6 +18,9 @@ wrappers/
   claude/           tout ce qui ne fonctionne que sous Claude Code
     hooks/          adaptateur Claude des gardes et leurs batteries
     scripts/        détecteur AIDD, statusline, anciens scripts de synchro
+  opencode/         tout ce qui ne fonctionne que sous OpenCode
+    plugins/        plugin harness-guards, adaptateur OpenCode des gardes
+    tests/          sa batterie, lancée par node
 ```
 
 Toutes les batteries se lancent d'une commande, qui échoue si une seule échoue :
@@ -179,7 +182,13 @@ python3 tools/tests/test-bench-report.py    # calibre le rapport
    ✓ rapport rendu, ~/.claude inchangé
 ```
 
-Le script échoue en code 1 sur une rule chargée hors du banc et du repo, sur un journal vide, ou sur une empreinte de `~/.claude` qui a changé. Un journal vide veut dire que le hook ne s'est pas déclenché, jamais qu'aucune rule ne s'est chargée. Le banc OpenCode n'existe pas encore.
+Le script échoue en code 1 sur une rule chargée hors du banc et du repo, sur un journal vide, ou sur une empreinte de `~/.claude` qui a changé. Un journal vide veut dire que le hook ne s'est pas déclenché, jamais qu'aucune rule ne s'est chargée.
+
+**Le banc OpenCode** vit dans `~/.opencode-bench`, visé par `OPENCODE_CONFIG_DIR`. Il ne prouve pour l'instant que les gardes : la session tente un commit dont le message porte une ligne de co-signature, puis un `ls`. Le rapport (`tools/bench/opencode-report.py`) lit dans `~/.local/share/opencode/opencode.db`, en lecture seule, que le commit a échoué en `permission.rejected` et que `ls` a abouti. Les identifiants d'OpenCode vivent dans cette base, donc le banc n'a pas de connexion à faire. En contrepartie, sa session reste dans l'historique du vivant.
+
+```bash
+bash tools/bench.sh opencode                # banc ~/.opencode-bench, ~/.config/opencode jamais touché
+```
 
 ### Les gardes déterministes
 
@@ -194,8 +203,11 @@ Quatre hooks `PreToolUse` refusent à l'appel ce qu'une règle de prose ne tenai
 
 **La décision vit dans `hooks/`, la traduction dans le wrapper.** Chaque module de `hooks/` expose `decide(event)`, qui rend la raison du refus ou rien. L'événement est neutre : `{event, action: shell|edit|read, command, paths, cwd, session, skills_used}`. `hooks/check.py` lance les gardes sur un événement lu sur stdin et répond `exit 0` (passe), `exit 2` + raison sur stderr (refus) ou `exit 1` (entrée illisible). Les fichiers de `wrappers/claude/hooks/` gardent leur nom et ne font plus que passer par `claude_adapter.py` : payload Claude vers événement, refus vers les deux formes de décision de Claude. Ce qui n'existe que sous Claude reste dans l'adaptateur, c'est-à-dire la lecture du transcript pour `skills_used` et le contrôle de `skipDangerousModePermissionPrompt`.
 
+**Sous OpenCode, le plugin `wrappers/opencode/plugins/harness-guards/` appelle le même `hooks/check.py`.** Il refuse dans `permission.evaluate`, mais ce hook ne reçoit pour le shell que les commandes simples, sans `cd` ni dossier courant. Le plugin retient donc dans `tool.execute.before` la commande entière et son `workdir`, puis les retrouve par l'identifiant d'appel. Si `check.py` ne rend pas de verdict, l'appel passe et l'erreur part dans le journal. `skills_used` vaut `null`, donc le garde AIDD ne refuse jamais sous OpenCode.
+
 ```bash
 python3 hooks/tests/test-core.py                       # le cœur, sur l'entrée neutre
+node wrappers/opencode/tests/test-harness-guards.ts    # le plugin OpenCode, hors d'OpenCode
 bash wrappers/claude/hooks/tests/test-guard-bash-tooling.sh
 bash wrappers/claude/hooks/tests/test-guard-no-claude-in-commit.sh
 bash wrappers/claude/hooks/tests/test-guard-aidd-skill-lookup.sh

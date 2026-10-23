@@ -25,9 +25,10 @@ Commits et PR suivent les Conventional Commits, sujet en anglais, sans aucune me
 | 2. `tools/install.py` et manifeste Claude | #16 | #17 | `69b4751` |
 | 3. Banc isolé Claude | #18 | #19 | `8f1ee6a` |
 | 4. Rangement : `wrappers/claude/hooks/`, `tools/` | #21 | #22 | `1b1265b` |
-| 5. Cœur des gardes dans `hooks/`, adaptateur Claude | #23 | branche `refactor/guard-core` | à merger |
+| 5. Cœur des gardes dans `hooks/`, adaptateur Claude | #23 | #24 | `73cab94` |
+| 6. Plugin OpenCode `harness-guards`, banc OpenCode | #25 | branche `feat/opencode-guards` | à merger |
 
-**Prochaine étape** : cadrer la tâche 6, le plugin OpenCode `harness-guards` sur `permission.evaluate`, qui appelle `hooks/check.py`. Elle ouvre aussi le banc OpenCode, reporté jusque-là.
+**Prochaine étape** : cadrer la tâche 7 du découpage du cadrage.
 
 ## La référence de parité
 
@@ -35,8 +36,9 @@ Après chaque tâche, ces commandes doivent rendre ce qui suit :
 
 ```bash
 cd ~/Developpement/Workspaces/agent-config-v2
-bash tools/test-all.sh          # 13 batteries, 0 en échec
+bash tools/test-all.sh          # 14 batteries, 0 en échec
 bash tools/bench.sh claude      # 17 rules d'origine worktree, 26 skills du repo, 6 plugins, 7 hooks résolus, aucune fuite
+bash tools/bench.sh opencode    # commit signé refusé en permission.rejected, ls passe, ~/.config/opencode inchangé
 ```
 
 - Le banc rend 100 skills au total : 26 du repo, 17 intégrés, 47 des plugins AIDD et 10 `anthropic-skills:*` du compte. À la tâche 3, il en rendait 43, parce que `init` ne listait pas encore les skills préfixés. Relancé sur `8f1ee6a`, il rend aussi 100, donc l'écart ne vient pas du repo.
@@ -48,7 +50,9 @@ bash tools/bench.sh claude      # 17 rules d'origine worktree, 26 skills du repo
 - La disposition installée sous `~/.claude/scripts/` ne change pas avant la bascule. Ce sont les `source` du manifeste qui ont bougé, pas les cibles.
 - `sync-rules.sh` et `sync-settings.py` restent jusqu'à la tâche 13, parce que `install.py` importe `sync-settings.py`.
 - `wrappers/claude/settings.json` porte `model: "opus"`.
-- Le banc OpenCode est reporté à la tâche 6.
+- Tâche 6 : le plugin écoute deux hooks. `permission.evaluate` refuse, et `tool.execute.before` lui fournit la commande entière et son `workdir`, que l'évaluation du shell ne porte pas. L'ordre et l'identifiant commun sont lus dans le source d'OpenCode (`packages/core/src/tool.ts`, l. 272, et `tool/plugin/shell.ts`, l. 118-140). Le banc les a confirmés au premier lancement.
+- Tâche 6 : `python3` sort en code 2 sur un script qu'il ne peut pas ouvrir, le même code que le refus de `check.py`. Le plugin vérifie donc que le script existe avant de le lancer. C'est la batterie du plugin qui l'a montré.
+- Tâche 6 : `install.py --check` sur `~/.claude` rend les mêmes 14 écarts avant et après la tâche, donc la branche `settings` de Claude n'a pas bougé.
 - Tâche 5 : le contrat du cœur est dans `hooks/check.py`. `exit 1` veut dire « entrée illisible », et chaque adaptateur décide quoi en faire. `skills_used: null` veut dire « inconnu », et le garde AIDD laisse alors passer.
 - Tâche 5 : la parité de l'adaptateur Claude a été mesurée sur 963 commandes réelles tirées des transcripts, rejouées contre l'ancien et le nouveau garde. Résultat : 0 écart, et 35 refus identiques des deux côtés. Pour rejouer, il faut reprendre les anciens gardes par `git show 5af25cd:wrappers/claude/hooks/<garde>`.
 - `git commit -m "fix: Claude"` **passe**, avant comme après la tâche 5 : nommer Claude n'est pas signer. Le critère de la tâche 6 dans le cadrage et la QA de l'issue #23 se testent donc avec `Co-Authored-By: Claude`.
@@ -59,3 +63,4 @@ bash tools/bench.sh claude      # 17 rules d'origine worktree, 26 skills du repo
 - Les plugins AIDD du banc sont plus récents que ceux du vivant, par exemple `aidd-vcs` 2.5.0 contre 2.4.0. C'est noté, pas corrigé.
 - Le garde de mention d'IA ne couvre ni `gh api …/pulls`, ni `gh pr comment`, ni le format du titre de PR.
 - Les branches mergées (`refactor/repo-layout`, `feat/claude-bench`, etc.) existent encore sur le dépôt distant.
+- `skills_used` sous OpenCode : l'outil `skill` laisse `input.id` dans `opencode.db`, donc le plugin pourrait suivre les skills lancés. Tant que ce n'est pas fait, le garde AIDD ne refuse jamais sous OpenCode.
