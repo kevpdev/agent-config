@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # opencode.sh — branche OpenCode de tools/bench.sh. Installe le worktree dans un dossier de
 # config à part, lance une session qui tente un commit signé puis un `ls`, et lit dans
-# opencode.db ce que le plugin harness-guards en a fait. `~/.config/opencode` n'est jamais
-# touché.
+# opencode.db ce que le plugin harness-guards en a fait, et quels skills la session expose.
+# `~/.config/opencode` n'est jamais touché.
 #
 # POURQUOI CES VARIABLES
 #   OPENCODE_CONFIG_DIR           le banc, fouillé pour ses plugins comme un `.opencode`
@@ -73,7 +73,7 @@ rc_session=$?
 [ "$rc_session" -ne 0 ] && { echo "bench — session en code $rc_session :" >&2; tail -5 "$RUN/run.err" >&2; }
 
 # 4. Le rapport, lu dans la base.
-python3 "$REPO/tools/bench/opencode-report.py" --dir "$DEPOT"
+python3 "$REPO/tools/bench/opencode-report.py" --dir "$DEPOT" --skills "$REPO/skills"
 rc=$?
 
 # 5. ~/.config/opencode n'a pas bougé.
