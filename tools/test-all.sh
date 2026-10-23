@@ -2,8 +2,8 @@
 # test-all.sh — lance toutes les batteries du repo, une par une, et échoue si une seule échoue.
 #
 # POURQUOI CE SCRIPT
-#   Les batteries vivent à quatre endroits (tools/tests, hooks/tests, wrappers/claude/hooks/tests,
-#   wrappers/claude/scripts/tests). Lancées à la main, une batterie oubliée passe pour verte.
+#   Les batteries vivent à cinq endroits (tools/tests, hooks/tests, wrappers/claude/hooks/tests,
+#   wrappers/claude/scripts/tests, wrappers/opencode/tests). Celles en `.ts` passent par `node`. Lancées à la main, une batterie oubliée passe pour verte.
 #   Ici, elles sont découvertes par leur nom `test-*`, et le nombre trouvé est affiché :
 #   une batterie qui disparaît se voit au compte.
 #
@@ -21,6 +21,7 @@ while IFS= read -r t; do
     case "$t" in
         *.py) python3 "$t" > "$SORTIE" 2>&1 ;;
         *.sh) bash "$t" > "$SORTIE" 2>&1 ;;
+        *.ts) node "$t" > "$SORTIE" 2>&1 ;;
         *) continue ;;
     esac
     rc=$?
@@ -33,6 +34,7 @@ while IFS= read -r t; do
         tail -15 "$SORTIE" | sed 's/^/        /'
     fi
 done < <(find "$REPO/tools/tests" "$REPO/hooks/tests" "$REPO/wrappers/claude/hooks/tests" "$REPO/wrappers/claude/scripts/tests" \
+    "$REPO/wrappers/opencode/tests" \
     -maxdepth 1 -type f -name 'test-*' | sort)
 
 if [ "$total" -eq 0 ]; then
