@@ -157,6 +157,10 @@ def charger_sync_settings():
 
 
 def verifier_settings(cible: str, manifeste: dict, fix: bool):
+    # Un manifeste sans `settings` n'a rien à fusionner : OpenCode charge ses plugins
+    # depuis plugins/ sans fichier de config.
+    if "settings" not in manifeste:
+        return [], []
     sync = charger_sync_settings()
     repo = sync.charger(os.path.join(REPO, manifeste["settings"]))
     repo = reecrire_chemins(repo, rendre_cible(cible) + "/")
@@ -199,7 +203,8 @@ def main(argv: list[str]) -> int:
     for f in faits:
         print(f"  {f}")
     if not ecarts:
-        print(f"✓ {cible} : {len(attendus)} liens et settings.json, aucun écart.")
+        quoi = " et settings.json" if "settings" in manifeste else ""
+        print(f"✓ {cible} : {len(attendus)} liens{quoi}, aucun écart.")
         return 0
     for e in ecarts:
         print(f"  {e}", file=sys.stderr)
