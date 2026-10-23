@@ -15,7 +15,9 @@ POURQUOI LIRE LA BASE
 Ce qui est vérifié :
     1. le commit signé est refusé, et `ls` passe ;
     2. avec --skills : les skills auto-invocables du repo sont exposés, et aucun de ceux qui
-       portent `disable-model-invocation: true`.
+       portent `disable-model-invocation: true` ;
+    3. avec --rules : chaque `rules/*.md` est dans `core/instructions`, chargé par le
+       tableau `instructions` d'opencode.json. Cette liste porte `[{path, content}]`.
 
 La base est ouverte en lecture seule. La session est celle dont `directory` est le dépôt
 jetable du banc, qui n'existe que le temps d'un lancement.
@@ -66,6 +68,28 @@ def skills_vus(con, sessions: list[str]) -> set[str]:
         if blob:
             vus |= {s["id"] for s in json.loads(blob[0])}
     return vus
+
+
+def instructions_vues(con, sessions: list[str]) -> set[str]:
+    """Les chemins de `core/instructions`, en realpath, toutes sessions confondues."""
+    vues: set[str] = set()
+    for sid in sessions:
+        r = con.execute("select initial_values from instruction_state where session_id = ?", (sid,)).fetchone()
+        h = json.loads(r[0]).get("core/instructions") if r else None
+        blob = con.execute("select value from instruction_blob where hash = ?", (h,)).fetchone() if h else None
+        if blob:
+            vues |= {os.path.realpath(i["path"]) for i in json.loads(blob[0])}
+    return vues
+
+
+def verifier_rules(vues: set[str], dossier: str) -> int:
+    attendues = {os.path.realpath(os.path.join(dossier, f)) for f in os.listdir(dossier) if f.endswith(".md")}
+    manquantes = sorted(os.path.basename(f) for f in attendues - vues)
+    if manquantes:
+        print(f"✗ {len(manquantes)} règle(s) absente(s) de core/instructions : {', '.join(manquantes)}")
+        return 1
+    print(f"✓ {len(attendues)} règles chargées par instructions.")
+    return 0
 
 
 def skills_attendus(dossier: str) -> tuple[set[str], set[str]]:
@@ -123,6 +147,7 @@ def main(argv=None) -> int:
     p.add_argument("--db", default=os.path.expanduser("~/.local/share/opencode/opencode.db"))
     p.add_argument("--dir", required=True, help="dossier de travail de la session du banc")
     p.add_argument("--skills", help="dossier skills/ du repo, pour vérifier les skills exposés")
+    p.add_argument("--rules", help="dossier rules/ du repo, pour vérifier les règles chargées")
     args = p.parse_args(argv)
 
     con = ouvrir(args.db)
@@ -134,6 +159,8 @@ def main(argv=None) -> int:
     echecs = verifier_gardes(appels_shell(con, sessions))
     if args.skills:
         echecs += verifier_skills(skills_vus(con, sessions), *skills_attendus(args.skills))
+    if args.rules:
+        echecs += verifier_rules(instructions_vues(con, sessions), args.rules)
     return 1 if echecs else 0
 
 

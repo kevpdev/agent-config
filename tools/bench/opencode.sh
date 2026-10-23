@@ -73,7 +73,7 @@ rc_session=$?
 [ "$rc_session" -ne 0 ] && { echo "bench — session en code $rc_session :" >&2; tail -5 "$RUN/run.err" >&2; }
 
 # 4. Le rapport, lu dans la base.
-python3 "$REPO/tools/bench/opencode-report.py" --dir "$DEPOT" --skills "$REPO/skills"
+python3 "$REPO/tools/bench/opencode-report.py" --dir "$DEPOT" --skills "$REPO/skills" --rules "$REPO/rules"
 rc=$?
 
 # 5. ~/.config/opencode n'a pas bougé.
