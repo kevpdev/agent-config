@@ -6,8 +6,10 @@
 # Les deux formes sont mesurées le 2026-10-26 sur un leurre hors du home : Claude refuse
 # en bypassPermissions, OpenCode refuse sous --auto (« Blocked by configuration policy »).
 #
-# CE QUE ÇA NE COUVRE PAS : une lecture par le shell. Mesuré sous OpenCode, `cat` sur le
-# même leurre passe. Une règle `read` ne voit que l'outil de lecture.
+# CE QUE ÇA NE COUVRE PAS SOUS OPENCODE : une lecture par le shell. Mesuré, `cat` sur le
+# même leurre passe et le témoin sort, parce qu'une règle `read` ne voit que l'outil de
+# lecture. Sous Claude, le même `cat` est refusé : la règle Read s'étend à une commande
+# Bash qui lit le fichier. Mesuré une fois, sans garantie écrite dans la doc.
 #
 # `sauf` lève l'interdit pour une fin plus précise. OpenCode le traduit par un `allow` après
 # le `deny`. Claude ne sait pas faire d'exception (un deny gagne toujours), donc une entrée

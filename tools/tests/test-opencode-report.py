@@ -39,6 +39,13 @@ def appel(commande: str, status: str, erreur: str | None = None) -> dict:
     return {"type": "tool", "name": "shell", "state": state}
 
 
+def lecture(chemin: str, status: str, sortie: str = "") -> dict:
+    state = {"status": status, "input": {"path": chemin}, "output": sortie}
+    if status == "error":
+        state["error"] = {"type": "permission.rejected", "message": "Blocked by configuration policy"}
+    return {"type": "tool", "name": "read", "state": state}
+
+
 def base(tmp: str, appels: list[dict], skills: list[str], dossier: str = DOSSIER,
          regles: list[str] | None = None) -> str:
     db = os.path.join(tmp, "opencode.db")
@@ -83,13 +90,15 @@ def regles_du_repo(tmp: str) -> str:
     return racine
 
 
-def lancer(db: str, skills: str | None, rules: str | None = None) -> tuple[int, str]:
+def lancer(db: str, skills: str | None, rules: str | None = None, leurre: bool = False) -> tuple[int, str]:
     argv = [sys.executable, RAPPORT, "--db", db, "--dir", DOSSIER] + (["--skills", skills] if skills else [])
     argv += ["--rules", rules] if rules else []
+    argv += ["--leurre", LEURRE, "--temoin", TEMOIN] if leurre else []
     r = subprocess.run(argv, capture_output=True, text=True)
     return r.returncode, r.stdout + r.stderr
 
 
+LEURRE, TEMOIN = "/tmp/leurre/.config/opencode/service.json", "temoin-0123"
 BONS = [appel("git commit --allow-empty -F msg.txt", "error", "permission.rejected"), appel("ls", "completed")]
 
 with tempfile.TemporaryDirectory() as tmp:
@@ -132,6 +141,23 @@ with tempfile.TemporaryDirectory() as tmp:
 
     code, sortie = avec_regles([os.path.join(regles, "style.md")])
     cas("règle manquante : nommée", code == 1 and "tooling.md" in sortie, sortie)
+
+    def avec_leurre(appels):
+        sous = tempfile.mkdtemp(dir=tmp)
+        return lancer(base(sous, BONS + appels, auto), racine, leurre=True)
+
+    cat = appel(f"cat {LEURRE}", "completed")
+    cat["state"]["output"] = TEMOIN
+    code, sortie = avec_leurre([lecture(LEURRE, "error"), cat])
+    cas("read du leurre refusé, cat consigné : code 0",
+        code == 0 and "read du leurre refusé" in sortie and "le témoin sort" in sortie, sortie)
+
+    code, sortie = avec_leurre([lecture(LEURRE, "completed", TEMOIN)])
+    cas("read du leurre abouti avec le témoin : code 1",
+        code == 1 and "témoin du leurre est sorti" in sortie, sortie)
+
+    code, sortie = avec_leurre([])
+    cas("read du leurre absent : code 1", code == 1 and "aucun read sur le leurre" in sortie, sortie)
 
 print(f"{'✓' if not echecs else '✗'} {echecs} échec(s).")
 sys.exit(1 if echecs else 0)
