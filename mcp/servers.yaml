@@ -1,0 +1,27 @@
+# Serveurs MCP, déclarés une fois pour les deux agents.
+#
+# Un serveur est un programme. Chaque agent garde un carnet qui dit comment le lancer, et
+# tools/install.py remplit les deux carnets à partir de ce fichier :
+#   Claude    .claude.json (mcpServers) : écrit par l'installateur du serveur, `installateur.claude`
+#   OpenCode  opencode.json (mcp.servers) : écrit par install.py, `type: local` et `commande`
+#
+# POURQUOI CLAUDE DÉLÈGUE : `codegraph install` 1.6.2 respecte CLAUDE_CONFIG_DIR, mesuré le
+# 2026-10-26 dans un HOME jetable. Il pose l'entrée du carnet, mais aussi l'allow
+# `mcp__codegraph__*` et le hook `codegraph prompt-hook` de settings.json, et sa section de
+# CLAUDE.md. Recopier ces trois effets ici les ferait diverger à sa prochaine version.
+# `.claude.json` est en plus un fichier que Claude réécrit pendant qu'il tourne.
+#
+# POURQUOI OPENCODE NE DÉLÈGUE PAS : le même installateur ignore OPENCODE_CONFIG_DIR et écrit
+# toujours ~/.config/opencode, mesuré le même jour. Lancé pour un banc, il modifierait le
+# vivant. L'entrée reprend la forme de `codegraph install --print-config opencode`.
+#
+# Champs : nom, commande (liste), raison, installateur.claude (liste, exigé), opencode
+# (optionnel, clés ajoutées telles quelles à l'entrée OpenCode).
+
+- nom: codegraph
+  commande: [codegraph, serve, --mcp]
+  raison: graphe des symboles d'un repo indexé, rayon d'impact avant de changer une fonction (rules/codegraph.md).
+  installateur:
+    claude: [codegraph, install, -t, claude, -l, global, -y]
+  opencode:
+    codemode: false

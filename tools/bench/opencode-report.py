@@ -21,6 +21,9 @@ Ce qui est vérifié :
     4. avec --leurre et --temoin : l'outil `read` sur le leurre est refusé, et le témoin
        n'apparaît pas dans son état. Ce que fait `cat` sur le même leurre est consigné sans
        compter comme un échec : une règle `read` ne couvre pas le shell (policy/deny.yaml).
+    5. avec --mcp NOM : la session a appelé un outil `NOM_…`, abouti ou en erreur. La base
+       ne garde pas la liste des outils exposés, donc l'appel est la seule preuve que le
+       serveur était branché. Une erreur suffit : l'outil existait.
 
 La base est ouverte en lecture seule. La session est celle dont `directory` est le dépôt
 jetable du banc, qui n'existe que le temps d'un lancement.
@@ -157,6 +160,28 @@ def verifier_lecture(lectures: list[dict], shells: list[dict], leurre: str, temo
     return echecs
 
 
+def outils_mcp(con, sessions: list[str], nom: str) -> list[tuple[str, str]]:
+    """[(outil, statut)] des appels dont le nom commence par `NOM_`."""
+    out = []
+    for sid in sessions:
+        for (data,) in con.execute(
+                "select data from session_message where session_id = ? and type = 'assistant' order by seq",
+                (sid,)):
+            for item in json.loads(data).get("content", []):
+                if item.get("type") == "tool" and str(item.get("name", "")).startswith(f"{nom}_"):
+                    out.append((item["name"], item.get("state", {}).get("status", "?")))
+    return out
+
+
+def verifier_mcp(vus: list[tuple[str, str]], nom: str) -> int:
+    termines = [(o, s) for o, s in vus if s in ("completed", "error")]
+    if termines:
+        print(f"✓ serveur MCP {nom} branché : {termines[0][0]} appelé ({termines[0][1]}).")
+        return 0
+    print(f"✗ aucun appel d'un outil {nom}_… : le serveur n'est pas branché, ou le modèle ne l'a pas lancé.")
+    return 1
+
+
 def verifier_skills(vus: set[str], auto: set[str], manuels: set[str]) -> int:
     manquants, intrus = sorted(auto - vus), sorted(manuels & vus)
     if not manquants:
@@ -178,6 +203,7 @@ def main(argv=None) -> int:
     p.add_argument("--rules", help="dossier rules/ du repo, pour vérifier les règles chargées")
     p.add_argument("--leurre", help="chemin d'un faux secret visé par policy/deny.yaml")
     p.add_argument("--temoin", help="mot écrit dans le leurre, qui ne doit pas sortir par read")
+    p.add_argument("--mcp", action="append", default=[], help="serveur MCP dont un outil doit avoir été appelé")
     args = p.parse_args(argv)
 
     con = ouvrir(args.db)
@@ -194,6 +220,8 @@ def main(argv=None) -> int:
         echecs += verifier_rules(instructions_vues(con, sessions), args.rules)
     if args.leurre and args.temoin:
         echecs += verifier_lecture(appels(con, sessions, "read"), shells, args.leurre, args.temoin)
+    for nom in args.mcp:
+        echecs += verifier_mcp(outils_mcp(con, sessions, nom), nom)
     return 1 if echecs else 0
 
 

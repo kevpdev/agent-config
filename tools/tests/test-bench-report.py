@@ -26,7 +26,7 @@ def ecrire(chemin, texte):
         f.write(texte)
 
 
-def flux(skills=("mermaid-craft", "aidd-dev:01-plan"), init=True):
+def flux(skills=("mermaid-craft", "aidd-dev:01-plan"), init=True, mcp=None, outils=()):
     lignes = []
     if init:
         lignes.append(json.dumps({
@@ -34,6 +34,8 @@ def flux(skills=("mermaid-craft", "aidd-dev:01-plan"), init=True):
             "plugins": [{"name": "aidd-vcs", "path": "/p/aidd-vcs", "version": "2.5.0"},
                         {"name": "cc-plugin-telemetry", "path": "builtin"}],
             "slash_commands": ["loop", "aidd-vcs:01-commit", "aidd-vcs:02-pull-request"],
+            "mcp_servers": [{"name": n, "status": s} for n, s in (mcp or {}).items()],
+            "tools": ["Read", "Bash", *outils],
         }))
     lignes.append(json.dumps({"type": "result", "result": "ok"}))
     return "\n".join(lignes) + "\n"
@@ -44,7 +46,7 @@ def reglages(commandes):
         {"type": "command", "command": c} for c in commandes]}]}})
 
 
-def lancer(racine, texte_flux, texte_journal, banc, texte_reglages=None):
+def lancer(racine, texte_flux, texte_journal, banc, texte_reglages=None, mcp=()):
     f = os.path.join(racine, "run.jsonl")
     j = os.path.join(racine, "instructions.log")
     ecrire(f, texte_flux)
@@ -54,6 +56,8 @@ def lancer(racine, texte_flux, texte_journal, banc, texte_reglages=None):
         s = os.path.join(racine, "settings.json")
         ecrire(s, texte_reglages)
         cmd += ["--settings", s]
+    for nom in mcp:
+        cmd += ["--mcp", nom]
     r = subprocess.run(cmd, capture_output=True, text=True)
     return r.returncode, r.stdout + r.stderr
 
@@ -133,6 +137,23 @@ def main() -> int:
         os.symlink(dehors, hook_sortant)
         code, sortie = lancer(racine, flux(), sain, banc, reglages([f"bash {hook_sortant}"]))
         cas("hook hors worktree : sort en 1", code == 1 and "hook introuvable" in sortie and "sortant.sh" in sortie)
+
+        # Un hook posé par l'installateur d'un serveur : une commande du PATH, sans chemin.
+        code, sortie = lancer(racine, flux(), sain, banc, reglages(["python3 -c pass"]))
+        cas("hook de la machine sur le PATH : sort en 0", code == 0 and "machine  python3 -c pass" in sortie)
+        code, sortie = lancer(racine, flux(), sain, banc, reglages(["commande-qui-nexiste-pas prompt-hook"]))
+        cas("hook sans chemin hors PATH : sort en 1", code == 1 and "hook introuvable" in sortie)
+
+        # Un serveur MCP exigé par --mcp : connecté, avec au moins un outil à son préfixe.
+        outil = "mcp__codegraph__codegraph_explore"
+        code, sortie = lancer(racine, flux(mcp={"codegraph": "connected"}, outils=[outil]), sain, banc, mcp=["codegraph"])
+        cas("mcp connecté avec ses outils : sort en 0", code == 0 and "codegraph  connected  1 outils" in sortie)
+        code, sortie = lancer(racine, flux(), sain, banc, mcp=["codegraph"])
+        cas("mcp absent de l'init : sort en 1", code == 1 and "serveur MCP codegraph : absent" in sortie)
+        code, sortie = lancer(racine, flux(mcp={"codegraph": "failed"}, outils=[outil]), sain, banc, mcp=["codegraph"])
+        cas("mcp en échec : sort en 1", code == 1 and "failed, pas connected" in sortie)
+        code, sortie = lancer(racine, flux(mcp={"codegraph": "connected"}), sain, banc, mcp=["codegraph"])
+        cas("mcp connecté sans outil : sort en 1", code == 1 and "aucun outil mcp__codegraph__" in sortie)
 
     print(f"{'✓' if not echecs else '✗'} {echecs} échec(s).")
     return 1 if echecs else 0

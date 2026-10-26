@@ -19,6 +19,11 @@ POURQUOI CE SCRIPT
     l'agent et ajouté au gabarit avant la fusion : `permissions.deny` pour Claude,
     `policies` pour OpenCode.
 
+    La clé `mcp` désigne `mcp/servers.yaml`. Pour OpenCode, chaque serveur devient une
+    entrée de `mcp.servers`, ajoutée au gabarit comme `deny`. Pour Claude, install.py
+    n'écrit rien : `--check` lit `.claude.json`, et `--fix` lance l'installateur déclaré
+    du serveur avec `CLAUDE_CONFIG_DIR` sur la cible. Les raisons sont dans le fichier.
+
 ÉCARTS, avec les mots de `sync-rules.sh`
     ABSENT          le lien attendu n'existe pas
     MAUVAISE CIBLE  le lien existe et vise ailleurs
@@ -48,6 +53,7 @@ import glob
 import importlib.util
 import json
 import os
+import subprocess
 import sys
 
 import yaml
@@ -207,6 +213,53 @@ def deny_opencode(entrees: list[dict]) -> dict:
 TRADUCTIONS = {"claude": deny_claude, "opencode": deny_opencode}
 
 
+def charger_mcp(chemin: str) -> list[dict]:
+    """Lit `mcp/servers.yaml`. Un serveur sans installateur Claude est refusé :
+    install.py n'écrit pas `.claude.json` lui-même."""
+    with open(chemin, encoding="utf-8") as f:
+        serveurs = yaml.safe_load(f) or []
+    for s in serveurs:
+        manque = [c for c in ("nom", "commande", "raison") if not s.get(c)]
+        if not (s.get("installateur") or {}).get("claude"):
+            manque.append("installateur.claude")
+        if manque:
+            raise SystemExit(f"install — {chemin} : serveur {s.get('nom', '?')} sans {', '.join(manque)}.")
+    return serveurs
+
+
+def mcp_opencode(serveurs: list[dict]) -> dict:
+    return {"mcp": {"servers": {s["nom"]: {"type": "local", "command": s["commande"], "disabled": False,
+                                           **(s.get("opencode") or {})} for s in serveurs}}}
+
+
+def verifier_mcp_claude(cible: str, serveurs: list[dict], fix: bool):
+    """Claude lit `~/.claude.json` pour `~/.claude`, `<cible>/.claude.json` sinon."""
+    defaut = os.path.join(os.path.expanduser("~"), ".claude")
+    fichier = defaut + ".json" if cible == defaut else os.path.join(cible, ".claude.json")
+
+    def presents():
+        if not os.path.exists(fichier):
+            return set()
+        with open(fichier, encoding="utf-8") as f:
+            return set(json.load(f).get("mcpServers", {}))
+
+    manquants = [s for s in serveurs if s["nom"] not in presents()]
+    if not fix:
+        return [f"ÉCART  .claude.json mcpServers.{s['nom']} : absent" for s in manquants], []
+    env = dict(os.environ, CODEGRAPH_TELEMETRY="0")
+    env.pop("CLAUDE_CONFIG_DIR", None)
+    if cible != defaut:
+        env["CLAUDE_CONFIG_DIR"] = cible
+    ecarts, faits = [], []
+    for s in manquants:
+        r = subprocess.run(s["installateur"]["claude"], env=env, capture_output=True, text=True)
+        if r.returncode == 0 and s["nom"] in presents():
+            faits.append(f"installé   .claude.json mcpServers.{s['nom']}")
+        else:
+            ecarts.append(f"ÉCART  .claude.json mcpServers.{s['nom']} : l'installateur a échoué ({r.returncode})")
+    return ecarts, faits
+
+
 def ajouter(repo: dict, ajout: dict) -> dict:
     """Ajoute la traduction au gabarit, un niveau d'objet en profondeur."""
     for cle, valeur in ajout.items():
@@ -226,6 +279,8 @@ def verifier_settings(cible: str, manifeste: dict, agent: str, repo_liens: str, 
     repo = sync.charger(os.path.join(REPO, manifeste["settings"]))
     if "deny" in manifeste:
         repo = ajouter(repo, TRADUCTIONS[agent](charger_deny(os.path.join(REPO, manifeste["deny"]))))
+    if "mcp" in manifeste and agent == "opencode":
+        repo = ajouter(repo, mcp_opencode(charger_mcp(os.path.join(REPO, manifeste["mcp"]))))
     repo = reecrire_repo(reecrire_chemins(repo, rendre_cible(cible) + "/"), repo_liens)
     fichier = os.path.join(cible, nom)
     machine = sync.charger(fichier, absent_ok=True)
@@ -262,6 +317,11 @@ def main(argv: list[str]) -> int:
     e_settings, f_settings = verifier_settings(cible, manifeste, args.agent, repo_liens, args.fix)
     ecarts += e_settings
     faits += f_settings
+    # Après la fusion : l'installateur écrit aussi dans settings.json.
+    if "mcp" in manifeste and args.agent == "claude":
+        e_mcp, f_mcp = verifier_mcp_claude(cible, charger_mcp(os.path.join(REPO, manifeste["mcp"])), args.fix)
+        ecarts += e_mcp
+        faits += f_mcp
 
     for f in faits:
         print(f"  {f}")

@@ -29,9 +29,10 @@ Commits et PR suivent les Conventional Commits, sujet en anglais, sans aucune me
 | 6. Plugin OpenCode `harness-guards`, banc OpenCode | #25 | #26 | `170bec3` |
 | 7. Skills du repo servis à OpenCode par liens | #27 | #28 | `b693130` |
 | 8. Rules du repo servies à OpenCode par `instructions` | #29 | #30 | `dd91ab4` |
-| 9. Lectures interdites, `policy/deny.yaml` pour les deux agents | #31 | branche `feat/deny-policy` | à merger |
+| 9. Lectures interdites, `policy/deny.yaml` pour les deux agents | #31 | #32 | `078d579` |
+| 10. Serveurs MCP, `mcp/servers.yaml` pour les deux agents | #33 | branche `feat/mcp-servers` | à merger |
 
-**Prochaine étape** : cadrer la tâche 10, `mcp/servers.yaml` et la délégation à `codegraph install`.
+**Prochaine étape** : cadrer la tâche 11, les drivers OpenCode de `run-skill-evals.py` et `mesure-reponses.py`.
 
 ## La référence de parité
 
@@ -40,13 +41,14 @@ Après chaque tâche, ces commandes doivent rendre ce qui suit :
 ```bash
 cd ~/Developpement/Workspaces/agent-config-v2
 bash tools/test-all.sh          # 16 batteries, 0 en échec
-bash tools/bench.sh claude      # 17 rules d'origine worktree, 26 skills du repo, 6 plugins, 7 hooks résolus, aucune fuite, Read du leurre refusé en bypass
-bash tools/bench.sh opencode    # commit signé refusé en permission.rejected, ls passe, 12 skills auto exposés, 0 des 14 manuels, 19 règles chargées, read du leurre refusé, ~/.config/opencode inchangé
+bash tools/bench.sh claude      # 17 rules d'origine worktree et le CLAUDE.md du banc, 26 skills du repo, 6 plugins, 8 hooks résolus dont 1 machine, codegraph connected, aucune fuite, Read du leurre refusé en bypass
+bash tools/bench.sh opencode    # commit signé refusé en permission.rejected, ls passe, 12 skills auto exposés, 0 des 14 manuels, 19 règles chargées, read du leurre refusé, codegraph_codegraph_explore appelé, ~/.config/opencode inchangé
 ```
 
 - Le banc rend 100 skills au total : 26 du repo, 17 intégrés, 47 des plugins AIDD et 10 `anthropic-skills:*` du compte. À la tâche 3, il en rendait 43, parce que `init` ne listait pas encore les skills préfixés. Relancé sur `8f1ee6a`, il rend aussi 100, donc l'écart ne vient pas du repo.
+- Depuis la tâche 10, le banc Claude charge 18 fichiers d'instructions. Le 18e est `~/.claude-bench/CLAUDE.md`, la section que `codegraph install` y écrit.
 - Les 4 rules qui portent un `paths:` (`back-spring`, `front-react`, `backend-api`, `frontend-design`) ne se chargent pas dans une session vide. C'est attendu.
-- Tant que la bascule (tâche 13) n'a pas eu lieu, `install.py --check` sur `~/.claude` rend 15 écarts avec le manifeste de `harness-v2`. Ce sont les 13 liens dont la source a bougé à la tâche 4, `model` et `permissions.deny` (tâche 9). Le vivant se contrôle en comparant ses liens à `audits/2026-10-22-liens-pre-v2.txt`.
+- Tant que la bascule (tâche 13) n'a pas eu lieu, `install.py --check` sur `~/.claude` rend 15 écarts avec le manifeste de `harness-v2`. Ce sont les 13 liens dont la source a bougé à la tâche 4, `model` et `permissions.deny` (tâche 9). Aucun ne porte sur `.claude.json`, qui a déjà codegraph. Le vivant se contrôle en comparant ses liens à `audits/2026-10-22-liens-pre-v2.txt`.
 
 ## Décisions prises en route
 
@@ -63,6 +65,10 @@ bash tools/bench.sh opencode    # commit signé refusé en permission.rejected, 
 - Tâche 9, mesuré le 2026-10-26 sur un leurre hors du home, avec un mot témoin : Claude refuse le Read en `bypassPermissions`, ce qui tranche la question ouverte du cadrage. Il refuse aussi le `cat` du même fichier. Sous OpenCode, le `read` est refusé (« Blocked by configuration policy ») et le `cat` laisse sortir le témoin.
 - Tâche 9 : une entrée à exception (`sauf`) n'est pas traduite pour Claude, où un `deny` gagne toujours. `.env.*` n'est donc interdit que sous OpenCode, et `.env.example` y reste lisible.
 - Tâche 9 : le banc OpenCode fixe son modèle (`openrouter/recursive/flint-v1.0:free`, celui du 2026-10-23). Le 2026-10-26, le défaut était passé à un modèle `opencode-go` que le fournisseur refusait.
+- Tâche 10 : pour Claude, `install.py` ne remplit pas lui-même le carnet `.claude.json`. `--fix` lance `codegraph install -t claude -l global -y` avec `CLAUDE_CONFIG_DIR` sur la cible. Mesuré le 2026-10-26 dans un HOME jetable : l'installateur 1.6.2 respecte cette variable, et pose aussi l'allow, le hook et la section de `CLAUDE.md`. Recopier ces trois effets les ferait diverger.
+- Tâche 10 : pour OpenCode, `install.py` écrit lui-même `mcp.servers` dans `opencode.json`, sous la forme de `codegraph install --print-config opencode`. L'installateur ignore `OPENCODE_CONFIG_DIR` et écrirait dans le vivant, mesuré le même jour.
+- Tâche 10 : sous OpenCode, l'outil s'appelle `codegraph_codegraph_explore`. La base ne garde pas les outils exposés, donc le banc prouve le branchement par un appel, abouti ou en erreur.
+- Tâche 10, constaté le 2026-10-26 : un modèle du banc OpenCode qui ne trouvait pas l'outil a fouillé la machine pendant 105 appels. Un `env` a envoyé à son fournisseur `CLAUDE_CODE_MESSAGING_TOKEN`, un jeton de la session Claude qui lançait le banc. Il a aussi lu le schéma d'`opencode.db`, pas la table `credential`. Depuis, le banc retire les variables `CLAUDE*` et `ANTHROPIC*`, et la consigne dit de s'arrêter si l'outil manque.
 - Tâche 6 : `install.py --check` sur `~/.claude` rend les mêmes 14 écarts avant et après la tâche, donc la branche `settings` de Claude n'a pas bougé.
 - Tâche 5 : le contrat du cœur est dans `hooks/check.py`. `exit 1` veut dire « entrée illisible », et chaque adaptateur décide quoi en faire. `skills_used: null` veut dire « inconnu », et le garde AIDD laisse alors passer.
 - Tâche 5 : la parité de l'adaptateur Claude a été mesurée sur 963 commandes réelles tirées des transcripts, rejouées contre l'ancien et le nouveau garde. Résultat : 0 écart, et 35 refus identiques des deux côtés. Pour rejouer, il faut reprendre les anciens gardes par `git show 5af25cd:wrappers/claude/hooks/<garde>`.
@@ -79,3 +85,5 @@ bash tools/bench.sh opencode    # commit signé refusé en permission.rejected, 
 - `rules/references/` n'est installé ni pour Claude (le manifeste ne lie que `rules/*.md`) ni pour OpenCode. Les règles y renvoient par chemin relatif.
 - Lecture d'un secret par le shell sous OpenCode : `cat` passe, mesuré à la tâche 9. Le fermer demande un garde du cœur sur l'action `shell`, qui reconnaisse une lecture de fin interdite.
 - La fusion remplace une liste entière : un `policies` posé à la main dans le vivant `opencode.json` serait écrasé par celui de `deny.yaml`. Le vivant n'en a pas aujourd'hui.
+- La section `AGENTS.md` que `codegraph install` écrit pour OpenCode n'est pas posée. `rules/codegraph.md` est déjà chargé par `instructions`, et l'installateur écrirait dans le vivant.
+- Un modèle gratuit du banc OpenCode lit tout ce que le banc lui laisse voir, et l'envoie à son fournisseur. Les variables Claude sont retirées, mais le `--auto` laisse encore le shell libre sur la machine.

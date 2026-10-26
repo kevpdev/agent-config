@@ -106,7 +106,7 @@ rc_session=$?
 
 # 5. Le rapport.
 python3 "$REPO/tools/bench-report.py" --stream "$RUN/run.jsonl" --log "$RUN/instructions.log" --bench "$BANC" \
-    --settings "$BANC/settings.json"
+    --settings "$BANC/settings.json" --mcp codegraph
 rc=$?
 
 # 6. Lecture interdite, en bypassPermissions : policy/deny.yaml doit refuser le Read d'un

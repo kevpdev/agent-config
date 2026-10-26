@@ -90,10 +90,16 @@ def regles_du_repo(tmp: str) -> str:
     return racine
 
 
-def lancer(db: str, skills: str | None, rules: str | None = None, leurre: bool = False) -> tuple[int, str]:
+def outil(nom: str, status: str) -> dict:
+    return {"type": "tool", "name": nom, "state": {"status": status, "input": {"query": "install.py"}}}
+
+
+def lancer(db: str, skills: str | None, rules: str | None = None, leurre: bool = False,
+           mcp: str | None = None) -> tuple[int, str]:
     argv = [sys.executable, RAPPORT, "--db", db, "--dir", DOSSIER] + (["--skills", skills] if skills else [])
     argv += ["--rules", rules] if rules else []
     argv += ["--leurre", LEURRE, "--temoin", TEMOIN] if leurre else []
+    argv += ["--mcp", mcp] if mcp else []
     r = subprocess.run(argv, capture_output=True, text=True)
     return r.returncode, r.stdout + r.stderr
 
@@ -158,6 +164,19 @@ with tempfile.TemporaryDirectory() as tmp:
 
     code, sortie = avec_leurre([])
     cas("read du leurre absent : code 1", code == 1 and "aucun read sur le leurre" in sortie, sortie)
+
+    def avec_mcp(appels):
+        sous = tempfile.mkdtemp(dir=tmp)
+        return lancer(base(sous, BONS + appels, auto), racine, mcp="codegraph")
+
+    code, sortie = avec_mcp([outil("codegraph_codegraph_explore", "completed")])
+    cas("outil MCP appelé : code 0", code == 0 and "codegraph_codegraph_explore appelé (completed)" in sortie, sortie)
+
+    code, sortie = avec_mcp([outil("codegraph_codegraph_explore", "error")])
+    cas("outil MCP en erreur : l'outil existait, code 0", code == 0, sortie)
+
+    code, sortie = avec_mcp([outil("execute", "completed")])
+    cas("aucun outil MCP appelé : code 1", code == 1 and "aucun appel d'un outil codegraph_" in sortie, sortie)
 
 print(f"{'✓' if not echecs else '✗'} {echecs} échec(s).")
 sys.exit(1 if echecs else 0)
