@@ -367,13 +367,17 @@ C'est la moitié de R13 que la septième vérification laisse dehors. Elle ne sa
 
 ### Jouer les évals des skills
 
-Un skill qui porte un `evals/eval.json` déclare ses cas en données pures : la requête, le déclenchement attendu, l'artefact attendu. Aucun nom d'outil, aucun nom d'agent — l'exécuteur est le seul à connaître Claude Code, ouvrir une session neuve passant par `claude -p`.
+Un skill qui porte un `evals/eval.json` déclare ses cas en données pures : la requête, le déclenchement attendu, l'artefact attendu. Aucun nom d'outil, aucun nom d'agent. Ce qui connaît l'agent vit dans `tools/drivers/<agent>.py`, qui ouvre une session neuve par `claude -p` ou par `opencode run`.
 
 ```bash
 python3 tools/tests/test-run-skill-evals.py   # calibre les verdicts, ne joue aucun cas
-python3 tools/run-skill-evals.py              # joue tout, rend un tableau de verdicts
+python3 tools/tests/test-drivers.py           # calibre la lecture des drivers
+python3 tools/run-skill-evals.py              # joue tout sous Claude, rend un tableau de verdicts
 python3 tools/run-skill-evals.py --skill mr-review
+python3 tools/run-skill-evals.py --agent opencode --skill security-reviewer --model <fournisseur/modèle>
 ```
+
+Sous OpenCode, le driver installe le worktree dans un dossier de config jetable et y ajoute un agent `skill-only`, qui refuse tout outil sauf `skill`. Il ne joue que le mode déclenchement : un cas `artifact` demanderait un shell libre à un modèle qui envoie à son fournisseur tout ce qu'il lit. `mesure-reponses.py --agent opencode` lit `opencode.db` et rend une section par modèle.
 
 Chaque cas rend deux verdicts, tous deux déterministes et sans juge LLM. Le **déclenchement** se lit au registre de la session : un appel à l'outil `Skill` nomme le skill ouvert, et sur un cas négatif le verdict s'inverse. L'**artefact** se contrôle par script : le fichier annoncé existe et porte les sections de son gabarit.
 
