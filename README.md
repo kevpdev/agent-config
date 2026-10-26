@@ -4,6 +4,66 @@ Configuration centralisée pour agents de code : règles de comportement, skills
 
 L'essentiel est de l'instruction en markdown. L'outillage du harnais (installation, lint, CI, évals, banc) vit à part, dans `tools/`.
 
+## Comment le harnais se configure
+
+Le repo est la seule source. Rien ne s'édite à la main dans `~/.claude` ni dans `~/.config/opencode`. `tools/install.py` traduit les sources dans la config de chaque agent, et `tools/bascule.sh` est le seul chemin par lequel un changement atteint le vivant.
+
+```mermaid
+flowchart TD
+  subgraph repo["Le repo, sur main"]
+    S1["rules/ et skills/"]
+    S2["policy/deny.yaml<br/>mcp/servers.yaml"]
+    S3["wrappers/claude/<br/>wrappers/opencode/"]
+    S4["tools/manifests/"]
+  end
+  repo --> B["tools/bascule.sh<br/>main avance sur origin/main"]
+  B --> I["tools/install.py --fix<br/>pour chaque agent"]
+  I --> C
+  I --> O
+  subgraph C["~/.claude"]
+    C1["liens<br/>rules, skills, agents, scripts"]
+    C2["settings.json fusionné<br/>gabarit + permissions.deny"]
+  end
+  subgraph O["~/.config/opencode"]
+    O1["liens<br/>skills, plugin harness-guards"]
+    O2["opencode.json fusionné<br/>instructions + policies + mcp"]
+  end
+  classDef source fill:#dbeafe,stroke:#1d4ed8,color:#1e3a8a
+  classDef outil fill:#fef3c7,stroke:#b45309,color:#78350f
+  classDef vivant fill:#dcfce7,stroke:#15803d,color:#14532d
+  class S1,S2,S3,S4 source
+  class B,I outil
+  class C1,C2,O1,O2 vivant
+```
+
+**Les liens visent le checkout principal**, `~/Developpement/Workspaces/agent-config`. Un fichier modifié sur `main` est donc vu par les deux agents dès que `main` avance, sans copie. `bascule.sh` fait avancer `main`, puis relance `install.py`, qui pose les liens neufs et refait la fusion. Le travail se fait dans un worktree, jamais dans le checkout principal.
+
+**Un réglage n'est pas lié, il est fusionné.** Claude Code et OpenCode écrivent eux-mêmes dans leur fichier de réglages (permissions accordées, plugins, `/config`). `install.py` y pose donc les seules clés du repo, et garde celles de la machine. `install.py --check` signale toute clé du repo qui manque ou qui a changé.
+
+| Je veux changer | J'édite | Ce qu'`install.py` en fait |
+|---|---|---|
+| une règle | `rules/*.md`, ou `wrappers/claude/rules/` pour Claude seul | Claude : un lien par fichier dans `~/.claude/rules/`. OpenCode : lue sur place par le glob `instructions` |
+| un skill | `skills/<nom>/` | un lien par skill dans `skills/`, pour les deux agents |
+| un garde | `hooks/<garde>.py`, la décision neutre | OpenCode : lancé par le plugin, qui lance tous les gardes. Claude : il faut un adaptateur dans `wrappers/claude/hooks/`, son lien dans le manifeste et son hook dans `wrappers/claude/settings.json` |
+| une lecture interdite | `policy/deny.yaml` | Claude : `permissions.deny`. OpenCode : `policies` |
+| un serveur MCP | `mcp/servers.yaml` | Claude : son installateur écrit `.claude.json`. OpenCode : `mcp.servers` |
+| un réglage (modèle, effort, hooks, plugins) | `wrappers/claude/settings.json` ou `wrappers/opencode/opencode.json` | fusionné dans le fichier de réglages de l'agent |
+| ce qui est lié | `tools/manifests/claude.json` ou `opencode.json` | la liste des liens posés et vérifiés |
+
+Dans tous les cas, le changement arrive au vivant par un merge sur `main`, puis `bash tools/bascule.sh` lancé depuis le worktree.
+
+**À ne jamais faire à la main :**
+- **éditer `~/.claude/settings.json` ou `~/.config/opencode/opencode.json`** pour une clé du repo. La prochaine fusion l'écrase, et `--check` la signale entre-temps.
+- **créer, déplacer ou supprimer un lien** sous `~/.claude` ou `~/.config/opencode`. Un garde introuvable bloque tous les appels `Bash`, et la session ne peut plus se réparer.
+- **lancer `git pull` ou `git switch` dans le checkout principal.** Les liens dont la source a bougé pendent jusqu'au prochain `install.py --fix`.
+
+```bash
+# depuis le worktree : --repo désigne le checkout principal, que visent les liens
+python3 tools/install.py --agent claude --target ~/.claude --repo ~/Developpement/Workspaces/agent-config
+python3 tools/install.py --agent opencode --target ~/.config/opencode --repo ~/Developpement/Workspaces/agent-config
+bash tools/bascule.sh                  # après un merge sur main
+```
+
 ## Structure
 
 ```
@@ -83,7 +143,7 @@ Les skills ne passent pas par `skills: [...]` : un lien sous `skills/` est déco
 
 Les règles ne passent pas par un `AGENTS.md` généré. OpenCode ne lit ni `~/.claude/rules` ni aucun dossier de règles, mais son tableau `instructions` accepte un glob. Il lit donc `rules/*.md` dans le repo, et une règle modifiée s'applique sans rien régénérer. OpenCode n'a pas de scope par chemin, donc les 4 règles scopées par `paths:` se chargent toujours. Une ligne **Portée** en tête de chacune dit à quels fichiers elle s'applique. Les règles propres à Claude restent hors du glob, dans `wrappers/claude/rules/`.
 
-Le vivant `~/.config/opencode` n'est pas encore installé, cela viendra avec la bascule (tâche 13 de `audits/2026-10-22-cadrage-harnais-agnostique.md`).
+Le vivant `~/.config/opencode` est installé par `install.py`, comme `~/.claude`, et `bascule.sh` le tient à jour.
 
 ## Utilisation avec Claude Code
 
@@ -106,27 +166,13 @@ Claude Code découvre ces dossiers automatiquement, sans rien déclarer. Aucun `
 
 Les symlinks sont supportés — lier plutôt que copier garde le repo comme source unique.
 
-**`~/.claude/rules/` est le seul cas particulier.** Deux dossiers de ce repo s'y déversent, et un lien de dossier ne fusionne pas : il faut donc un lien **par fichier**. Un fichier de règle neuf reste donc inerte jusqu'à ce que son lien existe, sans qu'aucun signal ne le dise.
-
-```bash
-bash wrappers/claude/scripts/sync-rules.sh          # vérifie, échoue sur tout écart
-bash wrappers/claude/scripts/sync-rules.sh --fix    # crée, répare, retire les orphelins
-```
-
-À lancer après tout ajout, renommage ou suppression dans `rules/` ou `wrappers/claude/rules/`.
+**`~/.claude/rules/` est le seul cas particulier.** Deux dossiers de ce repo s'y déversent, et un lien de dossier ne fusionne pas : il faut donc un lien **par fichier**. Un fichier de règle neuf reste donc inerte jusqu'à ce que son lien existe. `install.py --check` signale le lien manquant, et `--fix` le pose et retire les orphelins.
 
 Un lien de dossier n'est pas garanti non plus. Sur la machine de référence, `skills/`, `agents/`, `output-styles/` et `scripts/` sont de vrais dossiers remplis de liens par entrée (constaté le 2026-10-06). Un skill ou un script neuf y reste donc inerte tant que son lien n'existe pas.
 
-**`settings.json` ne se lie pas.** Claude Code y écrit lui-même : permissions accordées, plugins installés, `/config`. Un lien ferait entrer ces écritures dans le repo, ou serait remplacé par un fichier normal sans signal. C'est ce qui s'est produit, et le `"model": "sonnet"` du wrapper a cessé de s'appliquer. Le wrapper ne porte donc que les clés que le repo possède, et un script les applique sans toucher aux clés de la machine :
+**`settings.json` ne se lie pas.** Claude Code y écrit lui-même : permissions accordées, plugins installés, `/config`. Un lien ferait entrer ces écritures dans le repo, ou serait remplacé par un fichier normal sans signal. C'est ce qui s'est produit, et le `"model": "sonnet"` du wrapper a cessé de s'appliquer. Le wrapper ne porte donc que les clés que le repo possède, et `install.py` les fusionne sans toucher aux clés de la machine. `skipDangerousModePermissionPrompt` n'est pas appliqué : la clé se lit en OU entre les couches, donc un `false` écrit au niveau user ferait revenir l'avertissement du mode bypass dans tous les repos.
 
-```bash
-python3 wrappers/claude/scripts/sync-settings.py          # vérifie, échoue sur tout écart
-python3 wrappers/claude/scripts/sync-settings.py --fix    # applique, ancienne version en settings.json.bak
-```
-
-À lancer après toute modification de `wrappers/claude/settings.json`. `skipDangerousModePermissionPrompt` n'est pas appliqué : la clé se lit en OU entre les couches, donc un `false` écrit au niveau user ferait revenir l'avertissement du mode bypass dans tous les repos.
-
-**`tools/install.py` fait les deux d'un coup, pour n'importe quelle cible.** Il pose les liens décrits par `tools/manifests/claude.json`, les 68 actuels avec leurs irrégularités, et fusionne `settings.json` par la logique de `sync-settings.py`. Les commandes de hooks visent les scripts de la cible : `~/.claude/scripts/…` pour `~/.claude`, un chemin absolu pour un dossier de test. Les deux scripts ci-dessus restent en place jusqu'à la bascule de la refonte.
+**`tools/install.py` pose les liens et fusionne les réglages, pour n'importe quelle cible.** Il pose les liens décrits par `tools/manifests/claude.json`, les 68 actuels avec leurs irrégularités, et fusionne `settings.json`. Les commandes de hooks visent les scripts de la cible : `~/.claude/scripts/…` pour `~/.claude`, un chemin absolu pour un dossier de test. Les anciens scripts `wrappers/claude/scripts/sync-rules.sh` et `sync-settings.py` faisaient chacun une moitié de ce travail. `install.py` les remplace, et leur suppression est une tâche à part.
 
 ```bash
 python3 tools/install.py --agent claude --target ~/.claude          # vérifie, échoue sur tout écart
@@ -225,7 +271,7 @@ bash tools/bench.sh opencode                # banc ~/.opencode-bench, ~/.config/
 
 ### Les gardes déterministes
 
-Quatre hooks `PreToolUse` refusent à l'appel ce qu'une règle de prose ne tenait pas. Chacun est la couche déterministe d'une règle qui, du coup, ne répète pas ses critères.
+Cinq gardes refusent à l'appel ce qu'une règle de prose ne tenait pas. Quatre tournent sous les deux agents, et `no_secret_read` sous OpenCode seulement. Le garde AIDD ne refuse jamais sous OpenCode, qui ne lui donne pas la liste des skills invoqués. Chacun est la couche déterministe d'une règle qui, du coup, ne répète pas ses critères.
 
 | Garde (`wrappers/claude/hooks/`) | Décision (`hooks/`) | Refuse | Règle allégée | Batterie Claude |
 |---|---|---|---|---|
@@ -292,7 +338,7 @@ Trois couches, de la plus rare à la plus fréquente.
 |---|---|---|
 | Machine | `npm i -g @colbymchenry/codegraph`, puis `codegraph telemetry off`. Le serveur MCP est posé par `tools/install.py --fix` | une fois par poste |
 | Projet existant | `codegraph init` à la racine, puis `.codegraph/` dans le `.gitignore` | une fois par dépôt, à la main |
-| Projet neuf | `hooks/init-codegraph.py`, hook `SessionStart` | automatique |
+| Projet neuf | `wrappers/claude/hooks/init-codegraph.py`, hook `SessionStart` | automatique |
 
 **Ce que `install` écrit hors du repo** : le serveur MCP `codegraph` dans `~/.claude.json`, la permission `mcp__codegraph__*` et un hook `UserPromptSubmit` (`codegraph prompt-hook`) dans `~/.claude/settings.json`, et une section balisée dans `~/.claude/CLAUDE.md`. Rien de cela n'est dans le repo : `~/.claude/settings.json` n'est pas lié, et la fusion ne retire jamais un hook de la machine. C'est `tools/install.py --fix` qui lance `install`, d'après `mcp/servers.yaml` (voir plus bas).
 
