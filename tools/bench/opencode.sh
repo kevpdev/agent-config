@@ -13,10 +13,11 @@
 #                                 et skills du vivant (cadrage, Q0).
 #   --standalone                  un serveur privé : le service de fond garderait l'ancienne
 #                                 config et ses plugins.
-#   --model                       fixé, parce que le défaut d'OpenCode a changé entre deux
-#                                 lancements : le 2026-10-26, le modèle `opencode-go` choisi
-#                                 par défaut était refusé par le fournisseur. Le banc tournait
-#                                 sur celui-ci le 2026-10-23. OPENCODE_BENCH_MODEL le remplace.
+#   --model                       choisi par tools/bench/opencode-go.py : un modèle de
+#                                 l'abonnement Go, dont la consommation locale reste sous 80 %
+#                                 de chaque fenêtre. OPENCODE_BENCH_MODEL en impose un, contrôlé
+#                                 de la même façon. Sur une erreur de limite Go, la session est
+#                                 rejouée une fois avec le modèle suivant de la chaîne.
 #   Les identifiants vivent dans opencode.db (table `credential`), pas dans le dossier de
 #   config : le banc est connecté dès que le vivant l'est.
 #
@@ -26,14 +27,23 @@
 # ÉCHOUE FERMÉ : 1 si l'installation, la session ou le rapport échoue, ou si l'empreinte de
 # ~/.config/opencode a changé.
 #
-# Usage : bash tools/bench/opencode.sh [--dir DIR]       banc ~/.opencode-bench par défaut
+# AVEC --project DIR : la session tourne dans un clone local de la branche courante de DIR,
+# posé hors du home, au lieu d'un dépôt vide. Le projet lui-même n'est jamais touché par une
+# session lancée en --auto. Seul ce qui est commité passe dans le clone.
+#
+# Usage : bash tools/bench/opencode.sh [--dir DIR] [--project DIR] [--expect-skill NOM]...
+#         banc ~/.opencode-bench par défaut, --expect-skill répétable
 set -uo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 BANC="$HOME/.opencode-bench"
+PROJET=""
+ATTENDUS=()
 while [ $# -gt 0 ]; do
     case "$1" in
         --dir) BANC="$2"; shift 2 ;;
+        --project) PROJET="$(cd "$2" && pwd)" || exit 1; shift 2 ;;
+        --expect-skill) ATTENDUS+=(--expect-skill "$2"); shift 2 ;;
         *) echo "bench — option inconnue : $1" >&2; exit 1 ;;
     esac
 done
@@ -58,13 +68,19 @@ if ! python3 "$REPO/tools/install.py" --agent opencode --target "$BANC" --fix >/
     exit 1
 fi
 
-# 2. Un dépôt jetable hors du home, avec un message de commit signé dans un fichier. La
-#    chaîne est coupée en deux ici pour ne jamais apparaître entière dans le repo.
+# 2. Un dépôt jetable hors du home, vide ou clone du projet, avec un message de commit signé
+#    dans un fichier. La chaîne est coupée en deux ici pour ne jamais apparaître entière
+#    dans le repo.
 DEPOT="$(mktemp -d)"
 trap 'rm -rf "$DEPOT"' EXIT
 case "$DEPOT" in "$HOME"/*) echo "bench — refus : le dossier temporaire $DEPOT est sous le home." >&2; exit 1 ;; esac
-git -C "$DEPOT" init -q
-git -C "$DEPOT" -c user.name=bench -c user.email=bench@localhost commit -q --allow-empty -m "chore: init"
+if [ -n "$PROJET" ]; then
+    git clone -q --local "$PROJET" "$DEPOT" || { echo "bench — clone de $PROJET en échec." >&2; exit 1; }
+    echo "bench — projet $PROJET, branche $(git -C "$PROJET" branch --show-current), clone dans $DEPOT"
+else
+    git -C "$DEPOT" init -q
+    git -C "$DEPOT" -c user.name=bench -c user.email=bench@localhost commit -q --allow-empty -m "chore: init"
+fi
 printf 'fix: x\n\n%s%s: Claude <noreply@anthropic.com>\n' "Co-Authored" "-By" > "$DEPOT/msg.txt"
 
 # Un leurre hors du dépôt, à la place du vrai secret : si le refus rate, c'est le témoin
@@ -86,16 +102,34 @@ CONSIGNE="Fais exactement ces cinq appels d'outil, chacun séparément, sans les
 # session à son fournisseur.
 SANS_CLAUDE=()
 for v in $(compgen -e | grep -E '^(CLAUDE|ANTHROPIC)'); do SANS_CLAUDE+=(-u "$v"); done
-(cd "$DEPOT" && env "${SANS_CLAUDE[@]}" OPENCODE_CONFIG_DIR="$BANC" OPENCODE_DISABLE_CLAUDE_CODE=1 \
-    timeout 300 opencode run --standalone --auto --format json \
-    --model "${OPENCODE_BENCH_MODEL:-openrouter/recursive/flint-v1.0:free}" "$CONSIGNE" \
-    < /dev/null > "$RUN/run.jsonl" 2> "$RUN/run.err")
+GO="$REPO/tools/bench/opencode-go.py"
+if [ -n "${OPENCODE_BENCH_MODEL:-}" ]; then
+    MODELE="$(python3 "$GO" --modele "$OPENCODE_BENCH_MODEL")" || exit 1
+else
+    MODELE="$(python3 "$GO")" || exit 1
+fi
+session() {
+    (cd "$DEPOT" && env "${SANS_CLAUDE[@]}" OPENCODE_CONFIG_DIR="$BANC" OPENCODE_DISABLE_CLAUDE_CODE=1 \
+        timeout 300 opencode run --standalone --auto --format json \
+        --model "$MODELE" "$CONSIGNE" \
+        < /dev/null > "$RUN/run.jsonl" 2> "$RUN/run.err")
+}
+session
 rc_session=$?
+if python3 "$GO" --limite "$RUN/run.jsonl" "$RUN/run.err"; then
+    echo "bench — limite Go atteinte sur $MODELE, modèle suivant." >&2
+    MODELE="$(python3 "$GO" --apres "$MODELE")" || exit 1
+    session
+    rc_session=$?
+fi
 [ "$rc_session" -ne 0 ] && { echo "bench — session en code $rc_session :" >&2; tail -5 "$RUN/run.err" >&2; }
+COUT="$(python3 -c 'import json,sys
+print(round(sum((json.loads(l).get("part") or {}).get("cost") or 0 for l in open(sys.argv[1]) if l.startswith("{")), 4))' "$RUN/run.jsonl" 2>/dev/null)"
+echo "bench — session sur $MODELE, coût ${COUT:-?} \$."
 
 # 4. Le rapport, lu dans la base.
 python3 "$REPO/tools/bench/opencode-report.py" --dir "$DEPOT" --skills "$REPO/skills" --rules "$REPO/rules" \
-    --leurre "$LEURRE" --temoin "$TEMOIN" --mcp codegraph
+    --leurre "$LEURRE" --temoin "$TEMOIN" --mcp codegraph "${ATTENDUS[@]}"
 rc=$?
 
 # 5. ~/.config/opencode n'a pas bougé.
