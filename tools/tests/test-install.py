@@ -15,9 +15,11 @@ Sortie : 0 si tous les cas passent, 1 si un cas échoue.
 
 from __future__ import annotations
 
+import atexit
 import importlib.util
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -26,11 +28,39 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 SCRIPT = os.path.join(REPO, "tools", "install.py")
 
+# Un faux `codegraph` en tête du PATH : aucune batterie ne lance le vrai installateur.
+# Il note ses arguments et CLAUDE_CONFIG_DIR, puis écrit l'entrée là où le vrai l'écrit.
+FAUX_BIN = tempfile.mkdtemp(prefix="faux-codegraph-")
+atexit.register(shutil.rmtree, FAUX_BIN, True)
+FAUX_LOG = os.path.join(FAUX_BIN, "appels.jsonl")
+with open(os.path.join(FAUX_BIN, "codegraph"), "w", encoding="utf-8") as f:
+    f.write(f"""#!{sys.executable}
+import json, os, sys
+dossier = os.environ.get("CLAUDE_CONFIG_DIR")
+with open({FAUX_LOG!r}, "a") as f:
+    f.write(json.dumps({{"args": sys.argv[1:], "config_dir": dossier}}) + "\\n")
+fichier = os.path.join(dossier, ".claude.json") if dossier else os.path.expanduser("~/.claude.json")
+os.makedirs(os.path.dirname(fichier), exist_ok=True)
+donnees = json.load(open(fichier)) if os.path.exists(fichier) else {{}}
+donnees.setdefault("mcpServers", {{}})["codegraph"] = {{"type": "stdio", "command": "codegraph"}}
+json.dump(donnees, open(fichier, "w"))
+""")
+os.chmod(os.path.join(FAUX_BIN, "codegraph"), 0o755)
+
+
+def appels_faux() -> list[dict]:
+    if not os.path.exists(FAUX_LOG):
+        return []
+    with open(FAUX_LOG, encoding="utf-8") as f:
+        return [json.loads(l) for l in f]
+
 
 def lancer(cible, *argv, home=None):
     """Lance l'installateur, rend (code, sortie fusionnée)."""
     env = dict(os.environ)
     env.pop("CLAUDE_SETTINGS_FILE", None)
+    env.pop("CLAUDE_CONFIG_DIR", None)
+    env["PATH"] = FAUX_BIN + os.pathsep + env.get("PATH", "")
     if home:
         env["HOME"] = home
     r = subprocess.run(
@@ -82,10 +112,17 @@ def main() -> int:
         cas("vide : un ABSENT par lien attendu", sortie.count("ABSENT") == len(attendus))
         cas("vide : settings.json signalé", "settings.json" in sortie and "model" in sortie)
         cas("vide : --check n'écrit rien", not os.path.exists(cible))
+        cas("vide : serveur MCP absent de .claude.json", ".claude.json mcpServers.codegraph : absent" in sortie)
+        cas("vide : --check ne lance pas l'installateur", appels_faux() == [])
 
         # --fix pose tout, puis --check est propre.
         code, _ = lancer(cible, "--fix", home=autre_home)
         cas("fix : sort en 0", code == 0)
+        appels = appels_faux()
+        cas("fix : installateur lancé une fois, sur la cible",
+            len(appels) == 1 and appels[0]["config_dir"] == cible
+            and appels[0]["args"] == ["install", "-t", "claude", "-l", "global", "-y"])
+        cas("fix : .claude.json écrit dans la cible", os.path.exists(os.path.join(cible, ".claude.json")))
         code, sortie = lancer(cible, "--check", home=autre_home)
         cas("fix puis check : aucun écart", code == 0 and "aucun écart" in sortie)
 
@@ -189,6 +226,12 @@ def main() -> int:
             any(c == "bash ~/.claude/scripts/hooks/guard-no-claude-in-commit.sh" for c in cmds))
         cas("rendu sous le home : aucun chemin absolu",
             not any(home in c for c in cmds))
+        cas("mcp sous le home : $HOME/.claude.json, sans CLAUDE_CONFIG_DIR",
+            appels_faux()[-1]["config_dir"] is None and os.path.exists(os.path.join(home, ".claude.json"))
+            and not os.path.exists(os.path.join(cible_home, ".claude.json")))
+        n = len(appels_faux())
+        code, _ = lancer(cible_home, "--fix", home=home)
+        cas("mcp présent : l'installateur n'est pas relancé", code == 0 and len(appels_faux()) == n)
 
         # --repo change la source des liens, pas le reste.
         code, sortie = lancer(cible, "--check", "--repo", "/autre/repo", home=autre_home)
@@ -228,6 +271,18 @@ def main() -> int:
         variantes = [i for i, p in enumerate(policies) if p["resource"] == "read:*/.env.*"]
         cas("opencode : .env.example relevé après le deny de .env.*",
             exemple and variantes and policies[exemple[0]]["effect"] == "allow" and exemple[0] > variantes[0])
+        serveurs = lire_settings(cible, "opencode.json").get("mcp", {}).get("servers", {})
+        cas("opencode : mcp.servers.codegraph lancé par la commande déclarée",
+            serveurs.get("codegraph", {}).get("command") == ["codegraph", "serve", "--mcp"]
+            and serveurs["codegraph"].get("type") == "local")
+        donnees = lire_settings(cible, "opencode.json")
+        donnees["mcp"]["servers"]["autre"] = {"type": "remote", "url": "https://x"}
+        with open(config, "w", encoding="utf-8") as f:
+            json.dump(donnees, f)
+        code, sortie = lancer(cible, "--fix", "--agent", "opencode")
+        cas("opencode : serveur de la machine conservé",
+            code == 0 and "autre" in lire_settings(cible, "opencode.json")["mcp"]["servers"])
+        cas("opencode : aucun installateur lancé", all(a["config_dir"] != cible for a in appels_faux()))
 
     # Une entrée de deny.yaml mal formée arrête l'installation.
     spec = importlib.util.spec_from_file_location("install", SCRIPT)
@@ -245,6 +300,15 @@ def main() -> int:
             except SystemExit:
                 refuse = True
             cas(f"deny.yaml : {nom} refusée", refuse)
+        chemin = os.path.join(tmp, "servers.yaml")
+        with open(chemin, "w", encoding="utf-8") as f:
+            f.write("- {nom: x, commande: [x], raison: r}\n")
+        try:
+            install.charger_mcp(chemin)
+            refuse = False
+        except SystemExit:
+            refuse = True
+        cas("servers.yaml : serveur sans installateur Claude refusé", refuse)
 
     print(f"{'✓' if not echecs else '✗'} {echecs} échec(s).")
     return 1 if echecs else 0
