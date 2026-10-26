@@ -26,7 +26,7 @@ import fnmatch
 import os
 import sys
 
-from hooks.bash_tooling import ENV_ASSIGN, PREFIX_WRAPPERS, simple_commands, tokenize
+from hooks.bash_tooling import ENV_ASSIGN, HEREDOC, PREFIX_WRAPPERS, simple_commands, tokenize
 
 REPO = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 DENY = os.path.join(REPO, "policy", "deny.yaml")
@@ -75,6 +75,19 @@ def denied(token: str, cwd: str, entries):
     return None
 
 
+def strip_heredocs(command: str) -> str:
+    """`command` without its heredoc bodies: `cat >> f <<'EOF'` writes them, it does not read them."""
+    kept, pending = [], []
+    for line in command.split("\n"):
+        if pending:
+            if line.lstrip("\t") == pending[0]:
+                pending.pop(0)
+            continue
+        kept.append(line)
+        pending = [m.group(2) for m in HEREDOC.finditer(line)]
+    return "\n".join(kept)
+
+
 def read_operands(tokens):
     """(program, operands it prints or copies) for one simple command."""
     while tokens and (ENV_ASSIGN.match(tokens[0]) or os.path.basename(tokens[0]) in PREFIX_WRAPPERS):
@@ -112,7 +125,7 @@ def decide(event: dict):
     if not entries:
         return None
     try:
-        commands = simple_commands(tokenize(command))
+        commands = simple_commands(tokenize(strip_heredocs(command)))
     except ValueError:
         return None
     cwd = event.get("cwd") or os.getcwd()

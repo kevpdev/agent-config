@@ -105,6 +105,16 @@ with tempfile.TemporaryDirectory() as projet:
         ("chargé par docker compose", PASSE, "docker compose --env-file .env up", projet),
         ("chargé par source", PASSE, "source .env && pytest", projet),
         ("programme sur l'entrée standard", PASSE, "python3 app.py < .env", projet),
+        ("heredoc qui nomme un secret, écrit et non lu", PASSE,
+         "cat >> deny.yaml <<'EOF'\nfin: .ssh/id_rsa\nEOF", projet),
+        ("commande après le heredoc, toujours jugée", REFUS, "cat > a <<EOF\nx\nEOF\ncat .env", projet),
+        ("clé SSH privée", REFUS, "cat ~/.ssh/id_ed25519", projet),
+        ("jetons AWS", REFUS, "cat ~/.aws/credentials", projet),
+        ("jeton de la CLI GitHub", REFUS, "grep token ~/.config/gh/hosts.yml", projet),
+        ("clé privée de certificat", REFUS, "cat server.key", projet),
+        ("clé SSH publique", PASSE, "cat ~/.ssh/id_ed25519.pub", projet),
+        ("empreinte par ssh-keygen", PASSE, "ssh-keygen -lf ~/.ssh/id_ed25519", projet),
+        ("ls du dossier SSH", PASSE, "ls ~/.ssh", projet),
     ]:
         verifier(nom, attendu, "no_secret_read", command=commande, cwd=cwd)
 verifier("action edit, hors périmètre", PASSE, "no_secret_read", action="edit", paths=["/p/.env"])
