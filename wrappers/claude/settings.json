@@ -60,7 +60,7 @@
     }
   },
   "outputStyle": "Concise",
-  "effortLevel": "high",
+  "effortLevel": "medium",
   "skipDangerousModePermissionPrompt": false,
   "model": "opus",
   "autoMemoryEnabled": true
