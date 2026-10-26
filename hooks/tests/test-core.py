@@ -83,6 +83,42 @@ verifier("upload scp vers preprod", REFUS, "no_remote_write",
 verifier("edit d'un chemin local", PASSE, "no_remote_write", action="edit",
          paths=["/tmp/x.txt"])
 
+print("=== no_secret_read ===")
+with tempfile.TemporaryDirectory() as projet:
+    sous = os.path.join(projet, "sub")
+    for nom, attendu, commande, cwd in [
+        ("cat .env", REFUS, "cat .env", projet),
+        ("grep d'une clé dans .env", REFUS, "grep API_KEY .env", projet),
+        ("variante .env.production", REFUS, "cat .env.production", projet),
+        ("redirection < vers grep", REFUS, "grep x < .env", projet),
+        ("chemin relatif depuis un sous-dossier", REFUS, "cat ../.env", sous),
+        ("sqlite3 sur opencode.db", REFUS, 'sqlite3 ~/.local/share/opencode/opencode.db "select 1"', projet),
+        ("source d'un cp", REFUS, "cp ~/.claude/.credentials.json /tmp/x", projet),
+        ("dans une chaîne", REFUS, "echo ok && head -3 .env", projet),
+        ("exception .env.example", PASSE, "cat .env.example", projet),
+        ("ls ne lit pas le contenu", PASSE, "ls -la .env", projet),
+        ("test -f ne lit pas le contenu", PASSE, "test -f .env && echo oui", projet),
+        ("squelette par cp", PASSE, "cp .env.example .env", projet),
+        ("écriture par >", PASSE, "printf 'A=1\\n' > .env", projet),
+        ("ajout par >>", PASSE, "echo DEBUG=1 >> .env", projet),
+        ("sed -i écrit sans sortir", PASSE, "sed -i s/0/1/ .env", projet),
+        ("chargé par docker compose", PASSE, "docker compose --env-file .env up", projet),
+        ("chargé par source", PASSE, "source .env && pytest", projet),
+        ("programme sur l'entrée standard", PASSE, "python3 app.py < .env", projet),
+        ("heredoc qui nomme un secret, écrit et non lu", PASSE,
+         "cat >> deny.yaml <<'EOF'\nfin: .ssh/id_rsa\nEOF", projet),
+        ("commande après le heredoc, toujours jugée", REFUS, "cat > a <<EOF\nx\nEOF\ncat .env", projet),
+        ("clé SSH privée", REFUS, "cat ~/.ssh/id_ed25519", projet),
+        ("jetons AWS", REFUS, "cat ~/.aws/credentials", projet),
+        ("jeton de la CLI GitHub", REFUS, "grep token ~/.config/gh/hosts.yml", projet),
+        ("clé privée de certificat", REFUS, "cat server.key", projet),
+        ("clé SSH publique", PASSE, "cat ~/.ssh/id_ed25519.pub", projet),
+        ("empreinte par ssh-keygen", PASSE, "ssh-keygen -lf ~/.ssh/id_ed25519", projet),
+        ("ls du dossier SSH", PASSE, "ls ~/.ssh", projet),
+    ]:
+        verifier(nom, attendu, "no_secret_read", command=commande, cwd=cwd)
+verifier("action edit, hors périmètre", PASSE, "no_secret_read", action="edit", paths=["/p/.env"])
+
 print("=== aidd_skill_lookup ===")
 with tempfile.TemporaryDirectory() as aidd:
     os.mkdir(os.path.join(aidd, "aidd_docs"))

@@ -6,10 +6,23 @@
 # Les deux formes sont mesurées le 2026-10-26 sur un leurre hors du home : Claude refuse
 # en bypassPermissions, OpenCode refuse sous --auto (« Blocked by configuration policy »).
 #
-# CE QUE ÇA NE COUVRE PAS SOUS OPENCODE : une lecture par le shell. Mesuré, `cat` sur le
-# même leurre passe et le témoin sort, parce qu'une règle `read` ne voit que l'outil de
-# lecture. Sous Claude, le même `cat` est refusé : la règle Read s'étend à une commande
-# Bash qui lit le fichier. Mesuré une fois, sans garantie écrite dans la doc.
+# LE SHELL SOUS OPENCODE : une règle `read` ne voit que l'outil de lecture, et `cat` sur le
+# leurre laissait sortir le témoin (mesuré). Le garde hooks/no_secret_read.py lit ce même
+# fichier et refuse une commande qui SORT le contenu (`cat`, `grep`, `sqlite3`, la source
+# d'un `cp`). Il laisse passer les écritures et le chargement par un programme
+# (`--env-file .env`, `source .env && pytest`), et ne voit pas un contournement (`$(…)`,
+# un script qui ouvre le fichier). Sous Claude, la règle Read refuse aussi le `cat`, mesuré
+# une fois, sans garantie écrite dans la doc. Le garde n'y tourne pas.
+#
+# CRÉER UN .env : l'agent pose le squelette sans valeurs (`cp .env.example .env`), l'humain
+# remplit les valeurs. Une valeur tapée dans un prompt part chez le fournisseur du modèle
+# avant même d'être écrite. L'outil `edit` d'OpenCode modifie un .env existant sans `read`,
+# mesuré : le modèle ne reçoit que « Edited .env », le diff reste dans opencode.db.
+#
+# ÉTUDIER UNE SESSION OPENCODE : `opencode session export <id>`, ou un script de tools/bench/,
+# qui ouvre opencode.db en lecture seule sur les tables qu'il vise. Jamais `sqlite3` sur la
+# base, qui porte aussi la table credential. Un transcript recopie ce que le modèle a vu,
+# donc un secret sorti avant le garde ressort avec lui.
 #
 # `sauf` lève l'interdit pour une fin plus précise. OpenCode le traduit par un `allow` après
 # le `deny`. Claude ne sait pas faire d'exception (un deny gagne toujours), donc une entrée
@@ -43,3 +56,103 @@
   fin: .env.*
   sauf: [.env.example]
   raison: variantes de .env par environnement. Le fichier d'exemple reste lisible.
+
+- id: ssh-rsa
+  action: read
+  fin: .ssh/id_rsa
+  raison: clé SSH privée. La clé publique (.pub) reste lisible.
+
+- id: ssh-ed25519
+  action: read
+  fin: .ssh/id_ed25519
+  raison: clé SSH privée. La clé publique (.pub) reste lisible.
+
+- id: ssh-ecdsa
+  action: read
+  fin: .ssh/id_ecdsa
+  raison: clé SSH privée. La clé publique (.pub) reste lisible.
+
+- id: gnupg
+  action: read
+  fin: .gnupg/private-keys-v1.d/*
+  raison: clés GPG privées.
+
+- id: aws
+  action: read
+  fin: .aws/credentials
+  raison: clés d'accès AWS.
+
+- id: gcloud-adc
+  action: read
+  fin: .config/gcloud/application_default_credentials.json
+  raison: jeton Google Cloud par défaut.
+
+- id: gcloud-credentials
+  action: read
+  fin: .config/gcloud/credentials.db
+  raison: jetons Google Cloud de chaque compte.
+
+- id: azure
+  action: read
+  fin: .azure/msal_token_cache.json
+  raison: jetons Azure.
+
+- id: kube
+  action: read
+  fin: .kube/config
+  raison: accès aux clusters Kubernetes, jetons et certificats compris.
+
+- id: gh
+  action: read
+  fin: .config/gh/hosts.yml
+  raison: jeton de la CLI GitHub.
+
+- id: netrc
+  action: read
+  fin: .netrc
+  raison: identifiants de connexion HTTP et FTP.
+
+- id: npmrc
+  action: read
+  fin: .npmrc
+  raison: porte souvent un jeton de registre npm.
+
+- id: pypirc
+  action: read
+  fin: .pypirc
+  raison: jeton de publication PyPI.
+
+- id: docker
+  action: read
+  fin: .docker/config.json
+  raison: identifiants des registres Docker.
+
+- id: cle-key
+  action: read
+  fin: "*.key"
+  raison: clé privée de certificat.
+
+- id: cle-p12
+  action: read
+  fin: "*.p12"
+  raison: magasin de certificat avec sa clé privée.
+
+- id: cle-pfx
+  action: read
+  fin: "*.pfx"
+  raison: magasin de certificat avec sa clé privée.
+
+- id: cle-jks
+  action: read
+  fin: "*.jks"
+  raison: magasin de clés Java.
+
+- id: cle-keystore
+  action: read
+  fin: "*.keystore"
+  raison: magasin de clés Java ou Android.
+
+- id: pem
+  action: read
+  fin: "*.pem"
+  raison: certificat ou clé privée, les deux partagent l'extension.

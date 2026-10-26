@@ -154,11 +154,18 @@ with tempfile.TemporaryDirectory() as tmp:
         sous = tempfile.mkdtemp(dir=tmp)
         return lancer(base(sous, BONS + appels, auto), racine, leurre=True)
 
+    code, sortie = avec_leurre([lecture(LEURRE, "error"), appel(f"cat {LEURRE}", "error")])
+    cas("read et cat du leurre refusés : code 0",
+        code == 0 and "read du leurre refusé" in sortie and "cat du leurre refusé" in sortie, sortie)
+
     cat = appel(f"cat {LEURRE}", "completed")
     cat["state"]["output"] = TEMOIN
     code, sortie = avec_leurre([lecture(LEURRE, "error"), cat])
-    cas("read du leurre refusé, cat consigné : code 0",
-        code == 0 and "read du leurre refusé" in sortie and "le témoin sort" in sortie, sortie)
+    cas("cat du leurre qui sort le témoin : code 1",
+        code == 1 and "sorti par le shell" in sortie, sortie)
+
+    code, sortie = avec_leurre([lecture(LEURRE, "error")])
+    cas("cat du leurre absent : code 1", code == 1 and "aucun cat sur le leurre" in sortie, sortie)
 
     code, sortie = avec_leurre([lecture(LEURRE, "completed", TEMOIN)])
     cas("read du leurre abouti avec le témoin : code 1",
