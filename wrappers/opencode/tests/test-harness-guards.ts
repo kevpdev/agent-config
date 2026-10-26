@@ -57,6 +57,9 @@ verifier("commit -F signé derrière un cd, commande retenue", "REFUS",
 verifier("même cas sans appel retenu : le cd est perdu", "PASSE",
   shell(["git commit -F msg.txt"]), undefined, vide)
 verifier("ls", "PASSE", shell(["ls"]), { command: "ls" }, vide)
+verifier("cat .env : sort un secret", "REFUS", shell(["cat .env"]), { command: "cat .env" }, vide)
+verifier("cp .env.example .env : pose le squelette", "PASSE",
+  shell(["cp .env.example .env"]), { command: "cp .env.example .env" }, vide)
 verifier("./mvnw direct", "REFUS", shell(["./mvnw test"]), { command: "./mvnw test" }, vide)
 
 console.log("\nsans verdict du cœur")

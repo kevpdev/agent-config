@@ -83,6 +83,32 @@ verifier("upload scp vers preprod", REFUS, "no_remote_write",
 verifier("edit d'un chemin local", PASSE, "no_remote_write", action="edit",
          paths=["/tmp/x.txt"])
 
+print("=== no_secret_read ===")
+with tempfile.TemporaryDirectory() as projet:
+    sous = os.path.join(projet, "sub")
+    for nom, attendu, commande, cwd in [
+        ("cat .env", REFUS, "cat .env", projet),
+        ("grep d'une clé dans .env", REFUS, "grep API_KEY .env", projet),
+        ("variante .env.production", REFUS, "cat .env.production", projet),
+        ("redirection < vers grep", REFUS, "grep x < .env", projet),
+        ("chemin relatif depuis un sous-dossier", REFUS, "cat ../.env", sous),
+        ("sqlite3 sur opencode.db", REFUS, 'sqlite3 ~/.local/share/opencode/opencode.db "select 1"', projet),
+        ("source d'un cp", REFUS, "cp ~/.claude/.credentials.json /tmp/x", projet),
+        ("dans une chaîne", REFUS, "echo ok && head -3 .env", projet),
+        ("exception .env.example", PASSE, "cat .env.example", projet),
+        ("ls ne lit pas le contenu", PASSE, "ls -la .env", projet),
+        ("test -f ne lit pas le contenu", PASSE, "test -f .env && echo oui", projet),
+        ("squelette par cp", PASSE, "cp .env.example .env", projet),
+        ("écriture par >", PASSE, "printf 'A=1\\n' > .env", projet),
+        ("ajout par >>", PASSE, "echo DEBUG=1 >> .env", projet),
+        ("sed -i écrit sans sortir", PASSE, "sed -i s/0/1/ .env", projet),
+        ("chargé par docker compose", PASSE, "docker compose --env-file .env up", projet),
+        ("chargé par source", PASSE, "source .env && pytest", projet),
+        ("programme sur l'entrée standard", PASSE, "python3 app.py < .env", projet),
+    ]:
+        verifier(nom, attendu, "no_secret_read", command=commande, cwd=cwd)
+verifier("action edit, hors périmètre", PASSE, "no_secret_read", action="edit", paths=["/p/.env"])
+
 print("=== aidd_skill_lookup ===")
 with tempfile.TemporaryDirectory() as aidd:
     os.mkdir(os.path.join(aidd, "aidd_docs"))
