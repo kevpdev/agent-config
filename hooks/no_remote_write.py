@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-"""guard-no-remote-write.py — PreToolUse hook for Claude Code.
+"""no_remote_write — guard core, agent-neutral (contract in hooks/check.py).
 
 Blocks agent-initiated WRITES to the protected remote servers (preprod, prod).
 Reads stay allowed: losing diagnosis ability would make the guard so annoying
@@ -27,12 +26,11 @@ dangerous ones: a denylist is open by construction (every unlisted binary
 passes), an allowlist is closed (every unlisted binary is refused).
 """
 
-import json
+import functools
 import os
 import re
 import shlex
 import subprocess
-import sys
 
 # Aliases whose write access is denied to the agent. labs/dev stay writable on
 # purpose — that is the sandbox, and blocking it would create the friction that
@@ -110,26 +108,32 @@ def resolve(token: str) -> str:
     return host
 
 
+@functools.cache
 def protected_targets():
-    """Resolved hostnames/IPs of the protected servers, plus their alias names."""
+    """Resolved hostnames/IPs of the protected servers, plus their alias names.
+
+    Computed on first need, not at import: hooks/check.py imports every guard
+    for every call, and two `ssh -G` per shell command would be paid even by
+    a command that names no host at all.
+    """
     names = set(PROTECTED_ALIASES)
     for alias in PROTECTED_ALIASES:
         r = resolve(alias)
         if r:
             names.add(r)
-    return names
-
-
-PROTECTED = protected_targets()
+    return frozenset(names)
 
 
 def is_protected(token: str) -> bool:
     if not token:
         return False
     host = hostpart(token)
-    if host in PROTECTED:
+    if host in PROTECTED_ALIASES:
         return True
-    return resolve(host) in PROTECTED
+    protected = protected_targets()
+    if host in protected:
+        return True
+    return resolve(host) in protected
 
 
 def protected_mount_prefixes():
@@ -224,9 +228,12 @@ def classify(cmd: str):
     return None
 
 
+class Refused(Exception):
+    """Carries the refusal reason out of the nested checks to decide()."""
+
+
 def block(reason: str):
-    print(json.dumps({"decision": "block", "reason": reason}))
-    sys.exit(0)
+    raise Refused(reason)
 
 
 def check_bash(cmd: str):
@@ -344,24 +351,15 @@ def check_path(path: str, tool: str):
             )
 
 
-def main():
+def decide(event: dict):
+    """Reason to refuse this action, or None to let it through."""
+    action = event.get("action")
     try:
-        payload = json.load(sys.stdin)
-    except (json.JSONDecodeError, ValueError):
-        sys.exit(0)  # nothing to judge -> stay out of the way
-
-    tool = payload.get("tool_name", "")
-    ti = payload.get("tool_input", {}) or {}
-
-    if tool == "Bash":
-        check_bash(ti.get("command", "") or "")
-    elif tool in ("Write", "Edit", "MultiEdit"):
-        check_path(ti.get("file_path", "") or "", tool)
-    elif tool == "NotebookEdit":
-        check_path(ti.get("notebook_path", "") or "", tool)
-
-    sys.exit(0)
-
-
-if __name__ == "__main__":
-    main()
+        if action == "shell":
+            check_bash(event.get("command") or "")
+        elif action == "edit":
+            for path in event.get("paths") or []:
+                check_path(path, "edit")
+    except Refused as refusal:
+        return str(refusal)
+    return None

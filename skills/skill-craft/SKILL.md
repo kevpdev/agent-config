@@ -46,7 +46,7 @@ Dérouler le flux. Ne lire que la prochaine action.
 ## Transversal rules
 
 - **La convention est l'unique source.** Les règles, l'anatomie et le nommage vivent dans [`references/skill-authoring-fr.md`](references/skill-authoring-fr.md) et les deux gabarits d'`assets/`. Les actions les citent, ne les recopient pas.
-- **Le lint fait le mécanique, la relecture fait le reste.** `wrappers/claude/scripts/lint-skills.py` tranche les sept vérifications sans interprétation. Ce qui demande de comprendre ce que le skill *fait* n'entre jamais dans un script, et reste à l'étape de relecture de `validate`.
+- **Le lint fait le mécanique, la relecture fait le reste.** `tools/lint-skills.py` tranche les sept vérifications sans interprétation. Ce qui demande de comprendre ce que le skill *fait* n'entre jamais dans un script, et reste à l'étape de relecture de `validate`.
 - **Rien ne se juge dans le contexte qui a écrit.** `validate` part toujours en sous-agent neuf, et ses évals se rendent en commande, passe déclarée non jouée. Le principe, son exemption pour le lint et la borne de 3 passes vivent dans [`references/skill-authoring-fr.md`](references/skill-authoring-fr.md), section « Frame–Deliver–Checker ».
 - **Sans dépendance AIDD.** Ce skill ne compose aucun skill du plugin et ne suppose rien d'installé. Il porte sa propre convention, pour qu'un skill perso se crée n'importe où et sans repasser par une traduction depuis l'anglais.
 
@@ -65,5 +65,5 @@ Jouable seul, sans session neuve : les deux commandes tranchent sans LLM.
 
 | Cas | Preuve |
 | --- | --- |
-| `python3 wrappers/claude/scripts/lint-skills.py --skill skill-craft` | rend 0, « 1/1 skills conformes » |
-| `python3 wrappers/claude/scripts/tests/test-lint-skills.py` | rend 0, tous les cas passent |
+| `python3 tools/lint-skills.py --skill skill-craft` | rend 0, « 1/1 skills conformes » |
+| `python3 tools/tests/test-lint-skills.py` | rend 0, tous les cas passent |

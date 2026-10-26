@@ -1,0 +1,32 @@
+{
+  "_doc": "Liens que tools/install.py pose dans la config de Claude Code. Les liens de scripts reproduisent l'existant tel quel, bizarreries comprises (audits/2026-10-22-liens-pre-v2.txt) : les nettoyer est une tâche à part. Les sources vivent dans wrappers/claude/scripts, wrappers/claude/hooks et tools, mais les cibles gardent la forme de scripts/ d'avant le rangement, parce que settings.json et les skills appellent ~/.claude/scripts/… en dur. Elles changeront avec la bascule. La clé deny désigne policy/deny.yaml, traduit en permissions.deny (issue #31). La clé mcp désigne mcp/servers.yaml : pour chaque serveur, --check lit .claude.json, et --fix lance son installateur avec CLAUDE_CONFIG_DIR sur la cible (issue #33).",
+  "settings": "wrappers/claude/settings.json",
+  "deny": "policy/deny.yaml",
+  "mcp": "mcp/servers.yaml",
+  "entrees": [
+    {"mode": "glob-files", "source": "rules/*.md", "cible": "rules", "intrus": true},
+    {"mode": "glob-files", "source": "wrappers/claude/rules/*.md", "cible": "rules", "intrus": true},
+    {"mode": "glob-dirs", "source": "skills/*", "cible": "skills"},
+    {"mode": "glob-files", "source": "wrappers/claude/agents/*.md", "cible": "agents"},
+    {"mode": "glob-files", "source": "wrappers/claude/output-styles/*.md", "cible": "output-styles"},
+    {"mode": "link", "source": "wrappers/claude/scripts/aidd-updates.py", "cible": "scripts/aidd-updates.py"},
+    {"mode": "link", "source": "wrappers/claude/hooks/guard-aidd-skill-lookup.py", "cible": "scripts/hooks/guard-aidd-skill-lookup.py"},
+    {"mode": "link", "source": "wrappers/claude/hooks/guard-bash-tooling.py", "cible": "scripts/hooks/guard-bash-tooling.py"},
+    {"mode": "link", "source": "wrappers/claude/hooks/guard-no-claude-in-commit.sh", "cible": "scripts/hooks/guard-no-claude-in-commit.sh"},
+    {"mode": "link", "source": "wrappers/claude/hooks/guard-no-remote-write.py", "cible": "scripts/hooks/guard-no-remote-write.py"},
+    {"mode": "link", "source": "wrappers/claude/hooks/init-codegraph.py", "cible": "scripts/hooks/init-codegraph.py"},
+    {"mode": "link", "source": "wrappers/claude/hooks/tests", "cible": "scripts/hooks/tests"},
+    {"mode": "link", "source": "tools/lint-html-prose.py", "cible": "scripts/lint-html-prose.py"},
+    {"mode": "link", "source": "tools/lint-skills.py", "cible": "scripts/lint-skills.py"},
+    {"mode": "link", "source": "tools/mesure-reponses.py", "cible": "scripts/mesure-reponses.py"},
+    {"mode": "link", "source": "tools/run-skill-evals.py", "cible": "scripts/run-skill-evals.py"},
+    {"mode": "link", "source": "wrappers/claude/scripts/statusline.sh", "cible": "scripts/statusline.sh"},
+    {"mode": "link", "source": "wrappers/claude/scripts/sync-rules.sh", "cible": "scripts/sync-rules.sh"},
+    {"mode": "link", "source": "wrappers/claude/scripts/tests/test-aidd-updates.sh", "cible": "scripts/tests/test-aidd-updates.sh"},
+    {"mode": "link", "source": "tools/tests/test-lint-html-prose.py", "cible": "scripts/tests/test-lint-html-prose.py"},
+    {"mode": "link", "source": "tools/tests/test-lint-skills.py", "cible": "scripts/tests/test-lint-skills.py"},
+    {"mode": "link", "source": "tools/tests/test-run-skill-evals.py", "cible": "scripts/tests/test-run-skill-evals.py"},
+    {"mode": "link", "source": "wrappers/claude/scripts/statusline.sh", "cible": "statusline.sh"}
+  ],
+  "exclure": ["skills/synced"]
+}

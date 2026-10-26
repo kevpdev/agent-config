@@ -1,0 +1,10 @@
+{
+  "_doc": "Liens et config que tools/install.py pose dans un dossier de config d'OpenCode (OPENCODE_CONFIG_DIR). OpenCode charge seul tout plugin placé sous plugins/ et tout skill placé sous skills/. Les skills passent par des liens et non par `skills: [...]` : un lien sous skills/ est découvert, mesuré le 2026-10-23 dans le banc (issue #27). Les rules passent par `instructions` dans opencode.json, qui lit `rules/*.md` dans le repo : OpenCode ne lit pas ~/.claude/rules et n'a pas de dossier de rules (issue #29). La clé deny désigne policy/deny.yaml, traduit en policies tool.use read, qu'aucun --auto ni « Allow always » ne lève (issue #31). La clé mcp désigne mcp/servers.yaml, traduit en mcp.servers d'opencode.json. L'installateur de codegraph ignore OPENCODE_CONFIG_DIR, donc install.py écrit l'entrée lui-même (issue #33).",
+  "settings": "wrappers/opencode/opencode.json",
+  "deny": "policy/deny.yaml",
+  "mcp": "mcp/servers.yaml",
+  "entrees": [
+    {"mode": "link", "source": "wrappers/opencode/plugins/harness-guards", "cible": "plugins/harness-guards"},
+    {"mode": "glob-dirs", "source": "skills/*", "cible": "skills"}
+  ]
+}

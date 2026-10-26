@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-"""guard-bash-tooling.py — PreToolUse(Bash) hook for Claude Code.
+"""bash_tooling — guard core, agent-neutral (contract in hooks/check.py).
 
 Holds the two tooling invariants that used to live as 449 words of prose in
 rules/tooling.md. The audit of 2026-08-10 sent both out of the permanent context
@@ -33,10 +32,10 @@ WHERE IT FAILS CLOSED, AND WHERE IT RENOUNCES (cf. rules/workflow.md). The
 perimeter is a raw substring test that cannot itself fail; a command outside it
 exits 0 untouched. Inside it:
 
-  - a broken payload contract exits 2, so stderr reaches the agent. Refusing
-    there would deny every tool call in the session, including the reads needed
-    to diagnose it — and what the rule forbids is an INVISIBLE failure, which
-    this is not.
+  - a broken payload contract is the adapter's to report (the Claude one exits
+    2, so stderr reaches the agent). Refusing there would deny every tool call
+    in the session, including the reads needed to diagnose it — and what the
+    rule forbids is an INVISIBLE failure, which this is not.
   - a command the shell lexer cannot tokenize falls back to evidence_only(),
     which refuses only on a pattern it can positively read. Blanket-refusing
     there was the first design, and the real corpus killed it: see the
@@ -44,7 +43,6 @@ exits 0 untouched. Inside it:
     switched off, and then protects nothing.
 """
 
-import json
 import os
 import re
 import shlex
@@ -279,58 +277,14 @@ def evidence_only(text: str):
     return findings
 
 
-def deny(reason: str):
-    """Refuse the call.
-
-    Emits BOTH decision shapes on purpose. `decision: "block"` is what the two
-    sibling guards use, and the installed version honours it — measured
-    2026-08-11 on the live session: a non-conformant `git commit` was refused and
-    the reason came back to the agent. But it no longer appears in the published
-    hooks reference, which documents hookSpecificOutput.permissionDecision
-    instead. A guard whose refusal channel quietly stops being read fails OPEN,
-    the one mode rules/workflow.md forbids — so carry both keys and let whichever
-    the runtime reads do the refusing.
-    """
-    payload = {
-        "decision": "block",
-        "reason": reason,
-        "hookSpecificOutput": {
-            "hookEventName": "PreToolUse",
-            "permissionDecision": "deny",
-            "permissionDecisionReason": reason,
-        },
-    }
-    print(json.dumps(payload))
-    sys.exit(0)
-
-
-def main():
-    raw = sys.stdin.read()
-    if not raw.strip():
-        # Run by hand with no payload: nothing to judge, and nothing to hide.
-        print("guard-bash-tooling: aucun payload sur stdin.", file=sys.stderr)
-        sys.exit(0)
-
-    try:
-        payload = json.loads(raw)
-        tool = payload.get("tool_name", "")
-        command = (payload.get("tool_input", {}) or {}).get("command", "") or ""
-    except (ValueError, AttributeError) as exc:
-        # The payload contract broke. Cannot know the perimeter, so cannot judge
-        # anything — say it loudly instead of waving every command through.
-        print(
-            "guard-bash-tooling: payload PreToolUse illisible (%s). Le garde ne "
-            "peut rien juger : vérifier le contrat de hook avant de continuer."
-            % exc,
-            file=sys.stderr,
-        )
-        sys.exit(2)
-
-    if tool != "Bash" or not command.strip():
-        sys.exit(0)
+def decide(event: dict):
+    """Reason to refuse this shell command, or None to let it through."""
+    command = event.get("command") or ""
+    if event.get("action") != "shell" or not command.strip():
+        return None
 
     if not in_perimeter(command):
-        sys.exit(0)
+        return None
 
     findings = []
     try:
@@ -346,16 +300,11 @@ def main():
                 file=sys.stderr,
             )
 
-    if findings:
-        seen, unique = set(), []
-        for f in findings:
-            if f not in seen:
-                seen.add(f)
-                unique.append(f)
-        deny("Règle outillage (rules/tooling.md) — " + " | ".join(unique))
-
-    sys.exit(0)
-
-
-if __name__ == "__main__":
-    main()
+    if not findings:
+        return None
+    seen, unique = set(), []
+    for f in findings:
+        if f not in seen:
+            seen.add(f)
+            unique.append(f)
+    return "Règle outillage (rules/tooling.md) — " + " | ".join(unique)

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Batterie de cas pour ../guard-bash-tooling.py
 #
-# Usage : bash wrappers/claude/scripts/hooks/tests/test-guard-bash-tooling.sh
+# Usage : bash wrappers/claude/hooks/tests/test-guard-bash-tooling.sh
 # Sortie 0 si tous les cas passent, 1 sinon. N'ecrit rien, ne lance aucun java.
 #
 # POURQUOI CE FICHIER EXISTE

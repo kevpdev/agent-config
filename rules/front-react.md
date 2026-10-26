@@ -5,6 +5,8 @@ paths:
 
 # Conventions front — React / TypeScript
 
+**Portée** : ne s'applique qu'en travaillant sur des fichiers `.ts` ou `.tsx`.
+
 Défauts qui comblent les trous : une règle ne s'applique que si la convention du repo (config lint, `aidd_docs/`, code existant) ne couvre pas le sujet (`autorite-des-conventions.md`).
 
 ## Contrôles

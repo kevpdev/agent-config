@@ -12,7 +12,7 @@ Le fichier corrigé, plus un compte rendu qui nomme le mode joué, la sortie du 
 
 ## Process
 
-Le lint se lance par `python3 "$(readlink -f ~/.claude/skills)/../wrappers/claude/scripts/lint-html-prose.py" <fichier>`. *Pourquoi un chemin absolu : le skill est global et écrit dans le dossier courant, donc le run part presque toujours d'un autre repo que `agent-config`.*
+Le lint se lance par `python3 "$(readlink -f ~/.claude/skills)/../tools/lint-html-prose.py" <fichier>`. *Pourquoi un chemin absolu : le skill est global et écrit dans le dossier courant, donc le run part presque toujours d'un autre repo que `agent-config`.*
 
 **Toute correction du fichier est suivie d'un lint**, quelle que soit l'étape qui l'a demandée. Un lint rouge après une correction renvoie à `write` sur ses interdits, et cette boucle-là compte dans la limite de l'étape 1.
 

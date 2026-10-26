@@ -117,7 +117,7 @@ class CannotConclude(Exception):
 def derive_root() -> str:
     """Racine dérivée de l'emplacement du script, jamais un chemin en dur."""
     here = os.path.dirname(os.path.realpath(__file__))
-    root = os.path.abspath(os.path.join(here, "..", "..", ".."))
+    root = os.path.abspath(os.path.join(here, ".."))
     for marker in ("skills", "rules"):
         if not os.path.isdir(os.path.join(root, marker)):
             raise CannotConclude(

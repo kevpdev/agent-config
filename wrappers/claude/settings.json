@@ -62,6 +62,6 @@
   "outputStyle": "Concise",
   "effortLevel": "high",
   "skipDangerousModePermissionPrompt": false,
-  "model": "sonnet",
+  "model": "opus",
   "autoMemoryEnabled": true
 }

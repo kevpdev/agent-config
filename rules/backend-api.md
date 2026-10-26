@@ -7,6 +7,8 @@ paths:
 
 # Backend — bases API et sécurité par défaut
 
+**Portée** : ne s'applique qu'en travaillant sur des fichiers Java, un `pom.xml` ou un fichier `application*` (`.yml`, `.yaml`, `.properties`).
+
 Défauts qui comblent les trous : une règle ne s'applique que si la convention du repo ne couvre pas le sujet (`autorite-des-conventions.md`).
 
 ## Sécurité (OWASP API Top 10 2023)
