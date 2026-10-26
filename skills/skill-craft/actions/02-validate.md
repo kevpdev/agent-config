@@ -18,7 +18,8 @@ Un rapport en français, verdict global en tête puis une ligne par contrôle, `
 2. **Relire R1.** Un routeur ne porte que portée, flux, table d'actions et règles transverses. Des étapes numérotées de logique métier, ou du détail qui appartient à une action, sont une dérive à signaler. En mono-fichier, vérifier que l'inline reste justifié : responsabilité unique, sous ~150 lignes, aucune référence qui devrait sortir.
 3. **Relire R6.** Chercher un même fait présent à deux endroits, entre le routeur et une action, entre deux actions, entre une action et une référence, ou **entre deux skills**. Signaler chaque doublon avec ses deux emplacements, la copie périmée étant ce qui fait dériver un skill.
    - **Le lieu inter-skills se mesure, il ne se juge pas.** `grep -rl "<une phrase du fait>" skills/` pour le texte repris tel quel, `md5sum` de bloc pour une section entière. Le home d'un fait partagé est `skills/_shared/`, R6 le dit.
-4. **Relire R13.** Une seule question, celle qu'aucun script ne tranche : le skill **exécute-t-il** un effet de bord ? Oui sans `disable-model-invocation: true` est un `FAIL` dur, le skill partant au flair sur une action irréversible.
+4. **Relire R13.** Deux questions en cascade, qu'aucun script ne tranche. Le skill **exécute-t-il** un effet de bord ? Si oui, sa `description` nomme-t-elle un appelant autre que l'humain ? Le couple de réponses désigne la branche de R13, qui porte le verdict de chacune.
+   - **La seconde question se lit dans la `description`**, à la recherche d'un orchestrateur ou d'un skill voisin qui ouvrirait celui-ci. Sur la branche du maillon de pipeline, le contrôle porte sur le garde déterministe nommé dans les règles transverses, jamais sur le champ.
    - **Garde.** Ne pas relire la cohérence d'un skill déjà déclaré manuel, description et évals comprises. La vérification 7 du lint la tranche, et l'étape 1 a déjà reporté son verdict.
    - **Garde.** Ne pas compter les mots-clés, lire ce que le skill fait. Mesuré le 2026-08-11, un comptage d'occurrences refusait `mr-review`, qui cite « commit » et « push » pour décrire ce qu'il relit et se déclare en lecture seule dès sa description.
 5. **Contrôler le corpus d'évals.** Vérifier que `evals/eval.json` parse, puis que sa composition suit R7, **exception des skills à invocation manuelle comprise**. Un fichier d'évals cassé rend le même « rien à signaler » qu'un fichier absent.
@@ -34,4 +35,5 @@ Un rapport en français, verdict global en tête puis une ligne par contrôle, `
 | lancé sur un skill dont une action porte une section hors gabarit | le rapport nomme l'action et le home de remplacement |
 | lancé sur un skill mono-fichier | aucun `FAIL` fantôme pour « actions manquantes » |
 | lancé sur un skill dont le corpus d'évals n'a aucun cas négatif | le rapport nomme le frère qui n'a pas son cas |
+| lancé sur un skill à effet de bord dont la description nomme un orchestrateur | le rapport contrôle le garde nommé, et ne réclame pas `disable-model-invocation` |
 | le verdict final | dit explicitement que les évals n'ont pas été jouées, et rend la commande pour les jouer |
