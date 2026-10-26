@@ -1,8 +1,53 @@
 # agent-config
 
-Configuration centralisée pour agents de code : règles de comportement, skills experts, et le câblage propre à chaque runtime.
+Un harnais partagé par deux agents de code, Claude Code et OpenCode. Le repo porte trois choses :
 
-L'essentiel est de l'instruction en markdown. L'outillage du harnais (installation, lint, CI, évals, banc) vit à part, dans `tools/`.
+- des **règles**, chargées en contexte à chaque session (`rules/`)
+- des **skills**, des expertises chargées à la demande (`skills/`)
+- des **gardes**, qui refusent à l'appel ce qu'une règle de prose ne tient pas (`hooks/`, `policy/`)
+
+Chaque source est écrite une fois, et `tools/install.py` la traduit dans la config de chaque agent. L'outillage du harnais (installation, banc, lint, évals, CI) vit dans `tools/`.
+
+| Je veux | Section |
+|---|---|
+| installer le harnais sur une machine | [Démarrage rapide](#démarrage-rapide) |
+| comprendre d'où vient la config de chaque agent | [Comment le harnais se configure](#comment-le-harnais-se-configure) |
+| modifier une règle, un skill, un garde ou un réglage | [Faire un changement](#faire-un-changement) |
+| savoir ce que fait un mécanisme précis | [Référence du harnais](#référence-du-harnais) |
+| connaître l'écart entre Claude Code et OpenCode | [Particularités par agent](#particularités-par-agent) |
+| tester, mesurer, linter | [Outillage](#outillage) |
+| ajouter un fichier au bon endroit | [Contribuer](#contribuer) |
+
+## Démarrage rapide
+
+**1. Les prérequis.** Il faut `git` et `python3`, puis `claude` ou `opencode`, ou les deux. `node` sert à la batterie du plugin OpenCode, et `npm` à installer CodeGraph (voir [CodeGraph sur les projets AIDD](#codegraph-sur-les-projets-aidd)).
+
+**2. Le checkout principal et le worktree.** Les liens de config visent le checkout principal, qui ne sert qu'à ça. Le travail se fait dans un worktree à côté :
+
+```bash
+git clone git@github.com:kevpdev/agent-config.git ~/Developpement/Workspaces/agent-config
+git -C ~/Developpement/Workspaces/agent-config worktree add --detach ../agent-config-v2 origin/main
+```
+
+**3. Les variables.** Elles s'exportent depuis le profil du shell de lancement, jamais depuis un fichier de réglages d'agent (voir [`SKILLS_ROOT`](#skills_root--le-contrat-entre-un-skill-et-son-agent)). Les vaults sont facultatifs :
+
+```sh
+export SKILLS_ROOT="/chemin/absolu/vers/agent-config/skills"
+```
+
+```sh
+export OBSIDIAN_VAULT_PRO="/chemin/absolu/vers/le/vault/pro"
+export OBSIDIAN_VAULT_PERSO="/chemin/absolu/vers/le/vault/perso"
+```
+
+**4. L'installation**, une fois par agent. Sans `--fix`, la même commande vérifie et échoue sur tout écart :
+
+```bash
+python3 tools/install.py --agent claude --target ~/.claude --fix
+python3 tools/install.py --agent opencode --target ~/.config/opencode --fix
+```
+
+**5. Le profil.** Un seul fichier n'est pas transposable : **`rules/profil.md`**. Il décrit la personne à qui l'agent s'adresse (niveau technique, contraintes cognitives, mode de compréhension) pour calibrer ton et profondeur. Le remplacer par le sien : le format compte, pas le contenu. Tout le reste s'applique tel quel.
 
 ## Comment le harnais se configure
 
@@ -40,31 +85,7 @@ flowchart TD
 
 **Un réglage n'est pas lié, il est fusionné.** Claude Code et OpenCode écrivent eux-mêmes dans leur fichier de réglages (permissions accordées, plugins, `/config`). `install.py` y pose donc les seules clés du repo, et garde celles de la machine. `install.py --check` signale toute clé du repo qui manque ou qui a changé.
 
-| Je veux changer | J'édite | Ce qu'`install.py` en fait |
-|---|---|---|
-| une règle | `rules/*.md`, ou `wrappers/claude/rules/` pour Claude seul | Claude : un lien par fichier dans `~/.claude/rules/`. OpenCode : lue sur place par le glob `instructions` |
-| un skill | `skills/<nom>/` | un lien par skill dans `skills/`, pour les deux agents |
-| un garde | `hooks/<garde>.py`, la décision neutre | OpenCode : lancé par le plugin, qui lance tous les gardes. Claude : il faut un adaptateur dans `wrappers/claude/hooks/`, son lien dans le manifeste et son hook dans `wrappers/claude/settings.json` |
-| une lecture interdite | `policy/deny.yaml` | Claude : `permissions.deny`. OpenCode : `policies` |
-| un serveur MCP | `mcp/servers.yaml` | Claude : son installateur écrit `.claude.json`. OpenCode : `mcp.servers` |
-| un réglage (modèle, effort, hooks, plugins) | `wrappers/claude/settings.json` ou `wrappers/opencode/opencode.json` | fusionné dans le fichier de réglages de l'agent |
-| ce qui est lié | `tools/manifests/claude.json` ou `opencode.json` | la liste des liens posés et vérifiés |
-
-Dans tous les cas, le changement arrive au vivant par un merge sur `main`, puis `bash tools/bascule.sh` lancé depuis le worktree.
-
-**À ne jamais faire à la main :**
-- **éditer `~/.claude/settings.json` ou `~/.config/opencode/opencode.json`** pour une clé du repo. La prochaine fusion l'écrase, et `--check` la signale entre-temps.
-- **créer, déplacer ou supprimer un lien** sous `~/.claude` ou `~/.config/opencode`. Un garde introuvable bloque tous les appels `Bash`, et la session ne peut plus se réparer.
-- **lancer `git pull` ou `git switch` dans le checkout principal.** Les liens dont la source a bougé pendent jusqu'au prochain `install.py --fix`.
-
-```bash
-# depuis le worktree : --repo désigne le checkout principal, que visent les liens
-python3 tools/install.py --agent claude --target ~/.claude --repo ~/Developpement/Workspaces/agent-config
-python3 tools/install.py --agent opencode --target ~/.config/opencode --repo ~/Developpement/Workspaces/agent-config
-bash tools/bascule.sh                  # après un merge sur main
-```
-
-## Structure
+### Ce que contient le repo
 
 ```
 rules/              règles chargées en contexte — neutres
@@ -85,24 +106,54 @@ wrappers/
     tests/          sa batterie, lancée par node
 ```
 
-Toutes les batteries se lancent d'une commande, qui échoue si une seule échoue :
+## Faire un changement
+
+| Je veux changer | J'édite | Ce qu'`install.py` en fait |
+|---|---|---|
+| une règle | `rules/*.md`, ou `wrappers/claude/rules/` pour Claude seul | Claude : un lien par fichier dans `~/.claude/rules/`. OpenCode : lue sur place par le glob `instructions` |
+| un skill | `skills/<nom>/` | un lien par skill dans `skills/`, pour les deux agents |
+| un garde | `hooks/<garde>.py`, la décision neutre | OpenCode : lancé par le plugin, qui lance tous les gardes. Claude : il faut un adaptateur dans `wrappers/claude/hooks/`, son lien dans le manifeste et son hook dans `wrappers/claude/settings.json` |
+| une lecture interdite | `policy/deny.yaml` | Claude : `permissions.deny`. OpenCode : `policies` |
+| un serveur MCP | `mcp/servers.yaml` | Claude : son installateur écrit `.claude.json`. OpenCode : `mcp.servers` |
+| un réglage (modèle, effort, hooks, plugins) | `wrappers/claude/settings.json` ou `wrappers/opencode/opencode.json` | fusionné dans le fichier de réglages de l'agent |
+| ce qui est lié | `tools/manifests/claude.json` ou `opencode.json` | la liste des liens posés et vérifiés |
+
+Dans tous les cas, le changement arrive au vivant par un merge sur `main`, puis `bash tools/bascule.sh` lancé depuis le worktree.
+
+**À ne jamais faire à la main :**
+- **éditer `~/.claude/settings.json` ou `~/.config/opencode/opencode.json`** pour une clé du repo. La prochaine fusion l'écrase, et `--check` la signale entre-temps.
+- **créer, déplacer ou supprimer un lien** sous `~/.claude` ou `~/.config/opencode`. Un garde introuvable bloque tous les appels `Bash`, et la session ne peut plus se réparer.
+- **lancer `git pull` ou `git switch` dans le checkout principal.** Les liens dont la source a bougé pendent jusqu'au prochain `install.py --fix`.
+
+### Le chemin d'un changement
+
+1. Une branche tirée d'`origin/main`, dans le worktree.
+2. `bash tools/test-all.sh` vert (voir [Outillage](#outillage)).
+3. Une PR vers `main`, puis le merge.
+4. `bash tools/bascule.sh`, lancé depuis le worktree.
+
+**Pour changer le checkout principal de version, utiliser `tools/bascule.sh`.** Un `git pull` seul laisserait pendre les liens dont la source a bougé. Un garde introuvable bloque alors tous les appels `Bash`. Le script fait avancer `main` sur `origin/main`, puis lance `install.py --fix` pour les deux agents, dans le même processus. Il se lance depuis un worktree, et sauvegarde avant d'écrire, dans `~/.local/state/agent-config/bascule/<horodatage>/`. On y retrouve les liens vers le repo, `settings.json`, `opencode.json`, `.zshrc` et le commit d'avant.
 
 ```bash
-bash tools/test-all.sh
+bash tools/bascule.sh                                  # refuse si main est sale, ou si origin/main ne contient pas ce commit
+bash tools/bascule.sh --retour --etat <sauvegarde>     # main revient au commit d'avant, liens et fichiers sont restaurés
+bash tools/tests/test-bascule.sh                       # répète la bascule et le retour sur des cibles jetables
 ```
 
-## La règle de placement
+Depuis le worktree, la vérification du vivant puis la bascule :
 
-Un fichier va dans `wrappers/<runtime>/` si et seulement si **il cesse de fonctionner sans ce runtime**.
+```bash
+# depuis le worktree : --repo désigne le checkout principal, que visent les liens
+python3 tools/install.py --agent claude --target ~/.claude --repo ~/Developpement/Workspaces/agent-config
+python3 tools/install.py --agent opencode --target ~/.config/opencode --repo ~/Developpement/Workspaces/agent-config
+bash tools/bascule.sh                  # après un merge sur main
+```
 
-| | Exemple | Où |
-|---|---|---|
-| **Dépendance** | un hook qui parse le JSON d'événement de Claude Code | wrapper |
-| **Indice** | un frontmatter `paths:` qu'un autre runtime ignorera sans dommage | zone neutre |
+## Référence du harnais
 
-Le critère n'est pas « mentionne Claude » — une règle qui interdit de citer un assistant dans un message de commit reste universelle. Le critère est : **ça échoue, ou ça dégrade sans casse ?**
+Ces mécanismes valent pour les deux agents. Ce qui diffère de l'un à l'autre est dit dans chaque section, et ce qui n'existe que sous un agent est dans [Particularités par agent](#particularités-par-agent).
 
-## `rules/` ou `skills/` ?
+### `rules/` ou `skills/` ?
 
 | | `rules/` | `skills/` |
 |---|---|---|
@@ -126,39 +177,119 @@ paths:
 
 Un skill se déclenche sur sa `description` : la soigner, c'est tout ce qui décide s'il sera choisi ou ignoré.
 
-## Utilisation avec OpenCode
+### `SKILLS_ROOT` — le contrat entre un skill et son agent
 
-OpenCode reçoit le harnais par `tools/install.py --agent opencode`, d'après `tools/manifests/opencode.json` :
+Plusieurs skills appellent un script partagé de `skills/_shared/`. Ils le désignent par `$SKILLS_ROOT/_shared/<script>.sh`, jamais par le chemin d'un agent précis. La variable s'exporte depuis le profil du shell de lancement, à côté de `OBSIDIAN_VAULT_PRO` ou `OBSIDIAN_VAULT_PERSO` (voir [Démarrage rapide](#démarrage-rapide)).
 
-| Ce repo | Dans le dossier de config d'OpenCode |
-|---|---|
-| `skills/*` | liens sous `skills/` |
-| `wrappers/opencode/plugins/harness-guards/` | lien `plugins/harness-guards/` |
-| `rules/*.md` | lus sur place, par `instructions` dans `opencode.json` |
-| `wrappers/opencode/opencode.json` | fusionné dans `opencode.json`, `{repo}` remplacé par la racine du repo |
-| `policy/deny.yaml` | traduit en `policies` dans `opencode.json` |
-| `mcp/servers.yaml` | traduit en `mcp.servers` dans `opencode.json` |
+**Le bloc `env` de `~/.claude/settings.local.json` ne suffit pas, mesuré le 2026-08-27.** La variable y était déclarée depuis le 2026-08-20, et `echo "[$SKILLS_ROOT]"` rendait `[]` dans l'outil Bash, en shell simple comme en `bash -lc`. `OBSIDIAN_VAULT_PRO`, déclarée dans le même bloc, était peuplée — mais par une ligne d'export du `.zshrc`, pas par le bloc. **La preuve de la config est donc `echo "[$SKILLS_ROOT]"` non vide dans une session neuve**, jamais la présence de la clé dans le JSON.
 
-Les skills ne passent pas par `skills: [...]` : un lien sous `skills/` est découvert, mesuré dans le banc. Un skill qui porte `disable-model-invocation: true` n'est pas proposé au modèle, comme sous Claude.
+**Pourquoi une variable** : un `~/.claude/skills/…` écrit dans un skill le rend inutilisable sous un autre agent, alors que le script visé est au même endroit relatif partout. Le skill dit quoi appeler, le wrapper dit où. Cet argument tient toujours : il justifie la variable, pas le mécanisme qui la peuple.
 
-Les règles ne passent pas par un `AGENTS.md` généré. OpenCode ne lit ni `~/.claude/rules` ni aucun dossier de règles, mais son tableau `instructions` accepte un glob. Il lit donc `rules/*.md` dans le repo, et une règle modifiée s'applique sans rien régénérer. OpenCode n'a pas de scope par chemin, donc les 4 règles scopées par `paths:` se chargent toujours. Une ligne **Portée** en tête de chacune dit à quels fichiers elle s'applique. Les règles propres à Claude restent hors du glob, dans `wrappers/claude/rules/`.
+**Sans elle, l'appel échoue de façon trompeuse.** `bash "$SKILLS_ROOT/_shared/check-vault-bridge.sh"` devient `bash "/_shared/…"`, donc un `exit 127` qui accuse le script au lieu de la config — un agent est parti chercher le fichier par un `find /`.
 
-Le vivant `~/.config/opencode` est installé par `install.py`, comme `~/.claude`, et `bascule.sh` le tient à jour.
+### Les vaults Obsidian
 
-## Utilisation avec Claude Code
+Les skills `vault-*` sont des passerelles vers un vault Obsidian : ils délèguent aux skills canoniques situés sous `<vault>/.agents/skills/`. Le vault se résout par `skills/_shared/resolve-vault.sh`, qui ne lit que deux variables, `OBSIDIAN_VAULT_PRO` et `OBSIDIAN_VAULT_PERSO`. Elles s'exportent depuis le profil du shell de lancement, comme `SKILLS_ROOT` et pour la même raison mesurée.
 
-Claude Code découvre ces dossiers automatiquement, sans rien déclarer. Aucun `CLAUDE.md` global n'est nécessaire.
+Un poste n'en exporte qu'une ou les deux. Avec un seul vault, le skill le prend sans poser de question. Avec les deux, il propose une liste numérotée et l'utilisateur répond par le numéro. Sans aucune des deux, chaque `vault-*` dégrade sans casse : message « aucun vault configuré » puis arrêt, jamais d'écriture dans le repo courant.
 
-| Ce repo | Emplacement attendu |
-|---|---|
-| `rules/` | `~/.claude/rules/` |
-| `skills/` | `~/.claude/skills/` |
-| `wrappers/claude/agents/` | `~/.claude/agents/` |
-| `wrappers/claude/output-styles/` | `~/.claude/output-styles/` |
-| `wrappers/claude/rules/` | `~/.claude/rules/` |
-| `wrappers/claude/scripts/` | `~/.claude/scripts/` |
-| `wrappers/claude/hooks/` | `~/.claude/scripts/hooks/` |
-| `tools/` (lint, CI, évals) | `~/.claude/scripts/` |
+**Les deux vaults n'ont pas la même structure.** Seuls `vault-capture` et `vault-save` ont leur skill canonique dans le vault perso, mesuré le 2026-10-04 avec `check-vault-bridge.sh`. Les autres échouent sur un vault dont la cible canonique manque.
+
+### Les gardes déterministes
+
+Cinq gardes refusent à l'appel ce qu'une règle de prose ne tenait pas. Quatre tournent sous les deux agents, et `no_secret_read` sous OpenCode seulement. Le garde AIDD ne refuse jamais sous OpenCode, qui ne lui donne pas la liste des skills invoqués. Chacun est la couche déterministe d'une règle qui, du coup, ne répète pas ses critères.
+
+| Garde (`wrappers/claude/hooks/`) | Décision (`hooks/`) | Refuse | Règle allégée | Batterie Claude |
+|---|---|---|---|---|
+| `guard-bash-tooling.py` | `bash_tooling.py` | `java`/`mvnw` hors `bash -lc 'sh ./mvnw …'`, heredoc imbriqué | `rules/tooling.md` | `tests/test-guard-bash-tooling.sh` |
+| `guard-no-claude-in-commit.sh` | `no_ai_in_commit.py` | mention d'IA (commits et PR, fichier de message compris), format Conventional Commits | `rules/commit-convention.md` | `tests/test-guard-no-claude-in-commit.sh` |
+| `guard-no-remote-write.py` | `no_remote_write.py` | écritures de l'agent sur preprod/prod | — | *aucune*, couvert par la batterie du cœur |
+| `guard-aidd-skill-lookup.py` | `aidd_skill_lookup.py` | `gh issue/pr/release create`, `git tag -a` à la main dans un repo `aidd_docs/` sans skill `aidd-` invoqué (sortie : `# aidd-skip: <raison>`) | `rules/aidd.md` | `tests/test-guard-aidd-skill-lookup.sh` |
+| *aucun, OpenCode seulement* | `no_secret_read.py` | une commande shell qui sort le contenu d'un fichier de `policy/deny.yaml` (`cat .env`, `grep`, `sqlite3 …/opencode.db`, la source d'un `cp`). Les écritures et le chargement par un programme passent | `policy/deny.yaml` | *aucune*, couvert par la batterie du cœur |
+
+**La décision vit dans `hooks/`, la traduction dans le wrapper.** Chaque module de `hooks/` expose `decide(event)`, qui rend la raison du refus ou rien. L'événement est neutre : `{event, action: shell|edit|read, command, paths, cwd, session, skills_used}`. `hooks/check.py` lance les gardes sur un événement lu sur stdin et répond `exit 0` (passe), `exit 2` + raison sur stderr (refus) ou `exit 1` (entrée illisible). Les fichiers de `wrappers/claude/hooks/` gardent leur nom et ne font plus que passer par `claude_adapter.py` : payload Claude vers événement, refus vers les deux formes de décision de Claude. Ce qui n'existe que sous Claude reste dans l'adaptateur, c'est-à-dire la lecture du transcript pour `skills_used` et le contrôle de `skipDangerousModePermissionPrompt`.
+
+**Sous OpenCode, le plugin `wrappers/opencode/plugins/harness-guards/` appelle le même `hooks/check.py`.** Il refuse dans `permission.evaluate`, mais ce hook ne reçoit pour le shell que les commandes simples, sans `cd` ni dossier courant. Le plugin retient donc dans `tool.execute.before` la commande entière et son `workdir`, puis les retrouve par l'identifiant d'appel. Si `check.py` ne rend pas de verdict, l'appel passe et l'erreur part dans le journal. `skills_used` vaut `null`, donc le garde AIDD ne refuse jamais sous OpenCode. Le plugin lance tous les gardes du cœur, alors que chaque adaptateur Claude ne lance que le sien. `no_secret_read` ne tourne donc que sous OpenCode, et c'est voulu : l'outillage de mesure lit `opencode.db` par `Bash`.
+
+```bash
+python3 hooks/tests/test-core.py                       # le cœur, sur l'entrée neutre
+node wrappers/opencode/tests/test-harness-guards.ts    # le plugin OpenCode, hors d'OpenCode
+bash wrappers/claude/hooks/tests/test-guard-bash-tooling.sh
+bash wrappers/claude/hooks/tests/test-guard-no-claude-in-commit.sh
+bash wrappers/claude/hooks/tests/test-guard-aidd-skill-lookup.sh
+```
+
+**Une batterie pèse autant que son garde.** Un garde sans cible vivante se comporte exactement pareil qu'il soit cassé ou intact ; et un garde qui refuse du travail valide finit désactivé, donc ne protège plus rien. Chaque batterie porte les deux : des cas positifs **fabriqués à la main**, et les formes légitimes qui doivent passer. Toute forme de commande nouvellement rencontrée s'y ajoute *avant* d'être corrigée dans le garde.
+
+**Calibrer sur du trafic réel, pas seulement sur ses propres cas.** `guard-bash-tooling.py` a été confronté aux 987 commandes du périmètre extraites des transcripts de sessions (`~/.claude/projects/*/*.jsonl`) : sa première conception, qui refusait tout ce qu'elle ne pouvait pas tokeniser, y produisait 5 faux positifs sur des `git commit` ordinaires. Une batterie écrite par l'auteur du garde ne les aurait jamais montrés.
+
+### Les lectures interdites
+
+`policy/deny.yaml` liste les fichiers qu'un agent ne doit jamais lire : identifiants d'OpenCode et de Claude Code, base d'OpenCode, `.env`, clés SSH et GPG, jetons cloud (AWS, Google Cloud, Azure, Kubernetes), jetons d'outils (`gh`, `.netrc`, `.npmrc`, `.pypirc`, Docker) et clés privées de certificat (`*.key`, `*.pem`, `*.p12`…). Chaque entrée nomme une fin de chemin, visée à n'importe quelle profondeur. `tools/install.py` la traduit à la fusion de la config de chaque agent :
+
+| Agent | Forme | Ce qui la tient |
+|---|---|---|
+| Claude Code | `permissions.deny`, `Read(//**/<fin>)` | refuse aussi en `bypassPermissions`, mesuré dans le banc |
+| OpenCode | `policies`, `tool.use` sur `read:<fin>` et `read:*/<fin>` | passe après les règles d'agent et les approbations, donc ni `--auto` ni « Allow always » ne la lève |
+
+**Une entrée qui porte `sauf` n'est pas traduite pour Claude.** OpenCode lève l'interdit par un `allow` placé après le `deny`, mais sous Claude un `deny` gagne toujours. Plutôt qu'interdire `.env.example` avec les autres variantes de `.env`, Claude ne reçoit pas cette entrée.
+
+**Sous OpenCode, le shell passe par un garde du cœur.** Une règle `read` ne voit que l'outil de lecture, et `cat` sur le leurre laissait sortir le témoin. `hooks/no_secret_read.py` lit `policy/deny.yaml` et refuse une commande qui sort le contenu d'un fichier interdit. Il laisse passer les écritures et le chargement par un programme. Sous Claude, la règle Read refuse aussi le `cat`, mais la doc ne le garantit pas, donc le banc Claude le consigne sans l'exiger.
+
+**Étudier une session OpenCode passe par `tools/session-export.py`.** L'export brut (`opencode session export`) recopie chaque secret qu'une session a vu, et `--sanitize` masque tout le texte. Le script garde le texte et masque les valeurs : celles des `.env` du dossier de la session, les motifs de jetons connus, et la valeur d'une affectation dont la clé dit `KEY`, `TOKEN`, `SECRET` ou `PASSWORD`. Un secret au format inconnu, sans nom de clé parlant, passe.
+
+```bash
+python3 tools/session-export.py <id>             # JSON masqué
+python3 tools/session-export.py <id> --texte     # transcript lisible, raisonnement omis
+python3 tools/tests/test-session-export.py       # calibre le masquage
+```
+
+### Les serveurs MCP
+
+`mcp/servers.yaml` déclare chaque serveur une fois : son nom, la commande qui le lance, et son installateur pour Claude. Chaque agent garde un carnet qui dit comment lancer le serveur, et `tools/install.py` remplit les deux.
+
+| Agent | Carnet | Qui l'écrit |
+|---|---|---|
+| Claude Code | `mcpServers` de `.claude.json`, à côté du dossier de config pour `~/.claude`, dedans sinon | l'installateur du serveur, lancé par `--fix` avec `CLAUDE_CONFIG_DIR` sur la cible |
+| OpenCode | `mcp.servers` de `opencode.json` | `install.py`, à la fusion, comme `policy/deny.yaml` |
+
+**Pourquoi Claude délègue.** `codegraph install` pose aussi la permission, le hook et la section de `CLAUDE.md`. Les recopier ici les ferait diverger à sa prochaine version, et Claude réécrit `.claude.json` pendant qu'il tourne. `--check` lit seulement que le serveur est dans le carnet.
+
+**Pourquoi OpenCode ne délègue pas.** Le même installateur ignore `OPENCODE_CONFIG_DIR` et écrit toujours dans `~/.config/opencode`. Lancé pour le banc, il modifierait le vivant. L'entrée reprend la forme de `codegraph install --print-config opencode`.
+
+La batterie de `install.py` met un faux `codegraph` en tête du PATH, qui note ses arguments et écrit le carnet. Les deux bancs passent par le vrai.
+
+### CodeGraph sur les projets AIDD
+
+[CodeGraph](https://github.com/colbymchenry/codegraph) donne à l'agent un graphe local des symboles, des appels et des dépendances. Il est déployé sur tous les projets AIDD, sans mesure de gain par projet : un projet grossit avec le temps, et mesurer chacun pour décider ne tient pas.
+
+Trois couches, de la plus rare à la plus fréquente.
+
+| Couche | Geste | Fréquence |
+|---|---|---|
+| Machine | `npm i -g @colbymchenry/codegraph`, puis `codegraph telemetry off`. Le serveur MCP est posé par `tools/install.py --fix` | une fois par poste |
+| Projet existant | `codegraph init` à la racine, puis `.codegraph/` dans le `.gitignore` | une fois par dépôt, à la main |
+| Projet neuf | `wrappers/claude/hooks/init-codegraph.py`, hook `SessionStart` | automatique |
+
+**Ce que `install` écrit hors du repo** : le serveur MCP `codegraph` dans `~/.claude.json`, la permission `mcp__codegraph__*` et un hook `UserPromptSubmit` (`codegraph prompt-hook`) dans `~/.claude/settings.json`, et une section balisée dans `~/.claude/CLAUDE.md`. Rien de cela n'est dans le repo : `~/.claude/settings.json` n'est pas lié, et la fusion ne retire jamais un hook de la machine. C'est `tools/install.py --fix` qui lance `install`, d'après `mcp/servers.yaml` (voir [Les serveurs MCP](#les-serveurs-mcp)).
+
+**Ce que fait le hook** : il agit quand le `cwd` porte un `aidd_docs/`, pas de `.codegraph/`, et que `codegraph` est dans le PATH. Il ajoute `.codegraph/` au `.gitignore` racine, puis lance `codegraph init` détaché, pour qu'un gros dépôt ne retarde pas la session. Il échoue ouvert. Les dépôts existants ne sont pas indexés par lui, volontairement : ils reçoivent un passage explicite, pas un index surprise à la prochaine session.
+
+**Pourquoi `.codegraph/` est ignoré à la racine** : `.codegraph/` porte son propre `.gitignore` (`*` sauf lui-même), donc la base ne se versionne jamais. Il reste alors un seul fichier non suivi, ce qui salit `git status`. La ligne racine l'évite sans qu'aucun projet n'ait à committer ce fichier.
+
+```bash
+bash wrappers/claude/hooks/tests/test-init-codegraph.sh
+```
+
+La batterie tourne contre le vrai `codegraph`, pas un faux binaire.
+
+## Particularités par agent
+
+### Claude Code
+
+Claude Code découvre `rules/`, `skills/`, `agents/` et `output-styles/` sous `~/.claude/` sans rien déclarer. Aucun `CLAUDE.md` global n'est nécessaire.
+
+La plupart des dossiers du repo gardent leur nom sous `~/.claude/`, avec trois écarts : `wrappers/claude/rules/` rejoint `rules/` dans `~/.claude/rules/`, `wrappers/claude/hooks/` va dans `~/.claude/scripts/hooks/`, et `tools/` (lint, CI, évals) va dans `~/.claude/scripts/`.
 
 `~/.claude/scripts/` garde la forme qu'il avait avant le rangement de `tools/` et `wrappers/claude/hooks/`, parce que `settings.json` et plusieurs skills appellent `~/.claude/scripts/…` en dur. La liste exacte des liens est dans `tools/manifests/claude.json`.
 
@@ -182,12 +313,22 @@ python3 tools/tests/test-install.py                                 # calibre l'
 
 `--repo DIR` change la racine des sources de liens : depuis un worktree, `--repo ~/Developpement/Workspaces/agent-config` vérifie la config vivante, qui vise le checkout principal.
 
-**Pour changer le checkout principal de version, utiliser `tools/bascule.sh`.** Un `git pull` seul laisserait pendre les liens dont la source a bougé. Un garde introuvable bloque alors tous les appels `Bash`. Le script fait avancer `main` sur `origin/main`, puis lance `install.py --fix` pour les deux agents, dans le même processus. Il se lance depuis un worktree, et sauvegarde avant d'écrire, dans `~/.local/state/agent-config/bascule/<horodatage>/`. On y retrouve les liens vers le repo, `settings.json`, `opencode.json`, `.zshrc` et le commit d'avant.
+### OpenCode
+
+OpenCode reçoit le harnais par `tools/install.py --agent opencode`, d'après `tools/manifests/opencode.json`. Les skills sont liés sous `skills/`, et le plugin `wrappers/opencode/plugins/harness-guards/` sous `plugins/harness-guards/`. Le reste est fusionné dans `opencode.json` : le gabarit `wrappers/opencode/opencode.json`, avec `{repo}` remplacé par la racine du repo, les `policies` tirées de `policy/deny.yaml` et les `mcp.servers` tirés de `mcp/servers.yaml`.
+
+Les skills ne passent pas par `skills: [...]` : un lien sous `skills/` est découvert, mesuré dans le banc. Un skill qui porte `disable-model-invocation: true` n'est pas proposé au modèle, comme sous Claude.
+
+Les règles ne passent pas par un `AGENTS.md` généré. OpenCode ne lit ni `~/.claude/rules` ni aucun dossier de règles, mais son tableau `instructions` accepte un glob. Il lit donc `rules/*.md` dans le repo, et une règle modifiée s'applique sans rien régénérer. OpenCode n'a pas de scope par chemin, donc les 4 règles scopées par `paths:` se chargent toujours. Une ligne **Portée** en tête de chacune dit à quels fichiers elle s'applique. Les règles propres à Claude restent hors du glob, dans `wrappers/claude/rules/`.
+
+## Outillage
+
+### Lancer toutes les batteries
+
+Toutes les batteries se lancent d'une commande, qui échoue si une seule échoue :
 
 ```bash
-bash tools/bascule.sh                                  # refuse si main est sale, ou si origin/main ne contient pas ce commit
-bash tools/bascule.sh --retour --etat <sauvegarde>     # main revient au commit d'avant, liens et fichiers sont restaurés
-bash tools/tests/test-bascule.sh                       # répète la bascule et le retour sur des cibles jetables
+bash tools/test-all.sh
 ```
 
 ### Le banc isolé
@@ -269,55 +410,6 @@ Le rapport exige aussi, par `--mcp codegraph`, que l'événement `system/init` p
 bash tools/bench.sh opencode                # banc ~/.opencode-bench, ~/.config/opencode jamais touché
 ```
 
-### Les gardes déterministes
-
-Cinq gardes refusent à l'appel ce qu'une règle de prose ne tenait pas. Quatre tournent sous les deux agents, et `no_secret_read` sous OpenCode seulement. Le garde AIDD ne refuse jamais sous OpenCode, qui ne lui donne pas la liste des skills invoqués. Chacun est la couche déterministe d'une règle qui, du coup, ne répète pas ses critères.
-
-| Garde (`wrappers/claude/hooks/`) | Décision (`hooks/`) | Refuse | Règle allégée | Batterie Claude |
-|---|---|---|---|---|
-| `guard-bash-tooling.py` | `bash_tooling.py` | `java`/`mvnw` hors `bash -lc 'sh ./mvnw …'`, heredoc imbriqué | `rules/tooling.md` | `tests/test-guard-bash-tooling.sh` |
-| `guard-no-claude-in-commit.sh` | `no_ai_in_commit.py` | mention d'IA (commits et PR, fichier de message compris), format Conventional Commits | `rules/commit-convention.md` | `tests/test-guard-no-claude-in-commit.sh` |
-| `guard-no-remote-write.py` | `no_remote_write.py` | écritures de l'agent sur preprod/prod | — | *aucune*, couvert par la batterie du cœur |
-| `guard-aidd-skill-lookup.py` | `aidd_skill_lookup.py` | `gh issue/pr/release create`, `git tag -a` à la main dans un repo `aidd_docs/` sans skill `aidd-` invoqué (sortie : `# aidd-skip: <raison>`) | `rules/aidd.md` | `tests/test-guard-aidd-skill-lookup.sh` |
-| *aucun, OpenCode seulement* | `no_secret_read.py` | une commande shell qui sort le contenu d'un fichier de `policy/deny.yaml` (`cat .env`, `grep`, `sqlite3 …/opencode.db`, la source d'un `cp`). Les écritures et le chargement par un programme passent | `policy/deny.yaml` | *aucune*, couvert par la batterie du cœur |
-
-**La décision vit dans `hooks/`, la traduction dans le wrapper.** Chaque module de `hooks/` expose `decide(event)`, qui rend la raison du refus ou rien. L'événement est neutre : `{event, action: shell|edit|read, command, paths, cwd, session, skills_used}`. `hooks/check.py` lance les gardes sur un événement lu sur stdin et répond `exit 0` (passe), `exit 2` + raison sur stderr (refus) ou `exit 1` (entrée illisible). Les fichiers de `wrappers/claude/hooks/` gardent leur nom et ne font plus que passer par `claude_adapter.py` : payload Claude vers événement, refus vers les deux formes de décision de Claude. Ce qui n'existe que sous Claude reste dans l'adaptateur, c'est-à-dire la lecture du transcript pour `skills_used` et le contrôle de `skipDangerousModePermissionPrompt`.
-
-**Sous OpenCode, le plugin `wrappers/opencode/plugins/harness-guards/` appelle le même `hooks/check.py`.** Il refuse dans `permission.evaluate`, mais ce hook ne reçoit pour le shell que les commandes simples, sans `cd` ni dossier courant. Le plugin retient donc dans `tool.execute.before` la commande entière et son `workdir`, puis les retrouve par l'identifiant d'appel. Si `check.py` ne rend pas de verdict, l'appel passe et l'erreur part dans le journal. `skills_used` vaut `null`, donc le garde AIDD ne refuse jamais sous OpenCode. Le plugin lance tous les gardes du cœur, alors que chaque adaptateur Claude ne lance que le sien. `no_secret_read` ne tourne donc que sous OpenCode, et c'est voulu : l'outillage de mesure lit `opencode.db` par `Bash`.
-
-```bash
-python3 hooks/tests/test-core.py                       # le cœur, sur l'entrée neutre
-node wrappers/opencode/tests/test-harness-guards.ts    # le plugin OpenCode, hors d'OpenCode
-bash wrappers/claude/hooks/tests/test-guard-bash-tooling.sh
-bash wrappers/claude/hooks/tests/test-guard-no-claude-in-commit.sh
-bash wrappers/claude/hooks/tests/test-guard-aidd-skill-lookup.sh
-```
-
-**Une batterie pèse autant que son garde.** Un garde sans cible vivante se comporte exactement pareil qu'il soit cassé ou intact ; et un garde qui refuse du travail valide finit désactivé, donc ne protège plus rien. Chaque batterie porte les deux : des cas positifs **fabriqués à la main**, et les formes légitimes qui doivent passer. Toute forme de commande nouvellement rencontrée s'y ajoute *avant* d'être corrigée dans le garde.
-
-**Calibrer sur du trafic réel, pas seulement sur ses propres cas.** `guard-bash-tooling.py` a été confronté aux 987 commandes du périmètre extraites des transcripts de sessions (`~/.claude/projects/*/*.jsonl`) : sa première conception, qui refusait tout ce qu'elle ne pouvait pas tokeniser, y produisait 5 faux positifs sur des `git commit` ordinaires. Une batterie écrite par l'auteur du garde ne les aurait jamais montrés.
-
-### Les lectures interdites
-
-`policy/deny.yaml` liste les fichiers qu'un agent ne doit jamais lire : identifiants d'OpenCode et de Claude Code, base d'OpenCode, `.env`, clés SSH et GPG, jetons cloud (AWS, Google Cloud, Azure, Kubernetes), jetons d'outils (`gh`, `.netrc`, `.npmrc`, `.pypirc`, Docker) et clés privées de certificat (`*.key`, `*.pem`, `*.p12`…). Chaque entrée nomme une fin de chemin, visée à n'importe quelle profondeur. `tools/install.py` la traduit à la fusion de la config de chaque agent :
-
-| Agent | Forme | Ce qui la tient |
-|---|---|---|
-| Claude Code | `permissions.deny`, `Read(//**/<fin>)` | refuse aussi en `bypassPermissions`, mesuré dans le banc |
-| OpenCode | `policies`, `tool.use` sur `read:<fin>` et `read:*/<fin>` | passe après les règles d'agent et les approbations, donc ni `--auto` ni « Allow always » ne la lève |
-
-**Une entrée qui porte `sauf` n'est pas traduite pour Claude.** OpenCode lève l'interdit par un `allow` placé après le `deny`, mais sous Claude un `deny` gagne toujours. Plutôt qu'interdire `.env.example` avec les autres variantes de `.env`, Claude ne reçoit pas cette entrée.
-
-**Sous OpenCode, le shell passe par un garde du cœur.** Une règle `read` ne voit que l'outil de lecture, et `cat` sur le leurre laissait sortir le témoin. `hooks/no_secret_read.py` lit `policy/deny.yaml` et refuse une commande qui sort le contenu d'un fichier interdit. Il laisse passer les écritures et le chargement par un programme. Sous Claude, la règle Read refuse aussi le `cat`, mais la doc ne le garantit pas, donc le banc Claude le consigne sans l'exiger.
-
-**Étudier une session OpenCode passe par `tools/session-export.py`.** L'export brut (`opencode session export`) recopie chaque secret qu'une session a vu, et `--sanitize` masque tout le texte. Le script garde le texte et masque les valeurs : celles des `.env` du dossier de la session, les motifs de jetons connus, et la valeur d'une affectation dont la clé dit `KEY`, `TOKEN`, `SECRET` ou `PASSWORD`. Un secret au format inconnu, sans nom de clé parlant, passe.
-
-```bash
-python3 tools/session-export.py <id>             # JSON masqué
-python3 tools/session-export.py <id> --texte     # transcript lisible, raisonnement omis
-python3 tools/tests/test-session-export.py       # calibre le masquage
-```
-
 ### Le contrat CI GitHub
 
 Une porte `ci`, seul check exigé par le ruleset, qui attend tous les jobs de son workflow, Trivy compris. Les autres jobs se découpent au grain de la stack. Actions épinglées par SHA, permissions minimales. Le contrat est dans [`rules/references/ref-ci-github.md`](rules/references/ref-ci-github.md), la règle qui y renvoie dans `rules/aidd.md`.
@@ -327,45 +419,6 @@ python3 tools/check-ci-contract.py <dépôt>             # mesure, 0 si conforme
 python3 tools/tests/test-check-ci-contract.py          # calibre le script
 bash tools/apply-ci-ruleset.sh OWNER/REPO [--dry-run]
 ```
-
-### CodeGraph sur les projets AIDD
-
-[CodeGraph](https://github.com/colbymchenry/codegraph) donne à l'agent un graphe local des symboles, des appels et des dépendances. Il est déployé sur tous les projets AIDD, sans mesure de gain par projet : un projet grossit avec le temps, et mesurer chacun pour décider ne tient pas.
-
-Trois couches, de la plus rare à la plus fréquente.
-
-| Couche | Geste | Fréquence |
-|---|---|---|
-| Machine | `npm i -g @colbymchenry/codegraph`, puis `codegraph telemetry off`. Le serveur MCP est posé par `tools/install.py --fix` | une fois par poste |
-| Projet existant | `codegraph init` à la racine, puis `.codegraph/` dans le `.gitignore` | une fois par dépôt, à la main |
-| Projet neuf | `wrappers/claude/hooks/init-codegraph.py`, hook `SessionStart` | automatique |
-
-**Ce que `install` écrit hors du repo** : le serveur MCP `codegraph` dans `~/.claude.json`, la permission `mcp__codegraph__*` et un hook `UserPromptSubmit` (`codegraph prompt-hook`) dans `~/.claude/settings.json`, et une section balisée dans `~/.claude/CLAUDE.md`. Rien de cela n'est dans le repo : `~/.claude/settings.json` n'est pas lié, et la fusion ne retire jamais un hook de la machine. C'est `tools/install.py --fix` qui lance `install`, d'après `mcp/servers.yaml` (voir plus bas).
-
-**Ce que fait le hook** : il agit quand le `cwd` porte un `aidd_docs/`, pas de `.codegraph/`, et que `codegraph` est dans le PATH. Il ajoute `.codegraph/` au `.gitignore` racine, puis lance `codegraph init` détaché, pour qu'un gros dépôt ne retarde pas la session. Il échoue ouvert. Les dépôts existants ne sont pas indexés par lui, volontairement : ils reçoivent un passage explicite, pas un index surprise à la prochaine session.
-
-**Pourquoi `.codegraph/` est ignoré à la racine** : `.codegraph/` porte son propre `.gitignore` (`*` sauf lui-même), donc la base ne se versionne jamais. Il reste alors un seul fichier non suivi, ce qui salit `git status`. La ligne racine l'évite sans qu'aucun projet n'ait à committer ce fichier.
-
-```bash
-bash wrappers/claude/hooks/tests/test-init-codegraph.sh
-```
-
-La batterie tourne contre le vrai `codegraph`, pas un faux binaire.
-
-### Les serveurs MCP
-
-`mcp/servers.yaml` déclare chaque serveur une fois : son nom, la commande qui le lance, et son installateur pour Claude. Chaque agent garde un carnet qui dit comment lancer le serveur, et `tools/install.py` remplit les deux.
-
-| Agent | Carnet | Qui l'écrit |
-|---|---|---|
-| Claude Code | `mcpServers` de `.claude.json`, à côté du dossier de config pour `~/.claude`, dedans sinon | l'installateur du serveur, lancé par `--fix` avec `CLAUDE_CONFIG_DIR` sur la cible |
-| OpenCode | `mcp.servers` de `opencode.json` | `install.py`, à la fusion, comme `policy/deny.yaml` |
-
-**Pourquoi Claude délègue.** `codegraph install` pose aussi la permission, le hook et la section de `CLAUDE.md`. Les recopier ici les ferait diverger à sa prochaine version, et Claude réécrit `.claude.json` pendant qu'il tourne. `--check` lit seulement que le serveur est dans le carnet.
-
-**Pourquoi OpenCode ne délègue pas.** Le même installateur ignore `OPENCODE_CONFIG_DIR` et écrit toujours dans `~/.config/opencode`. Lancé pour le banc, il modifierait le vivant. L'entrée reprend la forme de `codegraph install --print-config opencode`.
-
-La batterie de `install.py` met un faux `codegraph` en tête du PATH, qui note ses arguments et écrit le carnet. Les deux bancs passent par le vrai.
 
 ### La veille des plugins AIDD
 
@@ -454,40 +507,20 @@ Chaque cas rend deux verdicts, tous deux déterministes et sans juge LLM. Le **d
 
 **Lancer la batterie avant de croire une passe.** Elle confronte les deux verdicts et la validation du corpus à 20 cas fabriqués à la main. Sans elle, un verdict aveugle qui répond toujours OK est indiscernable d'un verdict intact.
 
-### `SKILLS_ROOT` — le contrat entre un skill et son agent
+## Contribuer
 
-Plusieurs skills appellent un script partagé de `skills/_shared/`. Ils le désignent par `$SKILLS_ROOT/_shared/<script>.sh`, jamais par le chemin d'un agent précis. À exporter depuis le profil du shell de lancement, à côté de `OBSIDIAN_VAULT_PRO` ou `OBSIDIAN_VAULT_PERSO` :
+### La règle de placement
 
-```sh
-export SKILLS_ROOT="/chemin/absolu/vers/agent-config/skills"
-```
+Un fichier va dans `wrappers/<runtime>/` si et seulement si **il cesse de fonctionner sans ce runtime**.
 
-**Le bloc `env` de `~/.claude/settings.local.json` ne suffit pas, mesuré le 2026-08-27.** La variable y était déclarée depuis le 2026-08-20, et `echo "[$SKILLS_ROOT]"` rendait `[]` dans l'outil Bash, en shell simple comme en `bash -lc`. `OBSIDIAN_VAULT_PRO`, déclarée dans le même bloc, était peuplée — mais par une ligne d'export du `.zshrc`, pas par le bloc. **La preuve de la config est donc `echo "[$SKILLS_ROOT]"` non vide dans une session neuve**, jamais la présence de la clé dans le JSON.
+| | Exemple | Où |
+|---|---|---|
+| **Dépendance** | un hook qui parse le JSON d'événement de Claude Code | wrapper |
+| **Indice** | un frontmatter `paths:` qu'un autre runtime ignorera sans dommage | zone neutre |
 
-**Pourquoi une variable** : un `~/.claude/skills/…` écrit dans un skill le rend inutilisable sous un autre agent, alors que le script visé est au même endroit relatif partout. Le skill dit quoi appeler, le wrapper dit où. Cet argument tient toujours : il justifie la variable, pas le mécanisme qui la peuple.
+Le critère n'est pas « mentionne Claude » — une règle qui interdit de citer un assistant dans un message de commit reste universelle. Le critère est : **ça échoue, ou ça dégrade sans casse ?**
 
-**Sans elle, l'appel échoue de façon trompeuse.** `bash "$SKILLS_ROOT/_shared/check-vault-bridge.sh"` devient `bash "/_shared/…"`, donc un `exit 127` qui accuse le script au lieu de la config — un agent est parti chercher le fichier par un `find /`.
-
-## Dépendance externe
-
-Les skills `vault-*` sont des passerelles vers un vault Obsidian : ils délèguent aux skills canoniques situés sous `<vault>/.agents/skills/`. Le vault se résout par `skills/_shared/resolve-vault.sh`, qui ne lit que deux variables, `OBSIDIAN_VAULT_PRO` et `OBSIDIAN_VAULT_PERSO`. À exporter depuis le profil du shell de lancement, comme `SKILLS_ROOT` et pour la même raison mesurée :
-
-```sh
-export OBSIDIAN_VAULT_PRO="/chemin/absolu/vers/le/vault/pro"
-export OBSIDIAN_VAULT_PERSO="/chemin/absolu/vers/le/vault/perso"
-```
-
-Un poste n'en exporte qu'une ou les deux. Avec un seul vault, le skill le prend sans poser de question. Avec les deux, il propose une liste numérotée et l'utilisateur répond par le numéro. Sans aucune des deux, chaque `vault-*` dégrade sans casse : message « aucun vault configuré » puis arrêt, jamais d'écriture dans le repo courant.
-
-**Les deux vaults n'ont pas la même structure.** Seuls `vault-capture` et `vault-save` ont leur skill canonique dans le vault perso, mesuré le 2026-10-04 avec `check-vault-bridge.sh`. Les autres échouent sur un vault dont la cible canonique manque.
-
-## Reprendre ce repo
-
-Un seul fichier n'est pas transposable : **`rules/profil.md`**. Il décrit la personne à qui l'agent s'adresse — niveau technique, contraintes cognitives, mode de compréhension — pour calibrer ton et profondeur. Le remplacer par le sien ; le format compte, pas le contenu.
-
-Tout le reste s'applique tel quel.
-
-## Conventions d'écriture
+### Conventions d'écriture
 
 Toute règle énonce sa **raison**, pas seulement l'ordre — un LLM suit mieux un pourquoi qu'un impératif, et transfère au cas non prévu.
 
