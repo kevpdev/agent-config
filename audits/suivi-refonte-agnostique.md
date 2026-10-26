@@ -13,14 +13,14 @@ Fichier de reprise du chantier. Le cadrage, qui fait foi, est dans `audits/2026-
 
 1. Cadrer la tâche, dire la recommandation, puis attendre l'accord. Ensuite, plan mode.
 2. Ouvrir l'issue par `aidd-vcs:04-issue-create`, avec un titre, un corps et un label validés avant création.
-3. Créer une branche depuis `harness-v2`, puis ouvrir une PR draft vers `harness-v2` par `aidd-vcs:02-pull-request`.
-4. Après le merge, fermer l'issue à la main. `Closes #` n'agit que sur la branche par défaut.
+3. Dans le worktree `agent-config-v2`, créer une branche depuis `origin/main`, puis ouvrir une PR draft vers `main` par `aidd-vcs:02-pull-request`. Pendant la refonte, les branches partaient de `harness-v2`, aujourd'hui supprimée.
+4. Après le merge, mettre le vivant à jour par `bash tools/bascule.sh`, lancé depuis le worktree. `main` étant la branche par défaut, un `Closes #` dans la PR ferme l'issue.
 
 Commits et PR suivent les Conventional Commits, sujet en anglais, sans aucune mention d'IA, PR comprise.
 
 ## État au 2026-10-26
 
-| Tâche | Issue | PR | Merge dans `harness-v2` |
+| Tâche | Issue | PR | Merge dans `harness-v2`, branche de la refonte |
 |---|---|---|---|
 | 1. Worktree, tag, sauvegarde des liens | #15 | — | `7ab852b` |
 | 2. `tools/install.py` et manifeste Claude | #16 | #17 | `69b4751` |
