@@ -136,6 +136,14 @@ python3 tools/tests/test-install.py                                 # calibre l'
 
 `--repo DIR` change la racine des sources de liens : depuis un worktree, `--repo ~/Developpement/Workspaces/agent-config` vérifie la config vivante, qui vise le checkout principal.
 
+**Pour changer le checkout principal de version, utiliser `tools/bascule.sh`.** Un `git pull` seul laisserait pendre les liens dont la source a bougé. Un garde introuvable bloque alors tous les appels `Bash`. Le script fait avancer `main` sur `origin/main`, puis lance `install.py --fix` pour les deux agents, dans le même processus. Il se lance depuis un worktree, et sauvegarde avant d'écrire, dans `~/.local/state/agent-config/bascule/<horodatage>/`. On y retrouve les liens vers le repo, `settings.json`, `opencode.json`, `.zshrc` et le commit d'avant.
+
+```bash
+bash tools/bascule.sh                                  # refuse si main est sale, ou si origin/main ne contient pas ce commit
+bash tools/bascule.sh --retour --etat <sauvegarde>     # main revient au commit d'avant, liens et fichiers sont restaurés
+bash tools/tests/test-bascule.sh                       # répète la bascule et le retour sur des cibles jetables
+```
+
 ### Le banc isolé
 
 Le banc mesure ce qu'une session Claude charge de ce repo, sans toucher `~/.claude`. Tester directement dans `~/.claude` changerait les gardes de la session en cours.

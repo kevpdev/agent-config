@@ -32,9 +32,10 @@ Commits et PR suivent les Conventional Commits, sujet en anglais, sans aucune me
 | 9. Lectures interdites, `policy/deny.yaml` pour les deux agents | #31 | #32 | `078d579` |
 | 10. Serveurs MCP, `mcp/servers.yaml` pour les deux agents | #33 | #34 | `1f50da0` |
 | 11. Drivers `tools/drivers/`, évals et mesure des réponses sous OpenCode | #35 | #36 | `222c678` |
-| 12. AIDD sous OpenCode sur `yt-transcriber`, modèles du banc sur l'abonnement Go | #37 | branche `feat/aidd-opencode` | à merger |
+| 12. AIDD sous OpenCode sur `yt-transcriber`, modèles du banc sur l'abonnement Go | #37 | #38 | `e567333` |
+| 13. Bascule, `tools/bascule.sh` et son retour | #39 | branche `feat/switch-over` | à merger |
 
-**Prochaine étape** : cadrer la tâche 13, la bascule.
+**Prochaine étape** : merger `harness-v2` dans `main`, puis lancer `bash tools/bascule.sh` depuis le worktree. Ensuite, ouvrir une session neuve de chaque agent sur le vivant.
 
 ## La référence de parité
 
@@ -42,7 +43,7 @@ Après chaque tâche, ces commandes doivent rendre ce qui suit :
 
 ```bash
 cd ~/Developpement/Workspaces/agent-config-v2
-bash tools/test-all.sh          # 18 batteries, 0 en échec
+bash tools/test-all.sh          # 19 batteries, 0 en échec
 bash tools/bench.sh claude      # 17 rules d'origine worktree et le CLAUDE.md du banc, 26 skills du repo, 6 plugins, 8 hooks résolus dont 1 machine, codegraph connected, aucune fuite, Read du leurre refusé en bypass
 bash tools/bench.sh opencode    # sur opencode-go/deepseek-v4.1-flash, quota imprimé avant la session ; commit signé refusé en permission.rejected, ls passe, 12 skills auto exposés, 0 des 14 manuels, 19 règles chargées, read du leurre refusé, codegraph_codegraph_explore appelé, ~/.config/opencode inchangé
 ```
@@ -88,14 +89,17 @@ bash tools/bench.sh opencode    # sur opencode-go/deepseek-v4.1-flash, quota imp
 - Tâche 12, Q1 : AIDD s'installe par `npx @ai-driven-dev/cli@5.5.0 setup --source remote --ai opencode --plugins all --yes`. Mesuré le 2026-10-26 sur `yt-transcriber` : les 467 fichiers de `.opencode/` et `opencode.json` sont identiques à l'archive `aidd-framework-opencode-flat-5.12.0.zip`. La CLI ajoute `.aidd/manifest.json` et `.aidd/cache/` au `.gitignore`. On la préfère à l'archive pour `doctor` et `update`.
 - Tâche 12, Q2 : les 51 skills AIDD sont exposés sous leur nom aplati, sans espace de noms (`04-issue-create`, `01-sdlc`) et sans collision. La session du projet en voit 65 : 12 du repo, 51 d'AIDD, 2 d'OpenCode.
 - Tâche 12, Q3 : le `opencode.json` du projet s'ajoute à celui du banc sans le remplacer. Les 19 règles, la policy de lecture, le refus du commit signé et codegraph restent verts dans le clone. Son `instructions` vise `.opencode/rules/**/*.md`, que l'archive 5.12.0 ne pose pas, donc AIDD n'ajoute aucune règle.
-- Tâche 12 : `tools/bench/opencode.sh --project DIR` joue la session dans un `git clone --local` de DIR, hors du home. Seul ce qui est commité passe. La branche locale `chore/aidd-opencode` de `yt-transcriber` (`994b7b3`) n'est pas poussée.
+- Tâche 12 : `tools/bench/opencode.sh --project DIR` joue la session dans un `git clone --local` de DIR, hors du home. Seul ce qui est commité passe. La branche locale `chore/aidd-opencode` de `yt-transcriber` (`994b7b3`) a été supprimée après le merge, avec les restes `.aidd/` et `.opencode/` de l'installation.
+- Tâche 13 : la bascule passe par `tools/bascule.sh`, lancé depuis le worktree, parce qu'avant l'avance `main` ne contient pas encore le script. Il refuse et n'écrit rien dans trois cas : `main` est sale, `origin/main` ne contient pas son commit, ou un PAS UN LIEN ou un INTRUS attend dans une cible. Une fois ces contrôles passés, il sauvegarde, fait avancer `main`, lance `install.py --fix` sur les deux agents et pose `OPENCODE_DISABLE_CLAUDE_CODE_SKILLS=1` dans `~/.zshrc`, le tout dans le même processus.
+- Tâche 13 : le retour ne passe pas par l'ancien `sync-rules.sh`. Il repose les liens de la sauvegarde, restaure les fichiers, et remet `main` sur le commit d'avant par `git switch -C`, qui réécrit la branche locale seulement. Le plan prévoyait un `--detach`, mais un checkout détaché rendait une seconde bascule impossible sans `git switch main`, qui ferait lui-même pendre les liens.
+- Tâche 13 : on ne fait aucune archive de `~/.config/opencode`, parce qu'une archive lirait `service.json`. Seuls les fichiers que le harnais écrit sont copiés.
+- Tâche 13 : `tools/tests/test-bascule.sh` refait une cible Claude à partir des 68 liens de `audits/2026-10-22-liens-pre-v2.txt`, dans un clone jetable dont `origin` est un dépôt nu local. Mesuré le 2026-10-26 : la bascule, le retour et une seconde bascule rendent 0 écart. Après le retour, les liens et les empreintes sont identiques à l'avant.
 
 ## Fils ouverts, hors du chemin critique
 
 - Évals sous OpenCode : elles tournent désormais sur `opencode-go/deepseek-v4.1-flash`. Aucun verdict n'a encore été rejoué sur ce modèle.
 - Banc OpenCode dans un dépôt vide, le 2026-10-26 : DeepSeek dit deux fois que `codegraph_explore` est absent de son catalogue, alors que le log porte « mcp connected server=codegraph tools=1 ». Dans le clone de `yt-transcriber`, il l'a appelé. La cause n'est pas cherchée.
 - `aidd setup` laisse `.aidd/plugin-cache/` non suivi dans le projet : son `.gitignore` ne couvre que `.aidd/cache/`.
-- Garder ou non la branche `chore/aidd-opencode` de `yt-transcriber`, à trancher par l'utilisateur.
 - Garder ou non `ponctuation.md` pour DeepSeek et MiniMax, à trancher sur les taux de la tâche 11.
 
 - #20 : ranger `skills/_shared/` en `scripts/` et `references/`, avec un README. À faire entre deux tâches.
