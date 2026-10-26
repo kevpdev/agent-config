@@ -95,11 +95,13 @@ def outil(nom: str, status: str) -> dict:
 
 
 def lancer(db: str, skills: str | None, rules: str | None = None, leurre: bool = False,
-           mcp: str | None = None) -> tuple[int, str]:
+           mcp: str | None = None, attendus: tuple[str, ...] = ()) -> tuple[int, str]:
     argv = [sys.executable, RAPPORT, "--db", db, "--dir", DOSSIER] + (["--skills", skills] if skills else [])
     argv += ["--rules", rules] if rules else []
     argv += ["--leurre", LEURRE, "--temoin", TEMOIN] if leurre else []
     argv += ["--mcp", mcp] if mcp else []
+    for nom in attendus:
+        argv += ["--expect-skill", nom]
     r = subprocess.run(argv, capture_output=True, text=True)
     return r.returncode, r.stdout + r.stderr
 
@@ -177,6 +179,16 @@ with tempfile.TemporaryDirectory() as tmp:
 
     code, sortie = avec_mcp([outil("execute", "completed")])
     cas("aucun outil MCP appelé : code 1", code == 1 and "aucun appel d'un outil codegraph_" in sortie, sortie)
+
+    def avec_attendu(skills):
+        sous = tempfile.mkdtemp(dir=tmp)
+        return lancer(base(sous, BONS, skills), None, attendus=("04-issue-create",))
+
+    code, sortie = avec_attendu(["auto-a", "04-issue-create"])
+    cas("skill attendu exposé : code 0", code == 0 and "✓ skill 04-issue-create exposé" in sortie, sortie)
+
+    code, sortie = avec_attendu(["auto-a"])
+    cas("skill attendu absent : nommé, code 1", code == 1 and "✗ skill 04-issue-create absent" in sortie, sortie)
 
 print(f"{'✓' if not echecs else '✗'} {echecs} échec(s).")
 sys.exit(1 if echecs else 0)

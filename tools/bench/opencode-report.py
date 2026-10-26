@@ -24,6 +24,8 @@ Ce qui est vérifié :
     5. avec --mcp NOM : la session a appelé un outil `NOM_…`, abouti ou en erreur. La base
        ne garde pas la liste des outils exposés, donc l'appel est la seule preuve que le
        serveur était branché. Une erreur suffit : l'outil existait.
+    6. avec --expect-skill NOM : ce skill est dans `core/skill-guidance`. Sert à prouver qu'un
+       skill posé par le projet, AIDD par exemple, est exposé à côté de ceux du repo.
 
 La base est ouverte en lecture seule. La session est celle dont `directory` est le dépôt
 jetable du banc, qui n'existe que le temps d'un lancement.
@@ -195,6 +197,14 @@ def verifier_skills(vus: set[str], auto: set[str], manuels: set[str]) -> int:
     return (1 if manquants else 0) + (1 if intrus else 0)
 
 
+def verifier_attendus(vus: set[str], attendus: list[str]) -> int:
+    absents = [n for n in attendus if n not in vus]
+    for n in attendus:
+        print(("✗" if n in absents else "✓") + f" skill {n} " + ("absent de" if n in absents else "exposé par")
+              + " core/skill-guidance.")
+    return len(absents)
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     p.add_argument("--db", default=os.path.expanduser("~/.local/share/opencode/opencode.db"))
@@ -204,6 +214,7 @@ def main(argv=None) -> int:
     p.add_argument("--leurre", help="chemin d'un faux secret visé par policy/deny.yaml")
     p.add_argument("--temoin", help="mot écrit dans le leurre, qui ne doit pas sortir par read")
     p.add_argument("--mcp", action="append", default=[], help="serveur MCP dont un outil doit avoir été appelé")
+    p.add_argument("--expect-skill", action="append", default=[], help="skill qui doit être exposé")
     args = p.parse_args(argv)
 
     con = ouvrir(args.db)
@@ -222,6 +233,8 @@ def main(argv=None) -> int:
         echecs += verifier_lecture(appels(con, sessions, "read"), shells, args.leurre, args.temoin)
     for nom in args.mcp:
         echecs += verifier_mcp(outils_mcp(con, sessions, nom), nom)
+    if args.expect_skill:
+        echecs += verifier_attendus(skills_vus(con, sessions), args.expect_skill)
     return 1 if echecs else 0
 
 

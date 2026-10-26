@@ -31,9 +31,10 @@ Commits et PR suivent les Conventional Commits, sujet en anglais, sans aucune me
 | 8. Rules du repo servies à OpenCode par `instructions` | #29 | #30 | `dd91ab4` |
 | 9. Lectures interdites, `policy/deny.yaml` pour les deux agents | #31 | #32 | `078d579` |
 | 10. Serveurs MCP, `mcp/servers.yaml` pour les deux agents | #33 | #34 | `1f50da0` |
-| 11. Drivers `tools/drivers/`, évals et mesure des réponses sous OpenCode | #35 | branche `feat/opencode-drivers` | à merger |
+| 11. Drivers `tools/drivers/`, évals et mesure des réponses sous OpenCode | #35 | #36 | `222c678` |
+| 12. AIDD sous OpenCode sur `yt-transcriber`, modèles du banc sur l'abonnement Go | #37 | branche `feat/aidd-opencode` | à merger |
 
-**Prochaine étape** : cadrer la tâche 12, AIDD sous OpenCode sur un projet test.
+**Prochaine étape** : cadrer la tâche 13, la bascule.
 
 ## La référence de parité
 
@@ -41,9 +42,9 @@ Après chaque tâche, ces commandes doivent rendre ce qui suit :
 
 ```bash
 cd ~/Developpement/Workspaces/agent-config-v2
-bash tools/test-all.sh          # 17 batteries, 0 en échec
+bash tools/test-all.sh          # 18 batteries, 0 en échec
 bash tools/bench.sh claude      # 17 rules d'origine worktree et le CLAUDE.md du banc, 26 skills du repo, 6 plugins, 8 hooks résolus dont 1 machine, codegraph connected, aucune fuite, Read du leurre refusé en bypass
-bash tools/bench.sh opencode    # commit signé refusé en permission.rejected, ls passe, 12 skills auto exposés, 0 des 14 manuels, 19 règles chargées, read du leurre refusé, codegraph_codegraph_explore appelé, ~/.config/opencode inchangé
+bash tools/bench.sh opencode    # sur opencode-go/deepseek-v4.1-flash, quota imprimé avant la session ; commit signé refusé en permission.rejected, ls passe, 12 skills auto exposés, 0 des 14 manuels, 19 règles chargées, read du leurre refusé, codegraph_codegraph_explore appelé, ~/.config/opencode inchangé
 ```
 
 - Le banc rend 100 skills au total : 26 du repo, 17 intégrés, 47 des plugins AIDD et 10 `anthropic-skills:*` du compte. À la tâche 3, il en rendait 43, parce que `init` ne listait pas encore les skills préfixés. Relancé sur `8f1ee6a`, il rend aussi 100, donc l'écart ne vient pas du repo.
@@ -81,9 +82,20 @@ bash tools/bench.sh opencode    # commit signé refusé en permission.rejected, 
 - Tâche 5 : la parité de l'adaptateur Claude a été mesurée sur 963 commandes réelles tirées des transcripts, rejouées contre l'ancien et le nouveau garde. Résultat : 0 écart, et 35 refus identiques des deux côtés. Pour rejouer, il faut reprendre les anciens gardes par `git show 5af25cd:wrappers/claude/hooks/<garde>`.
 - `git commit -m "fix: Claude"` **passe**, avant comme après la tâche 5 : nommer Claude n'est pas signer. Le critère de la tâche 6 dans le cadrage et la QA de l'issue #23 se testent donc avec `Co-Authored-By: Claude`.
 
+- Tâche 12 : tout modèle lancé sous OpenCode passe par l'abonnement Go (10 $/mois), à la demande de l'utilisateur. La chaîne est `opencode-go/deepseek-v4.1-flash`, puis `opencode-go/minimax-m3.1-flash`, dans `tools/bench/opencode-go.py`. Un modèle hors `opencode-go/` est refusé avant toute session, même s'il répond. Mesuré le 2026-10-26 : les gratuits ne répondent pas (réglage Privacy, « Model unavailable »), et la variante Zen n'a pas de crédit.
+- Tâche 12 : aucune API ne donne le quota Go restant (`opencode.ai/docs/go` renvoie à la console). Le contrôle additionne donc `session_v2.cost` d'`opencode.db` sur 5 h, 7 j et 30 j, contre 20 %, 50 % et 100 % du plafond mensuel (80 $ pour DeepSeek, 20 $ pour MiniMax), et refuse dès 80 %. `opencode stats` ne compte que par jours, donc il ne couvre pas les 5 h. Le contrôle ne voit pas une autre machine. Sur une erreur de limite Go, le banc et le driver rejouent une fois avec le modèle suivant. La forme exacte de cette erreur dans le flux n'est pas mesurée, et la fenêtre de 30 jours glissante est supposée.
+- Tâche 12 : l'action TUI `usage.show` existe dans le schéma `opencode.ai/v2/cli.json`, mais Alt+U n'a rien affiché le 2026-10-26, et aucune des 119 routes de l'API locale ne sert l'usage.
+- Tâche 12, Q1 : AIDD s'installe par `npx @ai-driven-dev/cli@5.5.0 setup --source remote --ai opencode --plugins all --yes`. Mesuré le 2026-10-26 sur `yt-transcriber` : les 467 fichiers de `.opencode/` et `opencode.json` sont identiques à l'archive `aidd-framework-opencode-flat-5.12.0.zip`. La CLI ajoute `.aidd/manifest.json` et `.aidd/cache/` au `.gitignore`. On la préfère à l'archive pour `doctor` et `update`.
+- Tâche 12, Q2 : les 51 skills AIDD sont exposés sous leur nom aplati, sans espace de noms (`04-issue-create`, `01-sdlc`) et sans collision. La session du projet en voit 65 : 12 du repo, 51 d'AIDD, 2 d'OpenCode.
+- Tâche 12, Q3 : le `opencode.json` du projet s'ajoute à celui du banc sans le remplacer. Les 19 règles, la policy de lecture, le refus du commit signé et codegraph restent verts dans le clone. Son `instructions` vise `.opencode/rules/**/*.md`, que l'archive 5.12.0 ne pose pas, donc AIDD n'ajoute aucune règle.
+- Tâche 12 : `tools/bench/opencode.sh --project DIR` joue la session dans un `git clone --local` de DIR, hors du home. Seul ce qui est commité passe. La branche locale `chore/aidd-opencode` de `yt-transcriber` (`994b7b3`) n'est pas poussée.
+
 ## Fils ouverts, hors du chemin critique
 
-- Évals sous OpenCode : aucun modèle gratuit fiable n'est servi au 2026-10-26. Un verdict qui compte demande un modèle payant ou un quota rétabli.
+- Évals sous OpenCode : elles tournent désormais sur `opencode-go/deepseek-v4.1-flash`. Aucun verdict n'a encore été rejoué sur ce modèle.
+- Banc OpenCode dans un dépôt vide, le 2026-10-26 : DeepSeek dit deux fois que `codegraph_explore` est absent de son catalogue, alors que le log porte « mcp connected server=codegraph tools=1 ». Dans le clone de `yt-transcriber`, il l'a appelé. La cause n'est pas cherchée.
+- `aidd setup` laisse `.aidd/plugin-cache/` non suivi dans le projet : son `.gitignore` ne couvre que `.aidd/cache/`.
+- Garder ou non la branche `chore/aidd-opencode` de `yt-transcriber`, à trancher par l'utilisateur.
 - Garder ou non `ponctuation.md` pour DeepSeek et MiniMax, à trancher sur les taux de la tâche 11.
 
 - #20 : ranger `skills/_shared/` en `scripts/` et `references/`, avec un README. À faire entre deux tâches.
