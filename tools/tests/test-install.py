@@ -204,6 +204,7 @@ def main() -> int:
         deny = s.get("permissions", {}).get("deny", [])
         cas("deny : service.json interdit à toute profondeur",
             "Read(//**/.config/opencode/service.json)" in deny)
+        cas("deny : clé SSH privée interdite à toute profondeur", "Read(//**/.ssh/id_ed25519)" in deny)
         cas("deny : une entrée à exception n'est pas traduite", not any(".env.*" in d for d in deny))
         s["permissions"]["allow"] = ["Bash(ls:*)"]
         s["permissions"]["deny"] = deny[1:]
@@ -267,6 +268,8 @@ def main() -> int:
         policies = lire_settings(cible, "opencode.json").get("policies", [])
         cas("opencode : policies interdit service.json hors du dossier de travail",
             {"action": "tool.use", "resource": "read:*/.config/opencode/service.json", "effect": "deny"} in policies)
+        cas("opencode : policies interdit les jetons AWS hors du dossier de travail",
+            {"action": "tool.use", "resource": "read:*/.aws/credentials", "effect": "deny"} in policies)
         exemple = [i for i, p in enumerate(policies) if p["resource"] == "read:*/.env.example"]
         variantes = [i for i, p in enumerate(policies) if p["resource"] == "read:*/.env.*"]
         cas("opencode : .env.example relevé après le deny de .env.*",

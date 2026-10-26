@@ -253,7 +253,7 @@ bash wrappers/claude/hooks/tests/test-guard-aidd-skill-lookup.sh
 
 ### Les lectures interdites
 
-`policy/deny.yaml` liste les fichiers qu'un agent ne doit jamais lire : identifiants d'OpenCode et de Claude Code, base d'OpenCode, `.env`. Chaque entrée nomme une fin de chemin, visée à n'importe quelle profondeur. `tools/install.py` la traduit à la fusion de la config de chaque agent :
+`policy/deny.yaml` liste les fichiers qu'un agent ne doit jamais lire : identifiants d'OpenCode et de Claude Code, base d'OpenCode, `.env`, clés SSH et GPG, jetons cloud (AWS, Google Cloud, Azure, Kubernetes), jetons d'outils (`gh`, `.netrc`, `.npmrc`, `.pypirc`, Docker) et clés privées de certificat (`*.key`, `*.pem`, `*.p12`…). Chaque entrée nomme une fin de chemin, visée à n'importe quelle profondeur. `tools/install.py` la traduit à la fusion de la config de chaque agent :
 
 | Agent | Forme | Ce qui la tient |
 |---|---|---|
