@@ -11,6 +11,7 @@ rules/              règles chargées en contexte — neutres
 skills/             expertises chargées à la demande — neutres
   _shared/          références partagées entre plusieurs skills
 hooks/              décision des gardes, sur une entrée neutre
+policy/             lectures interdites, déclarées une fois pour les deux agents
   tests/            sa batterie
 tools/              outillage du harnais, sans dépendance à un agent
   tests/            ses batteries
@@ -74,6 +75,7 @@ OpenCode reçoit le harnais par `tools/install.py --agent opencode`, d'après `t
 | `wrappers/opencode/plugins/harness-guards/` | lien `plugins/harness-guards/` |
 | `rules/*.md` | lus sur place, par `instructions` dans `opencode.json` |
 | `wrappers/opencode/opencode.json` | fusionné dans `opencode.json`, `{repo}` remplacé par la racine du repo |
+| `policy/deny.yaml` | traduit en `policies` dans `opencode.json` |
 
 Les skills ne passent pas par `skills: [...]` : un lien sous `skills/` est découvert, mesuré dans le banc. Un skill qui porte `disable-model-invocation: true` n'est pas proposé au modèle, comme sous Claude.
 
@@ -201,7 +203,9 @@ python3 tools/tests/test-bench-report.py    # calibre le rapport
 
 Le script échoue en code 1 sur une rule chargée hors du banc et du repo, sur un journal vide, ou sur une empreinte de `~/.claude` qui a changé. Un journal vide veut dire que le hook ne s'est pas déclenché, jamais qu'aucune rule ne s'est chargée.
 
-**Le banc OpenCode** vit dans `~/.opencode-bench`, visé par `OPENCODE_CONFIG_DIR`. La session tente un commit dont le message porte une ligne de co-signature, puis un `ls`. Le rapport (`tools/bench/opencode-report.py`, calibré par `tools/tests/test-opencode-report.py`) lit dans `~/.local/share/opencode/opencode.db`, en lecture seule, que le commit a échoué en `permission.rejected` et que `ls` a abouti. Il lit aussi la liste des skills proposés au modèle (`core/skill-guidance`) : tous les skills auto-invocables du repo doivent y être, et aucun de ceux qui portent `disable-model-invocation: true`. Il lit enfin les fichiers chargés (`core/instructions`) : chaque `rules/*.md` doit y être. Les identifiants d'OpenCode vivent dans cette base, donc le banc n'a pas de connexion à faire. En contrepartie, sa session reste dans l'historique du vivant.
+Une seconde session, en `bypassPermissions`, tente de lire un faux `service.json` avec l'outil Read puis avec `cat`. Le rapport (`tools/bench/claude-deny-report.py`, calibré par `tools/tests/test-claude-deny-report.py`) échoue si le Read aboutit ou si le mot témoin du leurre sort par lui. Ce que fait `cat` est consigné.
+
+**Le banc OpenCode** vit dans `~/.opencode-bench`, visé par `OPENCODE_CONFIG_DIR`. La session tente un commit dont le message porte une ligne de co-signature, puis un `ls`. Le rapport (`tools/bench/opencode-report.py`, calibré par `tools/tests/test-opencode-report.py`) lit dans `~/.local/share/opencode/opencode.db`, en lecture seule, que le commit a échoué en `permission.rejected` et que `ls` a abouti. Il lit aussi la liste des skills proposés au modèle (`core/skill-guidance`) : tous les skills auto-invocables du repo doivent y être, et aucun de ceux qui portent `disable-model-invocation: true`. Il lit aussi les fichiers chargés (`core/instructions`) : chaque `rules/*.md` doit y être. La session tente enfin de lire un faux `service.json` avec l'outil `read` puis avec `cat`, et le `read` doit échouer sans laisser sortir le mot témoin. Le modèle est fixé dans `tools/bench/opencode.sh`, parce que le défaut d'OpenCode a changé entre deux lancements. Les identifiants d'OpenCode vivent dans cette base, donc le banc n'a pas de connexion à faire. En contrepartie, sa session reste dans l'historique du vivant.
 
 ```bash
 bash tools/bench.sh opencode                # banc ~/.opencode-bench, ~/.config/opencode jamais touché
@@ -233,6 +237,19 @@ bash wrappers/claude/hooks/tests/test-guard-aidd-skill-lookup.sh
 **Une batterie pèse autant que son garde.** Un garde sans cible vivante se comporte exactement pareil qu'il soit cassé ou intact ; et un garde qui refuse du travail valide finit désactivé, donc ne protège plus rien. Chaque batterie porte les deux : des cas positifs **fabriqués à la main**, et les formes légitimes qui doivent passer. Toute forme de commande nouvellement rencontrée s'y ajoute *avant* d'être corrigée dans le garde.
 
 **Calibrer sur du trafic réel, pas seulement sur ses propres cas.** `guard-bash-tooling.py` a été confronté aux 987 commandes du périmètre extraites des transcripts de sessions (`~/.claude/projects/*/*.jsonl`) : sa première conception, qui refusait tout ce qu'elle ne pouvait pas tokeniser, y produisait 5 faux positifs sur des `git commit` ordinaires. Une batterie écrite par l'auteur du garde ne les aurait jamais montrés.
+
+### Les lectures interdites
+
+`policy/deny.yaml` liste les fichiers qu'un agent ne doit jamais lire : identifiants d'OpenCode et de Claude Code, base d'OpenCode, `.env`. Chaque entrée nomme une fin de chemin, visée à n'importe quelle profondeur. `tools/install.py` la traduit à la fusion de la config de chaque agent :
+
+| Agent | Forme | Ce qui la tient |
+|---|---|---|
+| Claude Code | `permissions.deny`, `Read(//**/<fin>)` | refuse aussi en `bypassPermissions`, mesuré dans le banc |
+| OpenCode | `policies`, `tool.use` sur `read:<fin>` et `read:*/<fin>` | passe après les règles d'agent et les approbations, donc ni `--auto` ni « Allow always » ne la lève |
+
+**Une entrée qui porte `sauf` n'est pas traduite pour Claude.** OpenCode lève l'interdit par un `allow` placé après le `deny`, mais sous Claude un `deny` gagne toujours. Plutôt qu'interdire `.env.example` avec les autres variantes de `.env`, Claude ne reçoit pas cette entrée.
+
+**Le shell n'est pas couvert sous OpenCode.** Une règle `read` ne voit que l'outil de lecture : dans le banc, `cat` sur le leurre passe et le témoin sort. Sous Claude, le même `cat` est refusé, mais la doc ne le garantit pas, donc le banc le consigne sans l'exiger.
 
 ### Le contrat CI GitHub
 
