@@ -1,0 +1,45 @@
+# Lectures interdites, déclarées une fois pour les deux agents.
+#
+# tools/install.py traduit ce fichier à la fusion de la config de chaque agent :
+#   Claude    permissions.deny  : "Read(//**/<fin>)", un chemin absolu à toute profondeur
+#   OpenCode  policies          : tool.use "read:<fin>" (chemin interne) et "read:*/<fin>"
+# Les deux formes sont mesurées le 2026-10-26 sur un leurre hors du home : Claude refuse
+# en bypassPermissions, OpenCode refuse sous --auto (« Blocked by configuration policy »).
+#
+# CE QUE ÇA NE COUVRE PAS SOUS OPENCODE : une lecture par le shell. Mesuré, `cat` sur le
+# même leurre passe et le témoin sort, parce qu'une règle `read` ne voit que l'outil de
+# lecture. Sous Claude, le même `cat` est refusé : la règle Read s'étend à une commande
+# Bash qui lit le fichier. Mesuré une fois, sans garantie écrite dans la doc.
+#
+# `sauf` lève l'interdit pour une fin plus précise. OpenCode le traduit par un `allow` après
+# le `deny`. Claude ne sait pas faire d'exception (un deny gagne toujours), donc une entrée
+# qui porte `sauf` n'est pas traduite pour lui : mieux vaut ne rien interdire que d'interdire
+# le fichier d'exemple.
+#
+# Champs : id, action (read seulement), fin, raison, sauf (optionnel).
+
+- id: opencode-service
+  action: read
+  fin: .config/opencode/service.json
+  raison: identifiants du service OpenCode.
+
+- id: opencode-db
+  action: read
+  fin: .local/share/opencode/opencode.db
+  raison: la table credential porte les identifiants des fournisseurs.
+
+- id: claude-credentials
+  action: read
+  fin: .credentials.json
+  raison: jetons de connexion de Claude Code, vivant et banc.
+
+- id: env
+  action: read
+  fin: .env
+  raison: variables d'environnement d'un projet, souvent des secrets.
+
+- id: env-variantes
+  action: read
+  fin: .env.*
+  sauf: [.env.example]
+  raison: variantes de .env par environnement. Le fichier d'exemple reste lisible.

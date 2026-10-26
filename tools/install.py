@@ -15,6 +15,10 @@ POURQUOI CE SCRIPT
     commandes vers la cible, et `{repo}` vers la racine des sources de liens. OpenCode
     s'en sert pour lire `rules/*.md` dans le repo par `instructions`.
 
+    La clé `deny` du manifeste désigne `policy/deny.yaml`, traduit dans la forme de
+    l'agent et ajouté au gabarit avant la fusion : `permissions.deny` pour Claude,
+    `policies` pour OpenCode.
+
 ÉCARTS, avec les mots de `sync-rules.sh`
     ABSENT          le lien attendu n'existe pas
     MAUVAISE CIBLE  le lien existe et vise ailleurs
@@ -45,6 +49,8 @@ import importlib.util
 import json
 import os
 import sys
+
+import yaml
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MANIFESTES = os.path.join(REPO, "tools", "manifests")
@@ -168,13 +174,58 @@ def charger_sync_settings():
     return module
 
 
-def verifier_settings(cible: str, manifeste: dict, repo_liens: str, fix: bool):
+def charger_deny(chemin: str) -> list[dict]:
+    """Lit `policy/deny.yaml` et refuse une entrée incomplète ou une action inconnue."""
+    with open(chemin, encoding="utf-8") as f:
+        entrees = yaml.safe_load(f) or []
+    for e in entrees:
+        manque = [c for c in ("id", "action", "fin", "raison") if not e.get(c)]
+        if manque:
+            raise SystemExit(f"install — {chemin} : entrée {e.get('id', '?')} sans {', '.join(manque)}.")
+        if e["action"] != "read":
+            raise SystemExit(f"install — {chemin} : entrée {e['id']}, action {e['action']!r} inconnue (read seulement).")
+    return entrees
+
+
+def deny_claude(entrees: list[dict]) -> dict:
+    # Un deny Claude gagne toujours sur un allow : une entrée à exception n'est pas traduite.
+    return {"permissions": {"deny": [f"Read(//**/{e['fin']})" for e in entrees if not e.get("sauf")]}}
+
+
+def deny_opencode(entrees: list[dict]) -> dict:
+    # La ressource d'un `read` est relative sous le dossier de travail, absolue ailleurs.
+    def deux(effet, fin):
+        return [{"action": "tool.use", "resource": f"read:{r}", "effect": effet} for r in (fin, f"*/{fin}")]
+    policies = []
+    for e in entrees:
+        policies += deux("deny", e["fin"])
+        for fin in e.get("sauf") or []:
+            policies += deux("allow", fin)
+    return {"policies": policies}
+
+
+TRADUCTIONS = {"claude": deny_claude, "opencode": deny_opencode}
+
+
+def ajouter(repo: dict, ajout: dict) -> dict:
+    """Ajoute la traduction au gabarit, un niveau d'objet en profondeur."""
+    for cle, valeur in ajout.items():
+        if isinstance(valeur, dict) and isinstance(repo.get(cle), dict):
+            repo[cle] = {**repo[cle], **valeur}
+        else:
+            repo[cle] = valeur
+    return repo
+
+
+def verifier_settings(cible: str, manifeste: dict, agent: str, repo_liens: str, fix: bool):
     # Un manifeste sans `settings` n'a rien à fusionner.
     if "settings" not in manifeste:
         return [], []
     sync = charger_sync_settings()
     nom = os.path.basename(manifeste["settings"])
     repo = sync.charger(os.path.join(REPO, manifeste["settings"]))
+    if "deny" in manifeste:
+        repo = ajouter(repo, TRADUCTIONS[agent](charger_deny(os.path.join(REPO, manifeste["deny"]))))
     repo = reecrire_repo(reecrire_chemins(repo, rendre_cible(cible) + "/"), repo_liens)
     fichier = os.path.join(cible, nom)
     machine = sync.charger(fichier, absent_ok=True)
@@ -208,7 +259,7 @@ def main(argv: list[str]) -> int:
         return 0
 
     ecarts, faits = verifier_liens(cible, manifeste, attendus, repo_liens, args.fix)
-    e_settings, f_settings = verifier_settings(cible, manifeste, repo_liens, args.fix)
+    e_settings, f_settings = verifier_settings(cible, manifeste, args.agent, repo_liens, args.fix)
     ecarts += e_settings
     faits += f_settings
 
