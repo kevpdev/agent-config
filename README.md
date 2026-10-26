@@ -12,6 +12,7 @@ skills/             expertises chargées à la demande — neutres
   _shared/          références partagées entre plusieurs skills
 hooks/              décision des gardes, sur une entrée neutre
 policy/             lectures interdites, déclarées une fois pour les deux agents
+mcp/                serveurs MCP, déclarés une fois pour les deux agents
   tests/            sa batterie
 tools/              outillage du harnais, sans dépendance à un agent
   tests/            ses batteries
@@ -76,6 +77,7 @@ OpenCode reçoit le harnais par `tools/install.py --agent opencode`, d'après `t
 | `rules/*.md` | lus sur place, par `instructions` dans `opencode.json` |
 | `wrappers/opencode/opencode.json` | fusionné dans `opencode.json`, `{repo}` remplacé par la racine du repo |
 | `policy/deny.yaml` | traduit en `policies` dans `opencode.json` |
+| `mcp/servers.yaml` | traduit en `mcp.servers` dans `opencode.json` |
 
 Les skills ne passent pas par `skills: [...]` : un lien sous `skills/` est découvert, mesuré dans le banc. Un skill qui porte `disable-model-invocation: true` n'est pas proposé au modèle, comme sous Claude.
 
@@ -205,7 +207,9 @@ Le script échoue en code 1 sur une rule chargée hors du banc et du repo, sur u
 
 Une seconde session, en `bypassPermissions`, tente de lire un faux `service.json` avec l'outil Read puis avec `cat`. Le rapport (`tools/bench/claude-deny-report.py`, calibré par `tools/tests/test-claude-deny-report.py`) échoue si le Read aboutit ou si le mot témoin du leurre sort par lui. Ce que fait `cat` est consigné.
 
-**Le banc OpenCode** vit dans `~/.opencode-bench`, visé par `OPENCODE_CONFIG_DIR`. La session tente un commit dont le message porte une ligne de co-signature, puis un `ls`. Le rapport (`tools/bench/opencode-report.py`, calibré par `tools/tests/test-opencode-report.py`) lit dans `~/.local/share/opencode/opencode.db`, en lecture seule, que le commit a échoué en `permission.rejected` et que `ls` a abouti. Il lit aussi la liste des skills proposés au modèle (`core/skill-guidance`) : tous les skills auto-invocables du repo doivent y être, et aucun de ceux qui portent `disable-model-invocation: true`. Il lit aussi les fichiers chargés (`core/instructions`) : chaque `rules/*.md` doit y être. La session tente enfin de lire un faux `service.json` avec l'outil `read` puis avec `cat`, et le `read` doit échouer sans laisser sortir le mot témoin. Le modèle est fixé dans `tools/bench/opencode.sh`, parce que le défaut d'OpenCode a changé entre deux lancements. Les identifiants d'OpenCode vivent dans cette base, donc le banc n'a pas de connexion à faire. En contrepartie, sa session reste dans l'historique du vivant.
+Le rapport exige aussi, par `--mcp codegraph`, que l'événement `system/init` porte le serveur `codegraph` en `connected` et au moins un outil `mcp__codegraph__…`. Le hook `codegraph prompt-hook`, posé par l'installateur de codegraph, n'a pas de chemin : il est rangé « machine » parce que sa commande est sur le PATH.
+
+**Le banc OpenCode** vit dans `~/.opencode-bench`, visé par `OPENCODE_CONFIG_DIR`. La session tente un commit dont le message porte une ligne de co-signature, puis un `ls`. Le rapport (`tools/bench/opencode-report.py`, calibré par `tools/tests/test-opencode-report.py`) lit dans `~/.local/share/opencode/opencode.db`, en lecture seule, que le commit a échoué en `permission.rejected` et que `ls` a abouti. Il lit aussi la liste des skills proposés au modèle (`core/skill-guidance`) : tous les skills auto-invocables du repo doivent y être, et aucun de ceux qui portent `disable-model-invocation: true`. Il lit aussi les fichiers chargés (`core/instructions`) : chaque `rules/*.md` doit y être. La session tente enfin de lire un faux `service.json` avec l'outil `read` puis avec `cat`, et le `read` doit échouer sans laisser sortir le mot témoin. Elle appelle enfin `codegraph_explore` : la base ne garde pas la liste des outils exposés, donc cet appel est la seule preuve que le serveur MCP est branché. Sous OpenCode, l'outil s'appelle `codegraph_codegraph_explore`, le nom du serveur suivi de celui de l'outil. La session ne reçoit aucune variable `CLAUDE*` ni `ANTHROPIC*` : un modèle qui ne trouvait pas l'outil a lancé `env` et envoyé un jeton de la session Claude qui lançait le banc. Le modèle est fixé dans `tools/bench/opencode.sh`, parce que le défaut d'OpenCode a changé entre deux lancements. Les identifiants d'OpenCode vivent dans cette base, donc le banc n'a pas de connexion à faire. En contrepartie, sa session reste dans l'historique du vivant.
 
 ```bash
 bash tools/bench.sh opencode                # banc ~/.opencode-bench, ~/.config/opencode jamais touché
@@ -269,11 +273,11 @@ Trois couches, de la plus rare à la plus fréquente.
 
 | Couche | Geste | Fréquence |
 |---|---|---|
-| Machine | `npm i -g @colbymchenry/codegraph`, puis `codegraph install -t claude -l global -y`, puis `codegraph telemetry off` | une fois par poste |
+| Machine | `npm i -g @colbymchenry/codegraph`, puis `codegraph telemetry off`. Le serveur MCP est posé par `tools/install.py --fix` | une fois par poste |
 | Projet existant | `codegraph init` à la racine, puis `.codegraph/` dans le `.gitignore` | une fois par dépôt, à la main |
 | Projet neuf | `hooks/init-codegraph.py`, hook `SessionStart` | automatique |
 
-**Ce que `install` écrit hors du repo** : le serveur MCP `codegraph` dans `~/.claude.json`, la permission `mcp__codegraph__*` et un hook `UserPromptSubmit` (`codegraph prompt-hook`) dans `~/.claude/settings.json`, et une section balisée dans `~/.claude/CLAUDE.md`. Rien de cela n'est dans le repo : `~/.claude/settings.json` n'est pas lié, et `sync-settings.py` ne retire jamais un hook de la machine. Un poste neuf rejoue donc la ligne « Machine ».
+**Ce que `install` écrit hors du repo** : le serveur MCP `codegraph` dans `~/.claude.json`, la permission `mcp__codegraph__*` et un hook `UserPromptSubmit` (`codegraph prompt-hook`) dans `~/.claude/settings.json`, et une section balisée dans `~/.claude/CLAUDE.md`. Rien de cela n'est dans le repo : `~/.claude/settings.json` n'est pas lié, et la fusion ne retire jamais un hook de la machine. C'est `tools/install.py --fix` qui lance `install`, d'après `mcp/servers.yaml` (voir plus bas).
 
 **Ce que fait le hook** : il agit quand le `cwd` porte un `aidd_docs/`, pas de `.codegraph/`, et que `codegraph` est dans le PATH. Il ajoute `.codegraph/` au `.gitignore` racine, puis lance `codegraph init` détaché, pour qu'un gros dépôt ne retarde pas la session. Il échoue ouvert. Les dépôts existants ne sont pas indexés par lui, volontairement : ils reçoivent un passage explicite, pas un index surprise à la prochaine session.
 
@@ -284,6 +288,21 @@ bash wrappers/claude/hooks/tests/test-init-codegraph.sh
 ```
 
 La batterie tourne contre le vrai `codegraph`, pas un faux binaire.
+
+### Les serveurs MCP
+
+`mcp/servers.yaml` déclare chaque serveur une fois : son nom, la commande qui le lance, et son installateur pour Claude. Chaque agent garde un carnet qui dit comment lancer le serveur, et `tools/install.py` remplit les deux.
+
+| Agent | Carnet | Qui l'écrit |
+|---|---|---|
+| Claude Code | `mcpServers` de `.claude.json`, à côté du dossier de config pour `~/.claude`, dedans sinon | l'installateur du serveur, lancé par `--fix` avec `CLAUDE_CONFIG_DIR` sur la cible |
+| OpenCode | `mcp.servers` de `opencode.json` | `install.py`, à la fusion, comme `policy/deny.yaml` |
+
+**Pourquoi Claude délègue.** `codegraph install` pose aussi la permission, le hook et la section de `CLAUDE.md`. Les recopier ici les ferait diverger à sa prochaine version, et Claude réécrit `.claude.json` pendant qu'il tourne. `--check` lit seulement que le serveur est dans le carnet.
+
+**Pourquoi OpenCode ne délègue pas.** Le même installateur ignore `OPENCODE_CONFIG_DIR` et écrit toujours dans `~/.config/opencode`. Lancé pour le banc, il modifierait le vivant. L'entrée reprend la forme de `codegraph install --print-config opencode`.
+
+La batterie de `install.py` met un faux `codegraph` en tête du PATH, qui note ses arguments et écrit le carnet. Les deux bancs passent par le vrai.
 
 ### La veille des plugins AIDD
 
