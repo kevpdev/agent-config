@@ -15,6 +15,7 @@ Sortie : 0 si tous les cas passent, 1 si un cas échoue.
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import subprocess
@@ -162,6 +163,22 @@ def main() -> int:
             s.get("voice") == {"enabled": True} and "codegraph prompt-hook" in commandes(s))
         cas("machine : clé du repo réappliquée", s.get("model") != "haiku")
 
+        # policy/deny.yaml traduit en permissions.deny, à côté des allow de la machine.
+        deny = s.get("permissions", {}).get("deny", [])
+        cas("deny : service.json interdit à toute profondeur",
+            "Read(//**/.config/opencode/service.json)" in deny)
+        cas("deny : une entrée à exception n'est pas traduite", not any(".env.*" in d for d in deny))
+        s["permissions"]["allow"] = ["Bash(ls:*)"]
+        s["permissions"]["deny"] = deny[1:]
+        with open(os.path.join(cible, "settings.json"), "w") as f:
+            json.dump(s, f)
+        code, sortie = lancer(cible, "--check", home=autre_home)
+        cas("deny : une interdiction retirée est un écart", code == 1 and "permissions.deny" in sortie)
+        lancer(cible, "--fix", home=autre_home)
+        s = lire_settings(cible)
+        cas("deny : allow de la machine conservé et deny rétabli",
+            s["permissions"].get("allow") == ["Bash(ls:*)"] and s["permissions"]["deny"] == deny)
+
         # Rendu des chemins : sous le home, écrit avec ~.
         home = os.path.join(racine, "h2")
         cible_home = os.path.join(home, ".claude")
@@ -204,6 +221,30 @@ def main() -> int:
         code, sortie = lancer(cible, "--check", "--agent", "opencode", "--repo", "/autre/repo")
         cas("opencode : --repo déplace aussi instructions",
             code == 1 and "/autre/repo/rules/*.md" in sortie)
+        policies = lire_settings(cible, "opencode.json").get("policies", [])
+        cas("opencode : policies interdit service.json hors du dossier de travail",
+            {"action": "tool.use", "resource": "read:*/.config/opencode/service.json", "effect": "deny"} in policies)
+        exemple = [i for i, p in enumerate(policies) if p["resource"] == "read:*/.env.example"]
+        variantes = [i for i, p in enumerate(policies) if p["resource"] == "read:*/.env.*"]
+        cas("opencode : .env.example relevé après le deny de .env.*",
+            exemple and variantes and policies[exemple[0]]["effect"] == "allow" and exemple[0] > variantes[0])
+
+    # Une entrée de deny.yaml mal formée arrête l'installation.
+    spec = importlib.util.spec_from_file_location("install", SCRIPT)
+    install = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(install)
+    with tempfile.TemporaryDirectory() as tmp:
+        for nom, contenu in (("entrée à action inconnue", "- {id: x, action: shell, fin: a, raison: r}\n"),
+                             ("entrée sans fin", "- {id: x, action: read, raison: r}\n")):
+            chemin = os.path.join(tmp, "deny.yaml")
+            with open(chemin, "w", encoding="utf-8") as f:
+                f.write(contenu)
+            try:
+                install.charger_deny(chemin)
+                refuse = False
+            except SystemExit:
+                refuse = True
+            cas(f"deny.yaml : {nom} refusée", refuse)
 
     print(f"{'✓' if not echecs else '✗'} {echecs} échec(s).")
     return 1 if echecs else 0
