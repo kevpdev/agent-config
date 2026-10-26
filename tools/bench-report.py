@@ -13,12 +13,14 @@ ORIGINE D'UNE RULE, par son chemin résolu
     HORS BANC  tout le reste, `~/.claude` compris : l'isolation a fui
 
 ÉCHOUE FERMÉ : code 1 si le flux n'a pas d'`init`, si le journal est vide ou porte
-une LOG-ERREUR, si une rule est HORS BANC, ou si un hook de `--settings` ne mène pas
-à un fichier du worktree. Un journal vide veut dire « le journal est cassé », jamais
+une LOG-ERREUR, si une rule est HORS BANC, si un hook de `--settings` ne mène pas
+à un fichier du worktree, ou si un serveur de `--mcp` n'est pas connecté avec ses outils.
+Un hook sans chemin dont la commande est sur le PATH (`codegraph prompt-hook`, posé par
+l'installateur du serveur) est rangé « machine » : il ne vient pas du worktree. Un journal vide veut dire « le journal est cassé », jamais
 « aucune rule chargée ».
 
 Usage
-    python3 tools/bench-report.py --stream run.jsonl --log instructions.log --bench DIR [--repo DIR] [--settings FILE]
+    python3 tools/bench-report.py --stream run.jsonl --log instructions.log --bench DIR [--repo DIR] [--settings FILE] [--mcp NOM]
 """
 
 from __future__ import annotations
@@ -26,6 +28,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import sys
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -112,6 +115,7 @@ def main(argv: list[str]) -> int:
     p.add_argument("--bench", required=True)
     p.add_argument("--repo", default=REPO)
     p.add_argument("--settings", help="settings.json du banc : chaque hook doit mener à un fichier du worktree")
+    p.add_argument("--mcp", action="append", default=[], help="serveur MCP qui doit être connecté, avec ses outils")
     args = p.parse_args(argv)
     banc = os.path.abspath(os.path.expanduser(args.bench))
 
@@ -150,11 +154,26 @@ def main(argv: list[str]) -> int:
     if args.settings:
         print(f"Hooks ({len(hooks)})")
         for commande, script in hooks:
+            if not script and commande.split() and shutil.which(commande.split()[0]):
+                print(f"  machine  {commande}")
+                continue
             reel = os.path.realpath(script) if script else ""
             ok = bool(script) and os.path.isfile(reel) and sous(reel, os.path.realpath(args.repo))
             print(f"  {'ok' if ok else '✗ '}  {commande}")
             if not ok:
                 problemes.append(f"hook introuvable dans le worktree : {commande} → {reel or '?'}")
+
+    if args.mcp:
+        etats = {s.get("name"): s.get("status") for s in lister(init, "mcp_servers") if isinstance(s, dict)}
+        outils = [str(o) for o in lister(init, "tools")]
+        print(f"Serveurs MCP ({len(args.mcp)})")
+        for nom in args.mcp:
+            siens = [o for o in outils if o.startswith(f"mcp__{nom}__")]
+            print(f"  {nom}  {etats.get(nom, 'absent')}  {len(siens)} outils")
+            if etats.get(nom) != "connected":
+                problemes.append(f"serveur MCP {nom} : {etats.get(nom, 'absent')}, pas connected")
+            elif not siens:
+                problemes.append(f"serveur MCP {nom} : connecté, mais aucun outil mcp__{nom}__ dans la session")
 
     if problemes:
         for pb in problemes:
@@ -163,7 +182,7 @@ def main(argv: list[str]) -> int:
         return 1
     n_plugins = sum(len(v) for v in par_plugin.values())
     print(f"✓ {len(skills)} skills, {n_plugins} skills de plugins, {len(vus)} fichiers d'instructions, "
-          f"{len(hooks)} hooks résolus, aucune fuite.")
+          f"{len(hooks)} hooks résolus, {len(args.mcp)} serveurs MCP, aucune fuite.")
     return 0
 
 
