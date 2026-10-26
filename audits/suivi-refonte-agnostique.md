@@ -50,7 +50,7 @@ Après chaque tâche, ces commandes doivent rendre ce qui suit :
 cd ~/Developpement/Workspaces/agent-config-v2
 bash tools/test-all.sh          # 19 batteries, 0 en échec
 bash tools/bench.sh claude      # 17 rules d'origine worktree et le CLAUDE.md du banc, 26 skills du repo, 6 plugins, 8 hooks résolus dont 1 machine, codegraph connected, aucune fuite, Read du leurre refusé en bypass
-bash tools/bench.sh opencode    # sur opencode-go/deepseek-v4.1-flash, quota imprimé avant la session ; commit signé refusé en permission.rejected, ls passe, 12 skills auto exposés, 0 des 14 manuels, 19 règles chargées, read du leurre refusé, codegraph_codegraph_explore appelé, ~/.config/opencode inchangé
+bash tools/bench.sh opencode    # sur opencode-go/deepseek-v4.1-flash, quota imprimé avant la session ; commit signé refusé en permission.rejected, ls passe, 12 skills auto exposés, 0 des 14 manuels, 19 règles chargées, read et cat du leurre refusés, codegraph_codegraph_explore appelé, ~/.config/opencode inchangé
 ```
 
 - Le banc rend 100 skills au total : 26 du repo, 17 intégrés, 47 des plugins AIDD et 10 `anthropic-skills:*` du compte. À la tâche 3, il en rendait 43, parce que `init` ne listait pas encore les skills préfixés. Relancé sur `8f1ee6a`, il rend aussi 100, donc l'écart ne vient pas du repo.
@@ -102,6 +102,8 @@ bash tools/bench.sh opencode    # sur opencode-go/deepseek-v4.1-flash, quota imp
 - Tâche 13, constaté le 2026-10-26 : deux minutes après la bascule, Claude Code a réécrit `~/.claude/settings.json` après la confirmation du mode bypass, et la clé `model` y a disparu. `install.py --fix` l'a remise. Un `--check` après chaque relance de Claude Code attrape ce cas.
 - Tâche 13 : la machine s'aligne sur le wrapper. Opus en `medium` est le défaut, par `effortLevel` dans `wrappers/claude/settings.json`. La clé `modelSettings`, que Claude Code avait écrite sur la machine (Opus en `medium`, Sonnet en `high`), est retirée, parce qu'elle passait devant le wrapper sans que le repo la voie. Sonnet ne sert que dans un projet qui le déclare dans son `.claude/settings.json`, comme le vault.
 - Tâche 13 : contre le vivant, `tools/bench-report.py` compte comme « hook introuvable » les 14 hooks de l'application Orca, écrits en shell en ligne dans `~/.claude/settings.json`. Ils ne viennent pas du harnais. Le rapport est fait pour un banc, où ces hooks n'existent pas.
+- Après la refonte, #44 : un `cat` de secret sous OpenCode est refusé par `hooks/no_secret_read.py`, qui lit `policy/deny.yaml`. Le garde refuse une commande qui sort le contenu, et laisse passer les écritures et le chargement par un programme. Rejoué le 2026-10-26 sur 3 503 commandes `Bash` réelles, il en refuse 4, qui lisent toutes un secret (2 `sqlite3` sur `opencode.db`, 1 `cat` de `service.json`, 1 `cat` d'un `.env`). Le banc OpenCode compte désormais le `cat` du leurre comme un contrôle.
+- Après la refonte, #44, mesuré le 2026-10-26 : l'outil `edit` d'OpenCode modifie un `.env` existant sans `read`. Le modèle ne reçoit que « Edited .env (1 replacement) ». Le diff, lignes de contexte comprises, reste dans `metadata` d'`opencode.db`, absent de `providerResult`.
 
 ## Fils ouverts, hors du chemin critique
 
@@ -117,7 +119,6 @@ bash tools/bench.sh opencode    # sur opencode-go/deepseek-v4.1-flash, quota imp
 - `skills_used` sous OpenCode : l'outil `skill` laisse `input.id` dans `opencode.db`, donc le plugin pourrait suivre les skills lancés. Tant que ce n'est pas fait, le garde AIDD ne refuse jamais sous OpenCode.
 - Des paragraphes propres à Claude vivent dans des règles neutres, que lit aussi OpenCode : la section « Déplacer un projet existant » de `workspaces.md` (liens de `~/.claude`) et le hook `UserPromptSubmit` de `codegraph.md`. Le cadrage les renvoie à l'adaptateur.
 - `rules/references/` n'est installé ni pour Claude (le manifeste ne lie que `rules/*.md`) ni pour OpenCode. Les règles y renvoient par chemin relatif.
-- Lecture d'un secret par le shell sous OpenCode : `cat` passe, mesuré à la tâche 9. Le fermer demande un garde du cœur sur l'action `shell`, qui reconnaisse une lecture de fin interdite.
 - La fusion remplace une liste entière : un `policies` posé à la main dans le vivant `opencode.json` serait écrasé par celui de `deny.yaml`. Le vivant n'en a pas aujourd'hui.
 - La section `AGENTS.md` que `codegraph install` écrit pour OpenCode n'est pas posée. `rules/codegraph.md` est déjà chargé par `instructions`, et l'installateur écrirait dans le vivant.
 - Un modèle gratuit du banc OpenCode lit tout ce que le banc lui laisse voir, et l'envoie à son fournisseur. Les variables Claude sont retirées, mais le `--auto` laisse encore le shell libre sur la machine.

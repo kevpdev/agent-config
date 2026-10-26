@@ -6,10 +6,18 @@
 # Les deux formes sont mesurées le 2026-10-26 sur un leurre hors du home : Claude refuse
 # en bypassPermissions, OpenCode refuse sous --auto (« Blocked by configuration policy »).
 #
-# CE QUE ÇA NE COUVRE PAS SOUS OPENCODE : une lecture par le shell. Mesuré, `cat` sur le
-# même leurre passe et le témoin sort, parce qu'une règle `read` ne voit que l'outil de
-# lecture. Sous Claude, le même `cat` est refusé : la règle Read s'étend à une commande
-# Bash qui lit le fichier. Mesuré une fois, sans garantie écrite dans la doc.
+# LE SHELL SOUS OPENCODE : une règle `read` ne voit que l'outil de lecture, et `cat` sur le
+# leurre laissait sortir le témoin (mesuré). Le garde hooks/no_secret_read.py lit ce même
+# fichier et refuse une commande qui SORT le contenu (`cat`, `grep`, `sqlite3`, la source
+# d'un `cp`). Il laisse passer les écritures et le chargement par un programme
+# (`--env-file .env`, `source .env && pytest`), et ne voit pas un contournement (`$(…)`,
+# un script qui ouvre le fichier). Sous Claude, la règle Read refuse aussi le `cat`, mesuré
+# une fois, sans garantie écrite dans la doc. Le garde n'y tourne pas.
+#
+# CRÉER UN .env : l'agent pose le squelette sans valeurs (`cp .env.example .env`), l'humain
+# remplit les valeurs. Une valeur tapée dans un prompt part chez le fournisseur du modèle
+# avant même d'être écrite. L'outil `edit` d'OpenCode modifie un .env existant sans `read`,
+# mesuré : le modèle ne reçoit que « Edited .env », le diff reste dans opencode.db.
 #
 # `sauf` lève l'interdit pour une fin plus précise. OpenCode le traduit par un `allow` après
 # le `deny`. Claude ne sait pas faire d'exception (un deny gagne toujours), donc une entrée
