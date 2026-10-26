@@ -73,6 +73,28 @@ def opencode_stream(driver):
     ))[2:], ("", 0.0, "provider.quota : limite"))
 
 
+def opencode_rejeu(driver):
+    """Sur une limite Go, la session est rejouée une fois avec le modèle suivant."""
+    limite = lignes({"type": "error", "error": {"type": "GoUsageLimitError", "message": "limit"}})
+    bonne = lignes({"type": "text", "part": {"text": "fini"}})
+    joues = []
+
+    def faux(ctx, case, workdir, model, timeout):
+        joues.append(model)
+        return (limite if len(joues) == 1 else bonne), 0
+
+    vrai, driver._lancer = driver._lancer, faux
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            work = os.path.join(tmp, "work")
+            os.makedirs(work)
+            ctx = {"go": driver.GO, "db": os.path.join(tmp, "absente.db"), "rapport": None}
+            res = driver.run_session(ctx, {"query": "q"}, work, driver.GO.CHAINE[0], 10)
+    finally:
+        driver._lancer = vrai
+    cas("opencode — limite Go : rejeu sur le modèle suivant", (joues, res[2]), (driver.GO.CHAINE, "fini"))
+
+
 def opencode_base(driver):
     with tempfile.TemporaryDirectory() as tmp:
         db = os.path.join(tmp, "opencode.db")
@@ -118,6 +140,7 @@ def main() -> int:
     oc = load("opencode")
     opencode_stream(oc)
     opencode_base(oc)
+    opencode_rejeu(oc)
     with tempfile.TemporaryDirectory() as tmp:
         path = os.path.join(tmp, "opencode.json")
         with open(path, "w", encoding="utf-8") as f:
