@@ -72,3 +72,18 @@ La cible de 1,09 point-virgule est tenue avec un facteur 3. Les deux résidus so
 - la flèche de mapping de `tooling.md` (`` `java` → `bash -lc …` ``), qui est une table de correspondance déguisée en liste. Exception d'index, gardée.
 
 **Hors périmètre de cette passe** : `back-spring.md` et `front-react.md`, scopés par `paths:` donc absents de la couche chargée. Ils portaient 9 et 4 occurrences au comptage du 2026-08-11.
+
+## Sous OpenCode, par modèle (2026-10-26)
+
+`python3 tools/mesure-reponses.py --agent opencode` sur la base vivante `opencode.db`. Les réponses de fond seules (60 mots et plus), sessions des bancs et des évals écartées. Aucune de ces sessions n'avait `ponctuation.md` dans `core/instructions` : c'est le taux natif du modèle, sans la règle.
+
+| Modèle | Prose de fond | Points-virgules / 1 000 mots | Tirets cadratins / 1 000 mots |
+|---|---|---|---|
+| `opencode/deepseek-v4.1-flash-free` | 6 438 mots, 5 sessions | **2,49** | 8,39 |
+| `opencode-go/deepseek-v4.1-flash` | 7 387 mots, 2 sessions | **1,76** | 9,07 |
+| `opencode/minimax-m3.1-flash-free` | 3 911 mots, 7 sessions | **0,77** | 14,06 |
+| Cible de la règle | | 1,09 | |
+
+DeepSeek dépasse la cible sans la règle, donc la substitution du point-virgule le concerne. MiniMax est déjà sous la cible, mais ses tirets sont au niveau de la baseline Claude du 2026-08-11 (13,93). Le corpus de MiniMax est mince, moins de 4 000 mots.
+
+Garder ou non la règle pour ces modèles n'est pas tranché ici. Le compteur ne connaît que ` ; ` et ` — ` entourés d'espaces, comme pour Claude.

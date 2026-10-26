@@ -30,9 +30,10 @@ Commits et PR suivent les Conventional Commits, sujet en anglais, sans aucune me
 | 7. Skills du repo servis à OpenCode par liens | #27 | #28 | `b693130` |
 | 8. Rules du repo servies à OpenCode par `instructions` | #29 | #30 | `dd91ab4` |
 | 9. Lectures interdites, `policy/deny.yaml` pour les deux agents | #31 | #32 | `078d579` |
-| 10. Serveurs MCP, `mcp/servers.yaml` pour les deux agents | #33 | branche `feat/mcp-servers` | à merger |
+| 10. Serveurs MCP, `mcp/servers.yaml` pour les deux agents | #33 | #34 | `1f50da0` |
+| 11. Drivers `tools/drivers/`, évals et mesure des réponses sous OpenCode | #35 | branche `feat/opencode-drivers` | à merger |
 
-**Prochaine étape** : cadrer la tâche 11, les drivers OpenCode de `run-skill-evals.py` et `mesure-reponses.py`.
+**Prochaine étape** : cadrer la tâche 12, AIDD sous OpenCode sur un projet test.
 
 ## La référence de parité
 
@@ -40,7 +41,7 @@ Après chaque tâche, ces commandes doivent rendre ce qui suit :
 
 ```bash
 cd ~/Developpement/Workspaces/agent-config-v2
-bash tools/test-all.sh          # 16 batteries, 0 en échec
+bash tools/test-all.sh          # 17 batteries, 0 en échec
 bash tools/bench.sh claude      # 17 rules d'origine worktree et le CLAUDE.md du banc, 26 skills du repo, 6 plugins, 8 hooks résolus dont 1 machine, codegraph connected, aucune fuite, Read du leurre refusé en bypass
 bash tools/bench.sh opencode    # commit signé refusé en permission.rejected, ls passe, 12 skills auto exposés, 0 des 14 manuels, 19 règles chargées, read du leurre refusé, codegraph_codegraph_explore appelé, ~/.config/opencode inchangé
 ```
@@ -69,12 +70,21 @@ bash tools/bench.sh opencode    # commit signé refusé en permission.rejected, 
 - Tâche 10 : pour OpenCode, `install.py` écrit lui-même `mcp.servers` dans `opencode.json`, sous la forme de `codegraph install --print-config opencode`. L'installateur ignore `OPENCODE_CONFIG_DIR` et écrirait dans le vivant, mesuré le même jour.
 - Tâche 10 : sous OpenCode, l'outil s'appelle `codegraph_codegraph_explore`. La base ne garde pas les outils exposés, donc le banc prouve le branchement par un appel, abouti ou en erreur.
 - Tâche 10, constaté le 2026-10-26 : un modèle du banc OpenCode qui ne trouvait pas l'outil a fouillé la machine pendant 105 appels. Un `env` a envoyé à son fournisseur `CLAUDE_CODE_MESSAGING_TOKEN`, un jeton de la session Claude qui lançait le banc. Il a aussi lu le schéma d'`opencode.db`, pas la table `credential`. Depuis, le banc retire les variables `CLAUDE*` et `ANTHROPIC*`, et la consigne dit de s'arrêter si l'outil manque.
+- Tâche 11 : sous OpenCode, l'équivalent de `--tools Skill` est un agent `skill-only` dont la `permission` refuse tout sauf `skill`, lancé par `--agent`. Mesuré le 2026-10-26 : la session ouvre `security-reviewer`, ne lance ni `shell` ni `read`, et dit n'avoir que `skill`. Le driver le pose dans son dossier de config jetable, jamais dans `wrappers/opencode/opencode.json`, qui va au vivant.
+- Tâche 11 : le driver OpenCode lit les skills ouverts, le texte et le coût sur la sortie `--format json`. Seuls les skills exposés viennent d'`opencode.db`, par les lecteurs de `tools/bench/opencode-report.py`.
+- Tâche 11 : pas de mode artefact sous OpenCode. Il demanderait des outils ouverts et `--auto`, donc un shell libre pour un modèle gratuit.
+- Tâche 11, mesuré le 2026-10-26 : `opencode/deepseek-v4.1-flash-free` répond `provider.quota`, `opencode/minimax-m3.1-flash-free` répond `provider.no-route`. Seul `openrouter/recursive/flint-v1.0:free` répond. Il appelle `skill` en boucle (40 appels sur le cas négatif de `security-reviewer`), donc son verdict FAIL dit surtout la faiblesse du modèle.
+- Tâche 11 : taux de points-virgules natifs, sans la règle, dans `rules/references/ref-ponctuation.md`. DeepSeek 1,76 et 2,49, MiniMax 0,77, pour une cible de 1,09.
+- Tâche 11, constaté le 2026-10-26 : `~/.config/opencode/cli.json` est apparu pendant une passe d'évals. C'est la TUI lancée à la main à 11:21:51 qui l'a migré depuis `tui.json` (log `migrated cli config`), pas le driver.
 - Tâche 6 : `install.py --check` sur `~/.claude` rend les mêmes 14 écarts avant et après la tâche, donc la branche `settings` de Claude n'a pas bougé.
 - Tâche 5 : le contrat du cœur est dans `hooks/check.py`. `exit 1` veut dire « entrée illisible », et chaque adaptateur décide quoi en faire. `skills_used: null` veut dire « inconnu », et le garde AIDD laisse alors passer.
 - Tâche 5 : la parité de l'adaptateur Claude a été mesurée sur 963 commandes réelles tirées des transcripts, rejouées contre l'ancien et le nouveau garde. Résultat : 0 écart, et 35 refus identiques des deux côtés. Pour rejouer, il faut reprendre les anciens gardes par `git show 5af25cd:wrappers/claude/hooks/<garde>`.
 - `git commit -m "fix: Claude"` **passe**, avant comme après la tâche 5 : nommer Claude n'est pas signer. Le critère de la tâche 6 dans le cadrage et la QA de l'issue #23 se testent donc avec `Co-Authored-By: Claude`.
 
 ## Fils ouverts, hors du chemin critique
+
+- Évals sous OpenCode : aucun modèle gratuit fiable n'est servi au 2026-10-26. Un verdict qui compte demande un modèle payant ou un quota rétabli.
+- Garder ou non `ponctuation.md` pour DeepSeek et MiniMax, à trancher sur les taux de la tâche 11.
 
 - #20 : ranger `skills/_shared/` en `scripts/` et `references/`, avec un README. À faire entre deux tâches.
 - Les plugins AIDD du banc sont plus récents que ceux du vivant, par exemple `aidd-vcs` 2.5.0 contre 2.4.0. C'est noté, pas corrigé.
