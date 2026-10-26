@@ -10,6 +10,11 @@ qu'aucune commande du repo ne pouvait voir.
 Usage :
     python3 mesure-reponses.py <transcript.jsonl>
     python3 mesure-reponses.py            # dernier transcript du projet courant
+    python3 mesure-reponses.py --agent opencode [opencode.db]
+                                          # une section par modèle, et par présence
+                                          # de ponctuation.md dans la session
+
+La lecture des transcripts vit dans `tools/drivers/<agent>.py`.
 
 Baseline pré-enregistrée (2026-08-11 18h, session agent-config, 258 réponses) :
     tirets cadratins   13,93 / 1 000 mots
@@ -41,11 +46,11 @@ a une forme. Les deux autres, le nom abstrait à la place du verbe et le code in
 supposé connu, restent invisibles. Un zéro sur les sept ne vaut donc jamais « la
 réponse est claire ». Cf. le trigger « un comptage qui rend zéro » de reasoning.md.
 """
-import json
+import argparse
+import importlib.util
+import os
 import re
 import sys
-import glob
-import os
 import unicodedata
 
 SEUIL_FOND = 60      # une réponse de fond, par opposition à la narration d'un tool call
@@ -82,37 +87,6 @@ def sans_accent(s):
             .decode("ascii"))
 
 
-def charge(path):
-    """Rend (réponses assistant, prompts utilisateur) en texte brut."""
-    replies, prompts = [], []
-    with open(path, encoding="utf-8") as fh:
-        for line in fh:
-            try:
-                e = json.loads(line)
-            except ValueError:
-                continue
-            m = e.get("message") or {}
-            role, c = m.get("role"), m.get("content")
-            if not role or c is None:
-                continue
-            if isinstance(c, str):
-                txt = c
-            else:
-                txt = "\n".join(
-                    b.get("text", "")
-                    for b in c
-                    if isinstance(b, dict) and b.get("type") == "text"
-                )
-            txt = txt.strip()
-            if not txt:
-                continue
-            if role == "assistant":
-                replies.append(txt)
-            elif role == "user" and not txt.startswith("<"):
-                prompts.append(txt)
-    return replies, prompts
-
-
 def premiere_ligne(t):
     for l in t.split("\n"):
         if l.strip():
@@ -127,23 +101,28 @@ def phrases(t):
     return [len(s.split()) for s in re.split(r"(?<=[.!?])\s+", prose) if len(s.split()) > 2]
 
 
-def main():
-    if len(sys.argv) > 1:
-        path = sys.argv[1]
-    else:
-        pat = os.path.expanduser("~/.claude/projects/*/*.jsonl")
-        cands = sorted(glob.glob(pat), key=os.path.getmtime)
-        if not cands:
-            sys.exit("aucun transcript trouvé, passer le chemin en argument")
-        path = cands[-1]
+def load_driver(agent):
+    here = os.path.dirname(os.path.realpath(__file__))
+    path = os.path.join(here, "drivers", agent + ".py")
+    if not os.path.isfile(path):
+        sys.exit("aucun driver pour `%s` à %s" % (agent, path))
+    spec = importlib.util.spec_from_file_location("driver_" + agent, path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
-    replies, prompts = charge(path)
+
+def mesure(titre, replies, prompts):
+    """Imprime les sept compteurs d'une conversation. Rend False s'il n'y a rien à compter."""
+    print(titre)
     if not replies:
-        sys.exit("aucune réponse texte dans " + path)
+        print("aucune réponse texte")
+        return False
 
     fond = [r for r in replies if len(r.split()) >= SEUIL_FOND]
     if not fond:
-        sys.exit("aucune réponse de fond (>= %d mots)" % SEUIL_FOND)
+        print("aucune réponse de fond (>= %d mots) sur %d réponses" % (SEUIL_FOND, len(replies)))
+        return False
 
     mots = sum(len(r.split()) for r in fond)
     longueurs = sorted(len(r.split()) for r in fond)
@@ -159,7 +138,6 @@ def main():
     reform = sum(1 for p in prompts
                  if len(p) < 200 and REFORMULATION.search(sans_accent(p)))
 
-    print("transcript : %s" % path)
     print("réponses %d, dont %d de fond, %d mots de prose"
           % (len(replies), len(fond), mots))
     print()
@@ -167,7 +145,7 @@ def main():
     print("points-virgules       %6.2f / 1 000   (baseline 1,77, cible 1,09)"
           % (sc * 1000 / mots))
     print("phrases > %d mots      %4d sur %d  (%d %%)  (baseline 17 %%)"
-          % (SEUIL_PHRASE, longues, len(sents), round(100 * longues / len(sents))))
+          % (SEUIL_PHRASE, longues, len(sents), round(100 * longues / max(1, len(sents)))))
     print("ouvertures abstraites   %4d sur %d          (baseline 39 sur 112)"
           % (abstraites, len(fond)))
     print("demandes de reformul.   %4d sur %d prompts  (baseline 12 sur 110)"
@@ -179,6 +157,32 @@ def main():
           % (etiq * 1000 / mots))
     print("                        %d au total, dans %d réponses sur %d"
           % (etiq, etiq_rep, len(fond)))
+    return True
+
+
+def main():
+    p = argparse.ArgumentParser(description="mesure le style des réponses d'un agent")
+    p.add_argument("source", nargs="?", help="transcript Claude, ou base opencode.db")
+    p.add_argument("--agent", default="claude", help="un fichier de tools/drivers/ (défaut: claude)")
+    args = p.parse_args()
+
+    driver = load_driver(args.agent)
+    try:
+        convs = driver.conversations(args.source)
+    except driver.SessionError as exc:
+        sys.exit(str(exc))
+    if not convs:
+        sys.exit("aucune conversation à mesurer")
+
+    comptees = 0
+    for i, c in enumerate(convs):
+        if i:
+            print()
+            print("-" * 60)
+        comptees += mesure(c["titre"], c["replies"], c["prompts"])
+    if not comptees:
+        sys.exit("aucune réponse de fond (>= %d mots)" % SEUIL_FOND)
+
     print()
     if not (ETIQUETTE.search(ETIQUETTE_POS) and not ETIQUETTE.search(ETIQUETTE_NEG)):
         print("!! ETIQUETTE ne calibre plus, son comptage ne vaut rien tant que ce n'est pas réparé")

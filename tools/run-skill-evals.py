@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Joue les cas `evals/eval.json` des skills et rend un tableau de deux verdicts.
 
-Spécifique à Claude Code : ouvrir une session neuve passe par `claude -p`. Les cas
-eux-mêmes restent portables — ce fichier est le seul à connaître l'agent.
+L'agent vit dans `tools/drivers/<agent>.py`, choisi par `--agent` (Claude par défaut) :
+ouvrir une session neuve passe par `claude -p` ou par `opencode run`. Les cas restent
+portables, et ce fichier ne connaît aucun agent.
 
 Deux verdicts, aucun juge LLM :
 
-- **DÉCLENCHEMENT** — le registre de la session. Un appel à l'outil `Skill` nomme le
+- **DÉCLENCHEMENT** — le registre de la session. Un appel à l'outil `Skill` (`skill`
+  sous OpenCode) nomme le
   skill ouvert, c'est une preuve directe et binaire. Sur un cas négatif le verdict
   s'inverse : le skill ne doit pas y figurer.
 - **ARTEFACT** — le fichier annoncé par `artifact` existe, et porte les `##` de son
@@ -69,11 +71,15 @@ def derive_root() -> str:
     return root
 
 
-def require_tools() -> str:
-    claude = shutil.which("claude")
-    if not claude:
-        raise CannotConclude("`claude` introuvable dans le PATH")
-    return claude
+def load_driver(root: str, agent: str):
+    """Le driver de l'agent : il lance la session et lit ce qu'elle a fait."""
+    path = os.path.join(root, "tools", "drivers", f"{agent}.py")
+    if not os.path.isfile(path):
+        raise CannotConclude(f"aucun driver pour `{agent}` à {path}")
+    spec = importlib.util.spec_from_file_location(f"driver_{agent}", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def load_linter(root: str):
@@ -225,75 +231,20 @@ def teardown_workdir(case: dict, repo_root: str, workdir: str) -> list[str]:
 # --- exécution -------------------------------------------------------------
 
 
-def run_session(claude: str, case: dict, workdir: str, model: str, timeout: int):
-    """Lance une session neuve. Rend (skills ouverts, skills disponibles, coût)."""
-    cmd = [
-        claude,
-        "-p",
-        case["query"],
-        "--model",
-        model,
-        "--output-format",
-        "stream-json",
-        "--verbose",
-        "--no-session-persistence",
-        "--permission-mode",
-        "bypassPermissions",
-    ]
-    if not case.get("artifact"):
-        cmd += ["--tools", "Skill"]
+def run_session(driver, ctx, case: dict, workdir: str, model: str, timeout: int):
+    """Lance une session neuve par le driver. Rend (skills ouverts, skills disponibles, coût)."""
     try:
-        proc = subprocess.run(
-            cmd,
-            cwd=workdir,
-            stdin=subprocess.DEVNULL,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
+        opened, available, _result, cost = driver.run_session(
+            ctx, case, workdir, model, timeout
         )
-    except subprocess.TimeoutExpired as exc:
-        raise CannotConclude(
-            f"{case['_label']} : session au-delà de {timeout}s"
-        ) from exc
-
-    stream_path = os.path.join(os.path.dirname(workdir), "run.jsonl")
-    with open(stream_path, "w", encoding="utf-8") as handle:
-        handle.write(proc.stdout)
-
-    opened, available, result, cost = [], None, None, 0.0
-    for line in proc.stdout.splitlines():
-        line = line.strip()
-        if not line.startswith("{"):
-            continue
-        try:
-            event = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        kind = event.get("type")
-        if kind == "system" and event.get("subtype") == "init":
-            listed = event.get("skills")
-            if isinstance(listed, list):
-                available = [str(item) for item in listed]
-        elif kind == "assistant":
-            for block in event.get("message", {}).get("content", []):
-                if block.get("type") == "tool_use" and block.get("name") == "Skill":
-                    name = block.get("input", {}).get("skill")
-                    if name:
-                        opened.append(str(name))
-        elif kind == "result":
-            result = event.get("result")
-            cost = event.get("total_cost_usd") or 0.0
-
-    if not result or not str(result).strip():
-        raise CannotConclude(
-            f"{case['_label']} : sortie vide (rc={proc.returncode}) → {stream_path}"
-        )
+    except driver.SessionError as exc:
+        raise CannotConclude(f"{case['_label']} : {exc}") from exc
     # Calibrage avant comptage : un skill absent du listing de la session ne peut pas
     # s'ouvrir, et son cas rendrait rouge sans avoir rien mesuré.
     if available is not None and case["skill"] not in available:
         raise CannotConclude(
             f"{case['_label']} : `{case['skill']}` absent des {len(available)} skills "
-            f"listés par la session → {stream_path}"
+            f"listés par la session"
         )
     return opened, available, cost
 
@@ -362,12 +313,12 @@ def artifact_verdict(case: dict, workdir: str, linter, templates):
 # --- passe -----------------------------------------------------------------
 
 
-def play_case(claude: str, case: dict, out_dir: str, repo_root: str, linter, templates, args):
+def play_case(driver, ctx, case: dict, out_dir: str, repo_root: str, linter, templates, args):
     """Joue un cas de bout en bout. Rend (ligne de rapport, coût, défaut)."""
     workdir = stage_workdir(case, out_dir, repo_root)
     try:
         opened, _available, cost = run_session(
-            claude, case, workdir, args.model, args.timeout
+            driver, ctx, case, workdir, args.model, args.timeout
         )
         trigger, trigger_why = trigger_verdict(case, opened)
         artifact, artifact_why = artifact_verdict(case, workdir, linter, templates)
@@ -415,12 +366,16 @@ def main() -> int:
         "--skill", action="append", default=[], help="restreindre à ce skill (répétable)"
     )
     parser.add_argument(
+        "--agent",
+        default="claude",
+        help="agent qui joue les cas, un fichier de tools/drivers/ (défaut: claude)",
+    )
+    parser.add_argument(
         "--model",
-        default="opus",
         help=(
-            "modèle de la session jouée (défaut: opus — mesuré le 2026-08-06 : 7/8 "
-            "déclenchements sur opus contre 0/8 sur sonnet, à skills et contexte "
-            "identiques)"
+            "modèle de la session jouée (défaut: celui du driver, opus pour Claude — "
+            "mesuré le 2026-08-06 : 7/8 déclenchements sur opus contre 0/8 sur "
+            "sonnet, à skills et contexte identiques)"
         ),
     )
     parser.add_argument("--out", help="répertoire des traces (défaut: temporaire)")
@@ -433,23 +388,39 @@ def main() -> int:
     parser.add_argument(
         "--jobs",
         type=int,
-        default=4,
-        help="cas joués en parallèle (défaut: 4) — indépendants, chacun dans son répertoire",
+        help=(
+            "cas joués en parallèle (défaut: celui du driver, 4 pour Claude) — "
+            "indépendants, chacun dans son répertoire"
+        ),
     )
     args = parser.parse_args()
 
     try:
-        claude = require_tools()
         repo_root = derive_root()
+        driver = load_driver(repo_root, args.agent)
+        args.model = args.model or driver.DEFAULT_MODEL
+        args.jobs = args.jobs or driver.DEFAULT_JOBS
         linter = load_linter(repo_root)
         templates = linter.load_templates(repo_root)
         cases = load_cases(os.path.join(repo_root, "skills"), args.skill)
         out_dir = args.out or tempfile.mkdtemp(prefix="skill-evals-")
         os.makedirs(out_dir, exist_ok=True)
+        if not driver.ARTIFACT_MODE:
+            refused = [case["_label"] for case in cases if case.get("artifact")]
+            if refused:
+                raise CannotConclude(
+                    f"`{args.agent}` ne joue pas le mode artefact, cas concernés : "
+                    + ", ".join(refused)
+                    + ". Restreindre la passe par --skill."
+                )
+        try:
+            ctx = driver.prepare(repo_root, out_dir)
+        except driver.SessionError as exc:
+            raise CannotConclude(str(exc)) from exc
 
         artefacts = sum(1 for case in cases if case.get("artifact"))
         print(
-            f"{len(cases)} cas — session {args.model}, "
+            f"{len(cases)} cas — {args.agent}, session {args.model}, "
             f"{artefacts} en mode artefact, {len(cases) - artefacts} outils coupés"
         )
 
@@ -461,7 +432,7 @@ def main() -> int:
         with ThreadPoolExecutor(max_workers=max(1, min(args.jobs, len(cases)))) as pool:
             futures = {
                 pool.submit(
-                    play_case, claude, case, out_dir, repo_root, linter, templates, args
+                    play_case, driver, ctx, case, out_dir, repo_root, linter, templates, args
                 ): case["_label"]
                 for case in cases
             }
