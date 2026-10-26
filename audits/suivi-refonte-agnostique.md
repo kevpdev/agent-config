@@ -4,7 +4,8 @@ Fichier de reprise du chantier. Le cadrage, qui fait foi, est dans `audits/2026-
 
 ## Où vit le travail
 
-- Le worktree `~/Developpement/Workspaces/agent-config-v2` est sur la branche `harness-v2`. Le checkout principal `agent-config` reste sur `main`, et c'est lui que vise `~/.claude`.
+- Depuis la bascule du 2026-10-26, `main` porte la refonte (#41, `7c466a8`), et le checkout principal `agent-config` est sur `main`. C'est lui que visent `~/.claude` et `~/.config/opencode`.
+- On ne change jamais de branche dans `agent-config`, parce qu'un checkout y change les fichiers derrière les liens. Le travail se fait dans le worktree `~/Developpement/Workspaces/agent-config-v2`, sur une branche tirée d'`origin/main`, et les PR visent `main`. Après un merge, le vivant se met à jour par `bash tools/bascule.sh`, lancé depuis le worktree, jamais par un `git pull`.
 - Le tag `pre-v2` sur `d284502` est le point de retour arrière. La liste des 68 liens de `~/.claude` à cette date est dans `audits/2026-10-22-liens-pre-v2.txt`.
 - Le banc isolé est `~/.claude-bench`, connecté une fois par `/login`. Il sert à prouver ce que le worktree charge sans toucher `~/.claude`.
 
@@ -33,9 +34,13 @@ Commits et PR suivent les Conventional Commits, sujet en anglais, sans aucune me
 | 10. Serveurs MCP, `mcp/servers.yaml` pour les deux agents | #33 | #34 | `1f50da0` |
 | 11. Drivers `tools/drivers/`, évals et mesure des réponses sous OpenCode | #35 | #36 | `222c678` |
 | 12. AIDD sous OpenCode sur `yt-transcriber`, modèles du banc sur l'abonnement Go | #37 | #38 | `e567333` |
-| 13. Bascule, `tools/bascule.sh` et son retour | #39 | branche `feat/switch-over` | à merger |
+| 13. Bascule, `tools/bascule.sh` et son retour | #39 | #40 | `716a83a` |
 
-**Prochaine étape** : merger `harness-v2` dans `main`, puis lancer `bash tools/bascule.sh` depuis le worktree. Ensuite, ouvrir une session neuve de chaque agent sur le vivant.
+Les 13 tâches sont faites. `harness-v2` est entré dans `main` par #41 (`7c466a8`), et le vivant a basculé le 2026-10-26. `install.py --check` rend 0 écart sur `~/.claude` (68 liens et `settings.json`) et sur `~/.config/opencode` (28 liens et `opencode.json`), sans aucun lien pendant. Une session neuve de chaque agent charge le harnais : côté Claude, 17 rules du repo, les hooks du harnais résolus et codegraph connecté ; côté OpenCode, 12 skills auto, aucun des 14 manuels et 19 règles.
+
+Le retour arrière se lance par `bash ~/Developpement/Workspaces/agent-config-v2/tools/bascule.sh --retour --etat ~/.local/state/agent-config/bascule/20261026-165427`.
+
+**Prochaine étape** : les fils ouverts, plus bas, au choix.
 
 ## La référence de parité
 
@@ -51,7 +56,7 @@ bash tools/bench.sh opencode    # sur opencode-go/deepseek-v4.1-flash, quota imp
 - Le banc rend 100 skills au total : 26 du repo, 17 intégrés, 47 des plugins AIDD et 10 `anthropic-skills:*` du compte. À la tâche 3, il en rendait 43, parce que `init` ne listait pas encore les skills préfixés. Relancé sur `8f1ee6a`, il rend aussi 100, donc l'écart ne vient pas du repo.
 - Depuis la tâche 10, le banc Claude charge 18 fichiers d'instructions. Le 18e est `~/.claude-bench/CLAUDE.md`, la section que `codegraph install` y écrit.
 - Les 4 rules qui portent un `paths:` (`back-spring`, `front-react`, `backend-api`, `frontend-design`) ne se chargent pas dans une session vide. C'est attendu.
-- Tant que la bascule (tâche 13) n'a pas eu lieu, `install.py --check` sur `~/.claude` rend 15 écarts avec le manifeste de `harness-v2`. Ce sont les 13 liens dont la source a bougé à la tâche 4, `model` et `permissions.deny` (tâche 9). Aucun ne porte sur `.claude.json`, qui a déjà codegraph. Le vivant se contrôle en comparant ses liens à `audits/2026-10-22-liens-pre-v2.txt`.
+- Depuis la bascule, le vivant se contrôle directement : `python3 tools/install.py --agent claude --target ~/.claude` et `--agent opencode --target ~/.config/opencode`, lancés depuis `agent-config`, rendent 0 écart.
 
 ## Décisions prises en route
 
@@ -94,6 +99,9 @@ bash tools/bench.sh opencode    # sur opencode-go/deepseek-v4.1-flash, quota imp
 - Tâche 13 : le retour ne passe pas par l'ancien `sync-rules.sh`. Il repose les liens de la sauvegarde, restaure les fichiers, et remet `main` sur le commit d'avant par `git switch -C`, qui réécrit la branche locale seulement. Le plan prévoyait un `--detach`, mais un checkout détaché rendait une seconde bascule impossible sans `git switch main`, qui ferait lui-même pendre les liens.
 - Tâche 13 : on ne fait aucune archive de `~/.config/opencode`, parce qu'une archive lirait `service.json`. Seuls les fichiers que le harnais écrit sont copiés.
 - Tâche 13 : `tools/tests/test-bascule.sh` refait une cible Claude à partir des 68 liens de `audits/2026-10-22-liens-pre-v2.txt`, dans un clone jetable dont `origin` est un dépôt nu local. Mesuré le 2026-10-26 : la bascule, le retour et une seconde bascule rendent 0 écart. Après le retour, les liens et les empreintes sont identiques à l'avant.
+- Tâche 13, constaté le 2026-10-26 : deux minutes après la bascule, Claude Code a réécrit `~/.claude/settings.json` après la confirmation du mode bypass, et la clé `model` y a disparu. `install.py --fix` l'a remise. Un `--check` après chaque relance de Claude Code attrape ce cas.
+- Tâche 13 : la machine s'aligne sur le wrapper. Opus en `medium` est le défaut, par `effortLevel` dans `wrappers/claude/settings.json`. La clé `modelSettings`, que Claude Code avait écrite sur la machine (Opus en `medium`, Sonnet en `high`), est retirée, parce qu'elle passait devant le wrapper sans que le repo la voie. Sonnet ne sert que dans un projet qui le déclare dans son `.claude/settings.json`, comme le vault.
+- Tâche 13 : contre le vivant, `tools/bench-report.py` compte comme « hook introuvable » les 14 hooks de l'application Orca, écrits en shell en ligne dans `~/.claude/settings.json`. Ils ne viennent pas du harnais. Le rapport est fait pour un banc, où ces hooks n'existent pas.
 
 ## Fils ouverts, hors du chemin critique
 
