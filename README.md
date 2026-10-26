@@ -112,7 +112,7 @@ wrappers/
 |---|---|---|
 | une règle | `rules/*.md`, ou `wrappers/claude/rules/` pour Claude seul | Claude : un lien par fichier dans `~/.claude/rules/`. OpenCode : lue sur place par le glob `instructions` |
 | un skill | `skills/<nom>/` | un lien par skill dans `skills/`, pour les deux agents |
-| un garde | `hooks/<garde>.py`, la décision neutre | OpenCode : lancé par le plugin, qui lance tous les gardes. Claude : il faut un adaptateur dans `wrappers/claude/hooks/`, son lien dans le manifeste et son hook dans `wrappers/claude/settings.json` |
+| un hook ou un garde | `hooks/<nom>.py`, la décision neutre | OpenCode : lancé par le plugin, qui lance tous les gardes. Claude : un adaptateur, son lien et sa déclaration (voir [Les hooks](#les-hooks)) |
 | une lecture interdite | `policy/deny.yaml` | Claude : `permissions.deny`. OpenCode : `policies` |
 | un serveur MCP | `mcp/servers.yaml` | Claude : son installateur écrit `.claude.json`. OpenCode : `mcp.servers` |
 | un réglage (modèle, effort, hooks, plugins) | `wrappers/claude/settings.json` ou `wrappers/opencode/opencode.json` | fusionné dans le fichier de réglages de l'agent |
@@ -152,6 +152,50 @@ bash tools/bascule.sh                  # après un merge sur main
 ## Référence du harnais
 
 Ces mécanismes valent pour les deux agents. Ce qui diffère de l'un à l'autre est dit dans chaque section, et ce qui n'existe que sous un agent est dans [Particularités par agent](#particularités-par-agent).
+
+### Les hooks
+
+Un hook est un script que l'agent lance à un moment de son cycle, avant un appel d'outil ou au démarrage d'une session. Le harnais le coupe en deux couches, pour qu'un même critère serve aux deux agents.
+
+| Couche | Où | Ce qu'elle connaît |
+|---|---|---|
+| la décision | `hooks/<nom>.py` | un événement neutre, jamais le format d'un agent |
+| la traduction | `wrappers/<agent>/` | le format de l'agent, jamais le critère |
+
+**La décision ne sait pas quel agent l'appelle.** Chaque module de `hooks/` expose `decide(event)`, qui rend la raison du refus ou rien. L'événement est neutre : `{event, action: shell|edit|read, command, paths, cwd, session, skills_used}`. Les modules sont enregistrés dans `GUARDS`, dans `hooks/__init__.py`. `hooks/check.py` les lance sur un événement lu sur stdin, tous ou ceux que nomme `--guard`, et répond `exit 0` (passe), `exit 2` + raison sur stderr (refus) ou `exit 1` (entrée illisible).
+
+**Le branchement dépend de l'agent**, et `tools/install.py` le pose :
+
+| Agent | Ce qui appelle la décision | Ce qu'un garde neuf demande en plus |
+|---|---|---|
+| Claude Code | un adaptateur par garde dans `wrappers/claude/hooks/`, déclaré sur `PreToolUse` dans `wrappers/claude/settings.json` | l'adaptateur, son lien dans `tools/manifests/claude.json` et son entrée dans `settings.json` |
+| OpenCode | le plugin `wrappers/opencode/plugins/harness-guards/`, qui lance tous les gardes de `GUARDS` | rien |
+
+Sous Claude, `install.py` lie l'adaptateur et fusionne sa déclaration dans le `settings.json` de la cible, en faisant viser la commande aux scripts de cette cible. Les fichiers de `wrappers/claude/hooks/` gardent leur nom et ne font plus que passer par `claude_adapter.py` : payload Claude vers événement, refus vers les deux formes de décision de Claude. Ce qui n'existe que sous Claude reste dans l'adaptateur, c'est-à-dire la lecture du transcript pour `skills_used` et le contrôle de `skipDangerousModePermissionPrompt`.
+
+**Sous OpenCode, le plugin `wrappers/opencode/plugins/harness-guards/` appelle le même `hooks/check.py`.** Il refuse dans `permission.evaluate`, mais ce hook ne reçoit pour le shell que les commandes simples, sans `cd` ni dossier courant. Le plugin retient donc dans `tool.execute.before` la commande entière et son `workdir`, puis les retrouve par l'identifiant d'appel. Si `check.py` ne rend pas de verdict, l'appel passe et l'erreur part dans le journal. `skills_used` vaut `null`, donc le garde AIDD ne refuse jamais sous OpenCode. Le plugin lance tous les gardes du cœur, alors que chaque adaptateur Claude ne lance que le sien. `no_secret_read` ne tourne donc que sous OpenCode, et c'est voulu : l'outillage de mesure lit `opencode.db` par `Bash`.
+
+**Un hook sans décision neutre reste dans son wrapper.** Un hook qui ne juge aucun appel, comme ceux qui agissent au démarrage d'une session, n'a pas d'événement neutre à lire. Il vit dans `wrappers/<agent>/`, par la [règle de placement](#la-règle-de-placement), et ne tourne que sous l'agent dont il parle le format.
+
+**Ajouter un garde**, dans cet ordre :
+
+1. les cas dans `hooks/tests/test-core.py`, refus fabriqués à la main et formes légitimes (voir [Les gardes déterministes](#les-gardes-déterministes))
+2. la décision dans `hooks/<nom>.py`, enregistrée dans `GUARDS`
+3. sous Claude, l'adaptateur, son lien et son entrée de `settings.json`, puis `install.py --fix` sur le banc
+
+### Les gardes déterministes
+
+Un garde est un hook qui refuse à l'appel ce qu'une règle de prose ne tenait pas. Il est la couche déterministe d'une règle qui, du coup, ne répète pas ses critères. Chaque module de `hooks/` dit dans sa docstring ce qu'il refuse et pourquoi.
+
+```bash
+python3 hooks/tests/test-core.py                       # le cœur, sur l'entrée neutre
+node wrappers/opencode/tests/test-harness-guards.ts    # le plugin OpenCode, hors d'OpenCode
+for t in wrappers/claude/hooks/tests/test-*.sh; do bash "$t"; done   # les hooks Claude
+```
+
+**Une batterie pèse autant que son garde.** Un garde sans cible vivante se comporte exactement pareil qu'il soit cassé ou intact ; et un garde qui refuse du travail valide finit désactivé, donc ne protège plus rien. Chaque batterie porte les deux : des cas positifs **fabriqués à la main**, et les formes légitimes qui doivent passer. Toute forme de commande nouvellement rencontrée s'y ajoute *avant* d'être corrigée dans le garde.
+
+**Calibrer sur du trafic réel, pas seulement sur ses propres cas.** `guard-bash-tooling.py` a été confronté aux 987 commandes du périmètre extraites des transcripts de sessions (`~/.claude/projects/*/*.jsonl`) : sa première conception, qui refusait tout ce qu'elle ne pouvait pas tokeniser, y produisait 5 faux positifs sur des `git commit` ordinaires. Une batterie écrite par l'auteur du garde ne les aurait jamais montrés.
 
 ### `rules/` ou `skills/` ?
 
@@ -194,34 +238,6 @@ Les skills `vault-*` sont des passerelles vers un vault Obsidian : ils délègue
 Un poste n'en exporte qu'une ou les deux. Avec un seul vault, le skill le prend sans poser de question. Avec les deux, il propose une liste numérotée et l'utilisateur répond par le numéro. Sans aucune des deux, chaque `vault-*` dégrade sans casse : message « aucun vault configuré » puis arrêt, jamais d'écriture dans le repo courant.
 
 **Les deux vaults n'ont pas la même structure.** Seuls `vault-capture` et `vault-save` ont leur skill canonique dans le vault perso, mesuré le 2026-10-04 avec `check-vault-bridge.sh`. Les autres échouent sur un vault dont la cible canonique manque.
-
-### Les gardes déterministes
-
-Cinq gardes refusent à l'appel ce qu'une règle de prose ne tenait pas. Quatre tournent sous les deux agents, et `no_secret_read` sous OpenCode seulement. Le garde AIDD ne refuse jamais sous OpenCode, qui ne lui donne pas la liste des skills invoqués. Chacun est la couche déterministe d'une règle qui, du coup, ne répète pas ses critères.
-
-| Garde (`wrappers/claude/hooks/`) | Décision (`hooks/`) | Refuse | Règle allégée | Batterie Claude |
-|---|---|---|---|---|
-| `guard-bash-tooling.py` | `bash_tooling.py` | `java`/`mvnw` hors `bash -lc 'sh ./mvnw …'`, heredoc imbriqué | `rules/tooling.md` | `tests/test-guard-bash-tooling.sh` |
-| `guard-no-claude-in-commit.sh` | `no_ai_in_commit.py` | mention d'IA (commits et PR, fichier de message compris), format Conventional Commits | `rules/commit-convention.md` | `tests/test-guard-no-claude-in-commit.sh` |
-| `guard-no-remote-write.py` | `no_remote_write.py` | écritures de l'agent sur preprod/prod | — | *aucune*, couvert par la batterie du cœur |
-| `guard-aidd-skill-lookup.py` | `aidd_skill_lookup.py` | `gh issue/pr/release create`, `git tag -a` à la main dans un repo `aidd_docs/` sans skill `aidd-` invoqué (sortie : `# aidd-skip: <raison>`) | `rules/aidd.md` | `tests/test-guard-aidd-skill-lookup.sh` |
-| *aucun, OpenCode seulement* | `no_secret_read.py` | une commande shell qui sort le contenu d'un fichier de `policy/deny.yaml` (`cat .env`, `grep`, `sqlite3 …/opencode.db`, la source d'un `cp`). Les écritures et le chargement par un programme passent | `policy/deny.yaml` | *aucune*, couvert par la batterie du cœur |
-
-**La décision vit dans `hooks/`, la traduction dans le wrapper.** Chaque module de `hooks/` expose `decide(event)`, qui rend la raison du refus ou rien. L'événement est neutre : `{event, action: shell|edit|read, command, paths, cwd, session, skills_used}`. `hooks/check.py` lance les gardes sur un événement lu sur stdin et répond `exit 0` (passe), `exit 2` + raison sur stderr (refus) ou `exit 1` (entrée illisible). Les fichiers de `wrappers/claude/hooks/` gardent leur nom et ne font plus que passer par `claude_adapter.py` : payload Claude vers événement, refus vers les deux formes de décision de Claude. Ce qui n'existe que sous Claude reste dans l'adaptateur, c'est-à-dire la lecture du transcript pour `skills_used` et le contrôle de `skipDangerousModePermissionPrompt`.
-
-**Sous OpenCode, le plugin `wrappers/opencode/plugins/harness-guards/` appelle le même `hooks/check.py`.** Il refuse dans `permission.evaluate`, mais ce hook ne reçoit pour le shell que les commandes simples, sans `cd` ni dossier courant. Le plugin retient donc dans `tool.execute.before` la commande entière et son `workdir`, puis les retrouve par l'identifiant d'appel. Si `check.py` ne rend pas de verdict, l'appel passe et l'erreur part dans le journal. `skills_used` vaut `null`, donc le garde AIDD ne refuse jamais sous OpenCode. Le plugin lance tous les gardes du cœur, alors que chaque adaptateur Claude ne lance que le sien. `no_secret_read` ne tourne donc que sous OpenCode, et c'est voulu : l'outillage de mesure lit `opencode.db` par `Bash`.
-
-```bash
-python3 hooks/tests/test-core.py                       # le cœur, sur l'entrée neutre
-node wrappers/opencode/tests/test-harness-guards.ts    # le plugin OpenCode, hors d'OpenCode
-bash wrappers/claude/hooks/tests/test-guard-bash-tooling.sh
-bash wrappers/claude/hooks/tests/test-guard-no-claude-in-commit.sh
-bash wrappers/claude/hooks/tests/test-guard-aidd-skill-lookup.sh
-```
-
-**Une batterie pèse autant que son garde.** Un garde sans cible vivante se comporte exactement pareil qu'il soit cassé ou intact ; et un garde qui refuse du travail valide finit désactivé, donc ne protège plus rien. Chaque batterie porte les deux : des cas positifs **fabriqués à la main**, et les formes légitimes qui doivent passer. Toute forme de commande nouvellement rencontrée s'y ajoute *avant* d'être corrigée dans le garde.
-
-**Calibrer sur du trafic réel, pas seulement sur ses propres cas.** `guard-bash-tooling.py` a été confronté aux 987 commandes du périmètre extraites des transcripts de sessions (`~/.claude/projects/*/*.jsonl`) : sa première conception, qui refusait tout ce qu'elle ne pouvait pas tokeniser, y produisait 5 faux positifs sur des `git commit` ordinaires. Une batterie écrite par l'auteur du garde ne les aurait jamais montrés.
 
 ### Les lectures interdites
 
@@ -303,7 +319,7 @@ Un lien de dossier n'est pas garanti non plus. Sur la machine de référence, `s
 
 **`settings.json` ne se lie pas.** Claude Code y écrit lui-même : permissions accordées, plugins installés, `/config`. Un lien ferait entrer ces écritures dans le repo, ou serait remplacé par un fichier normal sans signal. C'est ce qui s'est produit, et le `"model": "sonnet"` du wrapper a cessé de s'appliquer. Le wrapper ne porte donc que les clés que le repo possède, et `install.py` les fusionne sans toucher aux clés de la machine. `skipDangerousModePermissionPrompt` n'est pas appliqué : la clé se lit en OU entre les couches, donc un `false` écrit au niveau user ferait revenir l'avertissement du mode bypass dans tous les repos.
 
-**`tools/install.py` pose les liens et fusionne les réglages, pour n'importe quelle cible.** Il pose les liens décrits par `tools/manifests/claude.json`, les 68 actuels avec leurs irrégularités, et fusionne `settings.json`. Les commandes de hooks visent les scripts de la cible : `~/.claude/scripts/…` pour `~/.claude`, un chemin absolu pour un dossier de test. Les anciens scripts `wrappers/claude/scripts/sync-rules.sh` et `sync-settings.py` faisaient chacun une moitié de ce travail. `install.py` les remplace, et leur suppression est une tâche à part.
+**`tools/install.py` pose les liens et fusionne les réglages, pour n'importe quelle cible.** Il pose les liens décrits par `tools/manifests/claude.json` avec leurs irrégularités, et fusionne `settings.json`. Les commandes de hooks visent les scripts de la cible : `~/.claude/scripts/…` pour `~/.claude`, un chemin absolu pour un dossier de test. Les anciens scripts `wrappers/claude/scripts/sync-rules.sh` et `sync-settings.py` faisaient chacun une moitié de ce travail. `install.py` les remplace, et leur suppression est une tâche à part.
 
 ```bash
 python3 tools/install.py --agent claude --target ~/.claude          # vérifie, échoue sur tout écart
@@ -319,7 +335,7 @@ OpenCode reçoit le harnais par `tools/install.py --agent opencode`, d'après `t
 
 Les skills ne passent pas par `skills: [...]` : un lien sous `skills/` est découvert, mesuré dans le banc. Un skill qui porte `disable-model-invocation: true` n'est pas proposé au modèle, comme sous Claude.
 
-Les règles ne passent pas par un `AGENTS.md` généré. OpenCode ne lit ni `~/.claude/rules` ni aucun dossier de règles, mais son tableau `instructions` accepte un glob. Il lit donc `rules/*.md` dans le repo, et une règle modifiée s'applique sans rien régénérer. OpenCode n'a pas de scope par chemin, donc les 4 règles scopées par `paths:` se chargent toujours. Une ligne **Portée** en tête de chacune dit à quels fichiers elle s'applique. Les règles propres à Claude restent hors du glob, dans `wrappers/claude/rules/`.
+Les règles ne passent pas par un `AGENTS.md` généré. OpenCode ne lit ni `~/.claude/rules` ni aucun dossier de règles, mais son tableau `instructions` accepte un glob. Il lit donc `rules/*.md` dans le repo, et une règle modifiée s'applique sans rien régénérer. OpenCode n'a pas de scope par chemin, donc les règles scopées par `paths:` se chargent toujours. Une ligne **Portée** en tête de chacune dit à quels fichiers elle s'applique. Les règles propres à Claude restent hors du glob, dans `wrappers/claude/rules/`.
 
 ## Outillage
 
@@ -424,7 +440,7 @@ bash tools/apply-ci-ruleset.sh OWNER/REPO [--dry-run]
 
 Claude Code sait appliquer une mise à jour de plugin, pas dire ce qu'elle va casser. Son auto-update
 par marketplace applique dans les dix minutes qui suivent le démarrage, donc la casse arrive
-décorrélée de sa cause. Or elle est **ici** : 16 noms de skills AIDD sont cités dans ce repo, et la
+décorrélée de sa cause. Or elle est **ici** : des noms de skills AIDD sont cités dans ce repo, et la
 montée 1.x → 2.x en avait déjà renommé trois (cf. [`CHANGELOG-aidd.md`](CHANGELOG-aidd.md)). D'où
 l'auto-update laissé désactivé pour `aidd-framework`, et ces quatre pièces.
 
@@ -442,7 +458,7 @@ l'**interface** entre le wrapper qui produit et le skill qui consomme, ce qui ga
 changer de runtime ne réécrirait que le détecteur.
 
 ```bash
-bash wrappers/claude/scripts/tests/test-aidd-updates.sh          # 28 cas, hors réseau
+bash wrappers/claude/scripts/tests/test-aidd-updates.sh          # hors réseau
 python3 wrappers/claude/scripts/aidd-updates.py --refresh        # force une vérification
 python3 wrappers/claude/scripts/aidd-updates.py --etat           # ce que le skill lit
 ```
@@ -464,7 +480,7 @@ trompeur sur des silences.
 
 ### Linter les skills
 
-Le lint lit les fichiers et n'exécute rien : sept vérifications mécaniques sur les 24 skills, en une seconde et sans appel LLM. Le frontmatter parse et porte ses trois clés, `name` égale le dossier, la `description` tient sous le plafond, les `##` correspondent à ceux du gabarit, aucun placeholder ne survit, aucun lien relatif n'est mort, et un skill qui porte `disable-model-invocation: true` ne promet de déclenchement nulle part ailleurs.
+Le lint lit les fichiers et n'exécute rien : sept vérifications mécaniques sur tous les skills, en une seconde et sans appel LLM. Le frontmatter parse et porte ses trois clés, `name` égale le dossier, la `description` tient sous le plafond, les `##` correspondent à ceux du gabarit, aucun placeholder ne survit, aucun lien relatif n'est mort, et un skill qui porte `disable-model-invocation: true` ne promet de déclenchement nulle part ailleurs.
 
 ```bash
 python3 tools/lint-skills.py                      # tous les skills
@@ -505,7 +521,7 @@ Chaque cas rend deux verdicts, tous deux déterministes et sans juge LLM. Le **d
 
 **Une passe coûte de l'argent** — 0,97 $ pour un cas de déclenchement joué sur `opus`, mesuré le 2026-08-24, soit une trentaine de dollars pour les 31 cas du corpus. Ce n'est pas un lint qu'on lance à chaque commit, et c'est pourquoi le lint existe à côté.
 
-**Lancer la batterie avant de croire une passe.** Elle confronte les deux verdicts et la validation du corpus à 20 cas fabriqués à la main. Sans elle, un verdict aveugle qui répond toujours OK est indiscernable d'un verdict intact.
+**Lancer la batterie avant de croire une passe.** Elle confronte les deux verdicts et la validation du corpus à des cas fabriqués à la main. Sans elle, un verdict aveugle qui répond toujours OK est indiscernable d'un verdict intact.
 
 ## Contribuer
 
