@@ -264,6 +264,14 @@ bash wrappers/claude/hooks/tests/test-guard-aidd-skill-lookup.sh
 
 **Sous OpenCode, le shell passe par un garde du cœur.** Une règle `read` ne voit que l'outil de lecture, et `cat` sur le leurre laissait sortir le témoin. `hooks/no_secret_read.py` lit `policy/deny.yaml` et refuse une commande qui sort le contenu d'un fichier interdit. Il laisse passer les écritures et le chargement par un programme. Sous Claude, la règle Read refuse aussi le `cat`, mais la doc ne le garantit pas, donc le banc Claude le consigne sans l'exiger.
 
+**Étudier une session OpenCode passe par `tools/session-export.py`.** L'export brut (`opencode session export`) recopie chaque secret qu'une session a vu, et `--sanitize` masque tout le texte. Le script garde le texte et masque les valeurs : celles des `.env` du dossier de la session, les motifs de jetons connus, et la valeur d'une affectation dont la clé dit `KEY`, `TOKEN`, `SECRET` ou `PASSWORD`. Un secret au format inconnu, sans nom de clé parlant, passe.
+
+```bash
+python3 tools/session-export.py <id>             # JSON masqué
+python3 tools/session-export.py <id> --texte     # transcript lisible, raisonnement omis
+python3 tools/tests/test-session-export.py       # calibre le masquage
+```
+
 ### Le contrat CI GitHub
 
 Une porte `ci`, seul check exigé par le ruleset, qui attend tous les jobs de son workflow, Trivy compris. Les autres jobs se découpent au grain de la stack. Actions épinglées par SHA, permissions minimales. Le contrat est dans [`rules/references/ref-ci-github.md`](rules/references/ref-ci-github.md), la règle qui y renvoie dans `rules/aidd.md`.

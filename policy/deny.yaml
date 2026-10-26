@@ -19,10 +19,12 @@
 # avant même d'être écrite. L'outil `edit` d'OpenCode modifie un .env existant sans `read`,
 # mesuré : le modèle ne reçoit que « Edited .env », le diff reste dans opencode.db.
 #
-# ÉTUDIER UNE SESSION OPENCODE : `opencode session export <id>`, ou un script de tools/bench/,
-# qui ouvre opencode.db en lecture seule sur les tables qu'il vise. Jamais `sqlite3` sur la
-# base, qui porte aussi la table credential. Un transcript recopie ce que le modèle a vu,
-# donc un secret sorti avant le garde ressort avec lui.
+# ÉTUDIER UNE SESSION OPENCODE : pour le contexte, `python3 tools/session-export.py <id>`,
+# qui masque les valeurs de secrets et garde le reste (`--texte` pour un transcript lisible).
+# Pour les seules métadonnées (coût, tokens, déroulé), `opencode session export --sanitize`,
+# qui masque tout le texte. Jamais l'export brut, qui recopie chaque secret déjà sorti, ni
+# `sqlite3` sur la base, qui porte aussi la table credential. Les scripts de tools/bench/
+# l'ouvrent en lecture seule, sur les tables qu'ils visent.
 #
 # `sauf` lève l'interdit pour une fin plus précise. OpenCode le traduit par un `allow` après
 # le `deny`. Claude ne sait pas faire d'exception (un deny gagne toujours), donc une entrée
