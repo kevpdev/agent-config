@@ -94,11 +94,14 @@ skills/             expertises chargées à la demande — neutres
 hooks/              décision des gardes, sur une entrée neutre
 policy/             lectures interdites, déclarées une fois pour les deux agents
 mcp/                serveurs MCP, déclarés une fois pour les deux agents
-  tests/            sa batterie
 tools/              outillage du harnais, sans dépendance à un agent
+  manifests/        liens posés par install.py
   tests/            ses batteries
 wrappers/
   claude/           tout ce qui ne fonctionne que sous Claude Code
+    agents/         sous-agents
+    output-styles/  styles de sortie
+    settings.json   réglages que le repo possède, fusionnés par install.py
     hooks/          adaptateur Claude des gardes et leurs batteries
     scripts/        détecteur AIDD, statusline, anciens scripts de synchro
   opencode/         tout ce qui ne fonctionne que sous OpenCode
@@ -195,7 +198,7 @@ for t in wrappers/claude/hooks/tests/test-*.sh; do bash "$t"; done   # les hooks
 
 **Une batterie pèse autant que son garde.** Un garde sans cible vivante se comporte exactement pareil qu'il soit cassé ou intact ; et un garde qui refuse du travail valide finit désactivé, donc ne protège plus rien. Chaque batterie porte les deux : des cas positifs **fabriqués à la main**, et les formes légitimes qui doivent passer. Toute forme de commande nouvellement rencontrée s'y ajoute *avant* d'être corrigée dans le garde.
 
-**Calibrer sur du trafic réel, pas seulement sur ses propres cas.** `guard-bash-tooling.py` a été confronté aux 987 commandes du périmètre extraites des transcripts de sessions (`~/.claude/projects/*/*.jsonl`) : sa première conception, qui refusait tout ce qu'elle ne pouvait pas tokeniser, y produisait 5 faux positifs sur des `git commit` ordinaires. Une batterie écrite par l'auteur du garde ne les aurait jamais montrés.
+**Calibrer sur du trafic réel, pas seulement sur ses propres cas.** Le 2026-08-11, `guard-bash-tooling.py` a été confronté aux 987 commandes du périmètre extraites des transcripts de sessions (`~/.claude/projects/*/*.jsonl`) : sa première conception, qui refusait tout ce qu'elle ne pouvait pas tokeniser, y produisait 5 faux positifs sur des `git commit` ordinaires. Une batterie écrite par l'auteur du garde ne les aurait jamais montrés.
 
 ### `rules/` ou `skills/` ?
 
@@ -241,7 +244,7 @@ Un poste n'en exporte qu'une ou les deux. Avec un seul vault, le skill le prend 
 
 ### Les lectures interdites
 
-`policy/deny.yaml` liste les fichiers qu'un agent ne doit jamais lire : identifiants d'OpenCode et de Claude Code, base d'OpenCode, `.env`, clés SSH et GPG, jetons cloud (AWS, Google Cloud, Azure, Kubernetes), jetons d'outils (`gh`, `.netrc`, `.npmrc`, `.pypirc`, Docker) et clés privées de certificat (`*.key`, `*.pem`, `*.p12`…). Chaque entrée nomme une fin de chemin, visée à n'importe quelle profondeur. `tools/install.py` la traduit à la fusion de la config de chaque agent :
+`policy/deny.yaml` liste les fichiers qu'un agent ne doit jamais lire (identifiants, secrets, clés), le détail est dans le YAML. Chaque entrée nomme une fin de chemin, visée à n'importe quelle profondeur. `tools/install.py` la traduit à la fusion de la config de chaque agent :
 
 | Agent | Forme | Ce qui la tient |
 |---|---|---|
@@ -319,7 +322,7 @@ Un lien de dossier n'est pas garanti non plus. Sur la machine de référence, `s
 
 **`settings.json` ne se lie pas.** Claude Code y écrit lui-même : permissions accordées, plugins installés, `/config`. Un lien ferait entrer ces écritures dans le repo, ou serait remplacé par un fichier normal sans signal. C'est ce qui s'est produit, et le `"model": "sonnet"` du wrapper a cessé de s'appliquer. Le wrapper ne porte donc que les clés que le repo possède, et `install.py` les fusionne sans toucher aux clés de la machine. `skipDangerousModePermissionPrompt` n'est pas appliqué : la clé se lit en OU entre les couches, donc un `false` écrit au niveau user ferait revenir l'avertissement du mode bypass dans tous les repos.
 
-**`tools/install.py` pose les liens et fusionne les réglages, pour n'importe quelle cible.** Il pose les liens décrits par `tools/manifests/claude.json` avec leurs irrégularités, et fusionne `settings.json`. Les commandes de hooks visent les scripts de la cible : `~/.claude/scripts/…` pour `~/.claude`, un chemin absolu pour un dossier de test. Les anciens scripts `wrappers/claude/scripts/sync-rules.sh` et `sync-settings.py` faisaient chacun une moitié de ce travail. `install.py` les remplace, et leur suppression est une tâche à part.
+**`tools/install.py` pose les liens et fusionne les réglages, pour n'importe quelle cible.** Il pose les liens décrits par `tools/manifests/claude.json` avec leurs irrégularités, et fusionne `settings.json`. Les commandes de hooks visent les scripts de la cible : `~/.claude/scripts/…` pour `~/.claude`, un chemin absolu pour un dossier de test. Les anciens scripts `wrappers/claude/scripts/sync-rules.sh` et `sync-settings.py` faisaient chacun une moitié de ce travail. `install.py` les remplace. Les deux fichiers sont encore dans `wrappers/claude/scripts/` au 2026-10-27.
 
 ```bash
 python3 tools/install.py --agent claude --target ~/.claude          # vérifie, échoue sur tout écart
@@ -363,7 +366,7 @@ Le banc mesure ce qu'une session Claude charge de ce repo, sans toucher `~/.clau
    (session réelle)                        (banc)
           │                                       │
    liens vers le checkout                  liens vers le repo de tools/bench.sh
-   principal                               (un worktree, en refonte)
+   principal                               (le repo que vise `tools/bench.sh`)
 ```
 
 **Ce que contient le banc.** `tools/install.py --fix` le remplit à chaque lancement :
@@ -442,14 +445,7 @@ Claude Code sait appliquer une mise à jour de plugin, pas dire ce qu'elle va ca
 par marketplace applique dans les dix minutes qui suivent le démarrage, donc la casse arrive
 décorrélée de sa cause. Or elle est **ici** : des noms de skills AIDD sont cités dans ce repo, et la
 montée 1.x → 2.x en avait déjà renommé trois (cf. [`CHANGELOG-aidd.md`](CHANGELOG-aidd.md)). D'où
-l'auto-update laissé désactivé pour `aidd-framework`, et ces quatre pièces.
-
-| Pièce | Rôle |
-|---|---|
-| `wrappers/claude/scripts/aidd-updates.py` | compare les versions installées aux tags upstream, garde l'état |
-| bloc `SessionStart` de `settings.json` | affiche une ligne au démarrage, une fois par jour au plus |
-| `skills/aidd-updates/` | lit les changelogs, rédige le plan d'adaptation, l'applique sur accord |
-| `wrappers/claude/scripts/tests/test-aidd-updates.sh` | la batterie du détecteur |
+l'auto-update laissé désactivé pour `aidd-framework`, et ce dispositif : le détecteur `wrappers/claude/scripts/aidd-updates.py` compare les versions installées aux tags upstream et garde l'état, le bloc `SessionStart` de `settings.json` affiche une ligne au démarrage (une fois par jour au plus), le skill `skills/aidd-updates/` lit les changelogs, rédige le plan d'adaptation et l'applique sur accord, et `wrappers/claude/scripts/tests/test-aidd-updates.sh` est la batterie du détecteur.
 
 L'état vit **hors du repo**, dans `${XDG_STATE_HOME:-$HOME/.local/state}/aidd-updates/plan.md` : un
 front-matter YAML pour la machine, le plan en markdown pour l'humain. C'est un état de machine, et
@@ -480,22 +476,22 @@ trompeur sur des silences.
 
 ### Linter les skills
 
-Le lint lit les fichiers et n'exécute rien : sept vérifications mécaniques sur tous les skills, en une seconde et sans appel LLM. Le frontmatter parse et porte ses trois clés, `name` égale le dossier, la `description` tient sous le plafond, les `##` correspondent à ceux du gabarit, aucun placeholder ne survit, aucun lien relatif n'est mort, et un skill qui porte `disable-model-invocation: true` ne promet de déclenchement nulle part ailleurs.
+Le lint lit les fichiers et n'exécute rien : des vérifications mécaniques (listées en tête de `tools/lint-skills.py`) sur tous les skills, en une seconde et sans appel LLM. Le frontmatter parse et porte ses trois clés, `name` égale le dossier, la `description` tient sous le plafond, les `##` correspondent à ceux du gabarit, aucun placeholder ne survit, aucun lien relatif n'est mort, et un skill qui porte `disable-model-invocation: true` ne promet de déclenchement nulle part ailleurs.
 
 ```bash
 python3 tools/lint-skills.py                      # tous les skills
 python3 tools/lint-skills.py --skill skill-craft   # un seul
 python3 tools/lint-skills.py --corpus ~/projects/myvaultobsidian/.agents/skills
-python3 tools/tests/test-lint-skills.py            # calibre les sept vérifications
+python3 tools/tests/test-lint-skills.py            # calibre les vérifications
 ```
 
-**`--corpus` vise les skills d'un autre repo, et n'y joue que six vérifications sur sept.** La conformité au gabarit et la présence d'`argument-hint` sont de la **forme** : la portée d'une convention s'arrête à ce qu'un run crée, jamais à l'existant qu'il croise (`rules/autorite-des-conventions.md`). Le reste est du **fond** et casse dans n'importe quel repo : un `name` qui diverge du dossier empêche Claude Code de résoudre le skill, une description au-delà de 1 536 caractères est refusée par l'API, un lien mort est mort. La ligne de bilan nomme toujours le corpus visé et le nombre de vérifications jouées, pour qu'un « 0 défaut » à six ne se lise pas comme un « 0 défaut » à sept.
+**`--corpus` vise les skills d'un autre repo, et n'y joue que les vérifications de fond, pas celles de forme.** La conformité au gabarit et la présence d'`argument-hint` sont de la **forme** : la portée d'une convention s'arrête à ce qu'un run crée, jamais à l'existant qu'il croise (`rules/autorite-des-conventions.md`). Le reste est du **fond** et casse dans n'importe quel repo : un `name` qui diverge du dossier empêche Claude Code de résoudre le skill, une description au-delà de 1 536 caractères est refusée par l'API, un lien mort est mort. La ligne de bilan nomme toujours le corpus visé et le nombre de vérifications jouées, pour qu'un « 0 défaut » sur le seul fond ne se lise pas comme un « 0 défaut » sur tout.
 
 **La liste des sections n'est pas dans le script.** Elle est dérivée des deux gabarits de `skills/skill-craft/assets/`, qui font foi pour l'humain comme pour le lint. Une liste décrite en prose et une liste vérifiée par un script divergent au premier edit de l'une des deux.
 
 **Rien n'y grep ce que le skill fait.** Un comptage de « push » ou « commit » attrape `security-reviewer`, qui cite ces mots pour décrire du code qu'il relit sans rien exécuter. Ce qui demande de comprendre le skill reste à la relecture de `skill-craft:02-validate`.
 
-C'est la moitié de R13 que la septième vérification laisse dehors. Elle ne sait pas dire qu'un skill qui écrit aurait dû porter le champ, seulement qu'un skill qui le porte se contredit ailleurs, dans sa description ou dans ses évals.
+C'est la moitié de R13 que la dernière vérification de la liste laisse dehors. Elle ne sait pas dire qu'un skill qui écrit aurait dû porter le champ, seulement qu'un skill qui le porte se contredit ailleurs, dans sa description ou dans ses évals.
 
 ### Jouer les évals des skills
 
@@ -519,7 +515,7 @@ Chaque cas rend deux verdicts, tous deux déterministes et sans juge LLM. Le **d
 
 **Le déclenchement dépend d'abord du modèle, pas du skill.** Mesuré le 2026-08-06 sur quatre skills en deux répétitions, à skills, requêtes et règles identiques : **7/8 sur `opus`, 0/8 sur `sonnet`**. Deux des quatre ne déclenchaient jamais sous Sonnet et déclenchent 2/2 sous Opus. D'où le `--model opus` par défaut : jouer les évals sur un modèle plus petit mesure un agent qu'on n'exécute pas, et fait passer pour un défaut de `description` ce qui n'en est pas un. Corollaire : un verdict de déclenchement rouge se réinterprète en changeant de modèle **avant** de réécrire quoi que ce soit.
 
-**Une passe coûte de l'argent** — 0,97 $ pour un cas de déclenchement joué sur `opus`, mesuré le 2026-08-24, soit une trentaine de dollars pour les 31 cas du corpus. Ce n'est pas un lint qu'on lance à chaque commit, et c'est pourquoi le lint existe à côté.
+**Une passe coûte de l'argent** — 0,97 $ pour un cas de déclenchement joué sur `opus`, mesuré le 2026-08-24, soit une trentaine de dollars pour les 31 cas du corpus à cette date (32 au 2026-10-27, sur 13 skills). Ce n'est pas un lint qu'on lance à chaque commit, et c'est pourquoi le lint existe à côté.
 
 **Lancer la batterie avant de croire une passe.** Elle confronte les deux verdicts et la validation du corpus à des cas fabriqués à la main. Sans elle, un verdict aveugle qui répond toujours OK est indiscernable d'un verdict intact.
 

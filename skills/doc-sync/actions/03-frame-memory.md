@@ -1,84 +1,31 @@
 # 03 - Cadrer la mémoire
 
-Décide ce qui mérite d'exister en mémoire avant d'écrire une ligne : garder, pointer, ou sortir.
+Décide, pour chaque fait candidat, s'il reste en mémoire, devient un pointeur ou sort. N'écrit rien.
 
 ## Input
 
-- Les cibles de régime **reflet** classées en action 02 qui touchent la memory (`aidd_docs/memory/*`).
-- L'état du banc au home résolu par l'action 01 : `<enfant>/aidd_docs/memory/` (distribué) ou
-  `aidd_docs/memory/<enfant>/` au parent (centralisé).
-- Le scope validé, qui donne les candidats issus du diff. En `--audit` il n'y a pas de diff : les candidats sont **chaque fait porté par les fichiers du scope**, et la seconde source de l'étape 2 devient la source unique.
+Les lignes de régime mémoire AIDD de `scope.md`, et le banc de mémoire à son home. Sur un retour de `check-memory`, les seuls constats routés ici.
 
 ## Output
 
-Un plan de mémoire, une ligne par candidat : le fait, le fichier qui le rend inférable ou « aucun »,
-le verdict (**garder** / **pointeur vers `<chemin>`** / **sortir**), et la réconciliation. Rien n'est
-écrit à ce stade.
+Un plan de mémoire montré à l'humain, une ligne par candidat : le fait, le fichier qui le rend inférable ou « aucun », le verdict, et sa réconciliation.
 
 ## Process
 
-1. **Charger.** Lire [memory-criteria.md](../references/memory-criteria.md), puis les quatre poids du
-   framework dans `aidd-context/skills/10-learn/references/assessment.md`. Le second fait foi sur les
-   quatre poids, le premier ajoute les trois dimensions qui manquent.
-2. **Lister les candidats.** Deux sources, dans cet ordre. D'abord ce que le scope apporte de neuf.
-   Ensuite ce que le banc porte **déjà** sur les fichiers que la passe va toucher — un candidat n'est
-   pas seulement un fait à ajouter, c'est aussi un fait en place dont la présence se rejuge.
-   - *Pourquoi rejuger l'existant : une passe qui n'examine que le neuf laisse grossir le banc à chaque
-     run, et le critère ne mord jamais sur ce qui est déjà là.*
-   - **En `--audit`, la première source est vide et la seconde s'élargit.** Aucun fait neuf n'arrive,
-     et « les fichiers que la passe va toucher » sont **tous** ceux du scope. Le mécanisme ne change
-     pas, seul l'ensemble grandit. *Pourquoi le noter : sans cette ligne, l'étape cherche un diff
-     qu'elle ne trouve pas et rend zéro candidat sur un banc qu'elle n'a pas lu.*
-   - **Sur un retour de l'action 05, ne pas relister.** Le périmètre est alors les seuls constats
-     routés, pas le banc entier. *Pourquoi : relister rouvre des candidats déjà tranchés, ce qui fait
-     grossir le lot au lieu de le réduire — et c'est exactement le signal que l'action 05 lit pour
-     arrêter le cycle.*
-3. **Mesurer avant de noter.** Pour chaque candidat, nommer le fichier qui le porte dans le code ou la
-   config. Aucun fichier → non inférable. Un fichier → relever le coût de ré-inférence et la
-   stabilité.
-   - **Nommer le fichier, ne pas l'estimer.** Un candidat dont le fichier source n'a pas été ouvert
-     n'est pas mesuré, il est supposé — et il se marque comme tel.
-4. **Regrouper par cause avant de trancher.** Deux candidats que la **même mesure** réparerait
-   partagent une cause. Le geste est mécanique : pour chaque candidat, grep le fait dans le home. Plus
-   d'un fichier touché → c'est un symptôme, chercher le fichier qui **produit** le fait.
-   - Le lot groupé reçoit **un** verdict « garder » chez la cause et **N** « sortir » chez les
-     symptômes, jamais N annotations. Le critère du piège porte les deux tables qui tranchent où le
-     fait vit et s'il mérite un piège.
-   - *Pourquoi mécanique et non au jugement : « ces deux-là partagent-ils une cause ? » se trompe en
-     silence, parce que deux pièges qui se ressemblent passent pour deux faits distincts. Un grep ne
-     juge pas.*
-   - **Ne pas chercher de cause commune à un candidat qui n'a qu'un symptôme.** Ça invente une
-     généralité, et un superlatif non énuméré est précisément ce que le contrôle attrape ensuite.
-5. **Trancher.** Appliquer le verdict en trois issues du critère. Les deux conditions de l'exception
-   (coût élevé **et** dérive faible) sont conjointes : une seule remplie donne un pointeur, pas un
-   « garder ».
-6. **Réconcilier.** Classer chaque verdict dans la taxonomie de `10-learn` — `new`, `covered`,
-   `updates`, `supersedes`, `retracts`. Un candidat `covered` ne descend pas en action 04.
-7. **Afficher le coût, en deux nombres.** Compter les mots de la racine du banc (`wc -w`) et rendre le chiffre tel quel,
-   sans le comparer à une cible — il n'y en a pas. Un plan qui fait **grossir** cet ensemble nomme ce
-   qu'il ajoute et pourquoi le critère le retient ; un plan qui le réduit n'a rien à justifier.
-   - **Rendre aussi le nombre de symptômes supprimés**, issu de l'étape 4. *Pourquoi deux nombres : le
-     delta de mots ne distingue pas une passe qui a réduit d'une passe qui a déplacé. Le compte des
-     symptômes le dit, et c'est la seule unité qui monte quand la duplication baisse.*
-8. **Rendre le plan.** Le montrer avant de descendre en action 04. Un verdict « sortir » ou
-   « pointeur » sur un fait que l'humain a écrit à la main se **soumet**, il ne s'applique pas seul.
-   - *Pourquoi cette asymétrie : décrire ce que le code fait est un constat, retirer une phrase qu'un
-     humain a jugée utile est une décision.*
+1. **Charger.** Lire [`../references/memory-criteria.md`](../references/memory-criteria.md), puis les quatre poids d'AIDD dans `aidd-context/skills/10-learn/references/assessment.md`, qui font foi sur les quatre.
+2. **Lister les candidats.** D'abord les faits neufs du diff, puis les faits déjà en place dans les fichiers que la passe touche. En `--audit`, seulement les seconds, sur tout le scope.
+   - Sur un retour de `check-memory`, ne pas relister : le périmètre est les constats routés.
+3. **Mesurer.** Pour chaque candidat, ouvrir le fichier qui le porte dans le code ou la config. Un candidat dont la source n'a pas été ouverte se marque « supposé ».
+4. **Regrouper par cause.** `grep` chaque fait dans le home. Plus d'un fichier touché signale un symptôme, et on cherche le fichier qui produit le fait.
+   - Le lot reçoit un « garder » chez la cause et un « sortir » par symptôme. Tout groupement cite la commande qui l'a établi.
+5. **Trancher et réconcilier.** Appliquer le verdict en trois issues du critère, puis sa réconciliation `10-learn`. Un `covered` ne descend pas.
+6. **Rendre le plan** avec le coût que demande le critère, plus le nombre de symptômes supprimés.
+   - **Garde.** Retirer une phrase écrite à la main est une décision : ce verdict se soumet, il ne s'applique pas seul.
 
 ## Test
 
-- Chaque candidat porte un verdict et une réconciliation, ou est marqué « supposé » faute de source
-  ouverte.
-- Chaque candidat nomme le fichier qui le rend inférable, ou porte la mention « aucun ».
-- Un candidat inférable, à coût de ré-inférence faible **ou** à dérive forte, ne ressort jamais en
-  « garder » : il ressort en pointeur ou en sortie.
-- Un candidat qui ne fait que recopier un fichier du disque ressort en pointeur, jamais en « garder ».
-- **Tout groupement de candidats cite la commande qui l'a établi.** Un lot groupé sans grep est une
-  appréciation, il ne passe pas.
-- **Chaque piège retenu nomme de quel côté du test d'existence il tombe**, et son home est la cause
-  quand plusieurs cibles la partagent.
-- Le plan rend **deux** nombres : le décompte de mots et le nombre de symptômes supprimés.
-- Le plan cite le décompte de mots de la racine. S'il la fait grossir, il nomme ce qui l'a fait grossir.
-- Aucun candidat n'est sorti pour atteindre un chiffre : chaque sortie cite le volet du critère qui la
-  motive.
-- Aucun fichier de mémoire n'a été modifié par cette action.
+| Cas | Preuve |
+| --- | --- |
+| chaque ligne du plan | nomme un fichier source ou « aucun », et porte un verdict |
+| un groupement de candidats | cite le `grep` qui l'a établi |
+| `git status --porcelain aidd_docs/memory/` avant et après | même sortie |
