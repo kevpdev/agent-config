@@ -37,7 +37,7 @@ flowchart TD
 
 ## Process
 
-1. **Garde.** Charger `../_shared/llm-decision-grid.md` et trancher si l'étape a vraiment besoin d'un LLM.
+1. **Garde.** Charger `../_shared/references/llm-decision-grid.md` et trancher si l'étape a vraiment besoin d'un LLM.
    - Beaucoup de « problèmes de fiabilité LLM » se règlent en remplaçant l'étape par du code. Quand c'est le cas, le dire et s'arrêter là.
 2. **Nommer le comportement métier attendu.** C'est lui qu'on évalue, jamais l'implémentation.
 3. **Choisir la stratégie d'évaluation.** Elle se déduit de la stabilité du ground truth.

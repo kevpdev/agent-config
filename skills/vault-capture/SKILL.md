@@ -30,7 +30,7 @@ flowchart TD
 ## Process
 
 1. **Garde et choix du vault.** Lister les vaults avant toute autre chose, sans supposer lequel existe.
-   - `bash -lc 'bash "$SKILLS_ROOT/_shared/resolve-vault.sh"'`
+   - `bash -lc 'bash "$SKILLS_ROOT/_shared/scripts/resolve-vault.sh"'`
    - `exit 0` → la sortie est le chemin du vault, noté `<vault>` plus bas.
    - `exit 3` → plusieurs vaults. Les proposer à l'utilisateur sous forme numérotée (une ligne `1 PERSO`, `2 PRO`, sans le chemin), lui demander de répondre par le numéro, puis relancer `resolve-vault.sh <numéro>` pour obtenir `<vault>`.
    - `exit 1` → dire « Aucun vault Obsidian configuré (aucune variable `OBSIDIAN_VAULT_*` dans le shell). J'arrête. » et s'arrêter là.
@@ -52,7 +52,7 @@ Jouable seul, sauf la dernière ligne qui se relit à la main.
 
 | Cas | Preuve |
 | --- | --- |
-| `bash "$SKILLS_ROOT/_shared/check-vault-bridge.sh" vault-capture`, vault en place | `exit 0` : les cibles canoniques citées au `## Process` résolvent réellement |
+| `bash "$SKILLS_ROOT/_shared/scripts/check-vault-bridge.sh" vault-capture`, vault en place | `exit 0` : les cibles canoniques citées au `## Process` résolvent réellement |
 | la même commande, cible canonique renommée ou déplacée | `exit 1` |
 | la même commande, vault absent ou `SKILL.md` illisible | `exit 2`, jamais un succès silencieux |
 | invocation sans aucune variable `OBSIDIAN_VAULT_*` | l'arrêt annoncé par la garde, pas une écriture dans le repo courant |
