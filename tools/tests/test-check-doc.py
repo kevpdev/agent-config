@@ -60,6 +60,10 @@ CASES = [
         None,
     ),
     ("section manquante relevée", CLEAN.replace("## Contribuer\n", ""), 1, "contribuer"),
+    ("compte de cas relevé", CLEAN + "\nUne trentaine de dollars pour les 31 cas.\n", 1, "[compte]"),
+    ("compte en lettres à trier", CLEAN + "\nLe lint joue sept vérifications.\n", 0, "[à trier]"),
+    ("fait stable en lettres à trier", CLEAN + "\nLe harnais sert deux agents.\n", 0, "[à trier]"),
+    ("compte en lettres daté laissé", CLEAN + "\nAu 2026-10-27, sept vérifications.\n", 0, "0 à trier"),
 ]
 
 

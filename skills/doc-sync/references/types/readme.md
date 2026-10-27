@@ -6,7 +6,7 @@ sections:
   changer: [changement, changer, modifier, développer, développement]
   consulter: [référence, reference, consulter, outillage]
   contribuer: [contribuer, contribution, contributing]
-counted_nouns: [skills, règles, hooks, gardes, scripts, agents, actions, fichiers, commandes, batteries, dépôts, repos, services, outils, serveurs, plugins, endpoints, modules, tests]
+counted_nouns: [skills, règles, hooks, gardes, scripts, agents, actions, fichiers, commandes, batteries, dépôts, repos, services, outils, serveurs, plugins, endpoints, modules, tests, cas, vérifications, pièces]
 inventory_min_items: 5
 ---
 

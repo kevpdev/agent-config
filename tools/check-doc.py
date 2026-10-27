@@ -15,6 +15,11 @@ Trois vérifications, toutes sans interprétation :
 3. **section** : une étape exigée par le type dont aucun titre `##` ou `###` ne contient
    un des mots-clés.
 
+**Un compte écrit en lettres est à trier** (`sept vérifications`) : il s'affiche, mais ne
+change pas le code de sortie. *Pourquoi, mesuré le 2026-10-27 : « deux agents » revient 8
+fois dans le README d'`agent-config`, et c'est un fait stable. Bloquant, le contrôle sortirait
+rouge sur un document conforme.*
+
 Les règles se lisent dans le frontmatter de `skills/doc-sync/references/types/<type>.md`.
 Un repo les surcharge par `.doc-rules/<type>.md` à sa racine, clé par clé. `--rules`
 désigne un fichier de surcharge explicite.
@@ -47,6 +52,10 @@ TABLE_ROW = re.compile(r"^\s*\|(.*)\|\s*$")
 TABLE_SEP = re.compile(r"^\s*\|[\s:|-]+\|\s*$")
 # Un item d'inventaire s'ouvre sur un nom en backticks ou un lien, gras éventuel compris.
 NAMED_ITEM = re.compile(r"^\s*(?:\*\*)?(?:`[^`]+`|\[[^\]]+\]\([^)]+\))")
+WORDS = (
+    "deux|trois|quatre|cinq|six|sept|huit|neuf|dix|onze|douze|treize|quatorze|quinze|seize"
+    "|dix-sept|dix-huit|dix-neuf|vingt"
+)
 
 
 def frontmatter(path: str) -> dict:
@@ -89,19 +98,24 @@ def prose_lines(lines: list[str]) -> list[tuple[int, str]]:
     return out
 
 
-def check_counts(lines, nouns) -> list[str]:
+def check_counts(lines, nouns) -> tuple[list[str], list[str]]:
+    """Les comptes en chiffres, qui sont des défauts, et ceux en lettres, à trier."""
     if not nouns:
-        return []
+        return [], []
     alt = "|".join(re.escape(n) for n in nouns)
-    count = re.compile(rf"(?<![\w.,-])\d+\s+(?:[\wÀ-ÿ'’-]+\s+)?(?:{alt})\b", re.I)
-    found = []
+    tail = rf"\s+(?:[\wÀ-ÿ'’-]+\s+)?(?:{alt})\b"
+    digits = re.compile(rf"(?<![\w.,-])\d+{tail}", re.I)
+    words = re.compile(rf"(?<![\w-])(?:{WORDS}){tail}", re.I)
+    found, to_sort = [], []
     for n, line in lines:
         if line.lstrip().startswith("#") or DATE.search(line):
             continue
-        m = count.search(INLINE_CODE.sub("", line))
-        if m:
+        text = INLINE_CODE.sub("", line)
+        if m := digits.search(text):
             found.append(f"ligne {n} [compte] « {m.group(0)} »")
-    return found
+        if m := words.search(text):
+            to_sort.append(f"ligne {n} [à trier] « {m.group(0)} »")
+    return found, to_sort
 
 
 def check_inventories(lines, minimum) -> list[str]:
@@ -160,14 +174,18 @@ def main() -> int:
     except (OSError, ValueError, yaml.YAMLError) as e:
         print(f"illisible : {e}", file=sys.stderr)
         return 2
+    counts, to_sort = check_counts(lines, rules.get("counted_nouns"))
     defects = (
-        check_counts(lines, rules.get("counted_nouns"))
+        counts
         + check_inventories(lines, int(rules.get("inventory_min_items", 5)))
         + check_sections(lines, rules.get("sections"))
     )
-    for d in defects:
+    for d in defects + to_sort:
         print(d)
-    print(f"{'✗' if defects else '✓'} {a.file} : {len(defects)} défaut(s), type {a.type}.")
+    print(
+        f"{'✗' if defects else '✓'} {a.file} : {len(defects)} défaut(s), "
+        f"{len(to_sort)} à trier, type {a.type}."
+    )
     return 1 if defects else 0
 
 
