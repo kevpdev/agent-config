@@ -22,6 +22,18 @@ est décrite dans [`README.md`](README.md#la-veille-des-plugins-aidd).
 
 ---
 
+## Télémétrie retirée, todo renommé en batch
+
+*Constaté le 2026-10-27, en montant jusqu'au marketplace v5.13.0 (26/10).*
+
+Transitions de version : `aidd-context` 2.8.1 → 2.10.0 · `aidd-dev` 2.6.0 → 2.7.1 · `aidd-orchestrator` 2.3.1 → 2.4.0 · `aidd-pm` 2.5.0 → 2.6.0 · `aidd-refine` 3.1.0 → 3.1.2 · `aidd-vcs` 2.4.0 → 2.5.0.
+
+- **Cassant, déclaré** : les commandes `aidd telemetry`, les hooks et skills `aidd-telemetry`, `backlog-link.json`, le trailer de commit `AIDD-Session-Id` et le dossier `aidd_docs/runs/` sont supprimés. Le changelog annonce un retour de la mesure, pour Claude Code d'abord.
+- **Non déclaré cassant** : `aidd-dev:10-todo` devient `batch`, et rend un compte rendu par agent. Le changelog le range en « Features » (#984).
+- Aucun nom cité par ce repo n'est touché.
+
+---
+
 ## aidd-refine 2.x → 3.x, et browser-qa sorti d'aidd-dev
 
 *Constaté le 2026-10-06, en montant jusqu'au marketplace v5.11.0 (`6e30640`, 24/09).*
