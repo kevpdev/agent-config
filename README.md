@@ -195,7 +195,7 @@ for t in wrappers/claude/hooks/tests/test-*.sh; do bash "$t"; done   # les hooks
 
 **Une batterie pèse autant que son garde.** Un garde sans cible vivante se comporte exactement pareil qu'il soit cassé ou intact ; et un garde qui refuse du travail valide finit désactivé, donc ne protège plus rien. Chaque batterie porte les deux : des cas positifs **fabriqués à la main**, et les formes légitimes qui doivent passer. Toute forme de commande nouvellement rencontrée s'y ajoute *avant* d'être corrigée dans le garde.
 
-**Calibrer sur du trafic réel, pas seulement sur ses propres cas.** `guard-bash-tooling.py` a été confronté aux 987 commandes du périmètre extraites des transcripts de sessions (`~/.claude/projects/*/*.jsonl`) : sa première conception, qui refusait tout ce qu'elle ne pouvait pas tokeniser, y produisait 5 faux positifs sur des `git commit` ordinaires. Une batterie écrite par l'auteur du garde ne les aurait jamais montrés.
+**Calibrer sur du trafic réel, pas seulement sur ses propres cas.** Le 2026-08-11, `guard-bash-tooling.py` a été confronté aux 987 commandes du périmètre extraites des transcripts de sessions (`~/.claude/projects/*/*.jsonl`) : sa première conception, qui refusait tout ce qu'elle ne pouvait pas tokeniser, y produisait 5 faux positifs sur des `git commit` ordinaires. Une batterie écrite par l'auteur du garde ne les aurait jamais montrés.
 
 ### `rules/` ou `skills/` ?
 
