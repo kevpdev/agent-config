@@ -24,7 +24,7 @@ Détecte où vit le code et la doc, propose un scope, et le fait confirmer avant
    - Commandes de détection :
      ```
      # enfants + home memory de chacun, en une passe (implémentation unique)
-     bash "$SKILLS_ROOT/_shared/detect-children.sh" --long
+     bash "$SKILLS_ROOT/_shared/scripts/detect-children.sh" --long
      # candidats contrat partagé au parent (pas de nom figé) — top-level only
      ls aidd_docs/memory/*.md 2>/dev/null
      ```
@@ -79,11 +79,11 @@ Détecte où vit le code et la doc, propose un scope, et le fait confirmer avant
 
 ## Test
 
-- La topologie est explicite : mono-projet, ou coordinateur avec la liste d'enfants **produite par `_shared/detect-children.sh --long`** — jamais par une commande recopiée sur place. Trois symptômes signalent que la détection a été réimplémentée à côté : un coordinateur dont les enfants sont groupés (`backend/<x>`) qui ressort « mono-repo », un monorepo dont les projets ne ressortent pas du tout, ou tous les enfants classés « sans memory ».
+- La topologie est explicite : mono-projet, ou coordinateur avec la liste d'enfants **produite par `_shared/scripts/detect-children.sh --long`** — jamais par une commande recopiée sur place. Trois symptômes signalent que la détection a été réimplémentée à côté : un coordinateur dont les enfants sont groupés (`backend/<x>`) qui ressort « mono-repo », un monorepo dont les projets ne ressortent pas du tout, ou tous les enfants classés « sans memory ».
 - **`$SKILLS_ROOT` est peuplée avant de croire la détection** : `echo "[$SKILLS_ROOT]"` rend un chemin, pas `[]`. Vide, la commande sort en 127 et accuse le script au lieu de la config.
 - Le script tourne et rend un résultat non vide sur un coordinateur. Contrôle à jouer depuis la racine du parent :
   ```
-  bash "$SKILLS_ROOT/_shared/detect-children.sh" --long
+  bash "$SKILLS_ROOT/_shared/scripts/detect-children.sh" --long
   ```
   Chaque ligne porte ses trois attributs. `VCS` vaut `propre` ou `parent` ; `BUILD` nomme le manifeste trouvé ou `aucun` ; `MEMORY` vaut `distribué`, `centralisé (memory/<nom>)` ou `aucune`. Un enfant à `BUILD = aucun` est normal (dépôt de doc ou de config) et n'est pas une erreur de détection.
   **Contrôle calibré** : la même commande lancée depuis un sous-dossier doit rendre « mono-projet ». Si elle rend des enfants des deux endroits, le script a changé et ce prérequis est à réécrire ; si elle rend « mono-projet » des deux, le `cwd` était faux.

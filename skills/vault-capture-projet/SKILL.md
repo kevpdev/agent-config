@@ -35,7 +35,7 @@ flowchart TD
 ## Process
 
 1. **Garde et choix du vault.** Lister les vaults avant toute autre chose, sans supposer lequel existe.
-   - `bash -lc 'bash "$SKILLS_ROOT/_shared/resolve-vault.sh"'`
+   - `bash -lc 'bash "$SKILLS_ROOT/_shared/scripts/resolve-vault.sh"'`
    - `exit 0` → la sortie est le chemin du vault, noté `<vault>` plus bas.
    - `exit 3` → plusieurs vaults. Les proposer à l'utilisateur sous forme numérotée (une ligne `1 PERSO`, `2 PRO`, sans le chemin), lui demander de répondre par le numéro, puis relancer `resolve-vault.sh <numéro>` pour obtenir `<vault>`.
    - `exit 1` → dire « Aucun vault Obsidian configuré (`OBSIDIAN_VAULT_PRO` et `OBSIDIAN_VAULT_PERSO` absents). J'arrête. » et s'arrêter là.
@@ -91,7 +91,7 @@ Jouable seul, sauf la dernière ligne qui se relit à la main.
 
 | Cas | Preuve |
 | --- | --- |
-| `bash "$SKILLS_ROOT/_shared/check-vault-bridge.sh" vault-capture-projet`, vault en place | `exit 0` : les cibles citées au `## Process` résolvent réellement, dont `conventions/notes.md` dont dépend l'étape 6 |
+| `bash "$SKILLS_ROOT/_shared/scripts/check-vault-bridge.sh" vault-capture-projet`, vault en place | `exit 0` : les cibles citées au `## Process` résolvent réellement, dont `conventions/notes.md` dont dépend l'étape 6 |
 | la même commande, cible renommée ou déplacée | `exit 1` |
 | la même commande, vault absent ou `SKILL.md` illisible | `exit 2`, jamais un succès silencieux |
 | invocation sans `OBSIDIAN_VAULT_PRO` ni `OBSIDIAN_VAULT_PERSO` | l'arrêt annoncé par la garde, rien n'est écrit dans le repo courant |

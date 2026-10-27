@@ -32,7 +32,7 @@ flowchart TD
 2. **Besoin de déterminisme.** Peser ce que coûte une erreur de routing.
    - Elle coûte cher, aller vers le déterministe. On explore, aller vers le probabiliste.
 3. **Points de défaillance.** Chercher où un agent peut planter silencieusement, halluciner ou boucler.
-4. **Grille de décision.** Charger `../_shared/llm-decision-grid.md`, l'entrée commune qui classe une étape en déterministe, LLM borné ou agent.
+4. **Grille de décision.** Charger `../_shared/references/llm-decision-grid.md`, l'entrée commune qui classe une étape en déterministe, LLM borné ou agent.
    - Souvent une étape supposée « agentique » se règle par du code.
 5. **Les quatre décisions.** Trancher chacune, dans cet ordre.
    - **Déterministe ou probabiliste.** Déjà tranché à l'étape 4. La table « par critère de comportement » de la grille pèse le coût d'une erreur de routing.

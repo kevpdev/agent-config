@@ -13,7 +13,7 @@
 
 set -uo pipefail
 
-SKILLS_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+SKILLS_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 if [ ! -d "$SKILLS_DIR/_shared" ]; then
   echo "FAIL racine dérivée invalide : $SKILLS_DIR ne porte pas _shared/"
   exit 2

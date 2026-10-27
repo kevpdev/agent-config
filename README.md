@@ -90,7 +90,7 @@ flowchart TD
 ```
 rules/              règles chargées en contexte — neutres
 skills/             expertises chargées à la demande — neutres
-  _shared/          références partagées entre plusieurs skills
+  _shared/          scripts et références partagés entre plusieurs skills (voir son README)
 hooks/              décision des gardes, sur une entrée neutre
 policy/             lectures interdites, déclarées une fois pour les deux agents
 mcp/                serveurs MCP, déclarés une fois pour les deux agents
@@ -223,17 +223,17 @@ Un skill se déclenche sur sa `description` : la soigner, c'est tout ce qui déc
 
 ### `SKILLS_ROOT` — le contrat entre un skill et son agent
 
-Plusieurs skills appellent un script partagé de `skills/_shared/`. Ils le désignent par `$SKILLS_ROOT/_shared/<script>.sh`, jamais par le chemin d'un agent précis. La variable s'exporte depuis le profil du shell de lancement, à côté de `OBSIDIAN_VAULT_PRO` ou `OBSIDIAN_VAULT_PERSO` (voir [Démarrage rapide](#démarrage-rapide)).
+Plusieurs skills appellent un script partagé de `skills/_shared/`. Ils le désignent par `$SKILLS_ROOT/_shared/scripts/<script>.sh`, jamais par le chemin d'un agent précis. La variable s'exporte depuis le profil du shell de lancement, à côté de `OBSIDIAN_VAULT_PRO` ou `OBSIDIAN_VAULT_PERSO` (voir [Démarrage rapide](#démarrage-rapide)).
 
 **Le bloc `env` de `~/.claude/settings.local.json` ne suffit pas, mesuré le 2026-08-27.** La variable y était déclarée depuis le 2026-08-20, et `echo "[$SKILLS_ROOT]"` rendait `[]` dans l'outil Bash, en shell simple comme en `bash -lc`. `OBSIDIAN_VAULT_PRO`, déclarée dans le même bloc, était peuplée — mais par une ligne d'export du `.zshrc`, pas par le bloc. **La preuve de la config est donc `echo "[$SKILLS_ROOT]"` non vide dans une session neuve**, jamais la présence de la clé dans le JSON.
 
 **Pourquoi une variable** : un `~/.claude/skills/…` écrit dans un skill le rend inutilisable sous un autre agent, alors que le script visé est au même endroit relatif partout. Le skill dit quoi appeler, le wrapper dit où. Cet argument tient toujours : il justifie la variable, pas le mécanisme qui la peuple.
 
-**Sans elle, l'appel échoue de façon trompeuse.** `bash "$SKILLS_ROOT/_shared/check-vault-bridge.sh"` devient `bash "/_shared/…"`, donc un `exit 127` qui accuse le script au lieu de la config — un agent est parti chercher le fichier par un `find /`.
+**Sans elle, l'appel échoue de façon trompeuse.** `bash "$SKILLS_ROOT/_shared/scripts/check-vault-bridge.sh"` devient `bash "/_shared/…"`, donc un `exit 127` qui accuse le script au lieu de la config — un agent est parti chercher le fichier par un `find /`.
 
 ### Les vaults Obsidian
 
-Les skills `vault-*` sont des passerelles vers un vault Obsidian : ils délèguent aux skills canoniques situés sous `<vault>/.agents/skills/`. Le vault se résout par `skills/_shared/resolve-vault.sh`, qui ne lit que deux variables, `OBSIDIAN_VAULT_PRO` et `OBSIDIAN_VAULT_PERSO`. Elles s'exportent depuis le profil du shell de lancement, comme `SKILLS_ROOT` et pour la même raison mesurée.
+Les skills `vault-*` sont des passerelles vers un vault Obsidian : ils délèguent aux skills canoniques situés sous `<vault>/.agents/skills/`. Le vault se résout par `skills/_shared/scripts/resolve-vault.sh`, qui ne lit que deux variables, `OBSIDIAN_VAULT_PRO` et `OBSIDIAN_VAULT_PERSO`. Elles s'exportent depuis le profil du shell de lancement, comme `SKILLS_ROOT` et pour la même raison mesurée.
 
 Un poste n'en exporte qu'une ou les deux. Avec un seul vault, le skill le prend sans poser de question. Avec les deux, il propose une liste numérotée et l'utilisateur répond par le numéro. Sans aucune des deux, chaque `vault-*` dégrade sans casse : message « aucun vault configuré » puis arrêt, jamais d'écriture dans le repo courant.
 
