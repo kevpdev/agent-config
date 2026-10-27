@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# lis — lit à voix haute la dernière réponse d'un agent, ou coupe la lecture.
+#
+# Les hooks de fin de tour (Claude Code, OpenCode) mémorisent la réponse par
+# hooks/speak.py. Ce script la fait lire à la demande. Tapé `! lis` dans l'agent,
+# il ne passe pas par le modèle.
+#
+# Usage
+#   lis          lit la dernière réponse
+#   lis stop     coupe la lecture en cours
+set -euo pipefail
+
+REPO="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+case "${1:-}" in
+    "") exec python3 "$REPO/hooks/speak.py" --last ;;
+    stop) exec python3 "$REPO/hooks/speak.py" --stop ;;
+    *) echo "usage: lis [stop]" >&2; exit 2 ;;
+esac

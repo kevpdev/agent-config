@@ -15,6 +15,7 @@
     {"mode": "link", "source": "wrappers/claude/hooks/guard-no-claude-in-commit.sh", "cible": "scripts/hooks/guard-no-claude-in-commit.sh"},
     {"mode": "link", "source": "wrappers/claude/hooks/guard-no-remote-write.py", "cible": "scripts/hooks/guard-no-remote-write.py"},
     {"mode": "link", "source": "wrappers/claude/hooks/init-codegraph.py", "cible": "scripts/hooks/init-codegraph.py"},
+    {"mode": "link", "source": "wrappers/claude/hooks/speak-on-stop.py", "cible": "scripts/hooks/speak-on-stop.py"},
     {"mode": "link", "source": "wrappers/claude/hooks/tests", "cible": "scripts/hooks/tests"},
     {"mode": "link", "source": "tools/lint-html-prose.py", "cible": "scripts/lint-html-prose.py"},
     {"mode": "link", "source": "tools/lint-skills.py", "cible": "scripts/lint-skills.py"},

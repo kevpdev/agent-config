@@ -186,6 +186,28 @@ Sous Claude, `install.py` lie l'adaptateur et fusionne sa déclaration dans le `
 2. la décision dans `hooks/<nom>.py`, enregistrée dans `GUARDS`
 3. sous Claude, l'adaptateur, son lien et son entrée de `settings.json`, puis `install.py --fix` sur le banc
 
+### La lecture vocale des réponses
+
+Les deux agents peuvent lire leur réponse finale à voix haute avec [Piper](https://github.com/rhasspy/piper), une synthèse vocale neuronale qui tourne en local. La lecture se fait à la demande :
+
+```bash
+! lis          # lit la dernière réponse, tapé dans l'agent : le modèle n'est pas appelé
+! lis stop     # coupe la lecture en cours
+```
+
+Le cœur est `hooks/speak.py`. À chaque fin de tour, il nettoie la réponse pour l'oreille (blocs de code, tableaux et URL retirés), la coupe sur une fin de phrase et la garde dans `$XDG_RUNTIME_DIR/agent-voice/last.txt`. `lis` (`tools/lis`) la fait jouer en arrière-plan. Avec deux sessions ouvertes, c'est la réponse finie en dernier qui est lue. `lis` se lie à la main dans le `PATH` : `ln -s "$PWD/tools/lis" ~/.local/bin/lis`.
+
+| Agent | Ce qui appelle `speak.py` |
+|---|---|
+| Claude Code | `wrappers/claude/hooks/speak-on-stop.py`, déclaré sur `Stop`, qui lit la réponse finale dans le transcript |
+| OpenCode | le plugin `wrappers/opencode/plugins/voice/`. OpenCode v2 n'a plus `session.idle`, donc il recompose la réponse depuis `session.text.ended` et parle sur `session.execution.succeeded`. Les sous-agents restent muets |
+
+**La voix se règle dans `hooks/speak.json`**, commun aux deux agents : voix, vitesse (`length_scale`, plus petit va plus vite), longueur maximale lue et chemins de Piper. `"mode": "auto"` fait lire chaque réponse sans attendre `lis`, et `AGENT_VOICE=0` dans l'environnement coupe alors cette lecture pour la session.
+
+**Un mot mal prononcé s'ajoute à `lexicon`**, dans le même fichier, écrit comme un lecteur français le dirait (`pipeline` devient `païpe-laïne`). Piper ne comprend pas le texte : sa prononciation vient des règles françaises d'espeak-ng, qui lisent tout comme du français. Les unités qui suivent un nombre (`23 ms`) se développent par `units`.
+
+**Piper s'installe hors du repo**, dans `~/.local/share/piper/` : le binaire autonome sous `piper/` et les voix (`.onnx` et `.onnx.json`) sous `voices/`. Sans Piper ou sans la voix, `speak.py` écrit une ligne sur stderr et laisse l'agent continuer.
+
 ### Les gardes déterministes
 
 Un garde est un hook qui refuse à l'appel ce qu'une règle de prose ne tenait pas. Il est la couche déterministe d'une règle qui, du coup, ne répète pas ses critères. Chaque module de `hooks/` dit dans sa docstring ce qu'il refuse et pourquoi.

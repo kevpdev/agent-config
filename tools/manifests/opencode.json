@@ -5,6 +5,7 @@
   "mcp": "mcp/servers.yaml",
   "entrees": [
     {"mode": "link", "source": "wrappers/opencode/plugins/harness-guards", "cible": "plugins/harness-guards"},
+    {"mode": "link", "source": "wrappers/opencode/plugins/voice", "cible": "plugins/voice"},
     {"mode": "glob-dirs", "source": "skills/*", "cible": "skills"}
   ]
 }

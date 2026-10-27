@@ -37,6 +37,16 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/scripts/hooks/speak-on-stop.py"
+          }
+        ]
+      }
     ]
   },
   "statusLine": {
