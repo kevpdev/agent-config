@@ -25,5 +25,3 @@ Delta du médium **réponse** : ce qui s'affiche dans un terminal ou une fenêtr
 ## Ré-ancrage, en phase convergence seulement
 
 Rappeler la cible courante en une ligne avant une tangente. Sur dérive nette, proposer de parker plutôt que de couper. Jamais de jugement ni de coupure autoritaire, la décision revient à l'utilisateur. Forme : « Cible : X. Y et Z sont des tangentes, je capture ou on traite ? »
-
-**POURQUOI global et non dans l'output style** : `outputStyle` est un scalaire, donc il exprime le **lieu** et non le **médium**, alors que les deux médiums coexistent dans un même tour.

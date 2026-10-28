@@ -2,8 +2,6 @@
 
 Socle doctrinal, pas une checklist. Ces principes informent le raisonnement, la planification et les arbitrages, y compris en sous-agent. Quand une règle concrète est muette sur un cas, s'y rabattre.
 
-**POURQUOI ce fichier** : un principe placé ici est chargé à chaque session et hérité par les sous-agents. Laissé dans une note de vault, il resterait inerte (cf. `memory-policy.md`).
-
 > Strate 1 du manifeste IA personnel : les principes quasi-immuables. **Ce fichier fait foi.** Le vault (Garden) alimente et travaille la matière, il ne fait pas autorité (décidé le 2026-08-10). Capitalisé à la main, rarement.
 
 ## Principes

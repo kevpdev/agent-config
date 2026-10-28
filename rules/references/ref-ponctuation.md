@@ -87,3 +87,9 @@ La cible de 1,09 point-virgule est tenue avec un facteur 3. Les deux résidus so
 DeepSeek dépasse la cible sans la règle, donc la substitution du point-virgule le concerne. MiniMax est déjà sous la cible, mais ses tirets sont au niveau de la baseline Claude du 2026-08-11 (13,93). Le corpus de MiniMax est mince, moins de 4 000 mots.
 
 Garder ou non la règle pour ces modèles n'est pas tranché ici. Le compteur ne connaît que ` ; ` et ` — ` entourés d'espaces, comme pour Claude.
+
+## Pourquoi la règle est globale et non scopée par `paths:`
+
+Sorti de la règle le 2026-10-28 (issue #66), texte d'origine.
+
+**POURQUOI global et non scopé par `paths:`** : la ponctuation de prose n'est identifiable par aucun chemin. Elle vaut pour un recap de vault, un message de PR, une réponse de chat et un rapport de sous-agent. Scopée par chemin, elle ne se déclenche qu'en éditant un fichier du périmètre, donc jamais dans une réponse.

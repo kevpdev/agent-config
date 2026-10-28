@@ -14,6 +14,6 @@ Une phrase qui cumule les deux premiers tics :
 - ❌ « Le score baisse — probablement à cause du bruit — donc on le recalibre ; le seuil actuel n'est plus fiable. »
 - ✅ « Le score baisse, probablement à cause du bruit. On recalibre : le seuil actuel n'est plus fiable. »
 
-**POURQUOI global et non scopé par `paths:`** : la ponctuation de prose n'est identifiable par aucun chemin. Elle vaut pour un recap de vault, un message de PR, une réponse de chat et un rapport de sous-agent. Scopée par chemin, elle ne se déclenche qu'en éditant un fichier du périmètre, donc jamais dans une réponse.
+Elle vaut pour toute prose : recap de vault, message de PR, réponse de chat, rapport de sous-agent.
 
 **TEST** : comptage sur la prose seule, tirets de titre, de tableau et de séparateur label exclus. Baselines, cibles et commande → `rules/references/ref-ponctuation.md`.

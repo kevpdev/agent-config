@@ -54,3 +54,9 @@ Le détail des angles morts est dans le docstring de `mesure-reponses.py`, qui f
 
 - **Chiffrer une réécriture de règle sur le contenu à déplacer** ignore le contenu à écrire, qui n'existe pas au moment où on estime. Raté d'un facteur 3,4 le 2026-08-11, raté de signe le 2026-08-12.
 - **Un auto-diagnostic sur son propre tour est une hypothèse**, au même titre qu'une prémisse de codebase non vérifiée. Trois règles accusées, une seule coupable à la mesure. Réécrire les deux autres aurait ajouté du texte pour corriger des défauts inexistants.
+
+## `reponse.md` — pourquoi global et non dans l'output style
+
+Sorti de la règle le 2026-10-28 (issue #66), texte d'origine.
+
+**POURQUOI global et non dans l'output style** : `outputStyle` est un scalaire, donc il exprime le **lieu** et non le **médium**, alors que les deux médiums coexistent dans un même tour.
