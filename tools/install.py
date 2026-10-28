@@ -17,7 +17,8 @@ POURQUOI CE SCRIPT
 
     La clé `deny` du manifeste désigne `policy/deny.yaml`, traduit dans la forme de
     l'agent et ajouté au gabarit avant la fusion : `permissions.deny` pour Claude,
-    `policies` pour OpenCode.
+    `policies` pour OpenCode. Une action `read` devient `Read`/`read`, une action `write`
+    devient `Edit`/`edit`.
 
     La clé `mcp` désigne `mcp/servers.yaml`. Pour OpenCode, chaque serveur devient une
     entrée de `mcp.servers`, ajoutée au gabarit comme `deny`. Pour Claude, install.py
@@ -188,25 +189,50 @@ def charger_deny(chemin: str) -> list[dict]:
         manque = [c for c in ("id", "action", "fin", "raison") if not e.get(c)]
         if manque:
             raise SystemExit(f"install — {chemin} : entrée {e.get('id', '?')} sans {', '.join(manque)}.")
-        if e["action"] != "read":
-            raise SystemExit(f"install — {chemin} : entrée {e['id']}, action {e['action']!r} inconnue (read seulement).")
+        if e["action"] not in OUTILS_CLAUDE:
+            raise SystemExit(f"install — {chemin} : entrée {e['id']}, action {e['action']!r} inconnue (read ou write).")
     return entrees
+
+
+# L'outil que chaque action interdit. `Edit` couvre tous les outils d'édition de Claude
+# selon sa doc, et `edit` couvre l'écriture sous OpenCode.
+OUTILS_CLAUDE = {"read": "Read", "write": "Edit"}
+OUTILS_OPENCODE = {"read": "read", "write": "edit"}
+
+
+def chemin_claude(fin: str) -> str:
+    """Forme Claude d'une fin : `~/` reste ancré au home, `/` devient `//`, un suffixe `//**/`."""
+    if fin.startswith("~/"):
+        return fin
+    if fin.startswith("/"):
+        return "/" + fin
+    return f"//**/{fin}"
 
 
 def deny_claude(entrees: list[dict]) -> dict:
     # Un deny Claude gagne toujours sur un allow : une entrée à exception n'est pas traduite.
-    return {"permissions": {"deny": [f"Read(//**/{e['fin']})" for e in entrees if not e.get("sauf")]}}
+    return {"permissions": {"deny": [f"{OUTILS_CLAUDE[e['action']]}({chemin_claude(e['fin'])})"
+                                     for e in entrees if not e.get("sauf")]}}
 
 
 def deny_opencode(entrees: list[dict]) -> dict:
-    # La ressource d'un `read` est relative sous le dossier de travail, absolue ailleurs.
-    def deux(effet, fin):
-        return [{"action": "tool.use", "resource": f"read:{r}", "effect": effet} for r in (fin, f"*/{fin}")]
+    # La ressource est relative sous le dossier de travail, absolue ailleurs. Une fin ancrée
+    # n'a que sa forme absolue. Le `*` d'OpenCode traverse les `/`, d'où `**` réduit à `*`.
+    def ressources(fin):
+        fin = fin.replace("**", "*")
+        if fin.startswith("~/"):
+            return [os.path.expanduser("~") + fin[1:]]
+        if fin.startswith("/"):
+            return [fin]
+        return [fin, f"*/{fin}"]
+
     policies = []
     for e in entrees:
-        policies += deux("deny", e["fin"])
-        for fin in e.get("sauf") or []:
-            policies += deux("allow", fin)
+        outil = OUTILS_OPENCODE[e["action"]]
+        for effet, fins in (("deny", [e["fin"]]), ("allow", e.get("sauf") or [])):
+            for fin in fins:
+                policies += [{"action": "tool.use", "resource": f"{outil}:{r}", "effect": effet}
+                             for r in ressources(fin)]
     return {"policies": policies}
 
 

@@ -206,6 +206,9 @@ def main() -> int:
             "Read(//**/.config/opencode/service.json)" in deny)
         cas("deny : clé SSH privée interdite à toute profondeur", "Read(//**/.ssh/id_ed25519)" in deny)
         cas("deny : une entrée à exception n'est pas traduite", not any(".env.*" in d for d in deny))
+        cas("deny : écriture sous .git à toute profondeur", "Edit(//**/.git/**)" in deny)
+        cas("deny : écriture de ~/.zshrc ancrée au home", "Edit(~/.zshrc)" in deny)
+        cas("deny : écriture sous /etc ancrée à la racine", "Edit(//etc/**)" in deny)
         s["permissions"]["allow"] = ["Bash(ls:*)"]
         s["permissions"]["deny"] = deny[1:]
         with open(os.path.join(cible, "settings.json"), "w") as f:
@@ -270,6 +273,13 @@ def main() -> int:
             {"action": "tool.use", "resource": "read:*/.config/opencode/service.json", "effect": "deny"} in policies)
         cas("opencode : policies interdit les jetons AWS hors du dossier de travail",
             {"action": "tool.use", "resource": "read:*/.aws/credentials", "effect": "deny"} in policies)
+        cas("opencode : policies interdit l'écriture sous .git hors du dossier de travail",
+            {"action": "tool.use", "resource": "edit:*/.git/*", "effect": "deny"} in policies)
+        cas("opencode : ~/.zshrc n'a que sa forme absolue",
+            [p["resource"] for p in policies if p["resource"].endswith("/.zshrc")]
+            == [f"edit:{os.path.expanduser('~')}/.zshrc"])
+        cas("opencode : /etc reste ancré à la racine",
+            {"action": "tool.use", "resource": "edit:/etc/*", "effect": "deny"} in policies)
         exemple = [i for i, p in enumerate(policies) if p["resource"] == "read:*/.env.example"]
         variantes = [i for i, p in enumerate(policies) if p["resource"] == "read:*/.env.*"]
         cas("opencode : .env.example relevé après le deny de .env.*",

@@ -119,6 +119,44 @@ with tempfile.TemporaryDirectory() as projet:
         verifier(nom, attendu, "no_secret_read", command=commande, cwd=cwd)
 verifier("action edit, hors périmètre", PASSE, "no_secret_read", action="edit", paths=["/p/.env"])
 
+print("=== no_sensitive_write ===")
+with tempfile.TemporaryDirectory() as projet:
+    for nom, attendu, commande in [
+        ("rm -rf .git", REFUS, "rm -rf .git"),
+        ("rm d'un objet sous .git", REFUS, "rm .git/index.lock"),
+        ("ajout à ~/.zshrc", REFUS, "echo 'export X=1' >> ~/.zshrc"),
+        ("redirection sans espace", REFUS, "echo x>$HOME/.bashrc"),
+        ("sed -i sur ~/.ssh/config", REFUS, "sed -i s/a/b/ ~/.ssh/config"),
+        ("mv vers authorized_keys", REFUS, "mv cle.pub ~/.ssh/authorized_keys"),
+        ("mv qui retire known_hosts", REFUS, "mv ~/.ssh/known_hosts /tmp/kh"),
+        ("sudo tee dans /etc", REFUS, "echo 1 | sudo tee /etc/hosts"),
+        ("destination d'un cp sous /usr", REFUS, "cp outil /usr/local/bin/outil"),
+        ("cp -t vers /boot", REFUS, "cp -t /boot vmlinuz"),
+        ("dd of= sous /boot", REFUS, "dd if=img of=/boot/efi.img"),
+        ("dans une chaîne", REFUS, "ls && rm -f ~/.profile"),
+        ("git écrit .git sans le nommer", PASSE, "git commit -m 'fix: x'"),
+        ("lecture de ~/.zshrc", PASSE, "cat ~/.zshrc"),
+        ("copie depuis ~/.zshrc", PASSE, "cp ~/.zshrc /tmp/sauvegarde"),
+        ("lecture sous /etc", PASSE, "grep x /etc/hosts"),
+        (".gitignore n'est pas .git", PASSE, "echo x > .gitignore"),
+        (".zshrc versionné dans un dépôt", PASSE, "echo x >> dotfiles/.zshrc"),
+        ("redirection vers /dev/null", PASSE, "ls 2>/dev/null"),
+        ("variable inconnue, chemin indécidable", PASSE, "rm -rf $S/t/base/.git"),
+        ("$HOME est résolu", REFUS, "rm $HOME/.ssh/config"),
+        ("2>&1 ne nomme aucun fichier", PASSE, "cp a b 2>&1"),
+        ("sed sans -i n'écrit rien", PASSE, "sed s/a/b/ ~/.zshrc"),
+        ("heredoc qui nomme ~/.zshrc, écrit ailleurs", PASSE,
+         "cat > note.md <<'EOF'\nrm ~/.zshrc\nEOF"),
+    ]:
+        verifier(nom, attendu, "no_sensitive_write", command=commande, cwd=projet)
+verifier("edit sous .git", REFUS, "no_sensitive_write", action="edit", paths=["/repo/.git/config"])
+verifier("edit de ~/.ssh/config", REFUS, "no_sensitive_write", action="edit",
+         paths=[os.path.expanduser("~/.ssh/config")])
+verifier("edit d'un fichier ordinaire", PASSE, "no_sensitive_write", action="edit",
+         paths=["/repo/src/app.py"])
+verifier("action read, hors périmètre", PASSE, "no_sensitive_write", action="read",
+         paths=["/repo/.git/config"])
+
 print("=== aidd_skill_lookup ===")
 with tempfile.TemporaryDirectory() as aidd:
     os.mkdir(os.path.join(aidd, "aidd_docs"))
