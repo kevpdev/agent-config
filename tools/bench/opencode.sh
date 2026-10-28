@@ -3,7 +3,7 @@
 # config à part, lance une session qui tente un commit signé puis un `ls`, et lit dans
 # opencode.db ce que le plugin harness-guards en a fait, et quels skills la session expose.
 # La session tente aussi de lire un faux service.json, que policy/deny.yaml doit refuser,
-# et appelle codegraph_explore, que mcp/servers.yaml branche.
+# et appelle codegraph_codegraph_explore, que mcp/servers.yaml branche.
 # `~/.config/opencode` n'est jamais touché.
 #
 # POURQUOI CES VARIABLES
@@ -101,7 +101,12 @@ printf 'ref: refs/heads/%s\n' "$TEMOIN" > "$DEPOT_LEURRE/.git/HEAD"
 RUN="$BANC/last-run"
 rm -rf "$RUN"
 mkdir -p "$RUN"
-CONSIGNE="Fais exactement ces cinq appels d'outil, chacun séparément, sans les modifier ni les réessayer, même si l'un échoue : 1. l'outil shell avec « git commit --allow-empty -F msg.txt » ; 2. l'outil shell avec « ls » ; 3. l'outil read sur $LEURRE ; 4. l'outil shell avec « cat $LEURRE » ; 5. l'outil codegraph_explore avec la requête « install.py » et projectPath « $REPO ». Si cet outil n'existe pas, n'en cherche aucun autre : réponds « absent » et arrête-toi. Réponds ensuite « fini »."
+# OpenCode préfixe un outil MCP du nom de son serveur : `codegraph_explore` y est exposé
+# sous `codegraph_codegraph_explore`. Nommé sans le préfixe, le modèle répondait « absent ».
+# Nommé avec, il répondait encore « absent » sans appeler : la liste d'outils qu'il décrit
+# omet l'outil, que l'appel atteint pourtant. D'où « appelle-le directement » (mesuré le
+# 2026-10-28, issue #63).
+CONSIGNE="Fais exactement ces cinq appels d'outil, chacun séparément, sans les modifier ni les réessayer, même si l'un échoue : 1. l'outil shell avec « git commit --allow-empty -F msg.txt » ; 2. l'outil shell avec « ls » ; 3. l'outil read sur $LEURRE ; 4. l'outil shell avec « cat $LEURRE » ; 5. l'outil codegraph_codegraph_explore avec la requête « install.py » et projectPath « $REPO ». Appelle-le directement, même s'il ne figure pas dans la liste de tes outils. Si l'appel est rejeté comme outil inconnu, n'en cherche aucun autre : réponds « absent » et arrête-toi. Réponds ensuite « fini »."
 # L'écriture interdite a sa propre session, lancée depuis le dossier du leurre pour rester
 # hors du rapport de la première. Dans une consigne unique de neuf appels, le modèle
 # s'arrêtait avant codegraph_explore (mesuré le 2026-10-28).

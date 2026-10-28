@@ -22,9 +22,10 @@ Ce qui est vérifié :
        n'apparaît pas dans son état. Le `cat` du même leurre doit être refusé aussi, par le
        garde `no_secret_read` du cœur, sans que le témoin sorte. Une règle `read` de la policy
        ne couvre pas le shell, d'où le garde.
-    5. avec --mcp NOM : la session a appelé un outil `NOM_…`, abouti ou en erreur. La base
+    5. avec --mcp NOM : la session a appelé un outil `NOM_…`, et l'appel a abouti. La base
        ne garde pas la liste des outils exposés, donc l'appel est la seule preuve que le
-       serveur était branché. Une erreur suffit : l'outil existait.
+       serveur était branché. Une erreur ne prouve rien : un outil inconnu rend aussi une
+       erreur (« Unknown tool », mesuré le 2026-10-28).
     6. avec --expect-skill NOM : ce skill est dans `core/skill-guidance`. Sert à prouver qu'un
        skill posé par le projet, AIDD par exemple, est exposé à côté de ceux du repo.
 
@@ -184,7 +185,7 @@ def outils_mcp(con, sessions: list[str], nom: str) -> list[tuple[str, str]]:
 
 
 def verifier_mcp(vus: list[tuple[str, str]], nom: str) -> int:
-    termines = [(o, s) for o, s in vus if s in ("completed", "error")]
+    termines = [(o, s) for o, s in vus if s == "completed"]
     if termines:
         print(f"✓ serveur MCP {nom} branché : {termines[0][0]} appelé ({termines[0][1]}).")
         return 0
