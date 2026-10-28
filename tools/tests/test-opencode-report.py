@@ -182,7 +182,7 @@ with tempfile.TemporaryDirectory() as tmp:
     cas("outil MCP appelé : code 0", code == 0 and "codegraph_codegraph_explore appelé (completed)" in sortie, sortie)
 
     code, sortie = avec_mcp([outil("codegraph_codegraph_explore", "error")])
-    cas("outil MCP en erreur : l'outil existait, code 0", code == 0, sortie)
+    cas("outil MCP en erreur : rien ne prouve qu'il existait, code 1", code == 1, sortie)
 
     code, sortie = avec_mcp([outil("execute", "completed")])
     cas("aucun outil MCP appelé : code 1", code == 1 and "aucun appel d'un outil codegraph_" in sortie, sortie)
