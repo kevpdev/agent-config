@@ -132,7 +132,7 @@ Dans tous les cas, le changement arrive au vivant par un merge sur `main`, puis 
 
 1. Une branche tirée d'`origin/main`, dans le worktree.
 2. `bash tools/test-all.sh` vert (voir [Outillage](#outillage)).
-3. Une PR vers `main`, puis le merge.
+3. Une PR vers `main`, puis le merge. La porte `ci` relance les batteries, le lint des skills et Trivy sur la PR, et bloque le merge si l'un échoue.
 4. `bash tools/bascule.sh`, lancé depuis le worktree.
 
 **Pour changer le checkout principal de version, utiliser `tools/bascule.sh`.** Un `git pull` seul laisserait pendre les liens dont la source a bougé. Un garde introuvable bloque alors tous les appels `Bash`. Le script fait avancer `main` sur `origin/main`, puis lance `install.py --fix` pour les deux agents, dans le même processus. Il se lance depuis un worktree, et sauvegarde avant d'écrire, dans `~/.local/state/agent-config/bascule/<horodatage>/`. On y retrouve les liens vers le repo, `settings.json`, `opencode.json`, `.zshrc` et le commit d'avant.
