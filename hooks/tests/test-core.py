@@ -53,7 +53,7 @@ def verifier(nom, attendu, garde, action="shell", command="", paths=(), cwd="/tm
 print("=== no_ai_in_commit ===")
 verifier("signature Co-Authored-By", REFUS, "no_ai_in_commit",
          command='git commit -m "fix: x\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"')
-verifier("nommer Claude n'est pas signer", REFUS, "no_ai_in_commit",
+verifier("nommer Claude n'est pas signer", PASSE, "no_ai_in_commit",
          command='git commit -m "fix: Claude"')
 verifier("format non conventionnel", REFUS, "no_ai_in_commit", command='git commit -m "wip"')
 verifier("format conventionnel", PASSE, "no_ai_in_commit",
