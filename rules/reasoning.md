@@ -50,6 +50,8 @@
 
 Une règle énonce sa raison **si cette raison apporte un fait indéduisible** : contrainte d'environnement, mesure, piège vécu. **À LA PLACE de** justifier ce qu'un modèle sait déjà, couper. Deux prescriptions de doc apparemment opposées, et le critère qui les réconcilie → `rules/references/ref-reasoning.md`.
 
+**Un fait par pourquoi, celui qui change ce que l'agent fait.** **À LA PLACE de** laisser dans une règle chargée ce qui sert à qui l'édite (rangement, scope, « pourquoi ici », récit daté), le mettre dans `rules/references/ref-<nom>.md`. `tools/tests/test-rules-no-placement-why.py` en attrape les formes connues, pas les récits.
+
 **FORME** : préférer « négation + alternative » à l'interdit sec (« ne fais jamais X, à la place fais Y »).
 
 ## Règle — en refonte, l'existant n'est pas un acquis
