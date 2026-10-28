@@ -48,3 +48,15 @@ Migrer l'existant dans le même run gonfle le diff et mélange deux intentions. 
 La hiérarchie ne porte **aucun niveau pour le défaut d'un framework installé**. Cas mesuré le 2026-08-21 : `rules/mermaid.md` impose `TD`/`TB` quand `aidd-context:09-mermaid` déclare `LR` par défaut dans sa propre référence. Ni le niveau 1 (le repo ne déclare rien) ni le niveau 2 (les deux sources sont extérieures au repo) ne le rangent.
 
 Résolu au cas par cas pour l'instant : la règle nomme le skill qu'elle écrase. Versé à `audits/2026-08-21-audit-agent-config-rules.md`, section « À réviser entre deux audits ».
+
+## Paragraphes sortis de la règle le 2026-10-28
+
+Raisons de conception autour des tableaux, sorties de la règle par l'issue #66. Texte d'origine.
+
+**POURQUOI la coupe passe avant la hiérarchie** : sans elle, « le repo gagne » laisserait un repo négligent éteindre « ne mocker que les I/O ». La cohésion se négocie, la correction non.
+
+**POURQUOI le repo passe devant mon harnais**, à l'inverse de la précédence habituelle : une convention médiocre appliquée à 100 % d'un repo vaut mieux qu'une meilleure appliquée à 5 %.
+
+**POURQUOI la portée s'arrête au neuf** : migrer l'existant dans le même run gonfle le diff et mélange deux intentions. C'est un `refactor` séparé, que l'humain demande.
+
+**POURQUOI le dire nommément** : sans cette liste, « la convention du repo gagne » se lit comme une porte ouverte, et un `CLAUDE.md` pourrait éteindre la discipline de vérification.

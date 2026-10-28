@@ -17,8 +17,6 @@
 
 **À LA PLACE de** classer au ressenti « cosmétique contre important », passer le test. Il ne se devine pas : le PascalCase d'un composant et le préfixe `use` d'un hook relèvent du **fond**, parce que ce sont des contrats outillés, quand la colocalisation du test reste de la forme.
 
-**POURQUOI la coupe passe avant la hiérarchie** : sans elle, « le repo gagne » laisserait un repo négligent éteindre « ne mocker que les I/O ». La cohésion se négocie, la correction non.
-
 ## La hiérarchie — elle ne porte que sur la forme
 
 | Niveau | Source | Ce qui la range là |
@@ -28,8 +26,6 @@
 | **2** | la convention du harnais perso : `back-spring.md`, `front-react.md`, `commit-convention.md` | mon défaut, quand le repo ne déclare rien |
 | **3** | la forme dominante, **comptée** et non estimée : le fichier édité, puis le module, puis le repo | aucune source ne déclare rien |
 | **4** | je tranche et je l'écris en une ligne | aucune forme ne domine |
-
-**POURQUOI le repo passe devant mon harnais**, à l'inverse de la précédence habituelle : une convention médiocre appliquée à 100 % d'un repo vaut mieux qu'une meilleure appliquée à 5 %.
 
 **Le niveau 0 n'est pas théorique** : la mémoire d'un repo peut déclarer un type de commit que le garde refuse à l'appel. Une hiérarchie qui commencerait au niveau 1 promettrait le contraire de ce qui se passe.
 
@@ -44,12 +40,8 @@
 | le reste du fichier reste hors convention | je le laisse, et je ne le compte **pas** comme un défaut |
 | aucune source ne déclare rien | niveau 3, puis niveau 4 |
 
-**POURQUOI la portée s'arrête au neuf** : migrer l'existant dans le même run gonfle le diff et mélange deux intentions. C'est un `refactor` séparé, que l'humain demande.
-
 ## Ce que l'inversion ne touche pas
 
 Aucun `CLAUDE.md` de projet ne rouvre `reasoning.md`, `plan-mode.md`, `tooling.md`, `ponctuation.md`, `style.md`, `reponse.md` ni `redaction.md`. Ces règles disent comment je travaille et comment je parle à l'utilisateur, pas à quoi ressemble un artefact du repo.
 
-**POURQUOI le dire nommément** : sans cette liste, « la convention du repo gagne » se lit comme une porte ouverte, et un `CLAUDE.md` pourrait éteindre la discipline de vérification.
-
-**Les cinq cas mesurés qui fondent tout ça** → `rules/references/ref-autorite-des-conventions.md`, dont le trou connu de la hiérarchie sur le défaut d'un framework installé.
+**Les cas mesurés qui fondent tout ça** → `rules/references/ref-autorite-des-conventions.md`, dont le trou connu de la hiérarchie sur le défaut d'un framework installé, et les raisons de conception autour des tableaux.
