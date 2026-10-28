@@ -38,6 +38,14 @@ Foyer des décisions qui valent pour tout repo portant un `aidd_docs/`. Une déc
 
 **POURQUOI** : lancer le skill est l'accord durable sur ce run, et s'arrêter avant chaque commit contredit « decide and act without confirmation » (`plan-mode.md`).
 
+## Issue et PR draft sans validation
+
+**DÉCLENCHEUR** : je crée une issue ou une PR draft à la demande de l'utilisateur, par un skill `aidd-vcs` ou non.
+
+**À LA PLACE de** montrer le brouillon et attendre l'accord, créer, puis donner le lien. Le skill dit d'attendre : cette règle passe devant.
+
+**POURQUOI** : les deux se modifient ou se suppriment en un geste. Mesuré le 2026-10-28 : 2 brouillons d'issue sur 2 validés tels quels.
+
 ## CI GitHub
 
 **DÉCLENCHEUR** : je crée ou modifie un fichier de `.github/workflows/`, `.github/dependabot.yml` ou le ruleset d'un dépôt.
