@@ -14,6 +14,7 @@
     {"mode": "link", "source": "wrappers/claude/hooks/guard-bash-tooling.py", "cible": "scripts/hooks/guard-bash-tooling.py"},
     {"mode": "link", "source": "wrappers/claude/hooks/guard-no-claude-in-commit.sh", "cible": "scripts/hooks/guard-no-claude-in-commit.sh"},
     {"mode": "link", "source": "wrappers/claude/hooks/guard-no-remote-write.py", "cible": "scripts/hooks/guard-no-remote-write.py"},
+    {"mode": "link", "source": "wrappers/claude/hooks/guard-no-sensitive-write.py", "cible": "scripts/hooks/guard-no-sensitive-write.py"},
     {"mode": "link", "source": "wrappers/claude/hooks/init-codegraph.py", "cible": "scripts/hooks/init-codegraph.py"},
     {"mode": "link", "source": "wrappers/claude/hooks/tests", "cible": "scripts/hooks/tests"},
     {"mode": "link", "source": "tools/lint-html-prose.py", "cible": "scripts/lint-html-prose.py"},

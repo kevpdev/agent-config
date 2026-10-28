@@ -1,10 +1,21 @@
-# Lectures interdites, déclarées une fois pour les deux agents.
+# Lectures et écritures interdites, déclarées une fois pour les deux agents.
 #
 # tools/install.py traduit ce fichier à la fusion de la config de chaque agent :
 #   Claude    permissions.deny  : "Read(//**/<fin>)", un chemin absolu à toute profondeur
 #   OpenCode  policies          : tool.use "read:<fin>" (chemin interne) et "read:*/<fin>"
 # Les deux formes sont mesurées le 2026-10-26 sur un leurre hors du home : Claude refuse
 # en bypassPermissions, OpenCode refuse sous --auto (« Blocked by configuration policy »).
+#
+# FORMES D'UNE FIN : `.ssh/id_rsa` est un suffixe, à toute profondeur. `~/.zshrc` est ancré
+# au home, donc un .zshrc versionné dans un dépôt de dotfiles reste modifiable. `/etc/**`
+# est ancré à la racine. Un `**` vaut zéro composant ou plus : `.git/**` vise .git et tout
+# ce qu'il contient. La correspondance vit dans hooks/deny_policy.py.
+#
+# ÉCRITURE (`action: write`, issue #47) : elle couvre aussi la suppression. Claude reçoit
+# "Edit(…)", OpenCode "edit:…", et le garde hooks/no_sensitive_write.py refuse le shell qui
+# écrit ou supprime (`rm`, `mv`, `>`, `tee`, `sed -i`, la destination d'un `cp`). `git`
+# écrit .git/ sans le nommer, donc passe. Conséquence assumée : modifier ~/.zshrc ou
+# ~/.ssh/config revient à l'humain, qui lance la commande avec `! <commande>`.
 #
 # LE SHELL SOUS OPENCODE : une règle `read` ne voit que l'outil de lecture, et `cat` sur le
 # leurre laissait sortir le témoin (mesuré). Le garde hooks/no_secret_read.py lit ce même
@@ -31,7 +42,7 @@
 # qui porte `sauf` n'est pas traduite pour lui : mieux vaut ne rien interdire que d'interdire
 # le fichier d'exemple.
 #
-# Champs : id, action (read seulement), fin, raison, sauf (optionnel).
+# Champs : id, action (read ou write), fin, raison, sauf (optionnel).
 
 - id: opencode-service
   action: read
@@ -158,3 +169,56 @@
   action: read
   fin: "*.pem"
   raison: certificat ou clé privée, les deux partagent l'extension.
+
+# Écritures interdites (issue #47, premier lot). La config de l'agent et les lockfiles
+# attendent un second lot : il faut savoir qui écrit le fichier pour lever l'interdit.
+
+- id: git
+  action: write
+  fin: .git/**
+  raison: historique du dépôt. Passer par git, qui l'écrit sans le nommer.
+
+- id: zshrc
+  action: write
+  fin: ~/.zshrc
+  raison: démarrage du shell. Une erreur casse chaque nouveau terminal.
+
+- id: bashrc
+  action: write
+  fin: ~/.bashrc
+  raison: démarrage du shell. Une erreur casse chaque nouveau terminal.
+
+- id: profile
+  action: write
+  fin: ~/.profile
+  raison: démarrage de la session. Une erreur casse chaque nouvelle connexion.
+
+- id: ssh-authorized-keys
+  action: write
+  fin: ~/.ssh/authorized_keys
+  raison: qui peut se connecter à cette machine.
+
+- id: ssh-config
+  action: write
+  fin: ~/.ssh/config
+  raison: hôtes et clés de chaque connexion SSH.
+
+- id: ssh-known-hosts
+  action: write
+  fin: ~/.ssh/known_hosts
+  raison: empreintes des hôtes, qui protègent d'une usurpation.
+
+- id: etc
+  action: write
+  fin: /etc/**
+  raison: configuration du système.
+
+- id: usr
+  action: write
+  fin: /usr/**
+  raison: programmes du système.
+
+- id: boot
+  action: write
+  fin: /boot/**
+  raison: démarrage de la machine.

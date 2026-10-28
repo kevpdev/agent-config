@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """claude_adapter.py — Claude Code side of the guard core (hooks/).
 
-The four guard files next to this one are shims over `run(<guard>)`. This file
+The guard files next to this one are shims over `run(<guard>)`. This file
 does the translation, and nothing in hooks/ knows Claude's payload:
 
   in   PreToolUse payload (`tool_name`, `tool_input`, `cwd`, `session_id`,

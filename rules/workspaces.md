@@ -27,7 +27,7 @@ Un dossier déplacé casse ce qui le vise par chemin absolu. Les liens de `~/.cl
 **À LA PLACE de** déplacer puis réparer, faire les deux dans **une seule commande** :
 
 1. Lister d'abord, sans limite de profondeur : `find ~ -type l -lname '*<ancien chemin>*' -not -path "$HOME/.cache/*"`. Une limite de profondeur a manqué les gardes en profondeur 4 le 2026-10-08.
-2. Déplacer, rebrancher les liens, corriger `~/.zshrc` et renommer le dossier d'historique `~/.claude/projects/<chemin-avec-tirets>` dans le même enchaînement.
+2. Déplacer, rebrancher les liens, corriger `~/.zshrc` et renommer le dossier d'historique `~/.claude/projects/<chemin-avec-tirets>` dans le même enchaînement. `policy/deny.yaml` interdit à l'agent d'écrire `~/.zshrc` (issue #47) : j'écris la commande, l'utilisateur la lance avec `! <commande>`.
 3. Si la session est déjà bloquée, c'est à l'utilisateur de lancer la réparation avec `! <commande>`.
 
 **TEST** : `ls -p ~/Developpement/Workspaces | grep -v /` ne renvoie aucun fichier, et chaque dossier de premier niveau est un projet, `VPS/` ou `_vrac/`.
