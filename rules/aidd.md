@@ -12,9 +12,9 @@ Foyer des décisions qui valent pour tout repo portant un `aidd_docs/`. Une déc
 
 **CE QU'ELLE NE DEMANDE PAS** : invoquer à tout prix. Regarder est systématique, invoquer dépend du « Use when ». Quand le skill choisi pilote le flux, l'exception de `plan-mode.md` s'applique.
 
-**POURQUOI**, mesuré le 2026-10-07 : 9 issues écrites à la main alors qu'un skill existait, vu seulement quand l'utilisateur a posé la question. Aucun nom de skill ici, parce qu'ils dérivent, et `aidd_docs/` est le même signal que `memory-policy.md`.
+**POURQUOI**, mesuré le 2026-10-07 : 9 issues écrites à la main alors qu'un skill existait, vu seulement quand l'utilisateur a posé la question.
 
-**ÉTAT DU GARDE, décidé le 2026-10-07** : `guard-aidd-skill-lookup.py` rappelle et ne bloque pas, la sortie `# aidd-skip: <raison>` reste libre. On ne le durcit que si on constate que les skills AIDD sont ignorés malgré leur présence.
+**Le garde** `guard-aidd-skill-lookup.py` rappelle sans bloquer, et la sortie `# aidd-skip: <raison>` reste libre. Sa décision et son historique → `rules/references/ref-aidd.md`.
 
 ## Langue du code et des documents
 
@@ -54,4 +54,4 @@ Foyer des décisions qui valent pour tout repo portant un `aidd_docs/`. Une déc
 
 **Après le changement** : relire le README et la mémoire du projet (`aidd_docs/memory/`), corriger ce que la CI ou les commandes de build rendent faux, avec `sh ./mvnw` dans les commandes Maven. **Recette de la fiche** : constater le langage avant d'appliquer, une stack « non mesurée » ne reçoit pas la table d'une autre.
 
-**POURQUOI**, constaté le 2026-10-08 : la CI de `yt-transcriber` nommait ses jobs d'après ses outils (`check (ruff, pyright, pytest)`), donc le ruleset aurait changé avec chaque stack. Le contrat fixe les noms, et le script le mesure au lieu de laisser la relecture le deviner. Les trois noms fixes ont ensuite laissé place à une porte unique (issue `agent-config#8`) : `check` ne disait pas ce qu'il vérifiait et imposait le même découpage à toutes les stacks. Le README de `swapi` avait aussi été oublié dans la PR #1, relevé par l'utilisateur.
+**POURQUOI** : des jobs nommés d'après leurs outils font changer le ruleset avec chaque stack, alors que le contrat fixe les noms. Historique du contrat → `rules/references/ref-aidd.md`.
