@@ -10,7 +10,7 @@
 - **Projet lourd à installer** (plusieurs minutes de dépendances ou de build, une base à lui) : un worktree seulement pour le parallèle.
 - **Harnais dont `~/.claude` pointe vers le checkout** : jamais de `git switch` ni de `git pull` dans ce checkout, voir le README d'`agent-config`.
 
-**POURQUOI** : un `git switch` dans le checkout d'`agent-config` change les règles et les gardes de toutes les sessions ouvertes. Ailleurs, le worktree évite le `stash` et le fichier oublié au changement de branche.
+**POURQUOI** : un `git switch` dans le checkout d'`agent-config` change les règles et les gardes de toutes les sessions ouvertes.
 
 ## Dans Orca
 
@@ -18,7 +18,6 @@
 
 **À LA PLACE de** `git worktree add`, créer le worktree par Orca, sans demander : décidé par l'utilisateur le 2026-10-28. Charger le skill `orca-cli` avant la première commande, il charge le guide qui correspond à la version installée. S'il manque, `orca-ide --help`.
 
-- **Sous Linux, `orca-ide`, jamais `orca`** : hors d'un terminal Orca, `orca` lance le lecteur d'écran GNOME.
-- **Les commandes ne sont pas recopiées ici** : le CLI change avec les versions d'Orca, le guide du skill suit la version.
+**Sous Linux, `orca-ide`, jamais `orca`** : hors d'un terminal Orca, `orca` lance le lecteur d'écran GNOME.
 
-**POURQUOI, mesuré le 2026-10-28** : 2 dépôts sur 3 enregistrés dans Orca cachent les worktrees créés hors d'Orca (`externalWorktreeVisibility: hide`). Un worktree Orca rattache aussi l'issue et lance un agent avec son brief en une seule commande.
+**POURQUOI, mesuré le 2026-10-28** : 2 dépôts sur 3 enregistrés dans Orca cachent les worktrees créés hors d'Orca (`externalWorktreeVisibility: hide`).
