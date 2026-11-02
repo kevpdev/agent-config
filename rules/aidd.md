@@ -1,32 +1,62 @@
-# AIDD — règles communes aux repos du framework
+# AIDD — le workflow de tout dépôt git
 
-Foyer des décisions qui valent pour tout repo portant un `aidd_docs/`. Une décision n'entre ici que si elle vaut pour tous ces repos et se tient en quelques lignes avec son pourquoi. Chaque section porte son propre déclencheur.
+AIDD est le workflow unique de tout travail qui produit dans un dépôt git, à profondeur selon la taille. Récits datés et sources → `rules/references/ref-aidd.md`.
 
 ## Chercher un skill avant d'agir
 
-**DÉCLENCHEUR** : une demande qui produit ou modifie quelque chose, dans un repo qui porte un `aidd_docs/`, à constater d'un `ls` au premier tour. Une question ou une lecture seule ne déclenche rien, et un repo sans `aidd_docs/` n'est pas concerné.
+**DÉCLENCHEUR** : une demande qui produit ou modifie quelque chose dans un dépôt git, qu'il porte un `aidd_docs/` ou non. Une question ou une lecture seule ne déclenche rien.
 
-**À LA PLACE de** démarrer à la main, parcourir le catalogue de la session et chercher une ligne dont le « Use when » couvre l'intention. Puis invoquer ce skill, ou écrire une ligne qui dit pourquoi aucun ne convient.
+**À LA PLACE de** démarrer à la main, parcourir le catalogue, par intention et jamais par nom, et chercher une ligne dont le « Use when » la couvre. Puis l'invoquer, ou écrire une ligne qui dit pourquoi aucun ne convient.
 
-**Lire par intention, jamais par nom** : mémoire du projet et génération d'artefacts de contexte, clarifier et remettre en cause, planifier et implémenter et contrôler (revue, tests, audit, débogage), versionner et livrer, produit et backlog, orchestrer de bout en bout.
+**CE QU'ELLE NE DEMANDE PAS** : invoquer à tout prix, seul regarder est systématique. Quand le skill choisi pilote le flux, l'exception de `plan-mode.md` s'applique. Sans AIDD installé (OpenCode sans installation projet), le parcours reste le même, mené sans ses skills.
 
-**CE QU'ELLE NE DEMANDE PAS** : invoquer à tout prix. Regarder est systématique, invoquer dépend du « Use when ». Quand le skill choisi pilote le flux, l'exception de `plan-mode.md` s'applique.
+**POURQUOI** : 9 issues ont été écrites à la main alors qu'un skill existait. Le garde `guard-aidd-skill-lookup.py` tient cette section, sortie `# aidd-skip: <raison>`.
 
-**POURQUOI**, mesuré le 2026-10-07 : 9 issues écrites à la main alors qu'un skill existait, vu seulement quand l'utilisateur a posé la question.
+## Profondeur selon la taille
 
-**Le garde** `guard-aidd-skill-lookup.py` rappelle sans bloquer, et la sortie `# aidd-skip: <raison>` reste libre. Sa décision et son historique → `rules/references/ref-aidd.md`.
+| Taille | Parcours |
+|---|---|
+| Petit (un script, un template) | implémenter, puis relecture à contexte neuf (`aidd-dev:checker` ou `aidd-dev:05-review`) |
+| Moyen (un skill, plusieurs fichiers) | `aidd-dev:01-plan`, puis implémenter, puis relire |
+| Grand (une feature de bout en bout) | `aidd-orchestrator:01-sdlc` |
+
+## Rôles et boucle de correction
+
+**La session principale orchestre.** Sous Claude Code, `aidd-dev:executor` implémente dans le worktree, `aidd-dev:checker` relit, et chaque correction repasse par le checker jusqu'au verdict « prêt ». Ailleurs, ces agents ne sont pas garantis : relire à contexte neuf par le moyen disponible.
+
+**BORNE, dans tous les modes, SDLC compris** : la boucle s'arrête au 3e verdict « à corriger » sur un même travail, ou dès qu'un finding traité revient. L'orchestrateur ne relance pas l'executor. Il revient au cadrage ou au plan, rapporte les écarts récurrents et rend la décision à l'humain.
+
+**POURQUOI 3** : Self-Debugging voit la plupart des réparations réussies finir en 3 tours, Self-Refine plafonne à 4. Au-delà, le problème vient le plus souvent du cadrage ou du plan.
+
+**ROUTAGE hors SDLC**, d'après le sujet du finding :
+
+| Le finding porte sur | Il repart vers |
+|---|---|
+| le besoin ou le contrat, dont un finding `fit` du `05-review` | le cadrage |
+| l'implémentation, corrections dépendantes | le plan puis l'exécution, d'un seul tenant |
+| l'implémentation, corrections indépendantes | l'exécution, parallèle possible (`aidd-dev:10-batch`) |
+
+## Où vit la mémoire
+
+| Rang | Condition | Où |
+|---|---|---|
+| 1 | le dépôt porte un `aidd_docs/` | `aidd_docs/memory/` |
+| 2 | le vault | `AGENTS.md` et `decisions/` |
+| 3 | sinon | le `CLAUDE.md` ou l'`AGENTS.md` du projet |
+
+Le fichier du rang 3 se crée au premier fait projet, pas d'avance. **Dans le vault, ne pas lancer `aidd-context:02-project-memory`** : il doublerait `AGENTS.md` et `decisions/`.
 
 ## Langue du code et des documents
 
-**DÉCLENCHEUR** : j'écris ou modifie du code, un commentaire, un nom de test ou un document, dans un repo qui porte un `aidd_docs/`.
+**DÉCLENCHEUR** : j'écris du code, un commentaire, un nom de test ou un document dans un dépôt git.
 
 **À LA PLACE de** mélanger, tout ce qui est code est en **anglais** : identifiants, commentaires, docstrings, noms de test, scripts, Dockerfile. La documentation (README, `aidd_docs/`) est en français.
 
-**Documents produits par un skill AIDD** (plan, spec, PRD, issue, mémoire projet) : le gabarit reste en anglais, c'est-à-dire les titres de section et les noms de champ. Le contenu est en **français**. Les skills AIDD rédigent en anglais par défaut, donc ne pas laisser ce défaut passer : écrire ou réécrire le contenu en français.
+**Documents produits par un skill AIDD** (plan, spec, PRD, issue, mémoire projet) : le gabarit, titres de section et noms de champ, reste en anglais. Le contenu est en **français**, même quand le skill rédige en anglais par défaut.
 
-**HORS PÉRIMÈTRE** : les textes affichés à l'utilisateur final (messages d'erreur, interface), dont la langue relève du produit. C'est de la forme au sens de `autorite-des-conventions.md` : un repo qui déclare autre chose garde la priorité, et migrer l'existant est un `refactor` séparé.
+**HORS PÉRIMÈTRE** : les textes affichés à l'utilisateur final, qui relèvent du produit. Forme au sens de `autorite-des-conventions.md` : un repo qui déclare autre chose garde la priorité, et migrer l'existant est un `refactor` séparé.
 
-**POURQUOI**, constaté le 2026-10-07 sur `yt-transcriber` : 14 fichiers de code mêlaient français et anglais, et le choix n'était écrit nulle part. Les titres de plan en anglais viennent du gabarit du skill, et le corps suit la langue de la conversation, sans règle qui les garantisse. Le contenu des documents est en français pour épargner au lecteur une traduction mentale, le gabarit reste en anglais parce que c'est le contrat du skill.
+**POURQUOI** : sans choix écrit, le code mêle les deux langues. Le français épargne au lecteur une traduction mentale, le gabarit est le contrat du skill.
 
 ## Git pendant un run AIDD
 
@@ -34,24 +64,24 @@ Foyer des décisions qui valent pour tout repo portant un `aidd_docs/`. Une déc
 
 **PERMIS pour ce run** : commit, push de la branche de travail et PR **draft**, y compris si le repo écrit « never » (`vcs.md`, `CLAUDE.md`).
 
-**HORS PÉRIMÈTRE** : push sur `main`, merge, force-push, tag, et toute action hors du run. `guard-no-claude-in-commit.sh` continue de s'appliquer.
+**HORS PÉRIMÈTRE** : push sur `main`, merge, force-push, tag, et toute action hors du run.
 
-**POURQUOI** : lancer le skill est l'accord durable sur ce run, et s'arrêter avant chaque commit contredit « decide and act without confirmation » (`plan-mode.md`).
+**POURQUOI** : lancer le skill vaut accord durable sur le run, et s'arrêter à chaque commit contredit « decide and act without confirmation ».
 
 ## Issue et PR draft sans validation
 
-**DÉCLENCHEUR** : je crée une issue ou une PR draft à la demande de l'utilisateur, par un skill `aidd-vcs` ou non.
+**DÉCLENCHEUR** : je crée une issue ou une PR draft à la demande de l'utilisateur.
 
-**À LA PLACE de** montrer le brouillon et attendre l'accord, créer, puis donner le lien. Le skill dit d'attendre : cette règle passe devant.
+**À LA PLACE de** montrer le brouillon et attendre l'accord, créer, puis donner le lien, même si le skill dit d'attendre.
 
-**POURQUOI** : les deux se modifient ou se suppriment en un geste. Mesuré le 2026-10-28 : 2 brouillons d'issue sur 2 validés tels quels.
+**POURQUOI** : les deux se modifient ou se suppriment en un geste, et les brouillons montrés ont été validés tels quels.
 
 ## CI GitHub
 
 **DÉCLENCHEUR** : je crée ou modifie un fichier de `.github/workflows/`, `.github/dependabot.yml` ou le ruleset d'un dépôt.
 
-**À LA PLACE de** composer la CI de mémoire, lire `rules/references/ref-ci-github.md`, appliquer son contrat (une porte `ci`, seul check exigé, qui attend tous les jobs de son workflow dont Trivy, des jobs découpés au grain de la stack et nommés par ce qu'ils vérifient, actions épinglées par SHA, permissions minimales en tête), puis lancer `tools/check-ci-contract.py` sur le dépôt avant de pousser.
+**À LA PLACE de** composer la CI de mémoire, lire `rules/references/ref-ci-github.md`, appliquer son contrat, puis lancer `tools/check-ci-contract.py` sur le dépôt avant de pousser.
 
-**Après le changement** : relire le README et la mémoire du projet (`aidd_docs/memory/`), corriger ce que la CI ou les commandes de build rendent faux, avec `sh ./mvnw` dans les commandes Maven. **Recette de la fiche** : constater le langage avant d'appliquer, une stack « non mesurée » ne reçoit pas la table d'une autre.
+**Après le changement** : corriger ce que la CI ou les commandes de build rendent faux dans le README et la mémoire du projet, avec `sh ./mvnw` dans les commandes Maven. Constater le langage avant d'appliquer la fiche : une stack « non mesurée » ne reçoit pas la table d'une autre.
 
-**POURQUOI** : des jobs nommés d'après leurs outils font changer le ruleset avec chaque stack, alors que le contrat fixe les noms. Historique du contrat → `rules/references/ref-aidd.md`.
+**POURQUOI** : des jobs nommés d'après leurs outils font changer le ruleset avec chaque stack, alors que le contrat fixe les noms.

@@ -1,6 +1,6 @@
 ## Auto-memory — ce qui n'y entre pas
 
-**RÈGLE D'ÉCRITURE** : ne pas y écrire de fait projet dès que le repo porte un `aidd_docs/` ou qu'un vault assure le récap. Ce sont les homes de la couche projet, chacun avec son propre système. L'auto-memory ne la reprend que si aucun des deux n'existe.
+**RÈGLE D'ÉCRITURE** : ne pas y écrire de fait projet dans un dépôt git ou quand un vault assure le récap. La hiérarchie de la mémoire de `rules/aidd.md` donne alors son home à la couche projet. L'auto-memory ne la reprend que hors des deux, et rien n'en est migré.
 
 **CE QU'ELLE GARDE** : profil user, config et environnement perso, référence Claude, feedback parent-only. Autrement dit ce qui n'a pas d'autre home.
 

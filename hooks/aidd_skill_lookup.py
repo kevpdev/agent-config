@@ -1,7 +1,7 @@
 """aidd_skill_lookup — guard core, agent-neutral (contract in hooks/check.py).
 
-Refuses a delivery gesture typed by hand in an AIDD repo when the session has
-not invoked any AIDD skill. It reminds, it does not choose the skill: the
+Refuses a delivery gesture typed by hand in a git repository when the session
+has not invoked any AIDD skill. It reminds, it does not choose the skill: the
 refusal names the intention, never a skill, because skill names drift
 (rules/aidd.md is the rule, this is its deterministic half).
 
@@ -10,7 +10,9 @@ Perimeter, all three needed to refuse:
      or `git tag -a`. Each has a dedicated skill. `git commit` is left out on
      purpose: frequent, already guarded, and a guard that refuses valid work
      gets disabled.
-  2. the event `cwd` holds an `aidd_docs/` (same signal as rules/aidd.md).
+  2. the event `cwd`, or one of its parents, holds a `.git` (directory, or file
+     in a worktree): AIDD is the workflow of every git repository, with or
+     without `aidd_docs/` (same signal as rules/aidd.md).
   3. `skills_used` holds no skill whose name starts with `aidd-`.
 
 Way out: end the command with `# aidd-skip: <reason>`, which leaves the
@@ -80,6 +82,16 @@ def gesture(command):
     return None
 
 
+def in_git_repo(cwd):
+    """True when `cwd` or a parent holds `.git`, file or directory. No subprocess."""
+    path = os.path.abspath(cwd)
+    while True:
+        if os.path.exists(os.path.join(path, ".git")):
+            return True
+        parent = os.path.dirname(path)
+        if parent == path:
+            return False
+        path = parent
 
 
 def decide(event: dict):
@@ -91,7 +103,7 @@ def decide(event: dict):
     if not intention or SKIP.search(command):
         return None
     cwd = event.get("cwd") or ""
-    if not cwd or not os.path.isdir(os.path.join(cwd, "aidd_docs")):
+    if not cwd or not in_git_repo(cwd):
         return None
 
     used = event.get("skills_used")
@@ -102,7 +114,7 @@ def decide(event: dict):
     if any(str(name).startswith("aidd-") for name in used):
         return None
     return (
-        "Repo AIDD, geste « %s » tapé à la main sans skill AIDD invoqué dans "
+        "Dépôt git, geste « %s » tapé à la main sans skill AIDD invoqué dans "
         "cette session (rules/aidd.md). Parcourir le catalogue de skills pour "
         "cette intention et invoquer celui dont le « Use when » couvre le "
         "geste. Si aucun ne convient, rejouer la commande terminée par "

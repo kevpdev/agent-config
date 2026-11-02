@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""guard-aidd-skill-lookup.py — PreToolUse hook for Claude Code: hand-typed delivery gesture in an AIDD repo (rules/aidd.md).
+"""guard-aidd-skill-lookup.py — PreToolUse hook for Claude Code: hand-typed delivery gesture in a git repository (rules/aidd.md).
 
 Shim. The decision lives in hooks/aidd_skill_lookup.py, the translation in claude_adapter.py.
 """
