@@ -231,7 +231,7 @@ Candidats annexes, indépendants de l'ordre ci-dessus :
 | Candidat | Origine |
 |---|---|
 | Passer le crible de l'Article sur `wrappers/claude/agents/doc-writer.md`, le seul agent maison | le Kit classe son writer-agent comme « candidat parfait pour devenir un skill » |
-| Une routine d'audit à chaque nouveau modèle : relire les sessions ratées par `aidd-refine:05-improve`, retirer un seul élément à la fois | Brief, méthode d'audit de l'auteur (17 contradictions, 2 plugins utilisés sur plusieurs dizaines) |
+| Une routine d'audit à chaque nouveau modèle : relire les sessions ratées par `aidd-refine:05-improve`, retirer un seul élément à la fois. Premier passage sur le texte des règles, hooks exclus : issue #73 | Brief, méthode d'audit de l'auteur (17 contradictions, 2 plugins utilisés sur plusieurs dizaines) |
 | Un garde des commandes destructives locales | Kit, `block-dangerous.mjs` |
 
 Chaque tâche peut devenir une issue par `aidd-vcs:04-issue-create`.
