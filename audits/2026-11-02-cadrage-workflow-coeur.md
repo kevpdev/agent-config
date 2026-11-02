@@ -13,6 +13,7 @@ Marquage : **mesuré** (commande lancée ce jour), **doc-vérifié** (fichier ou
 | DEV | `aidd-dev` 2.7.1, `skills/01-plan`, `skills/10-batch`, `agents/executor.md` |
 | Suivi | `audits/suivi-refonte-agnostique.md` |
 | #61 | issue « Revoir AIDD avec Orca : délégation, compatibilité multi-agents et choix du modèle » |
+| AIDD-GH | dépôt `ai-driven-dev/framework` sur GitHub, README et `aidd_docs/tasks/`, lus le 2026-11-02 |
 
 ---
 
@@ -64,12 +65,36 @@ AIDD respecte déjà le crible de l'Article : il ne lance un sous-agent que pour
 - Sous OpenCode, il s'installe projet par projet (Suivi, tâche 12) : `npx @ai-driven-dev/cli@5.5.0 setup --ai opencode` pose 467 fichiers dans `.opencode/`, soit 51 skills au nom aplati.
 - `~/.config/opencode/skills/` ne contient aucun skill `aidd-*` (mesuré). Un projet OpenCode sans installation n'a donc aucun workflow.
 
-Deux options restent ouvertes, à trancher dans #61 chantier C :
+L'installation globale n'est pas supportée par AIDD (doc-vérifié le 2026-11-02) :
+
+| Source | Ce qu'elle dit |
+|---|---|
+| README de `ai-driven-dev/framework`, tableau Compatibility | OpenCode « Supported », distribution Flat seulement, sans Marketplace |
+| README, section OpenCode | « Flat only » : l'archive se décompresse à la racine du projet, dans `.opencode/` |
+| `aidd setup --help`, CLI 5.5.0 et 5.6.0 | `--scope user` n'accepte que `claude,codex,copilot,cursor` |
+| `aidd_docs/tasks/2026_10/2026_10_07_opencode-plugin-loading/verification.md` | « Global installation […] were not exercised » |
+
+### La mémoire, elle, est déjà partagée
+
+Le trou ne touche que les skills. La mémoire AIDD vit dans le dépôt, sous `aidd_docs/memory/`, et `aidd-context:02-project-memory` la branche sur chaque outil par son fichier de contexte (doc-vérifié, `aidd-context` 2.8.1, `references/tools.md` et `actions/04-sync.md`) :
+
+| Outil | Détecté par | Fichier de contexte |
+|---|---|---|
+| Claude Code | `.claude/` ou `CLAUDE.md` | `CLAUDE.md` |
+| OpenCode | `.opencode/` | `AGENTS.md` |
+
+L'action `04-sync` écrit dans chacun un bloc `## Memory Management` qui liste les fichiers de la mémoire. Claude et OpenCode lisent donc la même mémoire et les mêmes plans de `aidd_docs/tasks/`. Une reprise d'une tâche d'un outil à l'autre n'a pas été mesurée sur un projet.
+
+Conséquence : sans `.opencode/`, `04-sync` ne détecte pas OpenCode et ne propose pas de brancher `AGENTS.md`. L'installation par projet porte donc aussi la détection.
+
+### Les deux options pour les skills
+
+À trancher dans #61 chantier C :
 
 | Option | Pour | Contre |
 |---|---|---|
 | Installation par projet | supportée par AIDD, mesurée | 467 fichiers par dépôt, à mettre à jour un par un |
-| Lien global depuis `agent-config`, comme les autres skills | une seule copie, servie par `install.py` | non supporté par AIDD (supposé). Les noms aplatis pourraient entrer en collision avec d'autres skills |
+| Lien global depuis `agent-config`, dans `~/.config/opencode/skills/` comme les autres skills | une seule copie, servie par `install.py` | hors du support AIDD (doc-vérifié). Fonctionnement non mesuré. Les noms aplatis pourraient entrer en collision avec d'autres skills. `04-sync` ne détecterait plus OpenCode sans `.opencode/` |
 
 ## Q3 — L'isolation : worktree git, routé
 
@@ -183,7 +208,8 @@ Chaque couche contre son alternative la plus simple, prise isolément :
 
 - **`orca-ide worktree set` sur un worktree créé par git** : on ne sait pas s'il rattache après coup les métadonnées Orca.
 - **AIDD dans un ouvrier Orca** : sous Claude, les plugins globaux devraient suffire (supposé). Sous OpenCode, non, faute d'installation globale.
-- **Lien global d'AIDD sous OpenCode** : jamais essayé.
+- **Lien global des skills AIDD sous OpenCode** : hors support, jamais essayé, ni par AIDD ni ici. Test proposé : lier un skill AIDD dans `~/.opencode-bench/skills/`, puis vérifier qu'il apparaît dans `core/skill-guidance` d'une session ouverte hors de tout projet AIDD.
+- **Mémoire partagée entre Claude et OpenCode** : doc-vérifiée, jamais exercée sur un projet.
 - **Collisions de `10-batch`** : jamais observées.
 - **Le rang 2 du routeur** : on ne sait pas si un worktree créé par git au chemin d'Orca, dans un dépôt réglé sur `show`, se comporte dans Orca comme un worktree natif.
 
