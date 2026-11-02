@@ -159,7 +159,7 @@ verifier("action read, hors périmètre", PASSE, "no_sensitive_write", action="r
 
 print("=== aidd_skill_lookup ===")
 with tempfile.TemporaryDirectory() as aidd:
-    os.mkdir(os.path.join(aidd, "aidd_docs"))
+    os.mkdir(os.path.join(aidd, ".git"))
     verifier("geste sans skill aidd", REFUS, "aidd_skill_lookup",
              command='gh issue create --title x', cwd=aidd, skills_used=[])
     verifier("geste après un skill aidd", PASSE, "aidd_skill_lookup",
@@ -169,7 +169,7 @@ with tempfile.TemporaryDirectory() as aidd:
              command='gh issue create --title x', cwd=aidd, skills_used=None)
     verifier("sortie aidd-skip", PASSE, "aidd_skill_lookup",
              command='gh issue create --title x # aidd-skip: test', cwd=aidd, skills_used=[])
-verifier("hors repo AIDD", PASSE, "aidd_skill_lookup",
+verifier("outside a git repository", PASSE, "aidd_skill_lookup",
          command='gh issue create --title x', cwd="/tmp", skills_used=[])
 
 print("=== contrat de check.py ===")

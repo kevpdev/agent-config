@@ -17,7 +17,10 @@ ECHECS=0
 [ -f "$HOOK" ] || { echo "garde introuvable : $HOOK" >&2; exit 1; }
 
 T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
-mkdir -p "$T/aidd/aidd_docs" "$T/plain"
+# aidd: git repository with aidd_docs. git: git repository without aidd_docs, git/src/deep is a subfolder.
+# plain: outside git. wt: worktree, whose .git is a file.
+mkdir -p "$T/aidd/aidd_docs" "$T/aidd/.git" "$T/git/.git" "$T/git/src/deep" "$T/plain" "$T/wt"
+printf 'gitdir: /ailleurs/.git/worktrees/wt\n' > "$T/wt/.git"
 SANS="$T/sans-skill.jsonl"; AVEC="$T/avec-skill.jsonl"; AUTRE="$T/autre-skill.jsonl"
 echo '{"message":{"content":[{"type":"text","text":"hello"}]}}' > "$SANS"
 echo '{"message":{"content":[{"type":"tool_use","name":"Skill","input":{"skill":"aidd-vcs:04-issue-create"}}]}}' > "$AVEC"
@@ -41,7 +44,7 @@ print(json.dumps({'tool_name':'Bash','cwd':sys.argv[2],'transcript_path':sys.arg
   fi
 }
 
-echo "=== Gestes sans skill, repo AIDD : refus ==="
+echo "=== Gestures without a skill, git repository: refused ==="
 verifier "gh issue create"            BLOQUE 'gh issue create --title "x" --body-file b.md'
 verifier "gh pr create"               BLOQUE 'gh pr create --fill'
 verifier "gh release create"          BLOQUE 'gh release create v1.0.0'
@@ -49,12 +52,15 @@ verifier "git tag -a"                 BLOQUE 'git tag -a v1.0.0 -m "release"'
 verifier "git -C ... tag -a"          BLOQUE 'git -C /tmp/x tag -a v1 -m r'
 verifier "enchaine apres &&"          BLOQUE 'cd /tmp && gh issue create --title x'
 verifier "skill non AIDD invoque"     BLOQUE 'gh issue create --title x' "$T/aidd" "$AUTRE"
+verifier "git repository without aidd_docs" BLOQUE 'gh issue create --title x' "$T/git"
+verifier "subfolder of a git repository" BLOQUE 'gh issue create --title x' "$T/git/src/deep"
+verifier "worktree, .git is a file"   BLOQUE 'gh issue create --title x' "$T/wt"
 
 echo
 echo "=== Les sorties de secours : passe ==="
 verifier "skill aidd- dans le transcript" PASSE 'gh issue create --title x' "$T/aidd" "$AVEC"
 verifier "# aidd-skip: raison"            PASSE 'gh issue create --title x # aidd-skip: aucun skill ne couvre ce cas'
-verifier "repo sans aidd_docs"            PASSE 'gh issue create --title x' "$T/plain"
+verifier "folder outside git"             PASSE 'gh issue create --title x' "$T/plain"
 
 echo
 echo "=== Hors perimetre : passe, sinon le garde sera desactive ==="
