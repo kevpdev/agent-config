@@ -9,7 +9,7 @@
 #   cadrage audits/2026-11-02-cadrage-workflow-coeur.md, Q3).
 #
 # LES RANGS, testés dans l'ordre
-#   1  ORCA_WORKTREE_ID défini et `orca-ide status` joignable en 5 s : Orca crée le
+#   1  ORCA_WORKTREE_ID défini et `orca-ide status` joignable dans le délai : Orca crée le
 #      worktree, avec ses métadonnées (issue liée, visibilité dans l'interface). Le chemin
 #      se lit dans result.worktree.path du JSON de `orca-ide worktree create --json`,
 #      forme relevée le 2026-11-02 sur Orca 1.4.243.
@@ -37,6 +37,8 @@
 # Variables
 #   ORCA_WORKSPACES     racine des worktrees, ~/orca/workspaces par défaut (défaut d'Orca)
 #   WORKTREE_ORCA_CLI   la CLI Orca, orca-ide par défaut (les tests la remplacent)
+#   WORKTREE_ORCA_TIMEOUT  délai de `orca-ide status` en secondes, 5 par défaut. Au-delà,
+#                       Orca compte comme injoignable (les tests le raccourcissent)
 #
 # Sortie : le chemin du worktree en dernière ligne de stdout, le rang sur stderr.
 # Code 1 sur un refus (nom invalide ou déjà pris, hors d'un dépôt git) ou un échec de
@@ -47,6 +49,7 @@ set -uo pipefail
 
 CLI="${WORKTREE_ORCA_CLI:-orca-ide}"
 RACINE="${ORCA_WORKSPACES:-$HOME/orca/workspaces}"
+DELAI="${WORKTREE_ORCA_TIMEOUT:-5}"
 
 usage() { echo "Usage : worktree.sh create <nom> [--issue N]" >&2; exit 1; }
 refus() { echo "worktree — $1" >&2; exit 1; }
@@ -110,7 +113,7 @@ orca_joignable() {
     [ -n "${ORCA_WORKTREE_ID:-}" ] || return 1
     command -v "$CLI" >/dev/null 2>&1 || return 1
     local etat
-    etat="$(timeout 5 "$CLI" status --json 2>/dev/null)" || return 1
+    etat="$(timeout "$DELAI" "$CLI" status --json 2>/dev/null)" || return 1
     [ "$(printf '%s' "$etat" | json_cle result.runtime.reachable)" = "true" ]
 }
 

@@ -43,13 +43,15 @@ git -C "$AUTRE" -c user.name=x -c user.email=x@localhost commit -q --allow-empty
 git -C "$AUTRE" push -q origin main
 EN_AVANCE="$(git -C "$AUTRE" rev-parse HEAD)"
 
-# Le faux orca-ide : `status` joignable selon FAUX_JOIGNABLE, `worktree create` journalisé.
+# Le faux orca-ide : `status` joignable selon FAUX_JOIGNABLE, et lent de FAUX_DORT secondes.
+# `worktree create` est journalisé.
 BIN="$T/bin"
 mkdir -p "$BIN"
 cat > "$BIN/faux-orca" <<'EOF'
 #!/usr/bin/env bash
 case "$1" in
-    status) [ "${FAUX_JOIGNABLE:-0}" = 1 ] && r=true || r=false
+    status) sleep "${FAUX_DORT:-0}"
+            [ "${FAUX_JOIGNABLE:-0}" = 1 ] && r=true || r=false
             printf '{"result": {"runtime": {"reachable": %s}}}\n' "$r" ;;
     worktree) echo "$*" >> "$FAUX_JOURNAL"
               # Comme le vrai, un autre `path` (ici celui du dépôt) précède celui du worktree.
@@ -87,6 +89,16 @@ cas "rang 2 : branche <user>/<nom>" "$(git -C "$RACINE/projet/deux" branch --sho
 cas "rang 2 : avertissement" "$(grep -c 'rang 2' "$T/err")" "1"
 cas "rang 2 : Orca n'a rien créé" "$(wc -l < "$FAUX_JOURNAL" | tr -d ' ')" "1"
 
+# Rang 2 aussi : `status` dépasse le délai, Orca compte comme injoignable.
+FAUX_DORT=3 WORKTREE_ORCA_TIMEOUT=1 lancer 1 x 1 create deux-lent
+cas "rang 2 sur délai dépassé : code 0" "$?" "0"
+cas "rang 2 sur délai dépassé : annoncé" "$(grep -c 'rang 2' "$T/err")" "1"
+cas "rang 2 sur délai dépassé : Orca n'a rien créé" "$(wc -l < "$FAUX_JOURNAL" | tr -d ' ')" "1"
+
+# Rang 2 : l'issue ne se rattache pas, et le script le dit.
+lancer 1 x 0 create deux-issue --issue 9
+cas "rang 2 : issue non rattachée annoncée" "$(grep -c 'issue #9 non rattachée' "$T/err")" "1"
+
 # Rang 2 aussi : orca-ide installé, hors terminal Orca.
 lancer 1 "" 1 create deux-bis
 cas "rang 2 hors terminal Orca" "$(grep -c 'rang 2' "$T/err")" "1"
@@ -97,6 +109,9 @@ cas "rang 3 : code 0" "$?" "0"
 cas "rang 3 : chemin au format d'Orca" "$(tail -1 "$T/out")" "$RACINE/projet/trois"
 cas "rang 3 : branche <user>/<nom>" "$(git -C "$RACINE/projet/trois" branch --show-current)" "testeur/trois"
 cas "rang 3 : annoncé" "$(grep -c 'rang 3' "$T/err")" "1"
+
+lancer 0 x 1 create trois-issue --issue 9
+cas "rang 3 : issue non rattachée annoncée" "$(grep -c 'issue #9 non rattachée' "$T/err")" "1"
 
 # La base est origin/main, pas le main local en retard.
 cas "base : le commit en avance d'origin" "$(git -C "$RACINE/projet/trois" rev-parse HEAD)" "$EN_AVANCE"
@@ -131,6 +146,34 @@ lancer 0 "" 0 create six
 cas "refus : branche existante, code 1" "$?" "1"
 cas "refus : branche existante, message" "$(grep -c 'la branche existe déjà : testeur/six' "$T/err")" "1"
 cas "refus : branche existante, aucun dossier" "$([ -e "$RACINE/projet/six" ] && echo present || echo absent)" "absent"
+
+# git worktree add en échec : testeur/dix/x empêche de créer testeur/dix.
+# Une racine créée par le script est retirée, une racine qui existait reste.
+git -C "$REPO" branch testeur/dix/x main
+RACINE_DIX="$T/racine-dix"
+(cd "$REPO" && env -u ORCA_WORKTREE_ID PATH=/usr/bin:/bin ORCA_WORKSPACES="$RACINE_DIX" \
+    bash "$SCRIPT" create dix > "$T/out" 2> "$T/err")
+cas "add en échec, racine neuve : code 1" "$?" "1"
+cas "add en échec, racine neuve : message" "$(grep -c 'git worktree add en échec' "$T/err")" "1"
+cas "add en échec, racine neuve : racine retirée" "$([ -e "$RACINE_DIX" ] && echo present || echo absent)" "absent"
+RACINE_PRE="$T/racine-pre"
+mkdir -p "$RACINE_PRE"
+(cd "$REPO" && env -u ORCA_WORKTREE_ID PATH=/usr/bin:/bin ORCA_WORKSPACES="$RACINE_PRE" \
+    bash "$SCRIPT" create dix > "$T/out" 2> "$T/err")
+cas "add en échec, racine préexistante : code 1" "$?" "1"
+cas "add en échec, racine préexistante : racine gardée" "$([ -d "$RACINE_PRE" ] && echo present || echo absent)" "present"
+cas "add en échec, racine préexistante : dossier du dépôt retiré" \
+    "$([ -e "$RACINE_PRE/projet" ] && echo present || echo absent)" "absent"
+
+# user.name vide : refus, sans dossier. La config globale de la machine est masquée.
+SANS_USER="$T/Workspaces/sans-user"
+git clone -q "$T/origin.git" "$SANS_USER"
+RACINE_USER="$T/racine-user"
+(cd "$SANS_USER" && env -u ORCA_WORKTREE_ID PATH=/usr/bin:/bin ORCA_WORKSPACES="$RACINE_USER" \
+    GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 bash "$SCRIPT" create onze > "$T/out" 2> "$T/err")
+cas "refus : user.name vide, code 1" "$?" "1"
+cas "refus : user.name vide, message" "$(grep -c 'user.name est vide' "$T/err")" "1"
+cas "refus : user.name vide, aucun dossier" "$([ -e "$RACINE_USER" ] && echo present || echo absent)" "absent"
 
 # Nom refusé par git check-ref-format : refus avant Orca et avant tout dossier.
 RACINE_NEUVE="$T/racine-neuve"
