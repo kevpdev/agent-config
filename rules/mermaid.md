@@ -8,6 +8,14 @@ S'applique à tout diagramme Mermaid produit par toi, un sous-agent ou un skill.
 - **Zéro croisement de flèches** — réordonner les nœuds, regrouper en sous-graphes, ou introduire un nœud intermédiaire plutôt que laisser deux arêtes se croiser.
   POURQUOI : un croisement force le lecteur à suivre une ligne du doigt. C'est le premier signal de désordre perçu.
 
+## Pas de Mermaid dans une réponse au terminal
+
+**DÉCLENCHEUR** : je veux montrer un flux ou un schéma dans une réponse de chat ou de terminal.
+
+**À LA PLACE d'** un bloc `mermaid`, dessiner en ASCII dans un bloc de code, vertical comme ci-dessus. Un schéma trop gros pour l'ASCII part dans un artifact. Mermaid reste aux supports qui le rendent : note du vault, README, PR, artifact.
+
+**POURQUOI, constaté le 2026-11-02** : le terminal affiche le code Mermaid brut, illisible pour l'humain.
+
 **Charger le skill `mermaid-craft` avant d'écrire un bloc `mermaid` non trivial**, il fait foi. Ces deux critères ne sont que l'alerte.
 
 Raison du découpage entre règle et skill → `rules/references/ref-mermaid.md`.
