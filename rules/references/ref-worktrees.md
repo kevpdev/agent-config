@@ -31,3 +31,9 @@ Le dépôt `agent-config` est réglé sur `externalWorktreeVisibility: show`. Un
 Ils diffèrent d'un worktree natif par leurs métadonnées. `creatorProvenance`, `cliProvenance` et `baseRef` y valent `null`. Le nom affiché est la branche (`kevpdev/essai-rang3-76`, mode `automatic`) au lieu du nom court (mode `fixed`).
 
 `orca-ide worktree rm` les retire comme un natif, branche locale comprise. Cette mesure tranche le point « non établi » de l'issue #76 sur le rang 2, pour l'affichage et le retrait. Le rattachement après coup par `orca-ide worktree set` n'a pas été mesuré.
+
+## Pourquoi le retrait passe par `remove` (2026-11-02)
+
+Constaté le 2026-11-02 sur les PR #72 et #77. Un `git branch -D` lancé juste après `orca-ide worktree rm` a échoué, parce que le retrait par Orca n'était pas fini. Un peu plus tard, la branche avait disparu, supprimée par Orca lui-même.
+
+Le ménage à la main tenait donc mal l'ordre et l'outil. Depuis l'issue #80, `tools/worktree.sh remove <nom>` s'en charge. Ses étapes et ses refus sont dans l'en-tête du script, section REMOVE.
