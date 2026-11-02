@@ -29,7 +29,7 @@
 
 **Le niveau 0 n'est pas théorique** : la mémoire d'un repo peut déclarer un type de commit que le garde refuse à l'appel. Une hiérarchie qui commencerait au niveau 1 promettrait le contraire de ce qui se passe.
 
-**Le niveau 4 se pose quelque part.** Quand le repo porte un `aidd_docs/`, la décision s'écrit dans `aidd_docs/memory/`, jamais en auto-memory (cf. `memory-policy.md`).
+**Le niveau 4 se pose quelque part** : au rang que donne la hiérarchie de la mémoire de `rules/aidd.md`, jamais en auto-memory (cf. `memory-policy.md`).
 
 ## La portée — ce que le run crée, pas ce qu'il croise
 

@@ -10,7 +10,7 @@ Le script choisit seul entre Orca et git, part d'`origin/<branche par défaut>` 
 
 - **Pas de la branche en cours**, même depuis un autre worktree. Seule exception, le travail empilé que l'utilisateur demande.
 - **Après le merge**, supprimer le worktree et sa branche, locale et distante. Les commandes sont dans l'en-tête du script, section « RETRAIT ».
-- **La session principale orchestre.** L'implémentation dans le worktree passe par un agent dédié (`aidd-dev:executor` sous Claude), la relecture par un autre (`aidd-dev:checker`).
+- **La session principale orchestre** : rôles, borne et routage dans `rules/aidd.md`, section « Rôles et boucle de correction ».
 - **Un worktree n'est pas un projet** : `workspaces.md` ne s'applique pas à son dossier.
 - **Projet lourd à installer** (plusieurs minutes de dépendances ou de build, une base à lui) : un worktree seulement pour le parallèle.
 - **Harnais dont `~/.claude` pointe vers le checkout** : jamais de `git switch` ni de `git pull` dans ce checkout, voir le README d'`agent-config`.
