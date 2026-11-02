@@ -23,3 +23,11 @@ Un worktree Orca rattache aussi l'issue et lance un agent avec son brief en une 
 ## Pourquoi un agent dédié implémente et un autre relit (2026-11-02)
 
 Décision de l'utilisateur du 2026-11-02. La session principale garde le contexte de l'ensemble. Un relecteur qui n'a pas écrit le code n'hérite pas de ses angles morts.
+
+## Un worktree créé par git apparaît dans Orca (mesuré le 2026-11-02)
+
+Le dépôt `agent-config` est réglé sur `externalWorktreeVisibility: show`. Un worktree créé par `tools/worktree.sh` au rang 3, puis un autre au rang 2, apparaissent tous deux dans `orca-ide worktree list --json`, au chemin d'Orca et sous leur branche.
+
+Ils diffèrent d'un worktree natif par leurs métadonnées. `creatorProvenance`, `cliProvenance` et `baseRef` y valent `null`. Le nom affiché est la branche (`kevpdev/essai-rang3-76`, mode `automatic`) au lieu du nom court (mode `fixed`).
+
+`orca-ide worktree rm` les retire comme un natif, branche locale comprise. Cette mesure tranche le point « non établi » de l'issue #76 sur le rang 2, pour l'affichage et le retrait. Le rattachement après coup par `orca-ide worktree set` n'a pas été mesuré.

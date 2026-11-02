@@ -1,4 +1,4 @@
-# Worktrees — un par issue, partis de `main`
+# Worktrees — un par issue, partis d'`origin`
 
 **DÉCLENCHEUR** : je commence une issue, ou un travail qui n'a pas encore d'issue, dans un dépôt git.
 
