@@ -87,14 +87,19 @@ L'action `04-sync` écrit dans chacun un bloc `## Memory Management` qui liste l
 
 Conséquence : sans `.opencode/`, `04-sync` ne détecte pas OpenCode et ne propose pas de brancher `AGENTS.md`. L'installation par projet porte donc aussi la détection.
 
-### Les deux options pour les skills
+### Les skills : installation par projet, avec un rappel
 
-À trancher dans #61 chantier C :
+Décidé le 2026-11-02 dans #61 chantier C : AIDD s'installe par projet sous OpenCode, comme sa doc le prévoit.
 
-| Option | Pour | Contre |
-|---|---|---|
-| Installation par projet | supportée par AIDD, mesurée | 467 fichiers par dépôt, à mettre à jour un par un |
-| Lien global depuis `agent-config`, dans `~/.config/opencode/skills/` comme les autres skills | une seule copie, servie par `install.py` | hors du support AIDD (doc-vérifié). Fonctionnement non mesuré. Les noms aplatis pourraient entrer en collision avec d'autres skills. `04-sync` ne détecterait plus OpenCode sans `.opencode/` |
+| Option | Pour | Contre | Décision |
+|---|---|---|---|
+| Installation par projet | supportée par AIDD, mesurée, porte la détection de `04-sync` | 467 fichiers par dépôt, à mettre à jour un par un | retenue |
+| Lien global vers le cache Claude | une seule copie | dépend du plugin Claude et d'un chemin versionné (`aidd-dev/2.7.1/`) | écartée |
+| Lien global vers un clone du framework | une seule copie, indépendante de Claude | contourne l'installateur AIDD, hors support, maintenu par personne | écartée |
+
+Le lien global fonctionne pourtant pour l'exposition (mesuré au banc le 2026-11-02, `tools/bench.sh opencode --expect-skill 01-plan --expect-skill 02-challenge`, 0,011 $). Deux skills AIDD liés dans `~/.opencode-bench/skills/` sont apparus dans `core/skill-guidance`. Le lien doit porter le nom du frontmatter (`01-plan`), pas un nom préfixé. L'écart tient à la maintenance, pas au chargement.
+
+Le coût de l'installation par projet se reporte sur un oubli possible. Un plugin OpenCode le couvre, tâche de #61 chantier C : sur `session.created`, il affiche un toast avec la commande d'installation quand le dépôt n'a pas AIDD dans `.opencode/`. Il n'installe jamais. L'événement, le contexte `worktree` et `client.tui.showToast` sont doc-vérifiés (`opencode.ai/docs/plugins`, `opencode.ai/docs/sdk`).
 
 ## Q3 — L'isolation : worktree git, routé
 
@@ -208,7 +213,8 @@ Chaque couche contre son alternative la plus simple, prise isolément :
 
 - **`orca-ide worktree set` sur un worktree créé par git** : on ne sait pas s'il rattache après coup les métadonnées Orca.
 - **AIDD dans un ouvrier Orca** : sous Claude, les plugins globaux devraient suffire (supposé). Sous OpenCode, non, faute d'installation globale.
-- **Lien global des skills AIDD sous OpenCode** : hors support, jamais essayé, ni par AIDD ni ici. Test proposé : lier un skill AIDD dans `~/.opencode-bench/skills/`, puis vérifier qu'il apparaît dans `core/skill-guidance` d'une session ouverte hors de tout projet AIDD.
+- **Skills AIDD exécutés sous OpenCode** : l'exposition est mesurée, pas l'exécution. Les renvois à `aidd-dev:executor` et `aidd-dev:checker` n'ont pas été exercés (#61 chantier B).
+- **Moment où part `session.created`** : à l'ouverture de la TUI ou au premier message, la doc ne le dit pas. À mesurer avant d'écrire le plugin de rappel.
 - **Mémoire partagée entre Claude et OpenCode** : doc-vérifiée, jamais exercée sur un projet.
 - **Collisions de `10-batch`** : jamais observées.
 - **Le rang 2 du routeur** : on ne sait pas si un worktree créé par git au chemin d'Orca, dans un dépôt réglé sur `show`, se comporte dans Orca comme un worktree natif.
@@ -222,7 +228,7 @@ L'ordre suit une contrainte : chaque tâche est utile seule, et la dernière dé
 | # | Tâche | Effet vérifiable |
 |---|---|---|
 | 1 | Routeur `tools/worktree`, trois rangs, puis `rules/worktrees.md` réduit à son appel. `externalWorktreeVisibility: show` sur tous les dépôts | une batterie simule les trois environnements et vérifie le rang choisi. Un worktree créé au rang 3 apparaît dans `orca-ide worktree list` |
-| 2 | AIDD disponible partout sous OpenCode (#61 C) | une session OpenCode dans un dépôt sans installation locale voit `01-plan` |
+| 2 | AIDD par projet sous OpenCode, avec le plugin de rappel (#61 C) | dans un dépôt sans `.opencode/`, l'ouverture d'une session affiche le toast. Dans un dépôt équipé ou exclu, rien ne s'affiche |
 | 3 | `rules/aidd.md` réécrit : AIDD comme workflow unique, profondeur selon la taille, déclencheur « tout travail qui produit », mémoire selon Q6 | `guard-aidd-skill-lookup.py` rappelle aussi hors d'un dépôt `aidd_docs/`, et sa batterie le couvre |
 | 4 | Routeur d'exécution parallèle (#61 D) | un `10-batch` lancé dans Orca crée un ouvrier et un worktree enfant par tâche. Hors d'Orca, il retombe sur des sous-agents natifs |
 
