@@ -21,6 +21,7 @@
     {"mode": "link", "source": "tools/lint-skills.py", "cible": "scripts/lint-skills.py"},
     {"mode": "link", "source": "tools/mesure-reponses.py", "cible": "scripts/mesure-reponses.py"},
     {"mode": "link", "source": "tools/run-skill-evals.py", "cible": "scripts/run-skill-evals.py"},
+    {"mode": "link", "source": "tools/worktree.sh", "cible": "scripts/worktree.sh"},
     {"mode": "link", "source": "wrappers/claude/scripts/statusline.sh", "cible": "scripts/statusline.sh"},
     {"mode": "link", "source": "wrappers/claude/scripts/sync-rules.sh", "cible": "scripts/sync-rules.sh"},
     {"mode": "link", "source": "wrappers/claude/scripts/tests/test-aidd-updates.sh", "cible": "scripts/tests/test-aidd-updates.sh"},

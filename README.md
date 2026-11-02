@@ -334,7 +334,7 @@ python3 tools/tests/test-install.py                                 # calibre l'
 
 ### OpenCode
 
-OpenCode reçoit le harnais par `tools/install.py --agent opencode`, d'après `tools/manifests/opencode.json`. Les skills sont liés sous `skills/`, et le plugin `wrappers/opencode/plugins/harness-guards/` sous `plugins/harness-guards/`. Le reste est fusionné dans `opencode.json` : le gabarit `wrappers/opencode/opencode.json`, avec `{repo}` remplacé par la racine du repo, les `policies` tirées de `policy/deny.yaml` et les `mcp.servers` tirés de `mcp/servers.yaml`.
+OpenCode reçoit le harnais par `tools/install.py --agent opencode`. Les liens posés sont ceux de `tools/manifests/opencode.json`. `--list` les affiche. Le reste est fusionné dans `opencode.json` : le gabarit `wrappers/opencode/opencode.json`, avec `{repo}` remplacé par la racine du repo, les `policies` tirées de `policy/deny.yaml` et les `mcp.servers` tirés de `mcp/servers.yaml`.
 
 Les skills ne passent pas par `skills: [...]` : un lien sous `skills/` est découvert, mesuré dans le banc. Un skill qui porte `disable-model-invocation: true` n'est pas proposé au modèle, comme sous Claude.
 

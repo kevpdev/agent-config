@@ -250,6 +250,8 @@ def main() -> int:
         cible = os.path.join(tmp, "opencode")
         code, sortie = lancer(cible, "--fix", "--agent", "opencode")
         cas("opencode : liens posés", code == 0 and os.path.islink(os.path.join(cible, "plugins", "harness-guards")))
+        cas("opencode : scripts/worktree.sh posé, comme sous Claude",
+            os.readlink(os.path.join(cible, "scripts", "worktree.sh")).endswith("tools/worktree.sh"))
         cas("opencode : aucun settings.json", not os.path.exists(os.path.join(cible, "settings.json")))
         config = os.path.join(cible, "opencode.json")
         instructions = lire_settings(cible, "opencode.json").get("instructions") if os.path.exists(config) else None
