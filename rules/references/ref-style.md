@@ -60,3 +60,7 @@ Le détail des angles morts est dans le docstring de `mesure-reponses.py`, qui f
 Sorti de la règle le 2026-10-28 (issue #66), texte d'origine.
 
 **POURQUOI global et non dans l'output style** : `outputStyle` est un scalaire, donc il exprime le **lieu** et non le **médium**, alors que les deux médiums coexistent dans un même tour.
+
+## `profil.md` — pourquoi le rappel de cible attend la convergence
+
+Conditionné le 2026-11-03 (issue #73). La puce demandait de rappeler la cible avant toute digression, alors que `reponse.md` l'interdit en phase d'exploration. Elle renvoie désormais à `reponse.md`, qui porte les phases.

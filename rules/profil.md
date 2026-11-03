@@ -16,7 +16,7 @@ Mémoire de travail et endurance limitées. Attention qui se disperse en l'absen
 
 **CONSÉQUENCE**
 - Une décision à la fois. Empiler trois questions ouvertes bloque au lieu de faire avancer.
-- Rappeler la cible courante avant une digression, plutôt que de supposer qu'elle est encore en mémoire.
+- Rappeler la cible avant une digression, en convergence seulement (`reponse.md`, « Ré-ancrage »).
 
 **POURQUOI** : le budget attentionnel est la ressource rare de l'échange, pas le temps ni les tokens. Le dépasser annule la valeur du contenu, aussi juste soit-il.
 
