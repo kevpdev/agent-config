@@ -2,12 +2,10 @@
 name: vault-capture
 description: >-
   Capture une note dans le vault Obsidian depuis une session HORS vault (CWD = repo de dev).
-  Pont vers le skill canonique vault-capture, avec résolution des chemins contre la racine
-  absolue du vault. Invocation manuelle uniquement, par `/vault-capture` : le skill écrit une
-  note dans le vault, qui est un dépôt git, un effet de bord qu'un déclenchement probabiliste
-  ne doit pas pouvoir provoquer.
+  Pont vers le skill canonique capture, avec résolution des chemins contre la racine absolue
+  du vault. Utiliser quand l'utilisateur dit "note ça dans le vault", "capture cette idée",
+  "garde ça dans Obsidian" ou "mets ça dans l'inbox".
 argument-hint: "le contenu de la note à capturer, en clair"
-disable-model-invocation: true
 ---
 
 # vault-capture — capturer une note dans le vault depuis un repo
