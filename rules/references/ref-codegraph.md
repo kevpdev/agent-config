@@ -6,7 +6,9 @@ Les récits datés et les raisons de rangement de la règle. Jamais chargé auto
 
 ## L'index pollué par les worktrees (2026-10-13)
 
-**POURQUOI, constaté le 2026-10-13 sur `yt-transcriber`** : le hook a injecté trois copies de `app/runs.py`, dont deux venaient de worktrees de sous-agents. `~/.config/git/ignore` n'est versionné nulle part, donc cette page est ce qui survit à une nouvelle machine.
+**POURQUOI, constaté le 2026-10-13 sur `yt-transcriber`** : le hook a injecté trois copies de `app/runs.py`, dont deux venaient de worktrees de sous-agents. `~/.config/git/ignore` n'est versionné nulle part.
+
+**Depuis le 2026-11-03, issue #73**, la ligne `**/.claude/worktrees/` est posée par `tools/install.py`, à partir de la clé `git_exclude` du manifeste Claude. Une nouvelle machine la reçoit donc à l'installation, et la section de la règle qui demandait de l'ajouter à la main a été retirée. Si CodeGraph a déjà indexé des doublons avant la pose de la ligne, `codegraph index` les retire.
 
 ## La consigne chargée mais jamais suivie (2026-10-12)
 

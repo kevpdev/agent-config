@@ -1,8 +1,9 @@
 {
-  "_doc": "Liens que tools/install.py pose dans la config de Claude Code. Les liens de scripts reproduisent l'existant tel quel, bizarreries comprises (audits/2026-10-22-liens-pre-v2.txt) : les nettoyer est une tâche à part. Les sources vivent dans wrappers/claude/scripts, wrappers/claude/hooks et tools, mais les cibles gardent la forme de scripts/ d'avant le rangement, parce que settings.json et les skills appellent ~/.claude/scripts/… en dur. La clé deny désigne policy/deny.yaml, traduit en permissions.deny (issue #31). La clé mcp désigne mcp/servers.yaml : pour chaque serveur, --check lit .claude.json, et --fix lance son installateur avec CLAUDE_CONFIG_DIR sur la cible (issue #33).",
+  "_doc": "Liens que tools/install.py pose dans la config de Claude Code. Les liens de scripts reproduisent l'existant tel quel, bizarreries comprises (audits/2026-10-22-liens-pre-v2.txt) : les nettoyer est une tâche à part. Les sources vivent dans wrappers/claude/scripts, wrappers/claude/hooks et tools, mais les cibles gardent la forme de scripts/ d'avant le rangement, parce que settings.json et les skills appellent ~/.claude/scripts/… en dur. La clé deny désigne policy/deny.yaml, traduit en permissions.deny (issue #31). La clé mcp désigne mcp/servers.yaml : pour chaque serveur, --check lit .claude.json, et --fix lance son installateur avec CLAUDE_CONFIG_DIR sur la cible (issue #33). La clé git_exclude liste les motifs que --fix ajoute au fichier d'exclusion global de git : CodeGraph saute ce que git ignore, et les worktrees des sous-agents Claude Code vivent sous .claude/worktrees/ (issue #73).",
   "settings": "wrappers/claude/settings.json",
   "deny": "policy/deny.yaml",
   "mcp": "mcp/servers.yaml",
+  "git_exclude": ["**/.claude/worktrees/"],
   "entrees": [
     {"mode": "glob-files", "source": "rules/*.md", "cible": "rules", "intrus": true},
     {"mode": "glob-files", "source": "wrappers/claude/rules/*.md", "cible": "rules", "intrus": true},

@@ -8,7 +8,8 @@ calibrage avant comptage).
 
 Pourquoi une cible fabriquée : la cible réelle est la config de la session en cours, et
 `--fix` y écrit. Le script est lancé en sous-processus, avec `HOME` redirigé quand le
-cas porte sur le rendu des chemins.
+cas porte sur le rendu des chemins. `XDG_CONFIG_HOME` et `GIT_CONFIG_GLOBAL` visent toujours
+un dossier temporaire, pour qu'aucun cas n'écrive dans le vrai `~/.config/git/ignore`.
 
 Sortie : 0 si tous les cas passent, 1 si un cas échoue.
 """
@@ -48,6 +49,16 @@ json.dump(donnees, open(fichier, "w"))
 os.chmod(os.path.join(FAUX_BIN, "codegraph"), 0o755)
 
 
+# Le git global de chaque lancement : un XDG_CONFIG_HOME et un fichier de config vides,
+# partagés par défaut, remplaçables par cas.
+GIT_ISOLE = tempfile.mkdtemp(prefix="git-isole-")
+atexit.register(shutil.rmtree, GIT_ISOLE, True)
+XDG_DEFAUT = os.path.join(GIT_ISOLE, "xdg")
+GITCONFIG_DEFAUT = os.path.join(GIT_ISOLE, "gitconfig")
+open(GITCONFIG_DEFAUT, "w").close()
+MOTIF = "**/.claude/worktrees/"
+
+
 def appels_faux() -> list[dict]:
     if not os.path.exists(FAUX_LOG):
         return []
@@ -55,9 +66,11 @@ def appels_faux() -> list[dict]:
         return [json.loads(l) for l in f]
 
 
-def lancer(cible, *argv, home=None):
+def lancer(cible, *argv, home=None, xdg=XDG_DEFAUT, gitconfig=GITCONFIG_DEFAUT):
     """Lance l'installateur, rend (code, sortie fusionnée)."""
     env = dict(os.environ)
+    env["XDG_CONFIG_HOME"] = xdg
+    env["GIT_CONFIG_GLOBAL"] = gitconfig
     env.pop("CLAUDE_SETTINGS_FILE", None)
     env.pop("CLAUDE_CONFIG_DIR", None)
     env["PATH"] = FAUX_BIN + os.pathsep + env.get("PATH", "")
@@ -114,6 +127,10 @@ def main() -> int:
         cas("vide : --check n'écrit rien", not os.path.exists(cible))
         cas("vide : serveur MCP absent de .claude.json", ".claude.json mcpServers.codegraph : absent" in sortie)
         cas("vide : --check ne lance pas l'installateur", appels_faux() == [])
+        ignore_defaut = os.path.join(XDG_DEFAUT, "git", "ignore")
+        cas("vide : motif git ignore absent signalé",
+            f"git ignore {MOTIF} : absent ({ignore_defaut})" in sortie)
+        cas("vide : --check n'écrit pas le git ignore", not os.path.exists(ignore_defaut))
 
         # --fix pose tout, puis --check est propre.
         code, _ = lancer(cible, "--fix", home=autre_home)
@@ -123,6 +140,8 @@ def main() -> int:
             len(appels) == 1 and appels[0]["config_dir"] == cible
             and appels[0]["args"] == ["install", "-t", "claude", "-l", "global", "-y"])
         cas("fix : .claude.json écrit dans la cible", os.path.exists(os.path.join(cible, ".claude.json")))
+        with open(ignore_defaut, encoding="utf-8") as f:
+            cas("fix : git ignore créé avec le motif", f.read() == f"{MOTIF}\n")
         code, sortie = lancer(cible, "--check", home=autre_home)
         cas("fix puis check : aucun écart", code == 0 and "aucun écart" in sortie)
 
@@ -241,6 +260,84 @@ def main() -> int:
         code, sortie = lancer(cible, "--check", "--repo", "/autre/repo", home=autre_home)
         cas("--repo : les liens visent l'autre repo",
             code == 1 and "MAUVAISE CIBLE" in sortie and "/autre/repo/" in sortie)
+
+    # Fichier d'exclusion global de git : chaque cas a son propre git isolé.
+    with tempfile.TemporaryDirectory() as racine:
+        cible = os.path.join(racine, "cfg")
+        lancer(cible, "--fix")
+        gitconfig = os.path.join(racine, "gitconfig")
+        open(gitconfig, "w").close()
+
+        # Ligne déjà présente : aucun écart, fichier inchangé octet pour octet.
+        xdg = os.path.join(racine, "xdg-present")
+        ignore = os.path.join(xdg, "git", "ignore")
+        os.makedirs(os.path.dirname(ignore))
+        avant = f"*.swp\n{MOTIF}   \n".encode()
+        with open(ignore, "wb") as f:
+            f.write(avant)
+        code, sortie = lancer(cible, "--check", xdg=xdg, gitconfig=gitconfig)
+        cas("git ignore présent : aucun écart", code == 0 and "git ignore" not in sortie)
+        code, sortie = lancer(cible, "--fix", xdg=xdg, gitconfig=gitconfig)
+        with open(ignore, "rb") as f:
+            cas("git ignore présent : --fix ne touche pas le fichier",
+                code == 0 and f.read() == avant and "git ignore" not in sortie)
+
+        # Autre ligne sans saut de ligne final : le motif va sur une ligne à lui.
+        xdg = os.path.join(racine, "xdg-sans-fin")
+        ignore = os.path.join(xdg, "git", "ignore")
+        os.makedirs(os.path.dirname(ignore))
+        with open(ignore, "w", encoding="utf-8") as f:
+            f.write("*.swp")
+        code, sortie = lancer(cible, "--check", xdg=xdg, gitconfig=gitconfig)
+        cas("git ignore sans le motif : signalé", code == 1 and f"git ignore {MOTIF} : absent" in sortie)
+        code, sortie = lancer(cible, "--fix", xdg=xdg, gitconfig=gitconfig)
+        with open(ignore, encoding="utf-8") as f:
+            cas("git ignore sans saut final : motif ajouté sur une nouvelle ligne, l'autre gardée",
+                code == 0 and f.read() == f"*.swp\n{MOTIF}\n" and f"ajouté     git ignore {MOTIF}" in sortie)
+
+        # core.excludesFile défini : c'est ce fichier qui est écrit, pas celui de XDG.
+        xdg = os.path.join(racine, "xdg-ignore")
+        declare = os.path.join(racine, "declare", "exclusions")
+        config = os.path.join(racine, "gitconfig-declare")
+        with open(config, "w", encoding="utf-8") as f:
+            f.write(f"[core]\n\texcludesFile = {declare}\n")
+        code, sortie = lancer(cible, "--check", xdg=xdg, gitconfig=config)
+        cas("core.excludesFile : l'écart nomme le fichier déclaré", code == 1 and f"({declare})" in sortie)
+        code, _ = lancer(cible, "--fix", xdg=xdg, gitconfig=config)
+        with open(declare, encoding="utf-8") as f:
+            cas("core.excludesFile : le fichier déclaré reçoit le motif", code == 0 and f.read() == f"{MOTIF}\n")
+        cas("core.excludesFile : le fichier XDG n'est pas créé",
+            not os.path.exists(os.path.join(xdg, "git", "ignore")))
+
+        # core.excludesFile déclaré dans un fichier inclus par [include] : il est suivi.
+        xdg = os.path.join(racine, "xdg-include")
+        inclus = os.path.join(racine, "inclus", "exclusions")
+        config_inclus = os.path.join(racine, "gitconfig-inclus")
+        with open(config_inclus, "w", encoding="utf-8") as f:
+            f.write(f"[core]\n\texcludesFile = {inclus}\n")
+        config = os.path.join(racine, "gitconfig-include")
+        with open(config, "w", encoding="utf-8") as f:
+            f.write(f"[include]\n\tpath = {config_inclus}\n")
+        code, sortie = lancer(cible, "--check", xdg=xdg, gitconfig=config)
+        cas("[include] : l'écart nomme le fichier déclaré dans l'inclus", code == 1 and f"({inclus})" in sortie)
+        code, _ = lancer(cible, "--fix", xdg=xdg, gitconfig=config)
+        recu = open(inclus, encoding="utf-8").read() if os.path.exists(inclus) else None
+        cas("[include] : le fichier de l'inclus reçoit le motif", code == 0 and recu == f"{MOTIF}\n")
+        cas("[include] : le fichier XDG n'est pas créé", not os.path.exists(os.path.join(xdg, "git", "ignore")))
+
+        # Un octet hors UTF-8 dans une autre ligne : ni plantage, ni octet perdu.
+        xdg = os.path.join(racine, "xdg-latin1")
+        ignore = os.path.join(xdg, "git", "ignore")
+        os.makedirs(os.path.dirname(ignore))
+        with open(ignore, "wb") as f:
+            f.write(b"caf\xe9.tmp\n")
+        code, sortie = lancer(cible, "--check", xdg=xdg, gitconfig=gitconfig)
+        cas("octet hors UTF-8 : --check signale sans planter",
+            code == 1 and f"git ignore {MOTIF} : absent" in sortie and "Traceback" not in sortie)
+        code, sortie = lancer(cible, "--fix", xdg=xdg, gitconfig=gitconfig)
+        with open(ignore, "rb") as f:
+            cas("octet hors UTF-8 : --fix ajoute le motif et garde l'octet",
+                code == 0 and f.read() == b"caf\xe9.tmp\n" + MOTIF.encode() + b"\n")
 
     code, sortie = lancer("/nulle-part", "--list", "--agent", "inconnu")
     cas("agent inconnu : refusé", code != 0)

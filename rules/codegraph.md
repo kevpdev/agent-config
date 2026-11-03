@@ -10,12 +10,4 @@
 
 **Le contexte injecté ne vaut pas appel.** Le hook `UserPromptSubmit` (`codegraph prompt-hook`) cherche les mots du prompt, pas les symboles que je vais modifier. Son bloc ne dispense donc pas de l'appel.
 
-## Index pollué par les worktrees
-
-**DÉCLENCHEUR** : CodeGraph rend un même fichier sous deux chemins, dont une copie sous `.claude/worktrees/`.
-
-**À LA PLACE de** choisir entre les copies, vérifier que `git check-ignore .claude/worktrees/x` répond. Sinon, ajouter `**/.claude/worktrees/` à `~/.config/git/ignore`, puis lancer `codegraph index`.
-
-**POURQUOI** : CodeGraph saute tout ce que git ignore (son README, section des exclusions), et rien d'autre ne retire les worktrees des sous-agents.
-
 Récits datés et raisons de rangement de cette page → `rules/references/ref-codegraph.md`.
