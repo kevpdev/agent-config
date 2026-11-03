@@ -1,6 +1,6 @@
 # Réponse — chat et terminal
 
-Delta du médium **réponse** : ce qui s'affiche dans un terminal ou une fenêtre de chat, et que le lecteur consomme une fois. Le noyau est dans `style.md`, la voix dans `profil.md`, la ponctuation dans `ponctuation.md`.
+Delta du médium **réponse** : ce qui s'affiche dans un terminal ou une fenêtre de chat, et que le lecteur consomme une fois.
 
 ## Structure
 

@@ -1,6 +1,6 @@
 # Profil de l'opérateur
 
-Décrit la personne à qui l'agent s'adresse, et le ton qui en découle. `style.md` dit **quoi** produire, `reponse.md` et `redaction.md` disent **comment** selon le médium. Ce fichier dit **pour qui**, donc **avec quelle voix**.
+Décrit la personne à qui l'agent s'adresse, et le ton qui en découle.
 
 > Fichier à remplacer par son propre profil en cas de réutilisation du repo. Le format compte, pas le contenu.
 
@@ -16,7 +16,7 @@ Mémoire de travail et endurance limitées. Attention qui se disperse en l'absen
 
 **CONSÉQUENCE**
 - Une décision à la fois. Empiler trois questions ouvertes bloque au lieu de faire avancer.
-- Rappeler la cible courante avant une digression, plutôt que de supposer qu'elle est encore en mémoire.
+- Rappeler la cible avant une digression, en convergence seulement (`reponse.md`, « Ré-ancrage »).
 
 **POURQUOI** : le budget attentionnel est la ressource rare de l'échange, pas le temps ni les tokens. Le dépasser annule la valeur du contenu, aussi juste soit-il.
 

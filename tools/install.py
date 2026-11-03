@@ -25,6 +25,12 @@ POURQUOI CE SCRIPT
     n'écrit rien : `--check` lit `.claude.json`, et `--fix` lance l'installateur déclaré
     du serveur avec `CLAUDE_CONFIG_DIR` sur la cible. Les raisons sont dans le fichier.
 
+    La clé `git_exclude` liste des motifs pour le fichier d'exclusion global de git, celui
+    de `core.excludesFile`, sinon `$XDG_CONFIG_HOME/git/ignore`, sinon `~/.config/git/ignore`.
+    `--fix` ajoute les motifs manquants et ne retire rien, parce que ce fichier appartient
+    à la machine. L'exclusion vaut pour tout l'utilisateur, quelle que soit la cible.
+    Un `core.excludesFile` déclaré au niveau système (`/etc/gitconfig`) n'est pas lu.
+
 ÉCARTS, avec les mots de `sync-rules.sh`
     ABSENT          le lien attendu n'existe pas
     MAUVAISE CIBLE  le lien existe et vise ailleurs
@@ -286,6 +292,43 @@ def verifier_mcp_claude(cible: str, serveurs: list[dict], fix: bool):
     return ecarts, faits
 
 
+def fichier_git_exclude() -> str:
+    """Le fichier d'exclusion global, dans l'ordre où git le cherche. `--includes` suit
+    les `[include]`, désactivés par défaut avec `--global`, et `--path` développe `~`."""
+    try:
+        r = subprocess.run(["git", "config", "--global", "--includes", "--path", "core.excludesFile"],
+                           capture_output=True, text=True)
+        defini = r.stdout.strip() if r.returncode == 0 else ""
+    except FileNotFoundError:
+        defini = ""
+    if defini:
+        return defini
+    base = os.environ.get("XDG_CONFIG_HOME") or os.path.join(os.path.expanduser("~"), ".config")
+    return os.path.join(base, "git", "ignore")
+
+
+def verifier_git_exclude(motifs: list[str], fix: bool):
+    """Compare ligne à ligne, espaces de fin retirés. `--fix` ajoute en fin de fichier.
+    Un octet hors UTF-8 traverse la lecture et l'écriture par `surrogateescape`."""
+    fichier = fichier_git_exclude()
+    contenu = ""
+    if os.path.exists(fichier):
+        with open(fichier, encoding="utf-8", errors="surrogateescape") as f:
+            contenu = f.read()
+    presents = {l.rstrip() for l in contenu.splitlines()}
+    manquants = [m for m in motifs if m not in presents]
+    if not manquants:
+        return [], []
+    if not fix:
+        return [f"ÉCART  git ignore {m} : absent ({fichier})" for m in manquants], []
+    os.makedirs(os.path.dirname(fichier), exist_ok=True)
+    with open(fichier, "a", encoding="utf-8", errors="surrogateescape") as f:
+        if contenu and not contenu.endswith("\n"):
+            f.write("\n")
+        f.write("".join(f"{m}\n" for m in manquants))
+    return [], [f"ajouté     git ignore {m}" for m in manquants]
+
+
 def ajouter(repo: dict, ajout: dict) -> dict:
     """Ajoute la traduction au gabarit, un niveau d'objet en profondeur."""
     for cle, valeur in ajout.items():
@@ -348,6 +391,10 @@ def main(argv: list[str]) -> int:
         e_mcp, f_mcp = verifier_mcp_claude(cible, charger_mcp(os.path.join(REPO, manifeste["mcp"])), args.fix)
         ecarts += e_mcp
         faits += f_mcp
+    if "git_exclude" in manifeste:
+        e_git, f_git = verifier_git_exclude(manifeste["git_exclude"], args.fix)
+        ecarts += e_git
+        faits += f_git
 
     for f in faits:
         print(f"  {f}")

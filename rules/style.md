@@ -1,6 +1,6 @@
 # Style — noyau transverse
 
-S'applique à toute production écrite : réponse de chat, note, commentaire de PR, rapport de subagent. Les deltas par médium vivent dans `reponse.md` et `redaction.md`. Le *pour qui* et la voix sont dans `profil.md`, qui porte la raison de fond de tout ce qui suit. Le budget attentionnel du lecteur est la ressource rare.
+S'applique à toute production écrite : réponse de chat, note, commentaire de PR, rapport de subagent. Le budget attentionnel du lecteur est la ressource rare.
 
 **Un verdict concret d'abord** — ne pas dérouler le raisonnement, le contexte ou la méthode avant la conclusion, et ne pas énoncer cette conclusion en abstrait. La première ligne porte la réponse **sous forme concrète** : l'exemple, le chiffre ou la citation qui *est* le verdict. Le lecteur décide dès la première ligne s'il lit la suite. Quand la réponse tranche entre des options, donner **le critère qui a fait pencher**, et l'alternative en une ligne si elle reste défendable.
 

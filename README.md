@@ -118,6 +118,7 @@ wrappers/
 | un hook ou un garde | `hooks/<nom>.py`, la décision neutre | OpenCode : lancé par le plugin, qui lance tous les gardes. Claude : un adaptateur, son lien et sa déclaration (voir [Les hooks](#les-hooks)) |
 | une lecture interdite | `policy/deny.yaml` | Claude : `permissions.deny`. OpenCode : `policies` |
 | un serveur MCP | `mcp/servers.yaml` | Claude : son installateur écrit `.claude.json`. OpenCode : `mcp.servers` |
+| le fichier d'exclusion global de git | la clé `git_exclude` de `tools/manifests/claude.json` | Claude : motifs ajoutés à `core.excludesFile`, sinon à `~/.config/git/ignore`, jamais retirés |
 | un réglage (modèle, effort, hooks, plugins) | `wrappers/claude/settings.json` ou `wrappers/opencode/opencode.json` | fusionné dans le fichier de réglages de l'agent |
 | ce qui est lié | `tools/manifests/claude.json` ou `opencode.json` | la liste des liens posés et vérifiés |
 
@@ -286,7 +287,7 @@ Trois couches, de la plus rare à la plus fréquente.
 
 | Couche | Geste | Fréquence |
 |---|---|---|
-| Machine | `npm i -g @colbymchenry/codegraph`, puis `codegraph telemetry off`. Le serveur MCP est posé par `tools/install.py --fix` | une fois par poste |
+| Machine | `npm i -g @colbymchenry/codegraph`, puis `codegraph telemetry off`. Le serveur MCP est posé par `tools/install.py --fix`, comme l'exclusion `**/.claude/worktrees/` dans le git ignore global, qui garde les worktrees des sous-agents hors de l'index | une fois par poste |
 | Projet existant | `codegraph init` à la racine, puis `.codegraph/` dans le `.gitignore` | une fois par dépôt, à la main |
 | Projet neuf | `wrappers/claude/hooks/init-codegraph.py`, hook `SessionStart` | automatique |
 
