@@ -8,13 +8,11 @@ description: >-
   les deux dérives qu'aucun script n'attrape, le routeur qui regonfle en logique métier
   et le fait recopié à deux endroits. Rejoue aussi cette vérification en lot, sur une
   liste de skills ou sur tout le corpus, en corrigeant le mécanique et en s'arrêtant sur
-  ce qui demande un arbitrage. Autonome, sans dépendance au framework AIDD, sortie
-  100 % française. Invocation manuelle uniquement, par `/skill-craft` : le skill écrit une
-  arborescence complète sous `skills/<nom>/`, un effet de bord qu'un déclenchement
-  probabiliste ne doit pas pouvoir provoquer. NE PAS utiliser pour un
-  skill d'équipe destiné au partage anglophone (→ aidd-context:04-skill-generate).
+  ce qui demande un arbitrage. Autonome, sans dépendance au framework AIDD. Utiliser quand l'utilisateur dit "crée un skill", "fais-moi un skill
+  pour", "vérifie ce skill" ou "passe la vérification sur tous les skills". NE PAS utiliser pour un
+  skill d'équipe destiné au partage anglophone (→ aidd-context:04-skill-generate), ni pour
+  benchmarker un skill hors de cette convention (→ anthropic-skills:skill-creator).
 argument-hint: une intention de skill, ou le nom d'un skill à vérifier
-disable-model-invocation: true
 ---
 
 # skill-craft

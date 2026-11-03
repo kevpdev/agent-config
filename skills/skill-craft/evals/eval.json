@@ -1,8 +1,19 @@
 [
   {
     "skill": "skill-craft",
+    "id": "positif-creer-skill-perso",
+    "query": "Crée-moi un skill perso pour résumer une pull request GitHub en français, avec ses cas d'éval."
+  },
+  {
+    "skill": "skill-craft",
     "id": "negatif-vers-aidd-context-04-skill-generate",
     "expect_trigger": false,
     "query": "Génère un skill pour l'équipe, en anglais, qu'on partagera dans le repo commun et que les autres devs vont lire."
+  },
+  {
+    "skill": "skill-craft",
+    "id": "negatif-vers-anthropic-skills-skill-creator",
+    "expect_trigger": false,
+    "query": "Lance un benchmark de déclenchement avec analyse de variance sur mon skill de résumé de PR, pour optimiser sa description."
   }
 ]

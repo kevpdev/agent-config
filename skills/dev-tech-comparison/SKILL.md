@@ -7,8 +7,8 @@ description: >-
   une impression A4 sans coupure, puis passe un lint de prose et une auto-relecture. Au démarrage, un choix
   interactif 0 ou 1 ajoute en mode strict une relecture à froid par un sous-agent neuf, plus
   coûteuse. Invocation manuelle uniquement, par `/dev-tech-comparison` suivi du sujet :
-  le skill écrit un fichier et fait des recherches web, deux effets qu'un déclenchement
-  probabiliste ne doit pas pouvoir provoquer. NE PAS utiliser pour une page publiée sur claude.ai
+  une question de comparaison posée en conversation attend une réponse courte, pas ce
+  livrable. NE PAS utiliser pour une page publiée sur claude.ai
   (→ artifact-design), ni pour un document partagé et édité à plusieurs
   (→ anthropic-skills:docs).
 argument-hint: le sujet, les options comparées avec leur version, et le dossier de sortie si ce n'est pas le dossier courant. Le mode de contrôle se choisit ensuite, par 0 ou 1
@@ -49,6 +49,7 @@ Dérouler le flux. Ne lire que la prochaine action.
 
 ## Transversal rules
 
+- **Invocation manuelle, au second motif de R13, le contrôle du moment.** Le skill n'a pas d'effet de bord au sens de R13. Mais une question « X ou Y ? » posée en conversation attend une réponse de chat, et un départ au flair lancerait un livrable HTML, des recherches web et, en mode strict, un sous-agent.
 - **Un seul fil conducteur.** Un objet concret du domaine, suivi de bout en bout, et chaque section le fait avancer d'une étape. *Pourquoi : c'est ce qui rend le document lisible à froid, sans la conversation qui l'a produit.*
 - **Le calcul se fait en code.** Pour chaque étape, le document dit qui la fait (modèle, LLM, code) et pourquoi. Un calcul, une conversion d'unités ou une vérification arithmétique se font toujours en code.
 - **Le document ne parle qu'au lecteur.** Aucune mention de la conversation, du skill ni de l'agent dans le fichier livré.

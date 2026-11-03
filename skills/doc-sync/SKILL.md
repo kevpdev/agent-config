@@ -1,8 +1,7 @@
 ---
 name: doc-sync
-description: "Synchronisation de la doc d'un repo avec son code validé, et mise en conformité de chaque document avec les règles de son type (README pour l'instant). Classe chaque document en régime reflet (réécrit), mémoire AIDD (cadrée, livrée par 10-learn puis contrôlée, seulement si aidd_docs/ existe) ou décision (jamais réécrit, l'écart est signalé). Deux entrées, le diff de commits par défaut et --audit pour juger les documents eux-mêmes. S'invoque par /doc-sync, jamais au fil de la conversation, parce qu'il écrit des fichiers versionnés. NE PAS utiliser pour committer seul (→ aidd-vcs:01-commit)."
+description: "Synchronisation de la doc d'un repo avec son code validé, et mise en conformité de chaque document avec les règles de son type (README pour l'instant). Classe chaque document en régime reflet (réécrit), mémoire AIDD (cadrée, livrée par 10-learn puis contrôlée, seulement si aidd_docs/ existe) ou décision (jamais réécrit, l'écart est signalé). Deux entrées, le diff de commits par défaut et --audit pour juger les documents eux-mêmes. Utiliser quand l'utilisateur dit « mets la doc à jour », « synchronise le README avec le code », « la doc a dérivé » ou « audite la doc », et en fin de livraison pour aligner la doc sur le code. NE PAS utiliser pour committer seul (→ aidd-vcs:01-commit)."
 argument-hint: "[--audit]"
-disable-model-invocation: true
 ---
 
 # doc-sync

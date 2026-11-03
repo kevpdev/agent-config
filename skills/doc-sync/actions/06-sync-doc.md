@@ -14,6 +14,7 @@ Les documents réécrits, `check-doc.py` vert sur chacun, et un commit proposé 
 
 1. **Se poser sur une branche de doc**, avant la première écriture et dans chaque repo qui recevra un commit : `docs/TICKET` si les commits du scope portent un seul ticket, `docs/sync-AAAA-MM-JJ` sinon.
    - La convention du repo passe devant ce défaut, quand il en déclare une (mémoire `vcs`, `CONTRIBUTING.md`).
+   - **Garde, avant la branche.** `git status --porcelain -- <documents reflet du scope>` doit être vide dans chaque repo. Sinon, s'arrêter et nommer les fichiers modifiés, sauf opt-in « WIP non commité » posé par `01-detect-scope`. *Pourquoi : écraser ou mêler des modifications non commitées est un effet de bord au sens de R13 de `skill-craft`, et git ne le rattrape pas.*
 2. **Charger les règles du type.** Lire `references/types/TYPE.md`, puis `.doc-rules/TYPE.md` à la racine du repo s'il existe. Le repo gagne sur la forme.
 3. **Mesurer avant.** Lancer `python3 "$(readlink -f "$SKILLS_ROOT/doc-sync")/../../tools/check-doc.py" DOC` et garder ses défauts.
    - *Pourquoi ce chemin : `tools/` n'est pas lié dans la config de l'agent, seul le dossier du skill l'est.*
@@ -33,4 +34,5 @@ Les documents réécrits, `check-doc.py` vert sur chacun, et un commit proposé 
 | `python3 tools/check-doc.py DOC` après l'action | rend 0, ou chaque défaut restant est justifié dans la sortie du run |
 | `git rev-parse --abbrev-ref HEAD` dans chaque repo touché | rend une branche `docs/`, sauf exclusion citée de la convention du repo |
 | `git log -1` après l'action, sans accord donné | aucun commit nouveau |
+| un document reflet du scope modifié et non commité, sans opt-in WIP | arrêt avant la branche, le fichier est nommé, `git diff` inchangé |
 | les hunks de `git diff DOC` contre la liste d'edits validée | aucun hunk sans edit validé correspondant |
