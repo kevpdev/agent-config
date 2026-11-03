@@ -6,8 +6,7 @@ description: >
   state, gantt/journey). Utiliser quand on produit ou relit un diagramme Mermaid — "fais un
   schéma", "diagramme cette archi", "ce diagramme est illisible", "quel type de diagramme
   pour", ou avant d'écrire un bloc mermaid non trivial. NE PAS utiliser pour décider de
-  l'architecture elle-même (→ agentic-architect), ni pour publier le
-  schéma dans le vault (→ vault-recap-raisonnement, qui appelle ce skill pour les critères).
+  l'architecture elle-même (→ agentic-architect).
 argument-hint: le sujet à schématiser, ou le bloc mermaid existant à relire
 ---
 
