@@ -3,5 +3,11 @@
     "skill": "vault-capture",
     "id": "positif-capture-idee",
     "query": "Note dans mon vault l'idée de mesurer le poids des descriptions de skills, je la creuserai plus tard."
+  },
+  {
+    "skill": "vault-capture",
+    "id": "negatif-vers-capture",
+    "expect_trigger": false,
+    "query": "Je suis dans mon vault Obsidian, capture cette idée dans l'inbox : relire les règles chargées chaque mois."
   }
 ]

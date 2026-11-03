@@ -21,7 +21,7 @@ Une arborescence sous `skills/<nom>/` : `SKILL.md`, un `actions/NN-<slug>.md` pa
    - **Garde.** Un recouvrement de description avec un skill installé arrête la création : remonter le choix (fusionner, renommer, resserrer) au lieu d'ajouter un deuxième candidat sur la même phrase.
 3. **Choisir la forme.** Responsabilité unique et aucune connaissance à différer → mono-fichier, la méthode sous `## Process`. Plusieurs actions distinctes ou de la référence à charger à la demande → routeur plus `actions/`. Dans le doute, commencer mono-fichier.
 4. **Cadrer les actions**, si routeur. Découper le but en actions à responsabilité unique, une action valant une étape vérifiable. Numéroter seulement si l'ordre est strict.
-5. **Trancher le mode d'invocation.** Question explicite : ce skill écrit-il un fichier versionné, committe-t-il, pousse-t-il, supprime-t-il, ou envoie-t-il sur le réseau ?
+5. **Trancher le mode d'invocation.** Question explicite : ce skill a-t-il un effet de bord au sens de [R13](../references/skill-authoring-fr.md), ou son déclenchement au flair serait-il faux ?
    - **Garde.** Ce point se tranche **avant** d'écrire la description, jamais après : le mode change la forme de la description (R13), donc le décider ensuite oblige à la réécrire, et personne ne la réécrit.
 6. **Copier `skill-template.md`** et le remplir. Le gabarit porte la liste des sections, leur ordre et leur statut — ne rien inventer à côté, ne rien réordonner. Le flux mermaid en `TD` montre chaque chemin, branches et retours de boucle compris : une branche dite en prose est une branche manquante du flux.
 7. **Copier `action-template.md`** une fois par action, si routeur. Quatre sections, ni plus ni moins.

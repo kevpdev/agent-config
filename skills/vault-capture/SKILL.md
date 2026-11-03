@@ -4,7 +4,8 @@ description: >-
   Capture une note dans le vault Obsidian depuis une session HORS vault (CWD = repo de dev).
   Pont vers le skill canonique capture, avec résolution des chemins contre la racine absolue
   du vault. Utiliser quand l'utilisateur dit "note ça dans le vault", "capture cette idée",
-  "garde ça dans Obsidian" ou "mets ça dans l'inbox".
+  "garde ça dans Obsidian" ou "mets ça dans l'inbox". NE PAS utiliser quand la session tourne
+  dans le vault lui-même (→ capture, le skill du vault).
 argument-hint: "le contenu de la note à capturer, en clair"
 ---
 

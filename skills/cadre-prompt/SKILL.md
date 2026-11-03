@@ -108,10 +108,8 @@ flowchart TD
      dans l'inbox.
    - **`--chat` dans les arguments** → afficher le prompt seul, sans proposer la capture. Pour un
      petit prompt qu'on relance tout de suite.
-   - **Ce skill n'ouvre pas `vault-capture` lui-même, et la proposition n'est pas une politesse.**
-     *Pourquoi, tranché le 2026-08-27 : les deux skills sont à invocation manuelle, et un skill manuel
-     n'est ouvrable que par l'humain. La R13 de `skill-craft` porte la mesure. La délégation que cette
-     étape promettait ne pouvait donc pas avoir lieu.*
+   - **Ce skill n'ouvre pas `vault-capture` lui-même, il le propose.** *Pourquoi : garder un prompt
+     cadré est un choix de l'utilisateur, et beaucoup se relancent tout de suite sans mériter une note.*
 
 ## Transversal rules
 
