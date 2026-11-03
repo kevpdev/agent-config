@@ -8,6 +8,10 @@ La fiche complète derrière la section « CI GitHub » de `rules/aidd.md`. Jama
 
 Le ruleset n'exige qu'**un** check : la porte `ci`. Elle attend tous les autres jobs de son workflow et échoue si l'un d'eux n'a pas réussi. Le reste se découpe au grain de la stack.
 
+Le ruleset exige aussi une PR **à jour** de sa branche cible avant le merge (`strict_required_status_checks_policy: true`). Le `ci` qui autorise le merge a donc tourné sur le code qui sera fusionné.
+
+**POURQUOI**, constaté le 2026-11-02 sur #79 et #80, lancées en parallèle : sans `strict`, chaque PR merge avec un `ci` vert calculé sans l'autre. A renomme une fonction, B ajoute un appel à l'ancien nom, git fusionne sans conflit textuel et la branche casse. **Coût** : un « Update branch » et un `ci` de plus par PR en retard. `strict` ne remplace pas la relance des tests après une mise à jour, il la force.
+
 | Couche | Contenu |
 |---|---|
 | **Imposé partout** | la porte `ci`, Trivy dans le même workflow qu'elle, actions épinglées par SHA, permissions minimales, Dependabot |
@@ -101,10 +105,14 @@ La CI ne se limite pas à compiler et lancer les tests. Elle couvre quatre caté
 | Geste | Commande |
 |---|---|
 | Mesurer qu'un dépôt respecte le contrat | `python3 tools/check-ci-contract.py <dépôt>` |
-| Poser le ruleset (un seul contexte, `ci`, sur la branche par défaut et chaque `--branch`) | `bash tools/apply-ci-ruleset.sh <owner/repo> [--branch develop]... [--dry-run]` |
+| Poser le ruleset (un seul contexte, `ci`, PR à jour, sur la branche par défaut et chaque `--branch`) | `bash tools/apply-ci-ruleset.sh <owner/repo> [--branch develop]... [--dry-run]` |
+| Mesurer que le ruleset vivant respecte le contrat | `bash tools/apply-ci-ruleset.sh <owner/repo> [--branch develop]... --check` |
 | Calibrer le script de conformité | `python3 tools/tests/test-check-ci-contract.py` |
+| Calibrer la pose et la mesure du ruleset | `bash tools/tests/test-apply-ci-ruleset.sh` |
 
-Le script rend 0 si le dépôt est conforme, 1 s'il mesure un écart (une ligne par écart, `fichier:ligne`), 2 s'il ne peut pas conclure.
+`check-ci-contract.py` lit les fichiers et n'appelle pas GitHub. Il rend 0 si le dépôt est conforme, 1 s'il mesure un écart (une ligne par écart, `fichier:ligne`), 2 s'il ne peut pas conclure.
+
+`apply-ci-ruleset.sh --check` lit le ruleset par l'API et ne compare que les champs que le contrat pose. Il rend 0 si le ruleset est conforme, 1 s'il mesure un écart ou si le dépôt n'a pas de ruleset du contrat, 2 s'il ne peut pas lire le ruleset vivant. Il écrit une ligne par écart. Passer les mêmes `--branch` qu'à la pose, sinon une branche protégée en plus compte comme un écart.
 
 ## L'ordre pour passer à la porte
 

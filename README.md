@@ -431,13 +431,7 @@ bash tools/bench.sh opencode                # banc ~/.opencode-bench, ~/.config/
 
 ### Le contrat CI GitHub
 
-Une porte `ci`, seul check exigé par le ruleset, qui attend tous les jobs de son workflow, Trivy compris. Les autres jobs se découpent au grain de la stack. Actions épinglées par SHA, permissions minimales. Le contrat est dans [`rules/references/ref-ci-github.md`](rules/references/ref-ci-github.md), la règle qui y renvoie dans `rules/aidd.md`.
-
-```bash
-python3 tools/check-ci-contract.py <dépôt>             # mesure, 0 si conforme
-python3 tools/tests/test-check-ci-contract.py          # calibre le script
-bash tools/apply-ci-ruleset.sh OWNER/REPO [--dry-run]
-```
+Une porte `ci`, seul check exigé par le ruleset, qui attend tous les jobs de son workflow, Trivy compris. Les autres jobs se découpent au grain de la stack. Actions épinglées par SHA, permissions minimales. Le contrat est dans [`rules/references/ref-ci-github.md`](rules/references/ref-ci-github.md), la règle qui y renvoie dans `rules/aidd.md`. Les commandes qui mesurent le contrat et posent le ruleset sont dans la section « Mesurer et appliquer » de la fiche.
 
 ### La veille des plugins AIDD
 
