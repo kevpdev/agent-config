@@ -1,6 +1,11 @@
 [
   {
     "skill": "doc-sync",
+    "id": "positif-sync-readme",
+    "query": "J'ai mergé la refacto de l'import des factures, mets le README à jour avec ce qui a changé."
+  },
+  {
+    "skill": "doc-sync",
     "id": "negatif-vers-aidd-vcs-01-commit",
     "expect_trigger": false,
     "query": "J'ai fini la refacto du pipeline d'import et la memory est déjà à jour. Mets-moi tout ça dans un commit propre et pousse la branche."
