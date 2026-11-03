@@ -9,10 +9,10 @@ Le script est `~/.claude/scripts/worktree.sh` sous Claude Code et `~/.config/ope
 Le script choisit seul entre Orca et git, part d'`origin/<branche par défaut>` et rend le chemin du worktree en dernière ligne. Ses rangs et leurs raisons sont dans son en-tête (`tools/worktree.sh`).
 
 - **Pas de la branche en cours**, même depuis un autre worktree. Seule exception, le travail empilé que l'utilisateur demande.
-- **Après le merge**, supprimer le worktree et sa branche, locale et distante, avec `bash <dossier de config de l'agent>/scripts/worktree.sh remove <nom>`.
+- **Après le merge**, supprimer le worktree et sa branche, locale et distante, avec `bash <dossier de config de l'agent>/scripts/worktree.sh remove <nom>`. Dans le checkout que vise `~/.claude`, la bascule passe avant, voir la puce « Harnais dont `~/.claude` pointe vers le checkout ».
 - **La session principale orchestre** : rôles, borne et routage dans `rules/aidd.md`, section « Rôles et boucle de correction ».
 - **Un worktree n'est pas un projet** : `workspaces.md` ne s'applique pas à son dossier.
 - **Projet lourd à installer** (plusieurs minutes de dépendances ou de build, une base à lui) : un worktree seulement pour le parallèle.
-- **Harnais dont `~/.claude` pointe vers le checkout** : jamais de `git switch` ni de `git pull` dans ce checkout, voir le README d'`agent-config`.
+- **Harnais dont `~/.claude` pointe vers le checkout** : jamais de `git switch` ni de `git pull` dans ce checkout, voir le README d'`agent-config`. **À LA PLACE**, après le merge, lancer `bash tools/bascule.sh` depuis le worktree, puis seulement `worktree.sh remove <nom>`. Sans bascule, le checkout reste sur l'ancien `main`, et les sessions avec lui.
 
 **POURQUOI** : un `git switch` dans le checkout d'`agent-config` change les règles et les gardes de toutes les sessions ouvertes.
