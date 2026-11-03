@@ -1,6 +1,6 @@
 # Rédaction — support durable
 
-Delta du médium **support** : note, doc, README, rapport, commentaire de PR, message de commit. Ce qui sera relu, souvent par quelqu'un d'autre, souvent longtemps après. Le noyau est dans `style.md`, la voix dans `profil.md`, la ponctuation dans `ponctuation.md`.
+Delta du médium **support** : note, doc, README, rapport, commentaire de PR, message de commit. Ce qui sera relu, souvent par quelqu'un d'autre, souvent longtemps après.
 
 ## Ce que le support change par rapport à une réponse
 

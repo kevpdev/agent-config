@@ -59,3 +59,10 @@ Son exemple : `NEVER use ellipses` (moins efficace) → *« Your response will b
 **Pourquoi la structure ne le porte pas nativement** : la doc affirme que le format des skills est déjà connu du modèle — *« Claude models understand the Skill format and structure natively. You don't need […] a "writing skills" skill »*. Ce qui est natif est le **gabarit** ; la présence d'un bloc pourquoi dépend du contenu, pas du gabarit, donc aucun gabarit ne peut la décider.
 
 **Non vérifié, et ça reste un trou** : les skills livrés par le harnais ne sont pas sur le disque — le binaire ne contient que leurs noms (5 occurrences de `artifact-design`, zéro pour leur corps), leur texte est servi côté serveur. Leur structure réelle n'a donc pas pu être mesurée ; seuls les exemples de la doc l'ont été, et aucun ne porte de bloc pourquoi.
+
+## Listes fermées gardées dans les règles (issue #73)
+
+L'audit du 2026-11-03 a envisagé de remplacer deux listes de noms par des descriptions, au motif qu'une liste écrite à la main devient fausse au premier renommage. Elles restent, pour deux raisons.
+
+- **Les 7 règles de `autorite-des-conventions.md`** (« Ce que l'inversion ne touche pas ») forment un périmètre fermé. Une description comme « les règles de travail et de style » laisserait flou si `aidd.md` ou `commit-convention.md` en font partie.
+- **Les 3 actions AIDD citées dans `reasoning.md`** (`04-audit/02-architecture`, `03-assert/02-assert-architecture`, `07-refactor/04-architecture`) existent toutes dans la version installée, vérifié le 2026-11-03 dans `~/.claude/plugins/marketplaces/aidd-framework/plugins/aidd-dev/skills/`.

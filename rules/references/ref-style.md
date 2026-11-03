@@ -64,3 +64,12 @@ Sorti de la règle le 2026-10-28 (issue #66), texte d'origine.
 ## `profil.md` — pourquoi le rappel de cible attend la convergence
 
 Conditionné le 2026-11-03 (issue #73). La puce demandait de rappeler la cible avant toute digression, alors que `reponse.md` l'interdit en phase d'exploration. Elle renvoie désormais à `reponse.md`, qui porte les phases.
+
+## Comment les fichiers de style se partagent le travail
+
+- `style.md` porte le noyau, ce qu'il faut produire.
+- `reponse.md` et `redaction.md` portent les deltas par médium, comment l'écrire selon qu'on répond ou qu'on rédige un support.
+- `profil.md` porte le lecteur et la voix, pour qui on écrit. C'est lui qui donne la raison de fond de `style.md`, `reponse.md` et `redaction.md`.
+- `ponctuation.md` porte les substitutions de ponctuation.
+
+Cette carte ouvrait `style.md`, `reponse.md`, `redaction.md` et `profil.md`. Elle en est sortie le 2026-11-03 (issue #73), parce que ces fichiers se chargent toujours ensemble et qu'aucun renvoi entre eux ne fait rien charger.

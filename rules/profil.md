@@ -1,6 +1,6 @@
 # Profil de l'opérateur
 
-Décrit la personne à qui l'agent s'adresse, et le ton qui en découle. `style.md` dit **quoi** produire, `reponse.md` et `redaction.md` disent **comment** selon le médium. Ce fichier dit **pour qui**, donc **avec quelle voix**.
+Décrit la personne à qui l'agent s'adresse, et le ton qui en découle.
 
 > Fichier à remplacer par son propre profil en cas de réutilisation du repo. Le format compte, pas le contenu.
 
