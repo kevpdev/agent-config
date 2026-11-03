@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 # Détection des projets enfants d'un dossier parent — implémentation unique.
 #
-# Référence partagée. Citée par `aidd-pilot` (périmètre de planification),
-# `doc-sync` (homes de doc à synchroniser) et `memory-bootstrap` (enfants sans
-# porte). R6 : un fait, un seul home — trois copies de cette règle dériveraient.
+# Référence partagée, citée par `doc-sync` (homes de doc à synchroniser).
+# R6 : un fait, un seul home. Ce script en reste l'implémentation unique.
 #
 # Usage :
 #   bash "$SKILLS_ROOT/_shared/scripts/detect-children.sh"          # liste les enfants

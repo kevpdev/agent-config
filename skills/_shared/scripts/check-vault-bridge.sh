@@ -9,7 +9,7 @@
 # absent, aucune cible trouvée) rend un code non nul. Un pont sans cible détectable est un
 # échec, pas un succès — sinon le contrôle ne surveillerait que les ponts déjà bien écrits.
 #
-# Usage : check-vault-bridge.sh <nom-du-skill>   (ex. vault-load)
+# Usage : check-vault-bridge.sh <nom-du-skill>   (ex. vault-save)
 
 set -uo pipefail
 

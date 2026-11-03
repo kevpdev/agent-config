@@ -16,11 +16,5 @@
     "id": "negatif-vers-ai-engineering",
     "expect_trigger": false,
     "query": "Ma sortie LLM est instable d'un prompt à l'autre, comment je mets en place une régression de prompt sur mon app ?"
-  },
-  {
-    "skill": "cadre-prompt",
-    "id": "negatif-vers-vault-recap-raisonnement",
-    "expect_trigger": false,
-    "query": "Je perds le fil de notre échange, fais-moi un snapshot visuel de où on en est."
   }
 ]

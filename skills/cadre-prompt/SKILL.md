@@ -7,9 +7,8 @@ description: >-
   immédiatement, trous comblés par des hypothèses marquées, une question au maximum, puis propose de
   le poser dans l'inbox du vault par "/vault-capture". S'appelle par "/cadre-prompt" en tête de
   message, l'ébauche à la suite. "--chat" rend le prompt seul, sans proposer la capture. NE PAS utiliser
-  pour dérouler le développement depuis une note de cadrage (→ aidd-orchestrator:01-sdlc), pour fiabiliser une
-  application qui appelle un LLM et mesurer une régression de prompt (→ ai-engineering), ni pour un
-  snapshot visuel de l'avancement destiné à l'humain (→ vault-recap-raisonnement).
+  pour dérouler le développement depuis une note de cadrage (→ aidd-orchestrator:01-sdlc), ni pour fiabiliser une
+  application qui appelle un LLM et mesurer une régression de prompt (→ ai-engineering).
 argument-hint: <l'ébauche à cadrer> [--chat]
 disable-model-invocation: true
 ---
