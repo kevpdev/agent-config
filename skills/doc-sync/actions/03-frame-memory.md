@@ -8,7 +8,7 @@ Les lignes de régime mémoire AIDD de `scope.md`, et le banc de mémoire à son
 
 ## Output
 
-Un plan de mémoire montré à l'humain, une ligne par candidat : le fait, le fichier qui le rend inférable ou « aucun », le verdict, et sa réconciliation.
+Un plan de mémoire, une ligne par candidat : le fait, le fichier qui le rend inférable ou « aucun », le verdict, et sa réconciliation. L'humain l'accepte avant `deliver-memory`.
 
 ## Process
 

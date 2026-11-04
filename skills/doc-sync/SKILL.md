@@ -25,7 +25,7 @@ flowchart TD
   check -->|borne atteinte| ferme([échec fermé, état rendu])
   check -->|banc conforme| sync[sync-doc]
   regime -->|reflet| sync
-  sync --> commit([commit proposé par repo])
+  sync --> commit([commit par repo, selon aidd.md])
 ```
 
 ## Actions
@@ -39,14 +39,14 @@ Dérouler le flux. Ne lire que la prochaine action.
 | frame-memory | décide ce qui mérite d'exister en mémoire, sans rien écrire |
 | deliver-memory | écrit le plan cadré, par `/10-learn` ou en édition directe |
 | check-memory | fait juger la mémoire par un checker neuf et route ses constats |
-| sync-doc | réécrit les documents reflet selon leur type, après validation |
+| sync-doc | réécrit les documents reflet selon leur type, et rend chaque edit |
 | reconcile | compare un document de décision au code et signale l'écart |
 
 ## Transversal rules
 
 - **La doc ne couvre que le validé.** Le scope est un range de commits, jamais le working tree, sauf opt-in explicite et averti.
 - **L'artefact de scope porte l'état d'une action à l'autre** : `$(git rev-parse --git-dir)/doc-sync/scope.md`, hors de l'arbre versionné. Chaque action le lit et le complète au lieu de compter sur le contexte.
-- **Rien ne s'écrit sans validation, document par document.** Le commit est proposé, jamais lancé sans accord.
+- **Un edit ciblé d'un document reflet s'applique sans validation préalable, et chacun se rend dans le compte rendu**, document par document. La mémoire AIDD garde sa validation (`frame-memory`). Le commit suit la section « Git sur une branche de travail » de `rules/aidd.md`. *Pourquoi : les edits vivent sur une branche `docs/` et se relisent dans le diff. Les valider avant de les écrire les faisait relire deux fois.*
 - **Un document de régime décision ne s'écrit jamais ici.** Il passe par `reconcile`, qui signale.
 - **Un sous-agent reçoit son instrument dans son prompt.** Une question de symbole (classe, appelants) va à l'outil de symboles du projet, une question de texte (SQL, clé de config, URL, CI) va à `grep`. Un zéro d'un outil de graphe se calibre sur un symbole connu avant de se lire comme une absence. *Pourquoi : le harnais ne transmet au sous-agent que les noms des outils MCP, pas leurs descriptions (vérifié le 2026-08-27).*
 
