@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -72,16 +73,77 @@ verifier("heredoc imbriqué", REFUS, "bash_tooling",
          command="bash -lc 'cat >> f << EOF\ncontenu\nEOF'")
 
 print("=== no_remote_write ===")
-verifier("écriture via ssh sur prod", REFUS, "no_remote_write",
-         command="ssh winggyprod docker compose down")
-verifier("lecture via ssh sur prod", PASSE, "no_remote_write",
-         command="ssh winggyprod docker ps")
-verifier("session ssh interactive sur prod", REFUS, "no_remote_write",
-         command="ssh winggyprod")
-verifier("upload scp vers preprod", REFUS, "no_remote_write",
-         command="scp f.txt winggypreprod:/tmp/")
+# Hôtes déclarés et config ssh temporaires : la batterie ne nomme aucun serveur réel.
+NRW = tempfile.mkdtemp()
+with open(os.path.join(NRW, "hosts"), "w") as fh:
+    fh.write("# hôtes protégés\nprotege-test\n")
+with open(os.path.join(NRW, "ssh_config"), "w") as fh:
+    fh.write("Host protege-test\n  HostName 203.0.113.7\nHost alias-bis\n  HostName 203.0.113.7\n")
+os.environ["AGENT_CONFIG_PROTECTED_HOSTS"] = os.path.join(NRW, "hosts")
+os.environ["AGENT_CONFIG_SSH_CONFIG"] = os.path.join(NRW, "ssh_config")
+verifier("écriture via ssh sur un hôte déclaré", REFUS, "no_remote_write",
+         command="ssh protege-test docker compose down")
+verifier("lecture via ssh sur un hôte déclaré", PASSE, "no_remote_write",
+         command="ssh protege-test docker ps")
+verifier("session ssh interactive sur un hôte déclaré", REFUS, "no_remote_write",
+         command="ssh protege-test")
+verifier("upload scp vers un hôte déclaré", REFUS, "no_remote_write",
+         command="scp f.txt protege-test:/tmp/")
+verifier("autre alias vers la même IP", REFUS, "no_remote_write",
+         command="ssh alias-bis rm -rf /srv")
+verifier("écriture ssh vers un hôte non déclaré", PASSE, "no_remote_write",
+         command="ssh bac-a-sable docker compose down")
+verifier("curl POST vers l'API d'un hôte déclaré", REFUS, "no_remote_write",
+         command="curl -X POST http://203.0.113.7:8080/api/orders -d '{}'")
+verifier("curl GET vers l'API d'un hôte déclaré", PASSE, "no_remote_write",
+         command="curl http://203.0.113.7:8080/api/orders")
+for nom, commande in [
+    ("curl --json", "curl --json '{}' http://203.0.113.7/x"),
+    ("curl -XPOST collé", "curl -XPOST http://203.0.113.7/x"),
+    ("curl options groupées -sd", "curl -sd '{}' http://203.0.113.7/x"),
+    ("curl sans schéma", "curl -X POST 203.0.113.7/x -d 1"),
+    ("sudo curl -X DELETE", "sudo curl -X DELETE http://203.0.113.7/x"),
+    ("wget --post-data", "wget --post-data=a=1 http://203.0.113.7/x"),
+]:
+    verifier(nom + " vers un hôte déclaré", REFUS, "no_remote_write", command=commande)
+verifier("curl -X GET vers un hôte déclaré", PASSE, "no_remote_write",
+         command="curl -X GET http://203.0.113.7/x")
+verifier("curl POST local", PASSE, "no_remote_write",
+         command="curl -X POST http://localhost:8080/api/orders -d '{}'")
+verifier("git push hors périmètre, écrit dans l'en-tête", PASSE, "no_remote_write",
+         command="git push protege-test:repo main")
 verifier("edit d'un chemin local", PASSE, "no_remote_write", action="edit",
          paths=["/tmp/x.txt"])
+os.environ["AGENT_CONFIG_PROTECTED_HOSTS"] = os.path.join(NRW, "absent")
+verifier("sans liste déclarée, rien n'est protégé", PASSE, "no_remote_write",
+         command="ssh protege-test docker compose down")
+
+
+def statut(hotes):
+    with open(os.path.join(NRW, "hosts"), "w") as fh:
+        fh.write(hotes)
+    os.environ["AGENT_CONFIG_PROTECTED_HOSTS"] = os.path.join(NRW, "hosts")
+    return subprocess.run([sys.executable, os.path.join(REPO, "hooks", "no_remote_write.py"),
+                           "--status"], capture_output=True, text=True).stdout
+
+
+def verifier_statut(nom, hotes, attendu):
+    global echecs
+    sortie = statut(hotes)
+    if attendu in sortie:
+        print(f"  OK    {nom:<58} statut")
+    else:
+        print(f"  ECHEC {nom:<58} sortie={sortie!r}")
+        echecs += 1
+
+
+verifier_statut("liste vide signalée", "", "aucune cible déclarée")
+verifier_statut("alias sans Host ssh signalé", "protege-test\nfantome\n",
+                "1 sur 2 cibles ne résolvent vers aucun HostName ssh (fantome)")
+verifier_statut("liste vivante", "protege-test\n", "1 cible(s) vivante(s)")
+for var in ("AGENT_CONFIG_PROTECTED_HOSTS", "AGENT_CONFIG_SSH_CONFIG"):
+    del os.environ[var]
+shutil.rmtree(NRW)
 
 print("=== no_secret_read ===")
 with tempfile.TemporaryDirectory() as projet:

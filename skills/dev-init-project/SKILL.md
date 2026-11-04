@@ -63,7 +63,7 @@ flowchart TD
 ## Transversal rules
 
 - **L'`AGENTS.md` du projet n'a qu'un écrivain** : ce skill. `aidd-context:02-project-memory` possède `aidd_docs/memory/` et n'y touche pas.
-- **Aucun geste réseau.** Ni création de dépôt distant, ni push. Rien ne les garde : mesuré le 2026-11-04, `hooks/no_remote_write.py` laisse passer `gh repo create` et `git push` vers GitHub, il ne couvre que les serveurs preprod et prod. La règle tient à l'instruction du skill seule.
+- **Aucun geste réseau.** Ni création de dépôt distant, ni push. Rien ne les garde : mesuré le 2026-11-04, `hooks/no_remote_write.py` laisse passer `gh repo create` et `git push` vers GitHub, il ne couvre que les hôtes protégés déclarés. La règle tient à l'instruction du skill seule.
 - **Son effet de bord est local et assumé.** Le skill écrit hors de tout dépôt git, mais seulement des dossiers et des fichiers neufs, que leur suppression rattrape. Ce n'est pas un effet de bord au sens de R13, donc il se déclenche au flair.
 - **Aucune stack supposée.** La convention propre à Java, Node ou Python se lit dans `agent-config/rules/`, jamais de mémoire.
 - **Ce qui n'est pas inférable se demande, jamais ne se devine.** Un port, une bibliothèque de test, une licence : une question, pas une valeur par défaut silencieuse.

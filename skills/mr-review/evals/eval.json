@@ -2,7 +2,7 @@
   {
     "skill": "mr-review",
     "id": "positif-revue-d-une-mr-nommee",
-    "query": "Fais la revue de la MR !449 du projet audit de Winggy V3, il est dans /home/kevin/projects/Winggy-v3/backend/audit."
+    "query": "Fais la revue de la MR !449 du projet audit d'Acme V3, il est dans /home/dev/projects/acme-v3/backend/audit."
   },
   {
     "skill": "mr-review",

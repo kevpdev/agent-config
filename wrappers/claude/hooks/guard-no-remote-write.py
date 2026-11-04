@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""guard-no-remote-write.py — PreToolUse hook for Claude Code: agent writes to preprod and prod.
+"""guard-no-remote-write.py — PreToolUse hook for Claude Code: agent writes to the declared protected hosts.
 
 Shim. The decision lives in hooks/no_remote_write.py, the translation in claude_adapter.py.
 """

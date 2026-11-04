@@ -159,5 +159,7 @@ pendants="$(find "$CLAUDE" "$OPENCODE" -xtype l -lname "$REPO/*" 2>/dev/null)"
 [ -z "$pendants" ] || echec "liens pendants :
 $pendants"
 
+statut_garde="$(python3 "$REPO/hooks/no_remote_write.py" --status 2>&1)" || statut_garde="no_remote_write : statut illisible ($statut_garde)."
+echo "  $statut_garde"
 echo "✓ bascule faite : $REPO sur $(git -C "$REPO" rev-parse --short HEAD), 0 écart sur $CLAUDE et $OPENCODE."
 echo "  Retour : $RETOUR_CMD"

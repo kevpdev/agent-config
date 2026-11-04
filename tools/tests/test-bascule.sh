@@ -53,6 +53,7 @@ printf '# opencode\nexport PATH=/opt/opencode/bin:$PATH\n' > "$Z"
 
 liens() { find "$1" -type l -printf '%p -> %l\n' 2>/dev/null | grep -F -- " -> $REPO/" | sort; }
 empreinte() { if [ -e "$1" ]; then sha256sum < "$1" | cut -d' ' -f1; else echo absent; fi; }
+export AGENT_CONFIG_PROTECTED_HOSTS="$T/protected-hosts"   # jamais la vraie liste
 lancer() { bash "$BASCULE" --repo "$REPO" --claude "$C" --opencode "$O" --zshrc "$Z" --etat "$E" "$@" >"$T/sortie" 2>&1; }
 check() { (cd "$REPO" && python3 tools/install.py --agent "$1" --target "$2" --check >/dev/null 2>&1); echo $?; }
 
@@ -74,6 +75,7 @@ rm -f "$REPO/sale"
 lancer; rc=$?
 [ "$rc" -eq 0 ] || sed 's/^/        /' "$T/sortie"
 cas "bascule : code 0" "$rc" 0
+cas "bascule : le statut du garde distant est affiché" "$(grep -c 'no_remote_write :' "$T/sortie")" 1
 cas "bascule : main a avancé sur le commit testé" "$(git -C "$REPO" rev-parse HEAD)" "$(git -C "$ICI" rev-parse HEAD)"
 cas "bascule : 0 écart sur les deux cibles" "$(check claude "$C") $(check opencode "$O")" "0 0"
 cas "bascule : aucun lien ne pend" "$(find "$C" "$O" -xtype l | wc -l)" 0
