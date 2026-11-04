@@ -66,7 +66,7 @@ Le fichier du rang 3 se crée au premier fait projet, pas d'avance. **Dans le va
 - **Pendant un run AIDD** (`aidd-orchestrator:01-sdlc`, `/aidd-dev:*`) : à chaque étape, même si le repo écrit « never » (`vcs.md`, `CLAUDE.md`). Lancer le skill vaut accord sur le run.
 - **Hors run** : une fois le travail validé (tests verts ou checker « prêt »). Un « never » du repo garde sa question.
 
-**HORS PÉRIMÈTRE** : tout geste sur la branche par défaut ou celle d'un autre, merge, force-push, tag.
+**Les autres gestes git** (merge, force-push, tag, branche par défaut ou d'autrui) ne sont pas réglés ici : `intention.md` dit quand ils se font sans question et quand ils gardent la leur.
 
 **POURQUOI hors run (issue #90)** : un « oui » nu à 54 % des questions push ou PR draft et 36 % des questions commit. Aucune autre réponse push ou PR draft ne refusait le geste.
 
