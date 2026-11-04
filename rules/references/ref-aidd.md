@@ -70,3 +70,9 @@ Jusqu'au 2026-11-03, commit, push et PR draft n'étaient permis sans question qu
 - **Lecture des 16 autres réponses push ou PR draft**, toutes lues : aucune ne refuse le geste. Deux demandent ce que la PR apporte, les autres portent sur le contenu ou sur un autre sujet.
 - **Limite** : un « oui » nu ne prouve pas que la question était inutile. Le push sur la branche par défaut et le merge gardent leur question, quel que soit leur taux (50 % et 37 %).
 - **Le « never » d'un repo** reste levé pendant un run seulement : la mesure dit qu'une question est redondante, pas qu'une consigne du repo peut être ignorée.
+
+## Gestes git hors commit, push et PR draft — renvoyés à `intention.md` (issue #90, 2026-11-04)
+
+Jusqu'au 2026-11-04, la section se terminait sur « HORS PÉRIMÈTRE : tout geste sur la branche par défaut ou celle d'un autre, merge, force-push, tag ». Lue à la lettre, cette liste voulait dire « ces gestes gardent leur question ». Elle doublait `intention.md`. Elle la contredisait aussi. À « mergée, lance la bascule », elle a fait demander si la #91 devait être mergée.
+
+La section ne règle plus que commit, push et PR draft. Les autres gestes suivent `intention.md`. La « Limite » de la mesure ci-dessus date d'avant ce renvoi.
