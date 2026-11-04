@@ -36,7 +36,7 @@ L'appel manuel ne borne rien une fois le skill ouvert : il bloque le déclenchem
 ## Les cas qui fondent la doctrine (2026-11-04, issue #90, proposition 5)
 
 - **Un skill de création de projet (#93) livré en appel manuel.** Il ne partait donc pas sur « je veux créer un projet ». La raison invoquée était R13, appliquée à un `mkdir`, alors que supprimer un dossier neuf rattrape l'effet.
-- **Un garde supposé.** Le même skill affirmait que `hooks/no_remote_write.py` gardait `gh repo create` et `git push`. Mesuré par `hooks/check.py --guard no_remote_write`, les deux passent avec un code retour 0. Dans la même mesure, `ssh winggyprod docker compose down` est refusé : ce garde vise les serveurs distants déclarés, pas les dépôts, et sa liste ne vise plus aucune cible active (réparation suivie à part).
+- **Un garde supposé.** Le même skill affirmait que `hooks/no_remote_write.py` gardait `gh repo create` et `git push`. Mesuré par `hooks/check.py --guard no_remote_write`, les deux passent avec un code retour 0. Dans la même mesure, un `docker compose down` par ssh vers un alias de la liste est refusé : ce garde vise les serveurs distants déclarés, pas les dépôts. Sa liste, écrite dans le code, ne visait plus aucune cible active. #98 l'a sortie vers `~/.config/agent-config/protected-hosts`, et la bascule signale désormais une liste vide ou morte.
 - **Le défaut commun** : une porte posée sur l'intention au lieu de l'acte. La première bloque l'usage légitime. La seconde rassure sans rien couvrir.
 
 ## Signal de révision

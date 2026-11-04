@@ -47,7 +47,7 @@ Donc : rester dans le clone, ou passer `GITLAB_HOST=<hôte>` dans l'environnemen
 | La liste des commits | `glab api "projects/<chemin-urlencodé>/merge_requests/<iid>/commits"` |
 | La liste des fichiers touchés | `glab api "projects/<chemin-urlencodé>/merge_requests/<iid>/changes"` |
 
-Le chemin de projet s'encode : `winggy/v3/audit` → `winggy%2Fv3%2Faudit`.
+Le chemin de projet s'encode : `acme/v3/audit` → `acme%2Fv3%2Faudit`.
 
 ## La base du diff se LIT, elle ne se dérive pas
 

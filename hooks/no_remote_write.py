@@ -1,6 +1,15 @@
 """no_remote_write — guard core, agent-neutral (contract in hooks/check.py).
 
-Blocks agent-initiated WRITES to the protected remote servers (preprod, prod).
+Blocks agent-initiated WRITES to the protected remote hosts.
+
+Which hosts are protected is DECLARED, never guessed: one ssh alias per line in
+~/.config/agent-config/protected-hosts (XDG_CONFIG_HOME honoured, overridden by
+AGENT_CONFIG_PROTECTED_HOSTS). A host is protected because it is listed there,
+never because it looks like a prod. No file or an empty one means nothing is
+protected, and `python3 hooks/no_remote_write.py --status` says so. tools/bascule.sh
+prints that status after every switch, because a dead list reads like a protection.
+The signal shows at the next switch, not at the moment a list dies (an edit of
+~/.ssh/config between two switches stays silent until then).
 Reads stay allowed: losing diagnosis ability would make the guard so annoying
 it would get disabled, and a disabled guard protects less than a narrow one.
 
@@ -9,7 +18,10 @@ String inspection of a shell command can always be defeated (`bash -lc "$V"`,
 base64, ...). This is a seatbelt against the accidental `docker compose down`
 on prod, not a sandbox.
 
-Two axes, because either one alone leaves a hole:
+Out of scope, on purpose: `git push` to a protected host (no deploy goes through
+git today) and `gh repo create` (GitHub is not a protected host).
+
+Three axes, because any one alone leaves a hole:
 
   1. COMMAND axis — ssh / scp / sftp / rsync / ansible / docker -H / DOCKER_HOST.
      Host tokens are resolved through `ssh -G`, so an alias added to
@@ -18,8 +30,15 @@ Two axes, because either one alone leaves a hole:
 
   2. PATH axis — a gvfs or sshfs mount turns the remote host into an ordinary
      local path. Writing to
-       /run/user/1000/gvfs/sftp:host=winggyprod/home/betterfly/docker-compose.yml
+       /run/user/1000/gvfs/sftp:host=vps/home/deploy/docker-compose.yml
      mentions no ssh, no hostname, no IP. A command-only guard sees nothing.
+
+  3. HTTP axis — a local `curl` or `wget` whose URL names a protected host and
+     carries a body or a verb other than GET/HEAD/OPTIONS writes to that host's API
+     without any ssh. The URL host is matched as typed: an API domain that differs
+     from the ssh HostName must be listed in protected-hosts as well. Not seen:
+     other HTTP clients (httpie, python requests), a URL built in a variable, and
+     a bracketed IPv6 host.
 
 Classification is an ALLOWLIST of read-only commands, not a denylist of
 dangerous ones: a denylist is open by construction (every unlisted binary
@@ -32,10 +51,27 @@ import re
 import shlex
 import subprocess
 
-# Aliases whose write access is denied to the agent. labs/dev stay writable on
-# purpose — that is the sandbox, and blocking it would create the friction that
-# gets guards switched off.
-PROTECTED_ALIASES = ["winggypreprod", "winggyprod"]
+# Hosts left out of the list stay writable on purpose: a sandbox server must stay
+# usable, and blocking it would create the friction that gets guards switched off.
+
+
+def hosts_file() -> str:
+    explicit = os.environ.get("AGENT_CONFIG_PROTECTED_HOSTS")
+    if explicit:
+        return explicit
+    base = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
+    return os.path.join(base, "agent-config", "protected-hosts")
+
+
+@functools.cache
+def protected_aliases() -> tuple:
+    """Declared aliases, one per line, `#` starts a comment. Unreadable means none."""
+    try:
+        with open(hosts_file(), encoding="utf-8") as fh:
+            lines = [line.split("#", 1)[0].strip() for line in fh]
+    except OSError:
+        return ()
+    return tuple(line for line in lines if line)
 
 # Commands that only read. Anything absent from this list is treated as a write.
 READONLY = {
@@ -64,10 +100,62 @@ READONLY_SUB = {
 # `docker compose <sub>` (space form) reuses the docker-compose allowlist.
 COMPOSE_READONLY = READONLY_SUB["docker-compose"]
 
-# curl mutates as soon as it carries a body or a non-GET verb.
-CURL_WRITE_FLAGS = re.compile(
-    r"(^|\s)(-X|--request|-d|--data\b|--data-\S+|-T|--upload-file|-F|--form)(\s|=|$)"
-)
+# curl and wget mutate as soon as they carry a body or a verb other than GET/HEAD.
+READ_VERBS = {"GET", "HEAD", "OPTIONS"}
+CURL_BODY_LONG = ("--json", "--data", "--form", "--upload-file")
+# Short options that take a value: letters after them are the value, not flags.
+CURL_VALUE_SHORT = set("oDHuwAebcEKmrxyYzCPQUt")
+WGET_WRITE_LONG = ("--post-data", "--post-file", "--body-data", "--body-file")
+
+
+def strip_wrappers(toks: list) -> list:
+    """Drop env-var prefixes (FOO=bar cmd) and sudo/nice/... wrappers."""
+    toks = list(toks)
+    while toks and re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", toks[0]):
+        toks.pop(0)
+    while toks and toks[0] in ("sudo", "nice", "nohup", "time", "env"):
+        toks.pop(0)
+        if toks and toks[0] == "-u":
+            toks = toks[2:]
+    return toks
+
+
+def http_writes(toks: list) -> bool:
+    """True when a curl or wget invocation sends a body or a non-read verb."""
+    binary = os.path.basename(toks[0]) if toks else ""
+    args = toks[1:]
+    if binary == "wget":
+        for i, a in enumerate(args):
+            if a.startswith(WGET_WRITE_LONG):
+                return True
+            if a.startswith("--method"):
+                verb = a.split("=", 1)[1] if "=" in a else (args[i + 1] if i + 1 < len(args) else "")
+                if verb.upper() not in READ_VERBS:
+                    return True
+        return False
+    if binary != "curl":
+        return False
+    for i, a in enumerate(args):
+        if a.startswith(CURL_BODY_LONG):
+            return True
+        if a == "--request" or a.startswith("--request="):
+            verb = a.split("=", 1)[1] if "=" in a else (args[i + 1] if i + 1 < len(args) else "")
+            if verb.upper() not in READ_VERBS:
+                return True
+        elif a.startswith("-") and not a.startswith("--"):
+            flags = a[1:]
+            for k, c in enumerate(flags):
+                if c in "dFT":
+                    return True
+                if c in CURL_VALUE_SHORT:
+                    break  # the rest of the token is this option's value
+                if c == "X":
+                    verb = flags[k + 1:] or (args[i + 1] if i + 1 < len(args) else "")
+                    if verb.upper() not in READ_VERBS:
+                        return True
+                    break
+    return False
+
 
 # Redirections and stream writers, whatever the binary in front of them.
 WRITE_SHELL = re.compile(r"(>>?|\btee\b|\bdd\b)")
@@ -77,7 +165,7 @@ def hostpart(token: str) -> str:
     """Extract the bare host from any target form.
 
     Handles alias, user@host, host:/path, and URL forms such as
-    ssh://betterfly@winggyprod — DOCKER_HOST uses the last one, and a naive
+    ssh://deploy@vps — DOCKER_HOST uses the last one, and a naive
     split on ':' would return "ssh" and silently miss the protected server.
     """
     t = re.sub(r"^[A-Za-z][A-Za-z0-9+.-]*://", "", token.strip())
@@ -97,9 +185,11 @@ def resolve(token: str) -> str:
     if not host:
         return ""
     try:
-        out = subprocess.run(
-            ["ssh", "-G", host], capture_output=True, text=True, timeout=5
-        ).stdout
+        cmd = ["ssh", "-G", host]
+        ssh_config = os.environ.get("AGENT_CONFIG_SSH_CONFIG")
+        if ssh_config:
+            cmd[1:1] = ["-F", ssh_config]
+        out = subprocess.run(cmd, capture_output=True, text=True, timeout=5).stdout
     except (OSError, subprocess.SubprocessError):
         return host
     for line in out.splitlines():
@@ -116,8 +206,8 @@ def protected_targets():
     for every call, and two `ssh -G` per shell command would be paid even by
     a command that names no host at all.
     """
-    names = set(PROTECTED_ALIASES)
-    for alias in PROTECTED_ALIASES:
+    names = set(protected_aliases())
+    for alias in protected_aliases():
         r = resolve(alias)
         if r:
             names.add(r)
@@ -128,7 +218,9 @@ def is_protected(token: str) -> bool:
     if not token:
         return False
     host = hostpart(token)
-    if host in PROTECTED_ALIASES:
+    if not protected_aliases():
+        return False
+    if host in protected_aliases():
         return True
     protected = protected_targets()
     if host in protected:
@@ -188,14 +280,7 @@ def classify(cmd: str):
             toks = shlex.split(part)
         except ValueError:
             return part.strip()
-        # Drop env-var prefixes (FOO=bar cmd) and sudo/nice wrappers.
-        while toks and ("=" in toks[0].split(" ")[0] and not toks[0].startswith("-")
-                        and re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", toks[0])):
-            toks.pop(0)
-        while toks and toks[0] in ("sudo", "nice", "nohup", "time", "env"):
-            toks.pop(0)
-            if toks and toks[0] == "-u":
-                toks = toks[2:]
+        toks = strip_wrappers(toks)
         if not toks:
             continue
 
@@ -203,8 +288,8 @@ def classify(cmd: str):
         args = [t for t in toks[1:] if t]
         sub = next((a for a in args if not a.startswith("-")), None)
 
-        if binary == "curl":
-            if CURL_WRITE_FLAGS.search(part):
+        if binary in ("curl", "wget"):
+            if http_writes(toks):
                 return part.strip()
             continue
         if binary == "nginx":
@@ -245,7 +330,7 @@ def check_bash(cmd: str):
                 block(
                     "Blocked: this writes to a PROTECTED remote server through the "
                     "mount %s (gvfs/sshfs makes a remote write look local). "
-                    "Offending part: %s. Reads are allowed; a write to preprod/prod "
+                    "Offending part: %s. Reads are allowed; a write to a protected host "
                     "must be done by the human." % (prefix, offending)
                 )
 
@@ -288,7 +373,7 @@ def check_bash(cmd: str):
                         "Blocked: write command on PROTECTED server %s. Offending "
                         "part: %s. Reads (cat, ls, docker ps, docker compose "
                         "config, journalctl, git log...) are allowed; writes to "
-                        "preprod/prod must be done by the human." % (host, offending)
+                        "a protected host must be done by the human." % (host, offending)
                     )
 
         elif binary in ("scp", "rsync"):
@@ -328,6 +413,25 @@ def check_bash(cmd: str):
                         "Offending part: %s." % (toks[k + 1], offending)
                     )
 
+    # --- HTTP axis: a local curl that writes to a protected host's API ---
+    for part in split_pipeline(cmd):
+        try:
+            ptoks = shlex.split(part)
+        except ValueError:
+            continue
+        ptoks = strip_wrappers(ptoks)
+        if not http_writes(ptoks):
+            continue
+        for target in ptoks[1:]:
+            if target.startswith("-") or not re.match(r"^(https?://)?([^@/\s]+@)?[\w.-]+(:\d+)?(/|$)", target):
+                continue
+            if is_protected(target):
+                block(
+                    "Blocked: %s writes to the API of PROTECTED host %s (body or "
+                    "non-read verb). Reads stay allowed, a write must be done by "
+                    "the human." % (os.path.basename(ptoks[0]), hostpart(target))
+                )
+
     m = re.search(r"DOCKER_HOST=([^\s;|&]+)", cmd)
     if m and is_protected(m.group(1)):
         offending = classify(cmd)
@@ -346,7 +450,7 @@ def check_path(path: str, tool: str):
         if real.startswith(prefix):
             block(
                 "Blocked: %s targets %s, which is the PROTECTED remote server mounted "
-                "at %s. Editing a mounted path writes straight to preprod/prod — that "
+                "at %s. Editing a mounted path writes straight to a protected host — that "
                 "is the human's call, not the agent's." % (tool, real, prefix)
             )
 
@@ -363,3 +467,30 @@ def decide(event: dict):
     except Refused as refusal:
         return str(refusal)
     return None
+
+
+def status() -> str:
+    """One line saying whether the declared list still protects a live host.
+
+    An alias is live when ssh resolves it to something else than its own name,
+    i.e. a Host entry gives it a HostName. An entry with a dot (IP or API domain)
+    counts as live without any check.
+    """
+    aliases = protected_aliases()
+    if not aliases:
+        return ("no_remote_write : aucune cible déclarée dans %s, le garde ne protège rien."
+                % hosts_file())
+    dead = [a for a in aliases if "." not in a and resolve(a) == a]
+    if dead:
+        return ("no_remote_write : %d sur %d cibles ne résolvent vers aucun HostName ssh (%s), "
+                "elles ne protègent rien." % (len(dead), len(aliases), ", ".join(dead)))
+    return "no_remote_write : %d cible(s) vivante(s) (%s)." % (len(aliases), ", ".join(aliases))
+
+
+if __name__ == "__main__":
+    import sys
+
+    if sys.argv[1:] != ["--status"]:
+        print("usage: no_remote_write.py --status", file=sys.stderr)
+        sys.exit(1)
+    print(status())
