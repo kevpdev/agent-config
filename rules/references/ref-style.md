@@ -65,6 +65,14 @@ Sorti de la règle le 2026-10-28 (issue #66), texte d'origine.
 
 Conditionné le 2026-11-03 (issue #73). La puce demandait de rappeler la cible avant toute digression, alors que `reponse.md` l'interdit en phase d'exploration. Elle renvoie désormais à `reponse.md`, qui porte les phases.
 
+## `reponse.md` — pourquoi la question de fin est conditionnelle
+
+Conditionné le 2026-11-04 (issue #90). La puce « Structure » disait « La dernière ligne est une question d'action concrète », sans condition. Lue à la lettre, elle faisait finir chaque réponse sur une question, même quand l'utilisateur avait déjà nommé la suite ou qu'une règle la prescrivait. Elle contredisait donc `intention.md`.
+
+`reponse.md` conditionne désormais la question de fin, et « Couper à la reco » suit. `redaction.md` suit aussi dans sa ligne sur la clôture d'une réponse.
+
+Le motif « ménage après merge » portait 52 % de « oui » nus dans la base de mesure de `ref-intention.md`. C'est le cas que la condition vise en premier.
+
 ## Comment les fichiers de style se partagent le travail
 
 - `style.md` porte le noyau, ce qu'il faut produire.
