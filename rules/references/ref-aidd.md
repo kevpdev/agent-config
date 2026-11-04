@@ -59,3 +59,14 @@ Cadrage du 2026-11-02, Q6. Le vault tient ses décisions en fiches datées dans 
 ## Issue et PR draft — la mesure (2026-10-28)
 
 Mesuré le 2026-10-28 : 2 brouillons d'issue sur 2 validés tels quels.
+
+## Git hors run — la mesure (issue #90, 2026-11-03)
+
+Jusqu'au 2026-11-03, commit, push et PR draft n'étaient permis sans question que pendant un run AIDD. La section s'étend à toute branche de travail après cette mesure.
+
+- **Instrument** : `python3 tools/measure-approvals.py --days 31`, et les exports OpenCode de `tools/session-export.py` passés en argument. Calibré sur la session de #73 : 18 questions trouvées, dont 11 « oui » nus, conforme au comptage à la main.
+- **Corpus** : 114 sessions Claude Code, 1 199 questions. Les 33 sessions OpenCode n'en portaient que 4, sans poids.
+- **Chiffres** : « push de branche ou PR draft » (`branch push or draft PR`), 35 questions, 54 % de « oui » nus. « Commit » (`commit`), 119 questions, 36 %.
+- **Lecture des 16 autres réponses push ou PR draft**, toutes lues : aucune ne refuse le geste. Deux demandent ce que la PR apporte, les autres portent sur le contenu ou sur un autre sujet.
+- **Limite** : un « oui » nu ne prouve pas que la question était inutile. Le push sur la branche par défaut et le merge gardent leur question, quel que soit leur taux (50 % et 37 %).
+- **Le « never » d'un repo** reste levé pendant un run seulement : la mesure dit qu'une question est redondante, pas qu'une consigne du repo peut être ignorée.
