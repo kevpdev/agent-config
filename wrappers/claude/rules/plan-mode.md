@@ -24,6 +24,6 @@ Ne pas appeler `EnterPlanMode` quand le travail est piloté par un skill AIDD, q
 
 **POURQUOI** : le corps de `aidd-orchestrator:01-sdlc` dit « decide and act without confirmation ». Sans cette exception, le harnais ne peut pas héberger un SDLC autonome.
 
-**Ce que l'exception autorise aussi** : commit, push et PR draft pendant le run, voir la section « Git pendant un run AIDD » de `rules/aidd.md`.
+**Commit, push et PR draft pendant le run** ne demandent pas d'accord, voir la section « Git sur une branche de travail » de `rules/aidd.md`.
 
 Récits et raisons de rangement de cette page → `rules/references/ref-plan-mode.md`.

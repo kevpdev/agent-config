@@ -58,15 +58,17 @@ Le fichier du rang 3 se crée au premier fait projet, pas d'avance. **Dans le va
 
 **POURQUOI** : sans choix écrit, le code mêle les deux langues. Le français épargne au lecteur une traduction mentale, le gabarit est le contrat du skill.
 
-## Git pendant un run AIDD
+## Git sur une branche de travail
 
-**DÉCLENCHEUR** : l'utilisateur lance `aidd-orchestrator:01-sdlc` ou un `/aidd-dev:*`.
+**DÉCLENCHEUR** : je m'apprête à commiter, pousser ou ouvrir une PR draft.
 
-**PERMIS pour ce run** : commit, push de la branche de travail et PR **draft**, y compris si le repo écrit « never » (`vcs.md`, `CLAUDE.md`).
+**PERMIS sans question** : commit, push et PR **draft** sur la branche que j'ai créée pour ce travail (`worktrees.md`).
+- **Pendant un run AIDD** (`aidd-orchestrator:01-sdlc`, `/aidd-dev:*`) : à chaque étape, même si le repo écrit « never » (`vcs.md`, `CLAUDE.md`). Lancer le skill vaut accord sur le run.
+- **Hors run** : une fois le travail validé (tests verts ou checker « prêt »). Un « never » du repo garde sa question.
 
-**HORS PÉRIMÈTRE** : push sur `main`, merge, force-push, tag, et toute action hors du run.
+**HORS PÉRIMÈTRE** : tout geste sur la branche par défaut ou celle d'un autre, merge, force-push, tag.
 
-**POURQUOI** : lancer le skill vaut accord durable sur le run, et s'arrêter à chaque commit contredit « decide and act without confirmation ».
+**POURQUOI hors run (issue #90)** : un « oui » nu à 54 % des questions push ou PR draft et 36 % des questions commit. Aucune autre réponse push ou PR draft ne refusait le geste.
 
 ## Issue et PR draft sans validation
 
