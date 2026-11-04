@@ -5,8 +5,9 @@ description: >-
   conception de la stack, scaffold du dépôt, conventions dans son AGENTS.md, puis mémoire AIDD.
   Utiliser quand l'utilisateur dit "je veux créer un projet", "démarre un nouveau projet",
   "crée-moi le dépôt de X" ou "initialise un projet avec ses conventions".
-  NE PAS utiliser pour concevoir la stack d'un projet existant (→ aidd-context:01-bootstrap),
-  ni pour construire la mémoire d'un projet déjà créé (→ aidd-context:02-project-memory).
+  NE PAS utiliser pour concevoir la stack ou l'architecture d'un projet, même quand il
+  n'existe pas encore (→ aidd-context:01-bootstrap), ni pour construire la mémoire d'un
+  projet déjà créé (→ aidd-context:02-project-memory).
 argument-hint: "[nom du projet]"
 ---
 
