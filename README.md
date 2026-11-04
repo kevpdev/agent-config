@@ -206,22 +206,12 @@ for t in wrappers/claude/hooks/tests/test-*.sh; do bash "$t"; done   # les hooks
 | | `rules/` | `skills/` |
 |---|---|---|
 | Découverte | automatique, récursive | automatique, via la `description` |
-| Chargement | **en contexte** — toujours, ou sur match `paths:` | **à la demande** — quand jugé pertinent |
+| Chargement | **en contexte** — toujours | **à la demande** — quand jugé pertinent |
 | Coût | permanent | nul tant qu'inutilisé |
 
 Ce qui doit être vrai en permanence est une règle. Ce qui ne sert que sur une tâche précise est un skill.
 
-Une règle peut se restreindre à certains fichiers via son frontmatter — `back-spring.md` ne se charge que sur du Java :
-
-```yaml
----
-paths:
-  - "**/*.java"
-  - "**/pom.xml"
----
-```
-
-> **Spécifique au runtime** : le scoping par `paths:` est une syntaxe **Claude Code**. Un autre runtime (Cursor utilise `globs:`, etc.) ignore cette clé — la règle est alors chargée **inconditionnellement** (elle reste correcte, juste non scopée), ou pas du tout si ce runtime n'auto-découvre pas `rules/`. C'est le « indice, pas dépendance » de la règle de placement : `paths:` ne casse rien ailleurs, mais ne compte pas dessus pour tenir une règle hors contexte hors de Claude Code.
+Aucune règle de `rules/` ne se restreint à des fichiers par un frontmatter `paths:` : OpenCode l'ignore et la chargerait partout. Une convention propre à une stack (Java, React, design web) vit dans les références du skill `dev-init-project`, qui la propose à la création du projet et écrit dans son `AGENTS.md` ce qui est validé.
 
 Un skill se déclenche sur sa `description` : la soigner, c'est tout ce qui décide s'il sera choisi ou ignoré.
 
@@ -339,7 +329,7 @@ OpenCode reçoit le harnais par `tools/install.py --agent opencode`. Les liens p
 
 Les skills ne passent pas par `skills: [...]` : un lien sous `skills/` est découvert, mesuré dans le banc. Un skill qui porte `disable-model-invocation: true` n'est pas proposé au modèle, comme sous Claude.
 
-Les règles ne passent pas par un `AGENTS.md` généré. OpenCode ne lit ni `~/.claude/rules` ni aucun dossier de règles, mais son tableau `instructions` accepte un glob. Il lit donc `rules/*.md` dans le repo, et une règle modifiée s'applique sans rien régénérer. OpenCode n'a pas de scope par chemin, donc les règles scopées par `paths:` se chargent toujours. Une ligne **Portée** en tête de chacune dit à quels fichiers elle s'applique. Les règles propres à Claude restent hors du glob, dans `wrappers/claude/rules/`.
+Les règles ne passent pas par un `AGENTS.md` généré. OpenCode ne lit ni `~/.claude/rules` ni aucun dossier de règles, mais son tableau `instructions` accepte un glob. Il lit donc `rules/*.md` dans le repo, et une règle modifiée s'applique sans rien régénérer. OpenCode n'a pas de scope par chemin, donc aucune règle du glob n'est propre à une stack. Les règles propres à Claude restent hors du glob, dans `wrappers/claude/rules/`.
 
 ## Outillage
 
@@ -523,7 +513,7 @@ Un fichier va dans `wrappers/<runtime>/` si et seulement si **il cesse de foncti
 | | Exemple | Où |
 |---|---|---|
 | **Dépendance** | un hook qui parse le JSON d'événement de Claude Code | wrapper |
-| **Indice** | un frontmatter `paths:` qu'un autre runtime ignorera sans dommage | zone neutre |
+| **Indice** | un frontmatter `paths:`, qu'un autre runtime ignore en chargeant la règle partout : la règle coûte du contexte, rien ne casse | zone neutre |
 
 Le critère n'est pas « mentionne Claude » — une règle qui interdit de citer un assistant dans un message de commit reste universelle. Le critère est : **ça échoue, ou ça dégrade sans casse ?**
 
