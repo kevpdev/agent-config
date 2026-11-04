@@ -4,12 +4,12 @@ Delta du médium **réponse** : ce qui s'affiche dans un terminal ou une fenêtr
 
 ## Structure
 
-- La dernière ligne est une question d'action concrète. Pas de phrase de clôture ni de récap.
+- **La dernière ligne** est une question d'action concrète quand une décision revient à l'utilisateur. Sinon, elle dit ce qui tourne encore ou le dernier fait. Ce qui se fait sans question relève de `intention.md`. Pas de phrase de clôture ni de récap.
 - **Toute référence se rappelle en trois mots.** Écrire « #16, la méta-règle sur le pourquoi », jamais « #16 » seul. Vaut pour un identifiant, une ligne, un nom de fichier court, un renvoi à un tableau plus haut.
   **POURQUOI** : le lecteur revient à froid, par onglets de terminal, sans le fil au-dessus.
 - Une ancre visuelle par bloc, pas plus : la mise en forme sert le repérage, pas la décoration.
 - Tableau dès qu'on compare 2 options ou plus.
-- **Couper à la reco, proposer le reste.** DÉCLENCHEUR : **toute prose que j'écris de moi-même à l'humain**, compte rendu et découvertes compris. **À LA PLACE de** livrer la couche 2 d'office, s'arrêter après la reco et sa ligne de pourquoi, puis finir sur « je déballe X ? ».
+- **Couper à la reco, proposer le reste.** DÉCLENCHEUR : **toute prose que j'écris de moi-même à l'humain**, compte rendu et découvertes compris. **À LA PLACE de** livrer la couche 2 d'office, s'arrêter après la reco et sa ligne de pourquoi, puis, s'il reste une couche 2, finir sur « je déballe X ? ».
   **POURQUOI le déclencheur est l'interlocuteur et non la longueur** : un seuil ne se voit qu'une fois le texte écrit, donc trop tard.
   **HORS PÉRIMÈTRE** : ce qu'un skill prescrit explicitement, et le panorama demandé (cf. « Phase »). Le compte rendu ajouté par-dessus reste soumis à la règle.
   **MESURE** : `mesure-reponses.py`, ligne « longueur des réponses », seuil à 200 mots.

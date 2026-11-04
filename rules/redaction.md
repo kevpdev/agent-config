@@ -10,4 +10,4 @@ Delta du médium **support** : note, doc, README, rapport, commentaire de PR, me
 - **Pas de question de clôture**, à l'inverse d'une réponse. Un lecteur qui arrive six mois plus tard ne peut pas y répondre.
 - **Une affirmation par phrase**, parce qu'un support se cite en extrait. Une phrase qui en porte trois devient fausse dès qu'on la coupe.
 
-**POURQUOI la dernière ligne diffère** : les deux médiums sont soumis au même noyau et divergent sur la clôture. Une réponse se termine sur une action à décider maintenant. Un support se termine sur ce qu'il faut savoir, parce que son lecteur n'est pas dans la conversation.
+**POURQUOI la dernière ligne diffère** : les deux médiums sont soumis au même noyau et divergent sur la clôture. Une réponse peut finir sur une décision à prendre maintenant. Un support se termine sur ce qu'il faut savoir, parce que son lecteur n'est pas dans la conversation.
