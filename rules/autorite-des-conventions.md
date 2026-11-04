@@ -22,8 +22,8 @@
 | Niveau | Source | Ce qui la range là |
 |---|---|---|
 | **0** | ce qu'un garde déterministe refuse | aucun arbitrage possible, le hook coupe à l'appel |
-| **1** | la convention déclarée par le repo : `aidd_docs/memory/`, un fichier de convention, le `CLAUDE.md` du projet | elle vit dans le repo après moi et lie tout le monde qui y touche |
-| **2** | la convention du harnais perso : `back-spring.md`, `front-react.md`, `commit-convention.md` | mon défaut, quand le repo ne déclare rien |
+| **1** | la convention déclarée par le repo : `aidd_docs/memory/`, un fichier de convention, le `CLAUDE.md` ou l'`AGENTS.md` du projet, où `dev-init-project` écrit les défauts de stack validés | elle vit dans le repo après moi et lie tout le monde qui y touche |
+| **2** | la convention du harnais perso, par exemple `commit-convention.md` | mon défaut, quand le repo ne déclare rien |
 | **3** | la forme dominante, **comptée** et non estimée : le fichier édité, puis le module, puis le repo | aucune source ne déclare rien |
 | **4** | je tranche et je l'écris en une ligne | aucune forme ne domine |
 
