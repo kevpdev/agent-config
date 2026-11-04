@@ -1,0 +1,19 @@
+[
+  {
+    "skill": "dev-init-project",
+    "id": "positif-demarrer-un-projet-neuf",
+    "query": "Je veux démarrer un nouveau projet de suivi de dépenses, en Spring Boot. Crée le dépôt et pose mes conventions dedans."
+  },
+  {
+    "skill": "dev-init-project",
+    "id": "negatif-vers-aidd-context-01-bootstrap",
+    "expect_trigger": false,
+    "query": "J'ai une idée de SaaS de gestion de tournées de livraison. Aide-moi à choisir la stack et l'architecture, et rends-moi un INSTALL.md."
+  },
+  {
+    "skill": "dev-init-project",
+    "id": "negatif-vers-aidd-context-02-project-memory",
+    "expect_trigger": false,
+    "query": "Le projet tourne depuis six mois et personne n'a écrit sa mémoire. Reprends l'architecture, les conventions et les décisions pour la construire, puis câble-la dans mes outils."
+  }
+]

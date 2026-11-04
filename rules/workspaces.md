@@ -12,6 +12,14 @@
 
 **POURQUOI**, constaté le 2026-10-08 : un rangement par langage avait laissé trois dossiers vides et séparé `focusflow-back` de `focusflow-front`, deux moitiés d'un même produit. Il m'a aussi fait cloner `swapi` hors de `Workspaces/` : la bonne case ne se déduisait pas du nom. À plat, le nom du dépôt suffit à retrouver le dossier, et `ccp` (`~/.zshrc`) liste déjà les projets par `.git`, `package.json` ou `pom.xml` sans connaître de catégorie.
 
+## Créer un projet : par le skill, jamais à la main
+
+**DÉCLENCHEUR** : le dossier d'un projet neuf reste à créer sous `~/Developpement/Workspaces`.
+
+**À LA PLACE d'** échafauder à la main, passer par le skill `dev-init-project`. Il pose les questions, scaffolde, écrit les conventions du projet dans son `AGENTS.md` et amorce sa mémoire AIDD.
+
+**POURQUOI cette ligne existe** : un projet créé à la main n'emporte ni ses conventions ni sa mémoire, et rien ne le signale plus tard. Le skill écrit hors de tout dépôt git, donc son déclenchement au flair se paie au pire un dossier à supprimer.
+
 ## Le vault perso : par sa variable, jamais par son nom
 
 **DÉCLENCHEUR** : je cherche le vault, un de ses skills (`.agents/skills/`) ou une note.
