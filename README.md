@@ -49,6 +49,8 @@ python3 tools/install.py --agent opencode --target ~/.config/opencode --fix
 
 **5. Le profil.** Un seul fichier n'est pas transposable : **`rules/profil.md`**. Il décrit la personne à qui l'agent s'adresse (niveau technique, contraintes cognitives, mode de compréhension) pour calibrer ton et profondeur. Le remplacer par le sien : le format compte, pas le contenu. Tout le reste s'applique tel quel.
 
+**6. Les hôtes protégés, s'il y en a.** Le garde d'écriture distante ne protège que les alias déclarés dans `~/.config/agent-config/protected-hosts`, un par ligne. Le fichier n'est pas versionné et ne s'installe pas : sans lui, le garde laisse tout passer, et la bascule l'affiche (voir [Les écritures vers un serveur distant](#les-écritures-vers-un-serveur-distant)).
+
 ## Comment le harnais se configure
 
 Le repo est la seule source. Rien ne s'édite à la main dans `~/.claude` ni dans `~/.config/opencode`. `tools/install.py` traduit les sources dans la config de chaque agent, et `tools/bascule.sh` est le seul chemin par lequel un changement atteint le vivant.
@@ -116,7 +118,7 @@ wrappers/
 | une règle | `rules/*.md`, ou `wrappers/claude/rules/` pour Claude seul | Claude : un lien par fichier dans `~/.claude/rules/`. OpenCode : lue sur place par le glob `instructions` |
 | un skill | `skills/<nom>/` | un lien par skill dans `skills/`, pour les deux agents |
 | un hook ou un garde | `hooks/<nom>.py`, la décision neutre | OpenCode : lancé par le plugin, qui lance tous les gardes. Claude : un adaptateur, son lien et sa déclaration (voir [Les hooks](#les-hooks)) |
-| une lecture interdite | `policy/deny.yaml` | Claude : `permissions.deny`. OpenCode : `policies` |
+| un fichier interdit, en lecture ou en écriture | `policy/deny.yaml` | Claude : `permissions.deny`. OpenCode : `policies` |
 | un serveur MCP | `mcp/servers.yaml` | Claude : son installateur écrit `.claude.json`. OpenCode : `mcp.servers` |
 | le fichier d'exclusion global de git | la clé `git_exclude` de `tools/manifests/claude.json` | Claude : motifs ajoutés à `core.excludesFile`, sinon à `~/.config/git/ignore`, jamais retirés |
 | un réglage (modèle, effort, hooks, plugins) | `wrappers/claude/settings.json` ou `wrappers/opencode/opencode.json` | fusionné dans le fichier de réglages de l'agent |
@@ -136,7 +138,7 @@ Dans tous les cas, le changement arrive au vivant par un merge sur `main`, puis 
 3. Une PR vers `main`, puis le merge. La porte `ci` relance les batteries, le lint des skills et Trivy sur la PR, et bloque le merge si l'un échoue.
 4. `bash tools/bascule.sh`, lancé depuis le worktree.
 
-**Pour changer le checkout principal de version, utiliser `tools/bascule.sh`.** Un `git pull` seul laisserait pendre les liens dont la source a bougé. Un garde introuvable bloque alors tous les appels `Bash`. Le script fait avancer `main` sur `origin/main`, puis lance `install.py --fix` pour les deux agents, dans le même processus. Il se lance depuis un worktree, et sauvegarde avant d'écrire, dans `~/.local/state/agent-config/bascule/<horodatage>/`. On y retrouve les liens vers le repo, `settings.json`, `opencode.json`, `.zshrc` et le commit d'avant.
+**Pour changer le checkout principal de version, utiliser `tools/bascule.sh`.** Un `git pull` seul laisserait pendre les liens dont la source a bougé. Un garde introuvable bloque alors tous les appels `Bash`. Le script fait avancer `main` sur `origin/main`, puis lance `install.py --fix` pour les deux agents, dans le même processus. Il se lance depuis un worktree, et sauvegarde avant d'écrire, dans `~/.local/state/agent-config/bascule/<horodatage>/`. On y retrouve les liens vers le repo, `settings.json`, `opencode.json`, `.zshrc` et le commit d'avant. Il termine par le statut du garde d'écriture distante, décrit dans [Les écritures vers un serveur distant](#les-écritures-vers-un-serveur-distant).
 
 ```bash
 bash tools/bascule.sh                                  # refuse si main est sale, ou si origin/main ne contient pas ce commit
@@ -233,16 +235,18 @@ Un poste n'en exporte qu'une ou les deux. Avec un seul vault, le skill le prend 
 
 **Les deux vaults n'ont pas la même structure.** Seuls `vault-capture` et `vault-save` ont leur skill canonique dans le vault perso, mesuré le 2026-10-04 avec `check-vault-bridge.sh`. Les autres échouent sur un vault dont la cible canonique manque.
 
-### Les lectures interdites
+### Les fichiers interdits
 
-`policy/deny.yaml` liste les fichiers qu'un agent ne doit jamais lire (identifiants, secrets, clés), le détail est dans le YAML. Chaque entrée nomme une fin de chemin, visée à n'importe quelle profondeur. `tools/install.py` la traduit à la fusion de la config de chaque agent :
+`policy/deny.yaml` liste les fichiers qu'un agent ne doit ni lire ni écrire : identifiants et secrets à la lecture, historique git et démarrage du shell à l'écriture. Chaque entrée porte son `action` et nomme une fin de chemin, visée à n'importe quelle profondeur. Le détail est dans le YAML, `tools/install.py` le traduit à la fusion de la config de chaque agent :
 
 | Agent | Forme | Ce qui la tient |
 |---|---|---|
-| Claude Code | `permissions.deny`, `Read(//**/<fin>)` | refuse aussi en `bypassPermissions`, mesuré dans le banc |
-| OpenCode | `policies`, `tool.use` sur `read:<fin>` et `read:*/<fin>` | passe après les règles d'agent et les approbations, donc ni `--auto` ni « Allow always » ne la lève |
+| Claude Code | `permissions.deny` : `Read(//**/<fin>)` et `Edit(//**/<fin>)` | refuse aussi en `bypassPermissions`, mesuré dans le banc |
+| OpenCode | `policies` : `tool.use` sur `read:<fin>` et `edit:<fin>`, plus leur forme `*/<fin>` | passe après les règles d'agent et les approbations, donc ni `--auto` ni « Allow always » ne la lève |
 
 **Une entrée qui porte `sauf` n'est pas traduite pour Claude.** OpenCode lève l'interdit par un `allow` placé après le `deny`, mais sous Claude un `deny` gagne toujours. Plutôt qu'interdire `.env.example` avec les autres variantes de `.env`, Claude ne reçoit pas cette entrée.
+
+**L'écriture couvre la suppression, et le shell a son propre garde.** `hooks/no_sensitive_write.py` refuse un `rm`, un `mv`, une redirection `>`, un `tee`, un `sed -i` ou la destination d'un `cp` qui visent un fichier interdit, sous les deux agents. `git` écrit `.git/` sans jamais le nommer, donc il passe, et c'est voulu : l'historique s'écrit par git. Conséquence assumée, modifier `~/.zshrc` ou `~/.ssh/config` revient à l'humain, qui lance la commande lui-même avec `! <commande>`.
 
 **Sous OpenCode, le shell passe par un garde du cœur.** Une règle `read` ne voit que l'outil de lecture, et `cat` sur le leurre laissait sortir le témoin. `hooks/no_secret_read.py` lit `policy/deny.yaml` et refuse une commande qui sort le contenu d'un fichier interdit. Il laisse passer les écritures et le chargement par un programme. Sous Claude, la règle Read refuse aussi le `cat`, mais la doc ne le garantit pas, donc le banc Claude le consigne sans l'exiger.
 
@@ -253,6 +257,24 @@ python3 tools/session-export.py <id>             # JSON masqué
 python3 tools/session-export.py <id> --texte     # transcript lisible, raisonnement omis
 python3 tools/tests/test-session-export.py       # calibre le masquage
 ```
+
+### Les écritures vers un serveur distant
+
+`hooks/no_remote_write.py` refuse toute écriture de l'agent vers un hôte distant protégé. Ce qui est protégé se **déclare**, ça ne se devine pas : un alias ssh par ligne dans `~/.config/agent-config/protected-hosts`, `#` ouvrant un commentaire. `XDG_CONFIG_HOME` est respecté, et `AGENT_CONFIG_PROTECTED_HOSTS` vise un autre fichier. Un hôte est protégé parce qu'il est écrit dans ce fichier, jamais parce qu'il ressemble à de la prod. Sans le fichier, ou s'il est vide, rien n'est protégé.
+
+Trois axes, parce qu'un seul en laisserait passer :
+
+| Axe | Ce qu'il attrape | Ce qu'il ne voit pas |
+|---|---|---|
+| commande | `ssh`, `scp`, `sftp`, `rsync`, `ansible`, `docker -H` et `DOCKER_HOST` | un hôte joint par un autre client |
+| chemin | un montage `gvfs` ou `sshfs`, qui fait d'une écriture distante un chemin local ordinaire | un chemin hors de ce montage |
+| HTTP | un `curl` ou un `wget` local dont l'URL nomme un hôte protégé, avec un corps ou un verbe autre que `GET`, `HEAD` ou `OPTIONS` | `httpie`, `python requests`, une URL construite dans une variable, un hôte IPv6 entre crochets |
+
+Les alias sont résolus par `ssh -G` : la comparaison porte sur le nom résolu, pas sur la chaîne tapée, donc un alias ajouté dans `~/.ssh/config` pour viser l'IP d'un hôte protégé est attrapé. Un domaine d'API qui diffère du `HostName` ssh se déclare à part. **Les lectures restent permises** : perdre le diagnostic rendrait le garde assez pénible pour être désactivé, et un garde désactivé protège moins qu'un garde étroit. Deux gestes sortent du périmètre à dessein : `git push` vers l'hôte, et `gh repo create`, GitHub n'étant pas un hôte protégé.
+
+C'est un garde contre l'erreur, pas un bac à sable : `bash -lc "$V"`, du base64 ou un script contournent l'inspection de la commande.
+
+**Une liste morte se lit comme une protection.** `bash tools/bascule.sh` affiche, après chaque bascule, la ligne de `python3 hooks/no_remote_write.py --status` : le nombre de cibles vivantes, ou celles qui ne résolvent vers aucun `HostName` ssh, ou l'absence de fichier. Le signal tombe donc à la bascule suivante, jamais au moment où la liste meurt, une édition de `~/.ssh/config` entre deux bascules restant silencieuse.
 
 ### Les serveurs MCP
 
