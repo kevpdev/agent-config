@@ -194,7 +194,10 @@ def main(argv=None) -> int:
             if a.detail:
                 print(f"[{'|'.join(patterns(q))}] {cls}\n  Q: {q[:160]}\n  A: {ans[:120]!r}")
 
+    bare_total = sum(per_session.values())
     print(f"\n{len(files)} sessions, {total} questions")
+    if total:
+        print(f"bare yes total: {bare_total} ({100 * bare_total // total} %), patterns below overlap")
     print(f"{'pattern':32}{'total':>6}{'bare':>7}{'+corr':>7}{'redir':>7}  bare share")
     for name, c in sorted(table.items(), key=lambda kv: -sum(kv[1].values())):
         t = sum(c.values())
