@@ -90,4 +90,12 @@ with tempfile.TemporaryDirectory() as tmp:
         )
     check("OpenCode pairs", list(m.pairs(opencode)), [("Je commite ?", "ok")])
 
+    import contextlib
+    import io
+
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        m.main([claude, opencode])
+    check("bare yes total line", "bare yes total: 3 (75 %)" in out.getvalue(), True)
+
 sys.exit(1 if failures else 0)
