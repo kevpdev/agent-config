@@ -37,7 +37,8 @@ Three axes, because any one alone leaves a hole:
      carries a body or a verb other than GET/HEAD/OPTIONS writes to that host's API
      without any ssh. The URL host is matched as typed: an API domain that differs
      from the ssh HostName must be listed in protected-hosts as well. Not seen:
-     other HTTP clients (httpie, python requests) and a URL built in a variable.
+     other HTTP clients (httpie, python requests), a URL built in a variable, and
+     a bracketed IPv6 host.
 
 Classification is an ALLOWLIST of read-only commands, not a denylist of
 dangerous ones: a denylist is open by construction (every unlisted binary
@@ -103,7 +104,7 @@ COMPOSE_READONLY = READONLY_SUB["docker-compose"]
 READ_VERBS = {"GET", "HEAD", "OPTIONS"}
 CURL_BODY_LONG = ("--json", "--data", "--form", "--upload-file")
 # Short options that take a value: letters after them are the value, not flags.
-CURL_VALUE_SHORT = set("oHuwAebcEKmrxyYzCPQUt")
+CURL_VALUE_SHORT = set("oDHuwAebcEKmrxyYzCPQUt")
 WGET_WRITE_LONG = ("--post-data", "--post-file", "--body-data", "--body-file")
 
 
