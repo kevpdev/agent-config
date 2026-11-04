@@ -70,7 +70,7 @@ Dérouler le flux. Ne lire que la prochaine action.
   `hooks/no_remote_write.py`, branché sous Claude par `wrappers/claude/hooks/guard-no-remote-write.py`
   (`PreToolUse` dans `wrappers/claude/settings.json`) et sous OpenCode par le plugin `harness-guards`,
   refuse toute écriture vers un hôte protégé, déclaré dans `~/.config/agent-config/protected-hosts`,
-  `curl` et `wget` compris dès qu'ils portent un corps ou un verbe autre que `GET`. Un domaine d'API
+  `curl` et `wget` compris dès qu'ils portent un corps ou un verbe autre que `GET`, `HEAD` ou `OPTIONS`. Un domaine d'API
   différent du `HostName` ssh se déclare lui aussi dans ce fichier. Le local reste ouvert, ce dont un testeur a
   besoin. *Pourquoi ce mécanisme et non `disable-model-invocation` : le champ supprimerait la voie
   d'appel que la description promet à un orchestrateur. C'est la branche « maillon de pipeline » de la

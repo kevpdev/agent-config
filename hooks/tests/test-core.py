@@ -104,8 +104,13 @@ for nom, commande in [
     ("curl sans schéma", "curl -X POST 203.0.113.7/x -d 1"),
     ("sudo curl -X DELETE", "sudo curl -X DELETE http://203.0.113.7/x"),
     ("wget --post-data", "wget --post-data=a=1 http://203.0.113.7/x"),
+    ("curl avec identifiants dans l'URL", "curl -X POST http://user:pw@203.0.113.7/x"),
 ]:
     verifier(nom + " vers un hôte déclaré", REFUS, "no_remote_write", command=commande)
+verifier("curl -o collé (valeur commençant par d)", PASSE, "no_remote_write",
+         command="curl -o/tmp/data.json http://203.0.113.7/x")
+verifier("curl --request-target n'est pas un verbe", PASSE, "no_remote_write",
+         command="curl --request-target /x http://203.0.113.7/")
 verifier("curl -X GET vers un hôte déclaré", PASSE, "no_remote_write",
          command="curl -X GET http://203.0.113.7/x")
 verifier("curl POST local", PASSE, "no_remote_write",

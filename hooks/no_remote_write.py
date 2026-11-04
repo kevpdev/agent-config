@@ -102,6 +102,8 @@ COMPOSE_READONLY = READONLY_SUB["docker-compose"]
 # curl and wget mutate as soon as they carry a body or a verb other than GET/HEAD.
 READ_VERBS = {"GET", "HEAD", "OPTIONS"}
 CURL_BODY_LONG = ("--json", "--data", "--form", "--upload-file")
+# Short options that take a value: letters after them are the value, not flags.
+CURL_VALUE_SHORT = set("oHuwAebcEKmrxyYzCPQUt")
 WGET_WRITE_LONG = ("--post-data", "--post-file", "--body-data", "--body-file")
 
 
@@ -135,7 +137,7 @@ def http_writes(toks: list) -> bool:
     for i, a in enumerate(args):
         if a.startswith(CURL_BODY_LONG):
             return True
-        if a.startswith("--request"):
+        if a == "--request" or a.startswith("--request="):
             verb = a.split("=", 1)[1] if "=" in a else (args[i + 1] if i + 1 < len(args) else "")
             if verb.upper() not in READ_VERBS:
                 return True
@@ -144,6 +146,8 @@ def http_writes(toks: list) -> bool:
             for k, c in enumerate(flags):
                 if c in "dFT":
                     return True
+                if c in CURL_VALUE_SHORT:
+                    break  # the rest of the token is this option's value
                 if c == "X":
                     verb = flags[k + 1:] or (args[i + 1] if i + 1 < len(args) else "")
                     if verb.upper() not in READ_VERBS:
@@ -418,7 +422,7 @@ def check_bash(cmd: str):
         if not http_writes(ptoks):
             continue
         for target in ptoks[1:]:
-            if target.startswith("-") or not re.match(r"^(https?://)?[\w.-]+(:\d+)?(/|$)", target):
+            if target.startswith("-") or not re.match(r"^(https?://)?([^@/\s]+@)?[\w.-]+(:\d+)?(/|$)", target):
                 continue
             if is_protected(target):
                 block(

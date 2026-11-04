@@ -75,7 +75,7 @@ rm -f "$REPO/sale"
 lancer; rc=$?
 [ "$rc" -eq 0 ] || sed 's/^/        /' "$T/sortie"
 cas "bascule : code 0" "$rc" 0
-cas "bascule : le statut du garde distant est affiché" "$(grep -c 'no_remote_write :' "$T/sortie")" 1
+cas "bascule : le statut du garde distant est affiché" "$(grep -c 'no_remote_write : aucune cible déclarée' "$T/sortie")" 1
 cas "bascule : main a avancé sur le commit testé" "$(git -C "$REPO" rev-parse HEAD)" "$(git -C "$ICI" rev-parse HEAD)"
 cas "bascule : 0 écart sur les deux cibles" "$(check claude "$C") $(check opencode "$O")" "0 0"
 cas "bascule : aucun lien ne pend" "$(find "$C" "$O" -xtype l | wc -l)" 0
