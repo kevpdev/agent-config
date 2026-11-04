@@ -18,4 +18,6 @@
 
 **POURQUOI, constaté le 2026-11-04** : à « mergée, lance la bascule », je me suis arrêté sur une PR restée en draft pour demander si je devais la merger. Lues comme des listes fermées, les règles font attendre l'utilisateur à chaque événement qu'elles ne nomment pas.
 
+**Poser, maintenir ou retirer une porte** dans le harnais (skill en appel manuel, question prescrite, garde déterministe) : lire d'abord `rules/references/ref-portes.md`.
+
 Le cas complet et la base de mesure → `rules/references/ref-intention.md`.
