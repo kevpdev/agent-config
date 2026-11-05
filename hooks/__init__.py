@@ -6,11 +6,12 @@ reaches this package through its own adapter (wrappers/<agent>/hooks/).
 """
 
 from hooks import (aidd_skill_lookup, bash_tooling, no_ai_in_commit, no_remote_write, no_secret_read,
-                   no_sensitive_write)
+                   no_sensitive_write, pr_merge_checks)
 
 # Run in this order by check.py; the first refusal wins.
 GUARDS = {
     "no_ai_in_commit": no_ai_in_commit,
+    "pr_merge_checks": pr_merge_checks,
     "no_remote_write": no_remote_write,
     "no_secret_read": no_secret_read,
     "no_sensitive_write": no_sensitive_write,
