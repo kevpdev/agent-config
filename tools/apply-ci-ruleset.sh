@@ -20,6 +20,9 @@
 # écart. Code 0 si conforme, 1 si un écart est mesuré ou si aucun ruleset n'est trouvé,
 # 2 si le ruleset vivant ne peut pas être lu (API injoignable, fichier absent, JSON illisible).
 # --live FICHIER lit le ruleset vivant dans FICHIER au lieu de l'API. Implique --check.
+# Un dépôt privé d'un compte gratuit n'a pas de ruleset : l'API répond « Upgrade to GitHub
+# Pro or make this repository public ». --check le rend en écart « ruleset indisponible »,
+# code 1, parce que rien n'exige alors la porte `ci`. Toute autre erreur de l'API rend 2.
 #
 # ATTENTION : appliquer ce ruleset avant que les jobs aient rapporté leur nouveau nom
 # sur une pull request bloque sa fusion. Voir « L'ordre pour changer des noms de job »
@@ -98,10 +101,19 @@ if [ "$CHECK" = 1 ]; then
   if [ -n "$LIVE" ]; then
     LIVE_JSON=$(cat "$LIVE") || { echo "$REPO : impossible de lire $LIVE" >&2; exit 2; }
   else
-    EXISTING=$(find_existing) || { echo "$REPO : lecture des rulesets impossible" >&2; exit 2; }
-    [ -n "$EXISTING" ] || { echo "$REPO : aucun ruleset du contrat"; exit 1; }
-    LIVE_JSON=$(gh api "repos/$REPO/rulesets/${EXISTING%%$'\t'*}") \
-      || { echo "$REPO : lecture du ruleset impossible" >&2; exit 2; }
+    ERR=$(mktemp); trap 'rm -f "$ERR"' EXIT
+    if EXISTING=$(find_existing 2>"$ERR"); then
+      [ -n "$EXISTING" ] || { echo "$REPO : aucun ruleset du contrat"; exit 1; }
+      LIVE_JSON=$(gh api "repos/$REPO/rulesets/${EXISTING%%$'\t'*}") \
+        || { echo "$REPO : lecture du ruleset impossible" >&2; exit 2; }
+    elif grep -qiE 'upgrade to github pro|make this repository public' "$ERR"; then
+      # Un dépôt privé d'un compte gratuit n'a pas de ruleset : rien n'exige la porte `ci`
+      # (mesuré le 2026-11-05 sur hypomnesis). C'est un écart, pas une API injoignable.
+      LIVE_JSON='{"rules": []}'
+      NO_RULESET="ruleset indisponible : dépôt privé sur un compte gratuit, la porte ci n'est exigée par rien"
+    else
+      cat "$ERR" >&2; echo "$REPO : lecture des rulesets impossible" >&2; exit 2
+    fi
   fi
   jq -e 'type == "object"' >/dev/null 2>&1 <<<"$LIVE_JSON" \
     || { echo "$REPO : le ruleset vivant n'est pas un objet JSON" >&2; exit 2; }
@@ -126,6 +138,7 @@ if [ "$CHECK" = 1 ]; then
                else empty end
          end)
   ' <<<"$LIVE_JSON")
+  [ -z "${NO_RULESET:-}" ] || GAPS="$NO_RULESET"
   if [ -n "$GAPS" ]; then
     sed "s|^|$REPO : |" <<<"$GAPS"
     exit 1
