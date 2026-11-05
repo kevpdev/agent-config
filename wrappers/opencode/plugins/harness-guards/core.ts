@@ -72,7 +72,9 @@ export function verdict(event: Event, check: string = CHECK): Verdict {
   // with: without this test, a broken link would read as a refusal.
   if (!existsSync(check))
     return { allow: true, warn: `harness-guards : ${check} introuvable, appel laissé passer.` }
-  const run = spawnSync("python3", [check], { input: JSON.stringify(event), timeout: 5000, encoding: "utf8" })
+  // 30 s, not 5: pr_merge_checks calls `gh pr checks` over the network (its own
+  // limit is 20 s), and a timeout here lets the call through without a verdict.
+  const run = spawnSync("python3", [check], { input: JSON.stringify(event), timeout: 30000, encoding: "utf8" })
   const reason = (run.stderr || "").trim()
   if (run.status === 2) return { deny: reason || "refusé par le cœur des gardes, sans raison donnée" }
   if (run.status === 0) return { allow: true }

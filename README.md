@@ -276,6 +276,18 @@ C'est un garde contre l'erreur, pas un bac à sable : `bash -lc "$V"`, du base64
 
 **Une liste morte se lit comme une protection.** `bash tools/bascule.sh` affiche, après chaque bascule, la ligne de `python3 hooks/no_remote_write.py --status` : le nombre de cibles vivantes, ou celles qui ne résolvent vers aucun `HostName` ssh, ou l'absence de fichier. Le signal tombe donc à la bascule suivante, jamais au moment où la liste meurt, une édition de `~/.ssh/config` entre deux bascules restant silencieuse.
 
+### Les merges sur checks verts
+
+`hooks/pr_merge_checks.py` refuse un `gh pr merge` tant qu'un check de la PR n'est pas vert, `--auto` compris. Il lance `gh pr checks` sur la PR que vise le merge. Le sélecteur est celui du merge. Le dépôt vient d'un `-R` ou d'un `--repo` placé après `gh`, `pr` ou `merge`, sinon d'un préfixe `GH_REPO=`. Le dossier est celui d'un `cd` placé avant le merge, sinon le dossier de la session. Seuls `pass` et `skipping` comptent comme verts. Un check en échec ou en attente, un état inconnu, une PR sans aucun check ou des checks illisibles refusent. `--disable-auto` passe, il ne merge rien.
+
+**Pourquoi un garde** : un dépôt privé sur un compte gratuit n'a pas de ruleset, donc rien n'exige la porte `ci` (voir `rules/references/ref-ci-github.md`). Le garde la remet devant l'agent.
+
+**La forme correcte** : attendre par `gh pr checks <N> --watch` dans un appel séparé, puis relancer le merge. Enchaîné dans la même commande (`gh pr checks 5 --watch && gh pr merge 5`), le merge est jugé avant que l'attente tourne, donc refusé.
+
+Une commande qui contient `gh pr merge` sans se laisser lire est refusée. C'est le cas d'un guillemet non fermé, d'un sélecteur ou d'un dépôt dans une variable, d'un `gh` lancé par `xargs` ou `parallel`, et d'un heredoc passé à un shell (`bash <<EOF`) dont le corps contient `gh pr merge`. Le corps d'un autre heredoc, un message de commit par exemple, n'est pas lu comme une commande.
+
+Le garde ne voit pas un merge par `gh api`, un clic dans l'interface web, un merge caché dans une chaîne (`bash -c '…'`), un heredoc passé à un shell par un pipe (`cat <<'EOT' | bash`), une ligne coupée par un `\` final sur la ligne qui ouvre un heredoc ou dans le corps d'un heredoc passé à un shell, ni un `export GH_REPO=…` placé avant le merge dans la même commande. Sous OpenCode, sans appel retenu, le `cd` est perdu.
+
 ### Les serveurs MCP
 
 `mcp/servers.yaml` déclare chaque serveur une fois : son nom, la commande qui le lance, et son installateur pour Claude. Chaque agent garde un carnet qui dit comment lancer le serveur, et `tools/install.py` remplit les deux.

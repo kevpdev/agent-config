@@ -71,6 +71,14 @@ verifier("check.py rend 1 : passe, avec avertissement", "AVERTI",
 verifier("check.py absent : passe, avec avertissement", "AVERTI",
   shell(["./mvnw test"]), { command: "./mvnw test" }, vide, join(vide, "absent.py"))
 
+// A guard that calls the network (pr_merge_checks runs `gh pr checks`) can exceed 5 s.
+// The plugin must wait for its verdict instead of letting the call through.
+const slow = join(vide, "check-slow.py")
+writeFileSync(slow, "import sys, time\ntime.sleep(6)\nprint('slow refusal', file=sys.stderr)\nsys.exit(2)\n")
+chmodSync(slow, 0o755)
+verifier("check.py rend 2 après 6 s : le refus est attendu", "REFUS",
+  shell(["gh pr merge 5"]), { command: "gh pr merge 5" }, vide, slow)
+
 console.log("\nforme de l'événement")
 egal("read : aucun événement, donc aucun processus",
   toEvent({ sessionID: "test", action: "read", resources: ["x"] }, undefined, vide), null)

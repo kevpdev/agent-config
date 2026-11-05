@@ -45,6 +45,8 @@ Hors de la porte, un workflow peut exister sans être exigé. C'est le cas de `c
 - **Permissions minimales** : un bloc `permissions:` en tête de chaque workflow, qui ne contient que `read` ou `none`. Une permission d'écriture se pose sur le job qui en a besoin, jamais en tête.
 - **Dependabot** sur l'écosystème `github-actions`, avec l'écosystème du langage en plus. Sans lui, les SHA épinglés ne montent jamais.
 - **Maven : Failsafe pour les `*IT`.** Surefire (actif par défaut) ne lance que `*Test`, `*Tests` et leurs voisins. Une classe `FooIT` est ignorée sans erreur tant que `maven-failsafe-plugin` n'est pas déclaré dans le `pom.xml`, donc `verify` reste vert sans l'avoir lancée (mesuré le 2026-10-08 sur `swapi`). Avec le parent Spring Boot, la déclaration seule suffit : sa version et ses exécutions sont déjà gérées. Le script de conformité refuse un dépôt qui a des `*IT` sans Failsafe.
+- **Pas de SARIF dans le workflow de la porte**, que le dépôt soit public ou privé. Trivy sort en `format: table` dans le log de son job, sans `upload-sarif` ni `security-events: write`, et `exit-code: '1'` garde le contrôle bloquant. Un envoi SARIF vers l'onglet Security va dans un workflow séparé, non exigé par le ruleset. `check-ci-contract.py` refuse un `github/codeql-action/upload-sarif` dans le workflow qui porte le job `ci`.
+  **POURQUOI, constaté le 2026-11-05** : le `ci.yml` d'`hypomnesis`, privé, a été recopié de celui d'`agent-config`, public. Sans licence GitHub Code Security, l'envoi échoue à chaque run (« Resource not accessible by integration »), et la porte `ci` est restée rouge sur chaque PR. Hors de la porte, le même échec n'aurait bloqué aucun merge.
 - **Parité locale** : un script versionné (`check.sh`, `mvnw verify`, `pnpm` script) enchaîne en local les mêmes étapes que les jobs. Un job n'a pas d'autre logique que d'en appeler une.
 
 ## Ce que la CI doit couvrir
@@ -88,6 +90,16 @@ La CI ne se limite pas à compiler et lancer les tests. Elle couvre quatre caté
 - Un outil qui rend zéro violation ne prouve rien tant qu'il n'a pas détecté une violation plantée. PMD a été calibré ainsi sur `swapi` (un champ privé inutilisé et un `catch` vide détectés).
 - Les règles Javadoc de `google_checks.xml` (49 des 103 premières violations de `swapi`) se suppriment par `suppressionsLocation`, le reste se corrige.
 
+## Dépôt privé sur un compte gratuit
+
+Un tel dépôt n'a pas de ruleset : l'API répond « Upgrade to GitHub Pro or make this repository public ». Rien n'exige alors la porte `ci`, et une PR rouge reste fusionnable dans l'interface. La porte ne bloque plus, elle informe.
+
+`apply-ci-ruleset.sh --check` le rend en écart, « ruleset indisponible », avec le code 1.
+
+`hooks/pr_merge_checks.py` empêche un agent de merger une PR dont un check n'est pas vert, à la place du ruleset absent. Il ne voit pas le clic de l'humain dans l'interface, qui reste libre de merger une PR rouge.
+
+**POURQUOI, constaté le 2026-11-05** sur `hypomnesis`, privé : `gh api repos/kevpdev/hypomnesis/rulesets` rend cette réponse en HTTP 403.
+
 ## CodeQL
 
 - `codeql.yml` à part, un job par langage, **non requis** par le ruleset tant que sa stabilité n'est pas mesurée.
@@ -112,7 +124,7 @@ La CI ne se limite pas à compiler et lancer les tests. Elle couvre quatre caté
 
 `check-ci-contract.py` lit les fichiers et n'appelle pas GitHub. Il rend 0 si le dépôt est conforme, 1 s'il mesure un écart (une ligne par écart, `fichier:ligne`), 2 s'il ne peut pas conclure.
 
-`apply-ci-ruleset.sh --check` lit le ruleset par l'API et ne compare que les champs que le contrat pose. Il rend 0 si le ruleset est conforme, 1 s'il mesure un écart ou si le dépôt n'a pas de ruleset du contrat, 2 s'il ne peut pas lire le ruleset vivant. Il écrit une ligne par écart. Passer les mêmes `--branch` qu'à la pose, sinon une branche protégée en plus compte comme un écart.
+`apply-ci-ruleset.sh --check` lit le ruleset par l'API et ne compare que les champs que le contrat pose. Il rend 0 si le ruleset est conforme, 1 s'il mesure un écart ou si le dépôt n'a pas de ruleset du contrat, 2 s'il ne peut pas lire le ruleset vivant. Sur un dépôt privé d'un compte gratuit, il rend l'écart « ruleset indisponible » (section « Dépôt privé sur un compte gratuit »). Il écrit une ligne par écart. Passer les mêmes `--branch` qu'à la pose, sinon une branche protégée en plus compte comme un écart.
 
 ## L'ordre pour passer à la porte
 

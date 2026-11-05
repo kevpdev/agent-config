@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Mesure qu'un dépôt respecte le contrat CI de `rules/references/ref-ci-github.md`.
 
-Lit les fichiers, n'exécute rien et n'appelle pas GitHub. Six vérifications :
+Lit les fichiers, n'exécute rien et n'appelle pas GitHub. Sept vérifications :
 
 1. la porte : un seul job `ci`, le seul check que le ruleset exige. Elle a `if: always()`,
    son `needs` couvre tous les autres jobs de son workflow, ses steps lisent leurs
@@ -12,6 +12,10 @@ Lit les fichiers, n'exécute rien et n'appelle pas GitHub. Six vérifications :
 5. `dependabot.yml` couvre l'écosystème `github-actions`
 6. une classe de test `*IT` (Maven) suppose `maven-failsafe-plugin` déclaré dans un
    `pom.xml`, sinon Surefire l'ignore et `verify` reste vert sans la lancer
+7. le workflow de la porte n'envoie pas de SARIF (`github/codeql-action/upload-sarif`) :
+   sans licence Code Security, un dépôt privé refuse l'envoi et la porte reste rouge à
+   chaque run. Un envoi SARIF va dans un workflow séparé, non exigé.
+   `codeql-action/analyze` envoie aussi du SARIF, mais n'est pas visé ici
 
 Le nom d'un job est le contexte que le ruleset exige : on lit donc `name:` s'il existe,
 l'identifiant du job sinon. Un nom construit par matrice (`${{ ... }}`) n'est pas un
@@ -44,6 +48,7 @@ SHA = re.compile(r"^[0-9a-f]{40}$")
 USES = re.compile(r"^\s*(?:-\s*)?uses:\s*([^\s#]+)")
 GATE = "ci"
 TRIVY = "aquasecurity/trivy-action"
+UPLOAD_SARIF = "github/codeql-action/upload-sarif@"
 READS_ALL_RESULTS = re.compile(r"needs\.\*\.result|tojson\(\s*needs\s*\)", re.IGNORECASE)
 SKIPPED_DIRS = {".git", "node_modules", "target", ".venv"}
 
@@ -132,6 +137,23 @@ def check_gate(root: str, files: list[str], documents: dict) -> list[str]:
     )
     if not runs_trivy:
         problems.append(f"{relative}: aucun job Trivy dans le workflow de la porte `{GATE}`")
+    return problems + check_no_sarif(root, path)
+
+
+def check_no_sarif(root: str, path: str) -> list[str]:
+    """Refuse an upload-sarif step in the gate workflow.
+
+    The parsed YAML has no line numbers, so the raw text is scanned as in `check_uses`.
+    """
+    problems = []
+    with open(path, encoding="utf-8") as handle:
+        for number, line in enumerate(handle, start=1):
+            match = USES.match(line)
+            if match and match.group(1).strip("'\"").startswith(UPLOAD_SARIF):
+                problems.append(
+                    f"{os.path.relpath(path, root)}:{number}: `{match.group(1)}` dans le workflow "
+                    f"de la porte `{GATE}`, un envoi SARIF va dans un workflow séparé non exigé"
+                )
     return problems
 
 

@@ -44,23 +44,17 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
-      security-events: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # Results go to the job log, not to code scanning: the gate never uploads SARIF.
       - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: fs
           scanners: vuln,secret
-          format: sarif
-          output: trivy-results.sarif
+          format: table
           exit-code: '1'
           severity: CRITICAL,HIGH
           ignore-unfixed: true
-          limit-severities-for-sarif: true
-      - uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4
-        if: always()
-        with:
-          sarif_file: trivy-results.sarif
 
   # The only check the ruleset requires. `always()` keeps it from being skipped when a job fails,
   # since GitHub counts a skipped job as passed.
