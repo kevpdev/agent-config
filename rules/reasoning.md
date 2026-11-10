@@ -23,6 +23,19 @@
 
 **TRIGGER — je m'apprête à compter quelque chose** : calibrer l'instrument avant de le lancer, et ne jamais lire un « zéro » comme l'absence du défaut. Mode d'emploi des deux gestes et les 1 019 occurrences qui les fondent → `rules/references/ref-reasoning.md`, **à charger avant de compter**.
 
+## Règle — la doc d'un outil agentique se lit à sa source et à ma version
+
+**DÉCLENCHEUR** : un doute sur le comportement de Claude Code, d'OpenCode ou d'un autre outil agentique (config, hooks, plugins, skills, CLI, SDK).
+
+**À LA PLACE de** répondre de mémoire ou de partir d'une recherche web :
+
+1. **Entrer par l'index officiel**, `https://code.claude.com/docs/llms.txt` ou `https://opencode.ai/llms.txt`, puis lire la page qu'il désigne. Sous Claude Code, l'agent `claude-code-guide` fait ce travail pour Claude Code. Une page tierce ne sert que si l'officiel est muet, et sa réponse reste marquée comme telle.
+2. **Ancrer la version** : lancer `<outil> --version` avant de lire. Si la doc décrit une autre version, ou ne dit rien, lire le changelog de l'index entre les deux versions.
+3. **Une page muette ne prouve pas que la fonction manque.** Le changelog passe d'abord. S'il est muet aussi, le point est marqué « non documenté » et se teste en vrai.
+4. **Citer** l'URL de la page et la version installée avec la réponse.
+
+**POURQUOI** : ma mémoire date de mon entraînement, et l'outil bouge plus vite qu'elle. L'index d'OpenCode a changé d'adresse en une semaine (404 le 2026-11-02, 200 le 2026-11-10). Seuls l'index du jour et la version installée suivent l'outil.
+
 ## Règle — le substrat de vérification se mesure, il ne se choisit pas au confort
 
 **DÉCLENCHEUR** : je vais vérifier un comportement, et je peux le faire soit contre le vrai système, soit contre un montage jetable que j'écris moi-même.
