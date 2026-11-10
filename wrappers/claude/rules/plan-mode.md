@@ -1,6 +1,6 @@
 # Sortie d'analyse — passer par le plan mode
 
-Quand la conclusion d'une analyse appellera des modifications, appeler `EnterPlanMode` avant d'éditer, au lieu d'enchaîner.
+Quand la conclusion d'une analyse appellera un travail coûteux au sens du test du coût d'`intention.md`, appeler `EnterPlanMode` avant d'éditer, au lieu d'enchaîner. Un travail peu coûteux s'annonce en une ligne et s'exécute sans plan mode.
 
 Ni le mode **bypass**, ni une demande précise et détaillée ne valent accord sur une **approche** : les deux couvrent l'exécution, jamais le choix de ce qu'on va faire. La description de l'outil autorise à sauter le plan dans le second cas. Ici, non.
 
@@ -20,7 +20,7 @@ Ni le mode **bypass**, ni une demande précise et détaillée ne valent accord s
 
 Ne pas appeler `EnterPlanMode` quand le travail est piloté par un skill AIDD, que ce soit `/aidd-orchestrator:01-sdlc` ou un `/aidd-dev:*` lancé à la main. Ces skills portent leurs propres portes de validation, et le plan mode arrête le flux à son premier edit.
 
-**Ce que l'exception ne couvre pas** : le travail que je pilote moi-même dans un repo AIDD. Une analyse de ticket, une refacto à la main, une lecture de code qui conclut sur des modifications. La règle s'applique alors entière, que le repo porte un `aidd_docs/` ou non.
+**Ce que l'exception ne couvre pas** : le travail que je pilote moi-même dans un repo AIDD. Une analyse de ticket, une refacto à la main, une lecture de code qui conclut sur un travail coûteux. La règle s'applique alors entière, que le repo porte un `aidd_docs/` ou non.
 
 **POURQUOI** : le corps de `aidd-orchestrator:01-sdlc` dit « decide and act without confirmation ». Sans cette exception, le harnais ne peut pas héberger un SDLC autonome.
 

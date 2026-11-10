@@ -19,3 +19,7 @@ Les raisons de rangement et les récits datés de la règle. Jamais chargé auto
 ## Pourquoi l'exception n'est pas un `paths:`
 
 **POURQUOI ce n'est pas un `paths:`** : le scope `paths:` porte sur le fichier édité, jamais sur le repo (`back-spring.md` sur `**/*.java`, `front-react.md` sur `**/*.{ts,tsx}`). Un repo AIDD mêlant Java et TypeScript matcherait les deux, donc aucun glob n'exprime cette exception.
+
+## Le déclencheur borné au travail coûteux (2026-11-10, issue #90)
+
+Jusqu'au 2026-11-10, toute modification issue d'une analyse passait par le plan mode et « je pars sur ça ? ». Le déclencheur ne vise plus que le travail coûteux au sens d'`intention.md`, et tout plan écrit garde sa validation. Mesure et raisons dans `ref-intention.md`, section « Une tâche confiée va jusqu'à la PR draft ».
