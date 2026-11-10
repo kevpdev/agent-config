@@ -2,19 +2,21 @@
 name: hypomnesis-handoff
 description: >-
   Écrit l'état du projet pour la session suivante, avec hypomnesis handoff, quand l'opérateur
-  change de session. Utiliser quand l'opérateur dit « je bascule », « on reprend ailleurs »,
-  « je passe sur une autre session », « la session est trop chargée » ou « prépare la reprise ».
-  NE PAS utiliser en fin de session sans cette intention, ni pour noter une leçon ou une règle.
+  quitte la session, pour une autre session, une pause ou la fin de sa journée. Utiliser quand
+  l'opérateur dit « je bascule », « on reprend ailleurs », « la session est trop chargée »,
+  « prépare la reprise », « je fais une pause », « je vais manger », « on stop là »,
+  « j'arrête pour aujourd'hui » ou « mémorise où on en est ». NE PAS utiliser pour noter une
+  leçon ou une règle, comme « mémorise que les dates restent en UTC ».
 argument-hint: "rien, ou ce qu'il faut absolument transmettre"
 ---
 
 # hypomnesis-handoff — passer la main à la session suivante
 
-L'opérateur quitte cette session pour une autre. Le skill écrit l'état du projet, le `state`, que la session suivante du même projet recevra au démarrage, puis rend la main.
+L'opérateur quitte cette session : pour une autre, pour une pause ou pour la journée. Le skill se lance sans attendre qu'il le demande, dès qu'il annonce son départ. Il écrit l'état du projet, le `state`, que la session suivante du même projet recevra au démarrage, puis rend la main.
 
 ```mermaid
 flowchart TD
-  entree([l'opérateur change de session]) --> redige[rédiger le state en quatre parties]
+  entree([l'opérateur quitte la session]) --> redige[rédiger le state en quatre parties]
   redige --> appel[hypomnesis handoff, le JSON sur stdin]
   appel --> code{code de sortie}
   code -->|0| ok([state écrit, dit en une ligne])
@@ -55,6 +57,8 @@ Se rejoue dans un dépôt déclaré dans `~/.config/hypomnesis/config.toml`, sou
 | Cas | Preuve |
 | --- | --- |
 | « je bascule » dans une session enregistrée | `hypomnesis handoff` rend `0`, et `hypomnesis report` compte un `handoff` à `ok` |
+| « je vais manger » ou « on stop là », sans demande de passation | le skill se lance seul, `hypomnesis handoff` rend `0` |
+| « mémorise que X », une leçon et non un départ | le skill ne se lance pas, la leçon va à la mémoire du projet |
 | une session neuve du même projet | son contexte de démarrage porte le `title` et le `body` écrits |
 | un `body` de plus de 1 200 caractères | code `1`, le skill raccourcit et renvoie, un seul `state` valide à la fin |
 | un dépôt non déclaré, ou un agent sans adaptateur hypomnesis | code `1`, la raison est dite, aucune nouvelle tentative |
