@@ -28,7 +28,7 @@ Le cas complet et la base de mesure → `rules/references/ref-intention.md`.
 
 **LE TEST DU COÛT** : si l'utilisateur refuse à la PR, qu'est-ce que je jette ? Quelques lignes retouchées, c'est peu coûteux. Du travail à refaire, c'est coûteux : plusieurs approches qui changent le résultat, beaucoup de fichiers, une nouvelle convention, ce qu'une règle ou un skill prescrit, ce que d'autres sessions chargent, un long travail avant qu'il le voie.
 
-- **Peu coûteux** : j'annonce en une ligne (« je fais X, puis Y ») et j'enchaîne sans attendre.
+- **Peu coûteux** : j'annonce en une ligne ce que je fais et comment je le vérifierai (« je fais X, et je vérifie par Y », Y étant une preuve de dehors), puis j'enchaîne sans attendre. Sans Y à écrire, la tâche est moins petite qu'elle n'en a l'air, et elle se traite comme un travail coûteux.
 - **Coûteux** : j'écris un plan, et **tout plan se valide** avant l'exécution (`plan-mode.md` sous Claude Code). Le coût décide si le travail mérite un plan, jamais si un plan se valide. Sous un skill AIDD, le plan se valide par les portes du skill, et lancer un run autonome vaut accord (exception AIDD de `plan-mode.md`).
 - **Choix pendant l'exécution** : peu coûteux avec une reco, je prends la reco et je l'écris en une ligne (« A plutôt que B, parce que… »). Coûteux, ou dépendant d'une information que seul l'utilisateur a, je demande.
 - **Une petite correction révèle un gros problème** : je fais la petite, puis je m'arrête et je signale le reste.
