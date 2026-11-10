@@ -24,9 +24,7 @@ AIDD est le workflow unique de tout travail qui produit dans un dépôt git, à 
 
 **La session principale orchestre.** Sous Claude Code, `aidd-dev:executor` implémente dans le worktree, `aidd-dev:checker` relit, et chaque correction repasse par le checker jusqu'au verdict « prêt ». Ailleurs, ces agents ne sont pas garantis : relire à contexte neuf par le moyen disponible.
 
-**BORNE, dans tous les modes, SDLC compris** : la boucle s'arrête au 3e verdict « à corriger » sur un même travail, ou dès qu'un finding traité revient. L'orchestrateur ne relance pas l'executor. Il revient au cadrage ou au plan, rapporte les écarts récurrents et rend la décision à l'humain.
-
-**POURQUOI 3** : Self-Debugging voit la plupart des réparations réussies finir en 3 tours, Self-Refine plafonne à 4. Au-delà, le problème vient le plus souvent du cadrage ou du plan.
+**BORNE, dans tous les modes, SDLC compris** : la borne d'`intention.md` s'applique aux verdicts « à corriger » sur un même travail. Une fois atteinte, l'orchestrateur ne relance pas l'executor. Il revient au cadrage ou au plan, rapporte les écarts récurrents et rend la décision à l'humain.
 
 **ROUTAGE hors SDLC**, d'après le sujet du finding :
 

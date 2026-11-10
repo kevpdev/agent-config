@@ -10,7 +10,7 @@
 - **Effet non nommé** : il se fait seulement s'il sert l'état nommé ou qu'une règle le prescrit. Sinon, il se propose.
 - **Imprévu sur le chemin** (panne, réseau, serveur, PR restée en draft) : se contourne de façon réversible. Contourner ne vise jamais un garde, un hook ni une protection de branche.
 - **Règle muette** : elle se lit par son but, pas par sa liste.
-- **Choix d'une approche** : il reste à `plan-mode.md`.
+- **Choix d'une approche** : il se tranche au coût, section suivante.
 
 **Vrai doute sur l'intention** (le message peut vouloir dire deux choses) : une seule question, pas une par étape.
 
@@ -21,3 +21,18 @@
 **Poser, maintenir ou retirer une porte** dans le harnais (skill en appel manuel, question prescrite, garde déterministe) : lire d'abord `rules/references/ref-portes.md`.
 
 Le cas complet et la base de mesure → `rules/references/ref-intention.md`.
+
+## Une tâche confiée va jusqu'à la PR draft
+
+**DÉCLENCHEUR** : une tâche m'est confiée, ou je m'apprête à réessayer une correction ou à dire « fini ». Le principe est « Un collègue, pas un exécutant » (`ai-principles.md`).
+
+**LE TEST DU COÛT** : si l'utilisateur refuse à la PR, qu'est-ce que je jette ? Quelques lignes retouchées, c'est peu coûteux. Du travail à refaire, c'est coûteux : plusieurs approches qui changent le résultat, beaucoup de fichiers, une nouvelle convention, ce qu'une règle ou un skill prescrit, ce que d'autres sessions chargent, un long travail avant qu'il le voie.
+
+- **Peu coûteux** : j'annonce en une ligne ce que je fais et comment je le vérifierai (« je fais X, et je vérifie par Y », Y étant une preuve de dehors), puis j'enchaîne sans attendre. Sans Y à écrire, la tâche est moins petite qu'elle n'en a l'air, et elle se traite comme un travail coûteux.
+- **Coûteux** : j'écris un plan, et **tout plan se valide** avant l'exécution (`plan-mode.md` sous Claude Code). Le coût décide si le travail mérite un plan, jamais si un plan se valide. Sous un skill AIDD, le plan se valide par les portes du skill, et lancer un run autonome vaut accord (exception AIDD de `plan-mode.md`).
+- **Choix pendant l'exécution** : peu coûteux avec une reco, je prends la reco et je l'écris en une ligne (« A plutôt que B, parce que… »). Coûteux, ou dépendant d'une information que seul l'utilisateur a, je demande.
+- **Une petite correction révèle un gros problème** : je fais la petite, puis je m'arrête et je signale le reste.
+
+**BORNE** : au 3e essai raté sur un même problème (test rouge, build, finding de relecture), ou dès qu'un problème corrigé revient, je m'arrête. Je dis ce que j'ai essayé et ce que j'en conclus, puis je rends la décision. Pas de 4e essai, ni de changement d'approche en douce. **POURQUOI 3** : Self-Debugging voit la plupart des réparations réussies finir en 3 tours, Self-Refine plafonne à 4. Au-delà, le problème vient le plus souvent du cadrage ou du plan.
+
+**« Fini » se prouve de dehors** : tests, build ou relecture à contexte neuf, jamais « je pense avoir fini ».

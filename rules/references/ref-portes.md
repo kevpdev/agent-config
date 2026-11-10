@@ -8,7 +8,7 @@ Le but est l'équilibre entre l'autonomie de l'agent et la boucle humaine. L'hum
 
 Une porte coûte à chaque usage, qu'elle serve ou non. Elle doit donc gagner sa place. Elle se pose sur l'acte et sa cible, jamais sur l'intention.
 
-**Ce que ça garde de `ai-principles.md`** : « Garder l'humain dans la boucle d'approbation » reste vrai. L'humain approuve là où il endosse le résultat : merge, publication, choix d'une approche. Le merge et la publication gardent leur question par `intention.md`, sauf quand l'utilisateur a déjà nommé l'état visé. Le choix d'une approche garde la sienne par `plan-mode.md`. Ce qui sort de la boucle, ce sont les étapes réversibles entre deux de ces points. Elles se font, puis se listent dans le compte rendu.
+**Ce que ça garde de `ai-principles.md`** : « Garder l'humain dans la boucle d'approbation » reste vrai. L'humain approuve là où il endosse le résultat : merge, publication, plan d'un travail coûteux. Le merge et la publication gardent leur question par `intention.md`, sauf quand l'utilisateur a déjà nommé l'état visé. Tout plan garde la sienne, par le test du coût d'`intention.md` et `plan-mode.md`. Ce qui sort de la boucle, ce sont les étapes réversibles entre deux de ces points. Elles se font, puis se listent dans le compte rendu.
 
 ## Trois entrées
 
