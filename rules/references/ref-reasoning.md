@@ -60,6 +60,18 @@ Son exemple : `NEVER use ellipses` (moins efficace) → *« Your response will b
 
 **Non vérifié, et ça reste un trou** : les skills livrés par le harnais ne sont pas sur le disque — le binaire ne contient que leurs noms (5 occurrences de `artifact-design`, zéro pour leur corps), leur texte est servi côté serveur. Leur structure réelle n'a donc pas pu être mesurée ; seuls les exemples de la doc l'ont été, et aucun ne porte de bloc pourquoi.
 
+## La doc d'un outil agentique — #75 réduite à une règle (2026-11-10)
+
+L'issue #75 proposait un skill routé par outil et un script qui lise la version installée, récupère le `llms.txt` officiel et rende les URL pertinentes. Elle a été réduite à la section de `reasoning.md`, pour trois raisons mesurées le 2026-11-10.
+
+- **L'échec connu tient au déclenchement, pas à la recherche.** Le 2026-11-02, deux « supposé » sur les plugins OpenCode ont été écrits sans aucun fetch, alors que `opencode.ai/docs/plugins` et `docs/sdk` tranchaient. Une règle chargée d'office déclenche, un skill n'ajoute rien de plus sur ce point.
+- **Les index se lisent sans filtre.** L'index racine `opencode.ai/llms.txt` fait 3 297 octets, son sous-index `opencode.ai/docs/llms.txt` 3 911, et `code.claude.com/docs/llms.txt` 63 658. Un fetch natif les lit entiers.
+- **Les sous-index bougent, la racine reste.** `opencode.ai/llms.txt` rendait 200 le 2026-11-02 comme le 2026-11-10. Le sous-index `opencode.ai/docs/llms.txt` rendait 404 le 2026-11-02 et rend 200 le 2026-11-10, et la racine y renvoie désormais. Un script à URL profondes figées casserait sans bruit, sur deux agents à maintenir.
+
+Les autres cas de doc périmée ou manquante rapportés par l'utilisateur n'ont pas pu être comptés : les transcripts de plus de quelques mois sont purgés.
+
+**Rouvrir un skill ou un script** si une mesure montre que le fetch natif, borné par la règle, ramène quand même une mauvaise page ou une mauvaise version.
+
 ## Listes fermées gardées dans les règles (issue #73)
 
 L'audit du 2026-11-03 a envisagé de remplacer deux listes de noms par des descriptions, au motif qu'une liste écrite à la main devient fausse au premier renommage. Elles restent, pour deux raisons.
