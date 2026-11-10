@@ -65,8 +65,8 @@ Son exemple : `NEVER use ellipses` (moins efficace) → *« Your response will b
 L'issue #75 proposait un skill routé par outil et un script qui lise la version installée, récupère le `llms.txt` officiel et rende les URL pertinentes. Elle a été réduite à la section de `reasoning.md`, pour trois raisons mesurées le 2026-11-10.
 
 - **L'échec connu tient au déclenchement, pas à la recherche.** Le 2026-11-02, deux « supposé » sur les plugins OpenCode ont été écrits sans aucun fetch, alors que `opencode.ai/docs/plugins` et `docs/sdk` tranchaient. Une règle chargée d'office déclenche, un skill n'ajoute rien de plus sur ce point.
-- **Les index se lisent sans filtre.** `opencode.ai/docs/llms.txt` fait 3 911 octets et `code.claude.com/docs/llms.txt` 63 658. Un fetch natif les lit entiers.
-- **Les adresses bougent.** `opencode.ai/docs/llms.txt` rendait 404 le 2026-11-02 et 200 le 2026-11-10, et l'index racine y renvoie désormais. Un script à URL figées casserait sans bruit, sur deux agents à maintenir.
+- **Les index se lisent sans filtre.** L'index racine `opencode.ai/llms.txt` fait 3 297 octets, son sous-index `opencode.ai/docs/llms.txt` 3 911, et `code.claude.com/docs/llms.txt` 63 658. Un fetch natif les lit entiers.
+- **Les sous-index bougent, la racine reste.** `opencode.ai/llms.txt` rendait 200 le 2026-11-02 comme le 2026-11-10. Le sous-index `opencode.ai/docs/llms.txt` rendait 404 le 2026-11-02 et rend 200 le 2026-11-10, et la racine y renvoie désormais. Un script à URL profondes figées casserait sans bruit, sur deux agents à maintenir.
 
 Les autres cas de doc périmée ou manquante rapportés par l'utilisateur n'ont pas pu être comptés : les transcripts de plus de quelques mois sont purgés.
 

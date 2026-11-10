@@ -29,12 +29,12 @@
 
 **À LA PLACE de** répondre de mémoire ou de partir d'une recherche web :
 
-1. **Entrer par l'index officiel**, `https://code.claude.com/docs/llms.txt` ou `https://opencode.ai/llms.txt`, puis lire la page qu'il désigne. Sous Claude Code, l'agent `claude-code-guide` fait ce travail pour Claude Code. Une page tierce ne sert que si l'officiel est muet, et sa réponse reste marquée comme telle.
-2. **Ancrer la version** : lancer `<outil> --version` avant de lire. Si la doc décrit une autre version, ou ne dit rien, lire le changelog de l'index entre les deux versions.
-3. **Une page muette ne prouve pas que la fonction manque.** Le changelog passe d'abord. S'il est muet aussi, le point est marqué « non documenté » et se teste en vrai.
+1. **Entrer par l'index officiel**, `https://code.claude.com/docs/llms.txt` ou `https://opencode.ai/llms.txt`, puis lire la page qu'il désigne. Sous Claude Code, l'agent `claude-code-guide` fait ce travail pour Claude Code, et sa réponse doit porter l'URL et la version installée comme en 4.
+2. **Ancrer la version** : lancer `<outil> --version` avant de lire. Si la doc décrit une autre version, ou ne dit rien, lire le changelog de l'index jusqu'à la version installée.
+3. **Une page muette ne prouve pas que la fonction manque.** Le changelog passe d'abord. S'il est muet aussi, le point est marqué « non documenté » et se teste en vrai. Une page tierce ne vient qu'après, marquée « tiers, non officiel ».
 4. **Citer** l'URL de la page et la version installée avec la réponse.
 
-**POURQUOI** : ma mémoire date de mon entraînement, et l'outil bouge plus vite qu'elle. L'index d'OpenCode a changé d'adresse en une semaine (404 le 2026-11-02, 200 le 2026-11-10). Seuls l'index du jour et la version installée suivent l'outil.
+**POURQUOI** : les sous-index et les pages d'un outil apparaissent et bougent d'une version à l'autre, alors que l'index racine garde son adresse. Une URL profonde gardée de mémoire casse sans bruit.
 
 ## Règle — le substrat de vérification se mesure, il ne se choisit pas au confort
 
