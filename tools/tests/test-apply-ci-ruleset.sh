@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Calibre `tools/apply-ci-ruleset.sh` sans réseau : --dry-run, et --check par --live.
+# Calibre `tools/apply-ci-ruleset.sh` sans réseau : --dry-run, --check par --live, et --check
+# contre un faux `gh` pour les erreurs de l'API.
 #
 # La fixture est le ruleset vivant d'agent-config, capturé le 2026-11-03 par `gh api`. Elle
 # garde les champs que GitHub ajoute au payload (`required_reviewers`,
@@ -74,6 +75,27 @@ cas "un fichier vivant absent ne conclut pas" "$rc" "2"
 echo 'pas du json' > "$T/illisible.json"
 rc=0; bash "$SCRIPT" o/r --live "$T/illisible.json" >/dev/null 2>&1 || rc=$?
 cas "un JSON illisible ne conclut pas" "$rc" "2"
+
+# Fake `gh` first in PATH: it prints FAKE_GH_ERR on stderr and exits in error, like
+# `gh api` facing an API refusal.
+mkdir -p "$T/bin"
+printf '%s\n' '#!/usr/bin/env bash' 'echo "$FAKE_GH_ERR" >&2' 'exit 1' > "$T/bin/gh"
+chmod +x "$T/bin/gh"
+
+# api ERROR: runs --check against the fake `gh`, prints "code|stdout".
+api() {
+    local out rc
+    out=$(PATH="$T/bin:$PATH" FAKE_GH_ERR="$1" bash "$SCRIPT" o/r --check 2>/dev/null)
+    rc=$?
+    echo "$rc|$out"
+}
+
+cas "un dépôt privé d'un compte gratuit rend l'écart « ruleset indisponible »" \
+    "$(api 'gh: Upgrade to GitHub Pro or make this repository public to enable this feature. (HTTP 403)')" \
+    "1|o/r : ruleset indisponible : dépôt privé sur un compte gratuit, la porte ci n'est exigée par rien"
+
+sortie=$(api 'gh: Not Found (HTTP 404)')
+cas "une autre erreur de l'API sur les rulesets ne conclut pas" "${sortie%%|*}" "2"
 
 rc=0; bash "$SCRIPT" o/r --dry-run --check >/dev/null 2>&1 || rc=$?
 cas "--dry-run et --check s'excluent" "$rc" "2"

@@ -76,3 +76,7 @@ Jusqu'au 2026-11-03, commit, push et PR draft n'étaient permis sans question qu
 Jusqu'au 2026-11-04, la section se terminait sur « HORS PÉRIMÈTRE : tout geste sur la branche par défaut ou celle d'un autre, merge, force-push, tag ». Lue à la lettre, cette liste voulait dire « ces gestes gardent leur question ». Elle doublait `intention.md`. Elle la contredisait aussi. À « mergée, lance la bascule », elle a fait demander si la #91 devait être mergée.
 
 La section ne règle plus que commit, push et PR draft. Les autres gestes suivent `intention.md`. La « Limite » de la mesure ci-dessus date d'avant ce renvoi.
+
+## La borne de correction déplacée dans `intention.md` (issue #90, 2026-11-10)
+
+La borne de 3 et son « POURQUOI 3 » vivaient dans la section « Rôles et boucle de correction ». Elles ne couvraient que la boucle executor et checker. Le chiffre est passé dans `intention.md` pour couvrir toute boucle de correction, et la section garde son routage AIDD avec un renvoi. Raisons dans `ref-intention.md`.

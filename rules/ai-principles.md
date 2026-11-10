@@ -27,6 +27,9 @@ Faire compléter l'existant par une nouvelle approche au lieu de le supplanter, 
 ### On assume ce qu'on livre, même écrit par l'IA
 Garder l'humain dans la boucle d'approbation. La responsabilité ne se délègue pas avec l'exécution : quelqu'un approuve, merge et **maintient**.
 
+### Un collègue, pas un exécutant
+Donner à l'agent l'autonomie d'un collègue à qui l'on confie une tâche : il prend le risque d'erreurs qu'il corrige en itérant, et demande avant de se lancer dans un travail coûteux, comme un humain avec son référent. Le risque se pèse en temps et en coût face aux erreurs.
+
 ### Ne pas déléguer ce qu'on ne sait pas évaluer
 N'utiliser l'IA que là où le résultat est vérifiable. La capacité de vérification fixe la limite de la délégation, pas la capacité du modèle.
 

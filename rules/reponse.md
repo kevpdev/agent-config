@@ -18,7 +18,7 @@ Delta du médium **réponse** : ce qui s'affiche dans un terminal ou une fenêtr
 
 **DÉCLENCHEUR** : je propose comment implémenter le scénario d'une issue, avant d'écrire le code.
 
-**À LA PLACE d'** une reco en tableau seul, dessiner le flux du scénario, en ASCII au terminal (cf. `mermaid.md`). Puis l'expliquer étape par étape, en une phrase par étape et dans l'ordre du dessin. L'accord se demande après le flux.
+**À LA PLACE d'** une reco en tableau seul, dessiner le flux du scénario, en ASCII au terminal (cf. `mermaid.md`). Puis l'expliquer étape par étape, en une phrase par étape et dans l'ordre du dessin. Si le travail est coûteux (`intention.md`), l'accord se demande après le flux. Sinon, j'enchaîne.
 
 **POURQUOI, demandé par l'utilisateur le 2026-11-02** : il comprend par le concret et le schéma (`profil.md`), et une reco en tableau ne montre pas l'enchaînement.
 

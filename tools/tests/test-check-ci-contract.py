@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Calibre `check-ci-contract.py` sur des dépôts fabriqués, un conforme et un par défaut.
 
-N'ouvre aucun dépôt réel et n'appelle pas GitHub : ne teste que les six vérifications,
+N'ouvre aucun dépôt réel et n'appelle pas GitHub : ne teste que les sept vérifications,
 qui sont déterministes.
 
 Pourquoi cette batterie existe : un script de conformité se comporte pareil qu'il mesure
@@ -246,6 +246,21 @@ def main() -> int:
         ))
 
     case("Trivy dans un autre workflow que la porte", "aucun job Trivy", trivy_elsewhere)
+    upload = f"      - uses: github/codeql-action/upload-sarif@{SHA} # v4\n"
+    trivy_step = f"      - uses: aquasecurity/trivy-action@{SHA} # v0.36.0\n"
+    case(
+        "upload-sarif dans le workflow de la porte",
+        "ci.yml:32: `github/codeql-action/upload-sarif",
+        lambda r: mutate(r, ci, trivy_step, trivy_step + upload),
+    )
+    case(
+        "upload-sarif dans un autre workflow que la porte",
+        None,
+        lambda r: write(r, ".github/workflows/sarif.yml", (
+            "name: sarif\npermissions:\n  contents: read\njobs:\n  upload:\n    runs-on: x\n    steps:\n"
+            + upload
+        )),
+    )
     case(
         "permissions absentes en tête",
         "bloc `permissions:` absent",

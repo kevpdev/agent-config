@@ -10,6 +10,11 @@
           },
           {
             "type": "command",
+            "command": "python3 ~/.claude/scripts/hooks/guard-pr-merge-checks.py",
+            "timeout": 30
+          },
+          {
+            "type": "command",
             "command": "python3 ~/.claude/scripts/hooks/guard-no-remote-write.py"
           },
           {
@@ -38,6 +43,14 @@
           {
             "type": "command",
             "command": "python3 ~/.claude/scripts/hooks/init-codegraph.py"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v hypomnesis >/dev/null 2>&1 && hypomnesis hook claude-code session-start || true"
           }
         ]
       }
