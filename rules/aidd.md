@@ -20,11 +20,11 @@ AIDD est le workflow unique de tout travail qui produit dans un dépôt git, à 
 | Moyen (un skill, plusieurs fichiers) | `aidd-dev:01-plan`, puis implémenter, puis relire |
 | Grand (une feature de bout en bout) | `aidd-orchestrator:01-sdlc` |
 
-**Un plan en phases se relit phase par phase**, run SDLC compris. L'orchestrateur confie une phase à la fois à l'executor, repris d'une phase à l'autre, et lance le checker entre deux. Le checker juge la phase sur ses propres critères, et le test d'acceptation reste attendu jusqu'à la dernière. Un finding de phase repart comme un finding de fin de run : le contrat vers le cadrage, l'implémentation vers l'executor. La borne de correction compte par phase. Le plan reste livré en une seule PR, et la relecture finale à contexte neuf reste due, parce qu'elle seule voit les phases ensemble. **À LA PLACE de** relire le plan une fois tout livré, corriger chaque phase tant que son code est petit. **POURQUOI** : relu d'un bloc, un plan de quatre phases a attendu 21 min de code avant sa première relecture, qui a trouvé un trou de contrat sur tout le code à la fois (`rules/references/ref-aidd.md`).
-
 ## Rôles et boucle de correction
 
 **La session principale orchestre.** Sous Claude Code, `aidd-dev:executor` implémente dans le worktree, `aidd-dev:checker` relit, et chaque correction repasse par le checker jusqu'au verdict « prêt ». Ailleurs, ces agents ne sont pas garantis : relire à contexte neuf par le moyen disponible.
+
+**Un plan en phases se relit phase par phase**, run SDLC compris. L'orchestrateur confie une phase à la fois à l'executor, repris d'une phase à l'autre, et lance le checker entre deux. Le checker juge la phase sur ses propres critères, et le test d'acceptation reste attendu jusqu'à la dernière. Un finding de phase suit le routage d'un finding de fin de run. La borne de correction compte par phase. Le plan reste livré en une seule PR, et la relecture finale à contexte neuf reste due, parce qu'elle seule voit les phases ensemble. **À LA PLACE de** relire le plan une fois tout livré, corriger chaque phase tant que son code est petit. **POURQUOI** : relu d'un bloc, un plan de quatre phases a attendu 21 min de code avant sa première relecture, qui a trouvé un trou de contrat sur tout le code à la fois (`rules/references/ref-aidd.md`).
 
 **BORNE, dans tous les modes, SDLC compris** : la borne d'`intention.md` s'applique aux verdicts « à corriger » sur un même travail. Une fois atteinte, l'orchestrateur ne relance pas l'executor. Il revient au cadrage ou au plan, rapporte les écarts récurrents et rend la décision à l'humain.
 
