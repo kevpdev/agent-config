@@ -80,3 +80,7 @@ La section ne règle plus que commit, push et PR draft. Les autres gestes suiven
 ## La borne de correction déplacée dans `intention.md` (issue #90, 2026-11-10)
 
 La borne de 3 et son « POURQUOI 3 » vivaient dans la section « Rôles et boucle de correction ». Elles ne couvraient que la boucle executor et checker. Le chiffre est passé dans `intention.md` pour couvrir toute boucle de correction, et la section garde son routage AIDD avec un renvoi. Raisons dans `ref-intention.md`.
+
+## Une PR par phase — le constat (hypomnesis #25, 2026-11-16)
+
+L'incrément 3 d'hypomnesis (issue #25, PR #43) avait un plan en quatre phases dépendantes, livrées en une seule PR par un run `aidd-orchestrator:01-sdlc`. La première relecture n'est arrivée qu'après 21 min de code, et elle a trouvé un trou de contrat (la session reprise après une passe de consolidation) qui touchait tout le code d'un coup. Les phases dépendaient l'une de l'autre, mais la dépendance impose un ordre, pas une taille : des PR empilées l'auraient attrapé dès la phase 1.

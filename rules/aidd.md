@@ -20,6 +20,8 @@ AIDD est le workflow unique de tout travail qui produit dans un dépôt git, à 
 | Moyen (un skill, plusieurs fichiers) | `aidd-dev:01-plan`, puis implémenter, puis relire |
 | Grand (une feature de bout en bout) | `aidd-orchestrator:01-sdlc` |
 
+**Un plan en phases se livre en une PR par phase**, empilées dans l'ordre du plan : chacune part de la précédente, passe sa relecture et sa CI, puis se merge avant la suivante. **À LA PLACE de** livrer tout le plan d'un bloc, regrouper dans une même PR seulement deux phases qui ne se vérifient qu'ensemble. **POURQUOI** : livré d'un bloc, un incrément a attendu 21 min de code avant sa première relecture, qui a trouvé un trou de contrat sur tout le code à la fois (`rules/references/ref-aidd.md`).
+
 ## Rôles et boucle de correction
 
 **La session principale orchestre.** Sous Claude Code, `aidd-dev:executor` implémente dans le worktree, `aidd-dev:checker` relit, et chaque correction repasse par le checker jusqu'au verdict « prêt ». Ailleurs, ces agents ne sont pas garantis : relire à contexte neuf par le moyen disponible.
