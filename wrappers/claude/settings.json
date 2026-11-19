@@ -54,6 +54,17 @@
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v hypomnesis >/dev/null 2>&1 && hypomnesis hook claude-code user-prompt-submit || true",
+            "timeout": 5
+          }
+        ]
+      }
     ]
   },
   "statusLine": {
