@@ -86,3 +86,11 @@ La borne de 3 et son « POURQUOI 3 » vivaient dans la section « Rôles et bouc
 L'incrément 3 d'hypomnesis (issue #25, PR #43) avait un plan en quatre phases dépendantes, livrées par un run `aidd-orchestrator:01-sdlc`. La première relecture n'est arrivée qu'après 21 min de code, et elle a trouvé un trou de contrat (la session reprise après une passe de consolidation) qui touchait tout le code d'un coup. Les phases dépendaient l'une de l'autre, mais la dépendance impose un ordre, pas une taille.
 
 Une PR par phase a été écartée le même jour, après relecture (agent-config#112). Le run SDLC livre une seule PR et ne merge jamais. Le test d'acceptation, écrit d'abord et par l'extérieur, ne passe la CI qu'avec la dernière phase. Et empiler les branches contredit `rules/worktrees.md`. La relecture par phase règle le vrai défaut, la relecture tardive, sans toucher à git ni à la CI.
+
+## Seul un finding bloquant relance l'executor (2026-11-19)
+
+**Constat** : l'opérateur a signalé des livraisons rallongées par les allers-retours après le checker. Sur hypomnesis#55, quatre causes : des findings mineurs renvoyés à l'executor sur un verdict « prêt », un checker complet à chaque correction (la relecture finale a coûté 338 s et 110 134 tokens), `scripts/check.sh` complet (environ 6 min) à chaque run, et des briefs d'executor qui oubliaient des fichiers de test.
+
+**Côté AIDD** : l'agent `aidd-dev:checker` ne sépare pas le bloquant du mineur, il ajuste un score à la gravité (`agents/checker.md`, 2.7.1). La zone Check d'`aidd-orchestrator:01-sdlc` n'ouvre la PR que sans « actionable finding » (`references/03-check.md`, 2.4.0). La règle se pose dans agent-config plutôt que dans le plugin, pour survivre à ses mises à jour : elle range les notes hors des findings actionnables.
+
+**Pourquoi un test plutôt qu'un second checker pour une correction** : vérifier qu'un finding est corrigé est une mesure, et une mesure vient de dehors (`reasoning.md`). Le checker garde sa valeur là où le contexte neuf voit ce que l'auteur ne voit plus, au premier passage sur du code neuf et sur l'ensemble des phases.

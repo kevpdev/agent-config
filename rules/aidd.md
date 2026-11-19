@@ -22,7 +22,16 @@ AIDD est le workflow unique de tout travail qui produit dans un dépôt git, à 
 
 ## Rôles et boucle de correction
 
-**La session principale orchestre.** Sous Claude Code, `aidd-dev:executor` implémente dans le worktree, `aidd-dev:checker` relit, et chaque correction repasse par le checker jusqu'au verdict « prêt ». Ailleurs, ces agents ne sont pas garantis : relire à contexte neuf par le moyen disponible.
+**La session principale orchestre.** Sous Claude Code, `aidd-dev:executor` implémente dans le worktree et `aidd-dev:checker` relit. Ailleurs, ces agents ne sont pas garantis : relire à contexte neuf par le moyen disponible.
+
+**Seul un finding bloquant relance l'executor.** Le brief du checker demande deux listes, « à corriger » pour ce qui empêche de livrer et « notes » pour le reste. Un verdict « prêt » fait avancer, et ses notes vont dans la PR ou dans une issue, ce qui vaut « aucun finding actionnable » pour la zone Check du SDLC.
+- **Correction mineure** (doc, nom, commentaire) : l'orchestrateur la fait lui-même, sans repasser au checker, et la signale dans la PR.
+- **Correction d'un finding bloquant** : le test qui la prouve, puis un checker limité aux findings corrigés, sur un brief court. Pas de relecture complète.
+- **Checker complet** : en fin de phase sur du code neuf, et en relecture finale.
+- **Suite complète du projet** : une fois avant la PR. Pendant l'itération, les tests ciblés suffisent.
+- **Brief de l'executor** : il nomme les fichiers à toucher, tests compris, et les tests à faire passer. Un finding évité coûte moins qu'un finding corrigé.
+
+**POURQUOI** : un checker complet a coûté 338 s et 110 000 tokens sur hypomnesis#55, et chaque mineur renvoyé en relançait un, qui trouvait de nouveaux mineurs (`rules/references/ref-aidd.md`).
 
 **Un plan en phases se relit phase par phase**, run SDLC compris. L'orchestrateur confie une phase à la fois à l'executor, repris d'une phase à l'autre, et lance le checker entre deux. Le checker juge la phase sur ses propres critères, et le test d'acceptation reste attendu jusqu'à la dernière. Un finding de phase suit le routage d'un finding de fin de run. La borne de correction compte par phase. Le plan reste livré en une seule PR, et la relecture finale à contexte neuf reste due, parce qu'elle seule voit les phases ensemble. **À LA PLACE de** relire le plan une fois tout livré, corriger chaque phase tant que son code est petit. **POURQUOI** : relu d'un bloc, un plan de quatre phases a attendu 21 min de code avant sa première relecture, qui a trouvé un trou de contrat sur tout le code à la fois (`rules/references/ref-aidd.md`).
 
