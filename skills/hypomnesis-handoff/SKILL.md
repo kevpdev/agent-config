@@ -1,32 +1,41 @@
 ---
 name: hypomnesis-handoff
 description: >-
-  Écrit l'état du projet pour la session suivante, avec hypomnesis handoff, quand l'opérateur
-  quitte la session, pour une autre session, une pause ou la fin de sa journée. Utiliser quand
-  l'opérateur dit « je bascule », « on reprend ailleurs », « la session est trop chargée »,
-  « prépare la reprise », « je fais une pause », « je vais manger », « on stop là »,
-  « j'arrête pour aujourd'hui » ou « mémorise où on en est ». NE PAS utiliser pour noter une
-  leçon ou une règle, comme « mémorise que les dates restent en UTC ».
+  Écrit l'état du projet pour la session suivante, avec hypomnesis handoff, après chaque jalon
+  de la session et quand l'opérateur la quitte, pour une autre session, une pause ou la fin de
+  sa journée. Utiliser sans demander après un jalon, par exemple une décision prise, un plan
+  validé, un commit poussé, une PR mergée, une issue créée ou un blocage levé, la liste fermée
+  étant celle du protocole d'hypomnesis. Utiliser aussi quand l'opérateur dit « je bascule »,
+  « on reprend ailleurs », « la session est trop chargée », « prépare la reprise », « je fais
+  une pause », « je vais manger », « on stop là », « j'arrête pour aujourd'hui » ou « mémorise
+  où on en est ». NE PAS utiliser pour noter une leçon ou une règle, comme « mémorise que les
+  dates restent en UTC ».
 argument-hint: "rien, ou ce qu'il faut absolument transmettre"
 ---
 
 # hypomnesis-handoff — passer la main à la session suivante
 
-L'opérateur quitte cette session : pour une autre, pour une pause ou pour la journée. Le skill se lance sans attendre qu'il le demande, dès qu'il annonce son départ. Il écrit l'état du projet, le `state`, que la session suivante du même projet recevra au démarrage, puis rend la main.
+Le skill écrit l'état du projet, le `state`, que la session suivante du même projet recevra au démarrage. Il se lance sans attendre que l'opérateur le demande, dans deux cas :
+
+- **après chaque jalon**, parce que l'opérateur ne prévient pas toujours de la fin de son travail. Le critère est une question : la session suivante referait-elle le travail, ou le contredirait-elle, sans cette information ? La liste fermée des jalons, et ce qui n'en est pas un, est dans `docs/protocole-v0.md` d'hypomnesis, section « Les jalons ». Le début de session la rappelle.
+- **quand l'opérateur annonce son départ**, pour une autre session, une pause ou la journée.
+
+Après un jalon, la session continue. Après un départ, le skill rend la main.
 
 ```mermaid
 flowchart TD
-  entree([l'opérateur quitte la session]) --> redige[rédiger le state en quatre parties]
+  entree([jalon atteint, ou l'opérateur quitte la session]) --> redige[rédiger le state en quatre parties]
   redige --> appel[hypomnesis handoff, le JSON sur stdin]
   appel --> code{code de sortie}
   code -->|0| ok([state écrit, dit en une ligne])
   code -->|1, state trop long| redige
+  code -->|1, état changé| fusion[fusionner l'état affiché] --> redige
   code -->|1, autre raison| arret([raison dite à l'opérateur, sans réessayer])
 ```
 
 ## Process
 
-1. **Rédiger le `state`.** Ce que git et la mémoire du projet ne disent pas, en quatre parties courtes :
+1. **Rédiger le `state`.** Il remplace l'état entier, il ne s'y ajoute pas : partir de l'état reçu au démarrage ou écrit au jalon précédent, et le réécrire. Ce que git et la mémoire du projet ne disent pas, en quatre parties courtes :
    - **Où on en est** : la tâche en cours et l'étape atteinte.
    - **Ce qui est décidé** : les choix faits pendant la session, avec leur raison en une ligne.
    - **Ce qui bloque** : l'obstacle, ou « rien ».
@@ -42,7 +51,7 @@ flowchart TD
 
 3. **Lire le code de sortie.**
    - `0` : le `state` est écrit et l'ancien est invalidé. Le dire en une ligne à l'opérateur.
-   - `1` : rien n'est écrit, la raison est sur la sortie d'erreur. Un `state` trop long se raccourcit puis se renvoie. Une session sans projet déclaré, ou que hypomnesis n'a pas enregistrée à son démarrage, ne peut pas passer la main : le dire à l'opérateur sans réessayer.
+   - `1` : rien n'est écrit, la raison est sur la sortie d'erreur. Un `state` trop long se raccourcit puis se renvoie. Un refus parce que l'état a changé depuis que la session l'a lu (une passe ou une autre session l'a réécrit) affiche l'état courant : le fusionner avec le sien, puis renvoyer. Un refus qui signale l'état changé sans pouvoir l'afficher ne se fusionne pas, et aucune passation de cette session ne peut le remplacer : le dire à l'opérateur sans réessayer. Une session sans projet déclaré, ou que hypomnesis n'a pas enregistrée à son démarrage, ne peut pas passer la main : le dire à l'opérateur sans réessayer.
 
 ## Transversal rules
 
@@ -56,9 +65,14 @@ Se rejoue dans un dépôt déclaré dans `~/.config/hypomnesis/config.toml`, sou
 
 | Cas | Preuve |
 | --- | --- |
+| un commit poussé ou une PR mergée, sans demande de passation | le skill se lance seul, `hypomnesis handoff` rend `0`, et la session continue |
+| une lecture de fichier ou un lancement de tests, sans conclusion | le skill ne se lance pas |
 | « je bascule » dans une session enregistrée | `hypomnesis handoff` rend `0`, et `hypomnesis report` compte un `handoff` à `ok` |
 | « je vais manger » ou « on stop là », sans demande de passation | le skill se lance seul, `hypomnesis handoff` rend `0` |
 | « mémorise que X », une leçon et non un départ | le skill ne se lance pas, la leçon va à la mémoire du projet |
 | une session neuve du même projet | son contexte de démarrage porte le `title` et le `body` écrits |
+| l'état réécrit par une passe depuis le démarrage | code `1` avec l'état courant, le skill fusionne et renvoie, un seul `state` valide à la fin |
 | un `body` de plus de 1 200 caractères | code `1`, le skill raccourcit et renvoie, un seul `state` valide à la fin |
 | un dépôt non déclaré, ou un agent sans adaptateur hypomnesis | code `1`, la raison est dite, aucune nouvelle tentative |
+
+Le refus d'un état que le contrôle de fuite retient ne se rejoue pas : ce contrôle ne devrait jamais rien attraper (`core/leak_check.py` d'hypomnesis). La règle du point 3 reste écrite pour le cas d'un défaut du premier filtre.
