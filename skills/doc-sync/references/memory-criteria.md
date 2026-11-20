@@ -1,6 +1,6 @@
 # Critère d'inclusion en mémoire
 
-Ce qui mérite d'exister dans une mémoire AIDD. Lu par `frame-memory` pour trancher, par `deliver-memory` pour écrire, et tendu au checker par `check-memory`.
+Ce qui mérite d'exister dans une mémoire AIDD. Lu par `frame-memory` pour trancher, par `deliver-memory` pour écrire, et tendu au reviewer par `check-memory`.
 
 ## Ce que ce fichier ajoute à AIDD
 

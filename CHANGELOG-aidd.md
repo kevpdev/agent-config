@@ -28,7 +28,7 @@ est décrite dans [`README.md`](README.md#la-veille-des-plugins-aidd).
 
 Transitions de version : `aidd-context` 2.10.0 → 2.11.0 · `aidd-dev` 2.7.1 → 2.8.0 · `aidd-orchestrator` 2.4.0 → 2.5.0 · `aidd-pm` 2.6.0 → 2.6.1 · `aidd-qa` 1.0.0 → 1.1.0 · `aidd-refine` 3.1.2 → 3.2.0 · `aidd-vcs` 2.5.0 → 2.5.1.
 
-- **Cassant, non déclaré** : `aidd-dev` ne livre plus d'agents. `aidd-dev:executor` devient `aidd-orchestrator:executor`. `aidd-dev:checker` se coupe en `aidd-orchestrator:validator` (la demande et ses critères) et `aidd-orchestrator:reviewer` (qualité, via `/aidd-dev:05-review`). Le changelog le range en « Features » (« ship generic sub-agents across six hosts »). Patché ici : `rules/aidd.md` et `skills/doc-sync/actions/05-check-memory.md`, le checker devenant `reviewer`.
+- **Cassant, non déclaré** : `aidd-dev` ne livre plus d'agents. `aidd-dev:executor` devient `aidd-orchestrator:executor`. `aidd-dev:checker` se coupe en `aidd-orchestrator:validator` (la demande et ses critères) et `aidd-orchestrator:reviewer` (qualité, via `/aidd-dev:05-review`). Le changelog le range en « Features » (« ship generic sub-agents across six hosts »). Patché ici : `rules/aidd.md` et `skills/doc-sync/actions/05-check-memory.md`, puis le mot générique « checker » dans `rules/`, `skills/doc-sync/` et `rules/references/ref-aidd.md`, le checker devenant `reviewer`.
 - **Non déclaré cassant** : `aidd-refine:05-improve` devient `05-review-conversation` (#1068). `aidd-vcs:resolve-conflict` devient `05-resolve-conflict`. Aucun des deux n'est cité par ce repo hors traces datées.
 - La zone Check d'`aidd-orchestrator:01-sdlc` lance `validator` puis `reviewer`, ce dernier seulement si la validation passe (`references/03-check.md`).
 

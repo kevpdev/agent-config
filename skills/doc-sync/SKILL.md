@@ -38,7 +38,7 @@ Dérouler le flux. Ne lire que la prochaine action.
 | classify-docs | donne à chaque document un type et un régime, et route |
 | frame-memory | décide ce qui mérite d'exister en mémoire, sans rien écrire |
 | deliver-memory | écrit le plan cadré, par `/10-learn` ou en édition directe |
-| check-memory | fait juger la mémoire par un checker neuf et route ses constats |
+| check-memory | fait juger la mémoire par un reviewer neuf et route ses constats |
 | sync-doc | réécrit les documents reflet selon leur type, et rend chaque edit |
 | reconcile | compare un document de décision au code et signale l'écart |
 
