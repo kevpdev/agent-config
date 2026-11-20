@@ -18,7 +18,8 @@
 #   3  no Orca: git, same path, same branch.
 #
 # THE BASE is origin/<default branch>, after a fetch. The local `main` of the agent-config
-# checkout is never updated (rules/worktrees.md), it would be stale. Without origin/HEAD,
+# checkout is never updated (rules/worktrees.md), it would be stale. Other checkouts get
+# their local `main` fast-forwarded by remove, step 7. Without origin/HEAD,
 # the script tries `git remote set-head origin --auto`. If that fails, the base is
 # origin/main and stderr says so.
 #
@@ -50,6 +51,12 @@
 #      `git branch -D` if it is still there. The dated why is in
 #      rules/references/ref-worktrees.md.
 #   6  The remote branch goes through `git push origin --delete` if `git ls-remote` sees it.
+#   7  The local default branch of the main checkout is fast-forwarded onto
+#      origin/<default branch>, so the code the sessions run from that checkout follows the
+#      merge (hypomnesis#56). Skipped when the checkout holds another branch, and in a
+#      checkout that carries tools/bascule.sh, which updates itself through that script
+#      (rules/worktrees.md). A merge that is not a fast-forward is reported, never forced,
+#      and does not change the exit code.
 #   Each item is reported on stderr as removed (« retiré ») or already absent
 #   (« déjà absent »). Exit 0 when everything is removed or absent, 1 on a refusal or a
 #   failure. Never `git worktree prune`.
@@ -366,7 +373,29 @@ $SALE"
         dire "branche distante origin/$BRANCHE : déjà absente."
     fi
 
+    avancer_principal
     [ "$ECHECS" -eq 0 ]
+}
+
+# Step 7: fast-forwards the local default branch of the main checkout onto $DEFAUT.
+avancer_principal() {
+    local locale="${DEFAUT#origin/}" courante
+    if [ -f "$PRINCIPAL/tools/bascule.sh" ]; then
+        dire "$locale local : non avancé, ce checkout se met à jour par tools/bascule.sh."
+        return 0
+    fi
+    courante="$(git -C "$PRINCIPAL" branch --show-current)"
+    if [ "$courante" != "$locale" ]; then
+        dire "$locale local : non avancé, le checkout principal est sur « ${courante:-HEAD détachée} »."
+        return 0
+    fi
+    if [ "$(git -C "$PRINCIPAL" rev-parse HEAD)" = "$(git -C "$PRINCIPAL" rev-parse "$DEFAUT")" ]; then
+        dire "$locale local : déjà à jour."
+    elif git -C "$PRINCIPAL" merge -q --ff-only "$DEFAUT" >&2; then
+        dire "$locale local : avancé sur $DEFAUT."
+    else
+        dire "$locale local : non avancé, git merge --ff-only a refusé. À mettre à jour à la main."
+    fi
 }
 
 # ---------------------------------------------------------------------------- dispatch
