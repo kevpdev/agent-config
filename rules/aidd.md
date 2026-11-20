@@ -16,13 +16,13 @@ AIDD est le workflow unique de tout travail qui produit dans un dépôt git, à 
 
 | Taille | Parcours |
 |---|---|
-| Petit (un script, un template) | implémenter, puis relecture à contexte neuf (`aidd-dev:checker` ou `aidd-dev:05-review`) |
+| Petit (un script, un template) | implémenter, puis relecture à contexte neuf (`aidd-orchestrator:reviewer` ou `aidd-dev:05-review`) |
 | Moyen (un skill, plusieurs fichiers) | `aidd-dev:01-plan`, puis implémenter, puis relire |
 | Grand (une feature de bout en bout) | `aidd-orchestrator:01-sdlc` |
 
 ## Rôles et boucle de correction
 
-**La session principale orchestre.** Sous Claude Code, `aidd-dev:executor` implémente dans le worktree et `aidd-dev:checker` relit. Ailleurs, ces agents ne sont pas garantis : relire à contexte neuf par le moyen disponible.
+**La session principale orchestre.** Sous Claude Code, `aidd-orchestrator:executor` implémente dans le worktree et `aidd-orchestrator:reviewer` relit. Ailleurs, ces agents ne sont pas garantis : relire à contexte neuf par le moyen disponible.
 
 **Seul un finding bloquant relance l'executor.** Le brief du checker demande deux listes, « à corriger » pour ce qui empêche de livrer et « notes » pour le reste. Un verdict « prêt » fait avancer, et ses notes vont dans la PR ou dans une issue, ce qui vaut « aucun finding actionnable » pour la zone Check du SDLC.
 - **Correction mineure** (doc, nom, commentaire) : l'orchestrateur la fait lui-même, sans repasser au checker, et la signale dans la PR.
