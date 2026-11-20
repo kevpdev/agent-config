@@ -10,7 +10,8 @@
 #
 # POURQUOI DEPUIS LE WORKTREE
 #   Avant l'avance, le checkout principal ne contient pas encore ce script. On le lance
-#   depuis `agent-config-v2`, et il exige que origin/main contienne le commit d'où il vient.
+#   depuis le worktree, et il exige que origin/main contienne le commit d'où il vient, ou
+#   son contenu quand la PR a été mergée en squash.
 #
 # CE QUI EST SAUVEGARDÉ, dans ETAT/<horodatage>/
 #   liens-claude.txt, liens-opencode.txt   les liens vers REPO, `chemin -> cible`
@@ -114,8 +115,17 @@ fi
 [ "$(git -C "$REPO" branch --show-current)" = "main" ] || refus "$REPO n'est pas sur main."
 git -C "$REPO" fetch -q origin || refus "git fetch origin a échoué dans $REPO."
 source_sha="$(git -C "$ICI" rev-parse HEAD)"
-git -C "$REPO" merge-base --is-ancestor "$source_sha" origin/main \
-    || refus "origin/main ne contient pas ${source_sha:0:7}, le commit de ce script. La PR vers main est-elle mergée ?"
+# Un merge en squash remplace le commit de la branche : on accepte alors origin/main s'il porte
+# le même contenu que la branche sur chaque fichier qu'elle a changé.
+contenu_merge() {
+    local base fichiers
+    base="$(git -C "$REPO" merge-base "$source_sha" origin/main)" || return 1
+    # -z et --literal-pathspecs : un nom non ASCII ou porteur de * ou : reste comparé tel quel.
+    mapfile -d '' -t fichiers < <(git -C "$REPO" diff -z --no-renames --name-only "$base" "$source_sha")
+    [ "${#fichiers[@]}" -gt 0 ] && git -C "$REPO" --literal-pathspecs diff --quiet "$source_sha" origin/main -- "${fichiers[@]}"
+}
+git -C "$REPO" merge-base --is-ancestor "$source_sha" origin/main || contenu_merge \
+    || refus "origin/main ne contient ni ${source_sha:0:7}, le commit de ce script, ni son contenu en squash. La PR vers main est-elle mergée, ou main a-t-il retouché ses fichiers depuis ? Relancer alors depuis un worktree à jour."
 git -C "$REPO" merge-base --is-ancestor HEAD origin/main || refus "main ne peut pas avancer en avance rapide sur origin/main."
 for paire in "claude:$CLAUDE" "opencode:$OPENCODE"; do
     agent="${paire%%:*}"; cible="${paire#*:}"

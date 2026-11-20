@@ -66,6 +66,23 @@ git -C "$T/origin.git" update-ref refs/heads/main "$PRE"
 lancer; rc=$?
 cas "origin/main sans le commit du script : refus" "$rc $(ls "$E" 2>/dev/null | wc -l)" "1 0"
 git -C "$T/origin.git" update-ref refs/heads/main "$(git -C "$ICI" rev-parse HEAD)"
+# Squash : origin/main porte le contenu du commit testé sous un autre commit, plus un fichier
+# sans rapport, comme un main qui a avancé. La précondition du contenu passe, et le refus
+# suivant (main local divergent) prouve qu'elle a été franchie.
+export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t
+AUTRE="$(echo autre | git -C "$T/origin.git" hash-object -w --stdin)"
+ARBRE="$(export GIT_INDEX_FILE="$T/index-squash"
+    git -C "$T/origin.git" read-tree "$(git -C "$ICI" rev-parse 'HEAD^{tree}')"
+    git -C "$T/origin.git" update-index --add --cacheinfo "100644,$AUTRE,sans-rapport.txt"
+    git -C "$T/origin.git" write-tree)"
+SQUASH="$(git -C "$T/origin.git" commit-tree "$ARBRE" -p "$PRE" -m squash)"
+git -C "$T/origin.git" update-ref refs/heads/main "$SQUASH"
+git -C "$REPO" -c user.name=t -c user.email=t@t commit -q --allow-empty -m divergent
+lancer; rc=$?
+cas "squash : le contenu suffit, le refus vient de l'étape suivante" \
+    "$rc $(grep -c 'ne contient ni' "$T/sortie") $(grep -c 'avance rapide' "$T/sortie")" "1 0 1"
+git -C "$REPO" reset -q --hard "$PRE"
+git -C "$T/origin.git" update-ref refs/heads/main "$(git -C "$ICI" rev-parse HEAD)"
 touch "$REPO/sale"
 lancer; rc=$?
 cas "dépôt sale : refus, rien n'est écrit" "$rc $(ls "$E" 2>/dev/null | wc -l) $(git -C "$REPO" rev-parse HEAD)" "1 0 $PRE"

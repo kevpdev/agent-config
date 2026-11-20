@@ -26,7 +26,7 @@ Jusqu'au 2026-11-02, la règle et son garde ne visaient que les dépôts portant
 
 **Lire par intention, liste d'origine** : mémoire du projet et génération d'artefacts de contexte, clarifier et remettre en cause, planifier et implémenter et contrôler (revue, tests, audit, débogage), versionner et livrer, produit et backlog, orchestrer de bout en bout. Sortie de la règle pour tenir son poids (issue #73), le « Use when » du catalogue porte la même information.
 
-**Sous OpenCode**, AIDD s'installe par projet (« Flat only »), et `executor` et `checker` sont des agents de plugin Claude. Le rappel d'installation et leur équivalent relèvent de #61, chantiers C et B. La règle les nomme donc sous Claude Code sans rien promettre ailleurs.
+**Sous OpenCode**, AIDD s'installe par projet (« Flat only »), et `executor` et `reviewer` sont des agents de plugin Claude. Le rappel d'installation et leur équivalent relèvent de #61, chantiers C et B. La règle les nomme donc sous Claude Code sans rien promettre ailleurs.
 
 ## Borne de la boucle de correction — les sources (2026-11-02)
 
@@ -46,7 +46,7 @@ La boucle mêle les deux premières lignes, puisque le checker lance les tests m
 
 **Routage** : le SDLC route d'après le sujet du finding (`03-check.md`). Le plan n'y est pas une cible à part, il vit dans Deliver. En `interactive`, un refus humain se route en plus par artefact refusé : contrat vers Frame, plan vers Deliver, résultat vers Deliver ou vers Frame s'il change ce qu'on construit (`mode.md`).
 
-**Suite prévue** : un hook qui compte les appels au checker par travail et refuse le 4e sans accord humain, à cadrer à part s'il demande un état persistant.
+**Suite prévue** : un hook qui compte les appels au reviewer par travail et refuse le 4e sans accord humain, à cadrer à part s'il demande un état persistant.
 
 ## Où vit la mémoire — la source
 
@@ -93,4 +93,4 @@ Une PR par phase a été écartée le même jour, après relecture (agent-config
 
 **Côté AIDD** : l'agent `aidd-dev:checker` ne sépare pas le bloquant du mineur, il ajuste un score à la gravité (`agents/checker.md`, 2.7.1). La zone Check d'`aidd-orchestrator:01-sdlc` n'ouvre la PR que sans « actionable finding » (`references/03-check.md`, 2.4.0). La règle se pose dans agent-config plutôt que dans le plugin, pour survivre à ses mises à jour : elle range les notes hors des findings actionnables.
 
-**Pourquoi un test plutôt qu'un second checker pour une correction** : vérifier qu'un finding est corrigé est une mesure, et une mesure vient de dehors (`reasoning.md`). Le checker garde sa valeur là où le contexte neuf voit ce que l'auteur ne voit plus, au premier passage sur du code neuf et sur l'ensemble des phases.
+**Pourquoi un test plutôt qu'un second reviewer pour une correction** : vérifier qu'un finding est corrigé est une mesure, et une mesure vient de dehors (`reasoning.md`). Le checker garde sa valeur là où le contexte neuf voit ce que l'auteur ne voit plus, au premier passage sur du code neuf et sur l'ensemble des phases.

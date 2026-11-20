@@ -1,6 +1,6 @@
 # 05 - Contrôler la mémoire
 
-Fait juger la mémoire par un checker qui ne l'a pas écrite, et route chaque constat vers l'action qui le répare.
+Fait juger la mémoire par un reviewer qui ne l'a pas écrite, et route chaque constat vers l'action qui le répare.
 
 ## Input
 
@@ -12,7 +12,7 @@ Un rapport au gabarit `aidd-context/skills/02-project-memory/assets/report.md`, 
 
 ## Process
 
-1. **Dispatcher un checker neuf.** Un seul `aidd-orchestrator:reviewer`, avec dans son prompt :
+1. **Dispatcher un reviewer neuf.** Un seul `aidd-orchestrator:reviewer`, avec dans son prompt :
    - le chemin absolu de [`../references/memory-criteria.md`](../references/memory-criteria.md), comme extension de sa checklist, car il ne le trouvera pas seul dans le projet ;
    - le chemin de `aidd-context/skills/02-project-memory/references/review-protocol.md`, pour les faits que le code contredit ;
    - la règle d'instrument des règles transverses, écrite en clair.
