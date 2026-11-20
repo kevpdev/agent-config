@@ -435,6 +435,51 @@ WORKTREE_ORCA_TIMEOUT=abc lancer 0 "" 0 create r-delai-create
 cas "create refused, invalid timeout: exit 1, no directory" \
     "$?/$(present "$RACINE/projet/r-delai-create")" "1/absent"
 
+# Step 7: the local main of the main checkout follows origin/main after the cleanup.
+derriere() { git -C "$REPO" reset -q --hard "origin/main^"; }
+preparer r-avance
+derriere
+lancer 0 "" 0 remove r-avance
+cas "remove, main behind: exit 0" "$?" "0"
+cas "remove, main behind: fast-forwarded onto origin/main" \
+    "$(git -C "$REPO" rev-parse main)" "$(git -C "$REPO" rev-parse origin/main)"
+cas "remove, main behind: reported" "$(grep -c 'main local : avancé sur origin/main' "$T/err")" "1"
+
+preparer r-a-jour
+git -C "$REPO" merge -q --ff-only origin/main
+lancer 0 "" 0 remove r-a-jour
+cas "remove, main already up to date: reported" "$(grep -c 'main local : déjà à jour' "$T/err")" "1"
+
+preparer r-sur-branche
+derriere
+AVANT_BRANCHE="$(git -C "$REPO" rev-parse main)"
+git -C "$REPO" switch -q -c ailleurs-principal
+lancer 0 "" 0 remove r-sur-branche
+cas "remove, main checkout on another branch: exit 0" "$?" "0"
+cas "remove, main checkout on another branch: main untouched" "$(git -C "$REPO" rev-parse main)" "$AVANT_BRANCHE"
+cas "remove, main checkout on another branch: reported" \
+    "$(grep -c 'non avancé, le checkout principal est sur « ailleurs-principal »' "$T/err")" "1"
+git -C "$REPO" switch -q main
+
+preparer r-bascule
+derriere
+AVANT_BASCULE="$(git -C "$REPO" rev-parse main)"
+mkdir -p "$REPO/tools" && : > "$REPO/tools/bascule.sh"
+lancer 0 "" 0 remove r-bascule
+cas "remove, checkout with bascule.sh: exit 0" "$?" "0"
+cas "remove, checkout with bascule.sh: main untouched" "$(git -C "$REPO" rev-parse main)" "$AVANT_BASCULE"
+cas "remove, checkout with bascule.sh: reported" "$(grep -c 'se met à jour par tools/bascule.sh' "$T/err")" "1"
+rm -rf "$REPO/tools"
+
+preparer r-diverge
+git -C "$REPO" commit -q --allow-empty -m "feat: local seulement"
+LOCAL_SEUL="$(git -C "$REPO" rev-parse main)"
+lancer 0 "" 0 remove r-diverge
+cas "remove, main diverged: exit 0, cleanup done" "$?/$(etat r-diverge)" "0/0/absent/absent"
+cas "remove, main diverged: main untouched" "$(git -C "$REPO" rev-parse main)" "$LOCAL_SEUL"
+cas "remove, main diverged: reported" "$(grep -c 'git merge --ff-only a refusé' "$T/err")" "1"
+git -C "$REPO" reset -q --hard origin/main
+
 # Arguments.
 lancer 0 "" 0 remove
 cas "remove refused, missing name: usage" "$?/$(grep -c '^Usage' "$T/err")" "1/1"
