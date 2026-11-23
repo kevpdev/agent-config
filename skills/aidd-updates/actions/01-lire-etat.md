@@ -33,4 +33,4 @@ quel), ou `à planifier`.
 | `--etat` sur une machine à jour | `retards` est vide, et l'action s'arrête sans rien écrire |
 | un appel juste après `--marquer-planifie` | l'action affiche le plan existant et ne relit aucun changelog |
 | un `derniere_erreur` non nul dans l'état | il apparaît en tête de la sortie, avant le verdict |
-| `bash wrappers/claude/scripts/tests/test-aidd-updates.sh` | la batterie du détecteur couvre les branches côté données et passe au vert |
+| `bash tools/tests/test-aidd-updates.sh` | la batterie du détecteur couvre les branches côté données et passe au vert |

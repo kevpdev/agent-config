@@ -14,6 +14,14 @@ POURQUOI CE SCRIPT
   cause. Or la casse est chez nous : 16 noms de skills AIDD sont cites dans ce repo, et la montee
   1.x -> 2.x en avait deja renomme trois (cf. CHANGELOG-aidd.md).
 
+RUNTIMES (Claude Code and OpenCode)
+  Claude Code lists its plugins in ~/.claude/plugins/installed_plugins.json. OpenCode gets AIDD from
+  `aidd setup --global`, whose CLI records versions in $XDG_CONFIG_HOME/aidd/manifest.json, key
+  .tools.opencode.plugins[].{name,version} (measured with CLI 5.7.0: the manifest follows
+  XDG_CONFIG_HOME, the OpenCode files stay under ~/.config/opencode). A missing runtime is not a
+  failure. A present but unreadable file goes to `derniere_erreur` without hiding the other runtime.
+  Per plugin, the LOWEST installed version wins: the plan covers the largest lag.
+
 POURQUOI DEUX MODES, ET PAS DE RESEAU SUR --notify
   Le decoupage vient de la CLI AIDD elle-meme (cli/src/application/use-cases/check-update-use-case.ts,
   « Hot path: print the update notice from cached value only — fresh OR stale, never network »).
@@ -34,6 +42,7 @@ UN SEUL ECRIVAIN DU FRONT-MATTER
 SURCHARGES D'ENVIRONNEMENT (calibrage, sur le modele de CLAUDE_RULES_DIR dans sync-rules.sh)
   AIDD_UPDATES_STATE_DIR      dossier d'etat, au lieu de $XDG_STATE_HOME/aidd-updates
   AIDD_UPDATES_PLUGINS_JSON   installed_plugins.json jetable, au lieu de celui de Claude Code
+  AIDD_UPDATES_AIDD_MANIFEST  AIDD CLI manifest, instead of $XDG_CONFIG_HOME/aidd/manifest.json (OpenCode)
   AIDD_UPDATES_TAGS_FILE      remplace la sortie de `git ls-remote`, donc la batterie tourne hors reseau
   AIDD_UPDATES_NO_DETACH      coupe le refresh detache de --notify, pour que la batterie soit sequentielle
 """
@@ -63,6 +72,7 @@ CHAMPS = (
     "dernier_affichage",
     "statut",
     "derniere_erreur",
+    "runtimes",
 )
 TAG = re.compile(r"refs/tags/(aidd-[a-z]+)-v(\d+)\.(\d+)\.(\d+)$")
 
@@ -87,6 +97,14 @@ def fichier_plugins() -> Path:
     if surcharge:
         return Path(surcharge)
     return Path.home() / ".claude" / "plugins" / "installed_plugins.json"
+
+
+def aidd_manifest_file() -> Path:
+    override = os.environ.get("AIDD_UPDATES_AIDD_MANIFEST")
+    if override:
+        return Path(override)
+    base = os.environ.get("XDG_CONFIG_HOME") or (Path.home() / ".config")
+    return Path(base) / "aidd" / "manifest.json"
 
 
 # ------------------------------------------------------- front-matter, lecture / ecriture
@@ -178,19 +196,71 @@ def _tuple_version(v: str) -> tuple[int, int, int]:
         return 0, 0, 0
 
 
-def versions_installees() -> dict[str, str]:
-    chemin = fichier_plugins()
+def _read_json(path: Path, label: str) -> dict | None:
+    """None when the file is absent (runtime not installed). Panne when present but unreadable."""
+    if not path.is_file():
+        return None
     try:
-        brut = json.loads(chemin.read_text(encoding="utf-8"))
+        data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as err:
-        raise Panne(f"installed_plugins.json illisible ({chemin}) : {err}") from err
-    trouvees = {}
-    for identifiant, entrees in (brut.get("plugins") or {}).items():
-        nom = identifiant.split("@")[0]
-        if not nom.startswith("aidd-") or not entrees:
+        raise Panne(f"{label} illisible ({path}) : {err}") from err
+    if not isinstance(data, dict):
+        raise Panne(f"{label} illisible ({path}) : objet JSON attendu")
+    return data
+
+
+def claude_versions() -> dict[str, str] | None:
+    data = _read_json(fichier_plugins(), "installed_plugins.json")
+    if data is None:
+        return None
+    found = {}
+    for identifier, entries in (data.get("plugins") or {}).items():
+        name = identifier.split("@")[0]
+        if not name.startswith("aidd-") or not entries:
             continue
-        trouvees[nom] = entrees[0].get("version", "0.0.0")
-    return trouvees
+        found[name] = entries[0].get("version", "0.0.0")
+    return found
+
+
+def opencode_versions() -> dict[str, str] | None:
+    data = _read_json(aidd_manifest_file(), "manifeste AIDD")
+    if data is None:
+        return None
+    plugins = ((data.get("tools") or {}).get("opencode") or {}).get("plugins") or []
+    return {
+        p["name"]: p.get("version", "0.0.0")
+        for p in plugins
+        if isinstance(p, dict) and str(p.get("name", "")).startswith("aidd-")
+    }
+
+
+RUNTIMES = (("claude", claude_versions), ("opencode", opencode_versions))
+
+
+def versions_installees() -> tuple[dict[str, str], list[str], list[str]]:
+    """Return (lowest version per plugin, runtimes holding AIDD plugins, per-runtime errors).
+    Raise Panne only when no runtime file could be read at all."""
+    lowest: dict[str, str] = {}
+    runtimes: list[str] = []
+    errors: list[str] = []
+    readable = 0
+    for runtime, read in RUNTIMES:
+        try:
+            found = read()
+        except Panne as err:
+            errors.append(str(err))
+            continue
+        if found is None:
+            continue
+        readable += 1
+        if found:
+            runtimes.append(runtime)
+        for name, version in found.items():
+            if name not in lowest or _tuple_version(version) < _tuple_version(lowest[name]):
+                lowest[name] = version
+    if not readable:
+        raise Panne(" ; ".join(errors) or "aucun runtime AIDD trouve (ni installed_plugins.json ni manifeste AIDD)")
+    return lowest, runtimes, errors
 
 
 def versions_upstream() -> dict[str, str]:
@@ -267,7 +337,7 @@ def _perime(horodatage: str | None, heures: int) -> bool:
 def mode_refresh() -> int:
     etat, corps = lire()
     try:
-        installe = versions_installees()
+        installe, runtimes, erreurs = versions_installees()
         upstream = versions_upstream()
     except Panne as err:
         etat["derniere_erreur"] = str(err).replace("\n", " ")[:300]
@@ -280,8 +350,9 @@ def mode_refresh() -> int:
     a_bouge = any(etat.get(c) != neuf[c] for c in neuf)
     etat.update(neuf)
     etat["cassant"] = cassants(retards)
+    etat["runtimes"] = runtimes
     etat["verifie_le"] = maintenant()
-    etat["derniere_erreur"] = None
+    etat["derniere_erreur"] = " ; ".join(erreurs).replace("\n", " ")[:300] if erreurs else None
     if a_bouge:
         # Une cle qui bouge invalide le plan, et lui seul. Sans cette condition, chaque refresh
         # effacerait un plan encore valable, et le skill replanifierait pour rien.

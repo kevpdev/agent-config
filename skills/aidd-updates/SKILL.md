@@ -70,7 +70,7 @@ Une batterie jouable seule pour la donnée, le reste en relecture humaine du run
 
 | Cas | Preuve |
 | --- | --- |
-| `bash wrappers/claude/scripts/tests/test-aidd-updates.sh` | la batterie du détecteur passe au vert, branches d'état comprises |
+| `bash tools/tests/test-aidd-updates.sh` | la batterie du détecteur passe au vert, branches d'état comprises |
 | une machine sans retard | le skill dit « à jour » et s'arrête sans ouvrir un seul changelog |
 | un plan sur disque encore valide | le skill l'affiche tel quel, il ne replanifie pas |
 | une rupture upstream sans occurrence ici | elle sort en une ligne du plan, jamais en tâche |
