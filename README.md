@@ -365,6 +365,14 @@ Les skills ne passent pas par `skills: [...]` : un lien sous `skills/` est déco
 
 Les règles ne passent pas par un `AGENTS.md` généré. OpenCode ne lit ni `~/.claude/rules` ni aucun dossier de règles, mais son tableau `instructions` accepte un glob. Il lit donc `rules/*.md` dans le repo, et une règle modifiée s'applique sans rien régénérer. OpenCode n'a pas de scope par chemin, donc aucune règle du glob n'est propre à une stack. Les règles propres à Claude restent hors du glob, dans `wrappers/claude/rules/`.
 
+AIDD s'installe pour OpenCode une fois par machine, à la main, par la CLI du framework. Les plugins sont ceux installés sous Claude Code :
+
+```bash
+npm_config_ignore_scripts=true npx -y @ai-driven-dev/cli@5.7.0 setup --global --source remote --ide opencode --plugins aidd-context,aidd-dev,aidd-vcs,aidd-pm,aidd-orchestrator,aidd-refine --yes
+```
+
+`--source remote` est obligatoire en mode non interactif, ce que la doc d'AIDD ne disait pas au 2026-11-23. Sans `--release vX.Y.Z`, `setup` interroge l'API des releases de GitHub, qui a rendu des erreurs 504 le 2026-11-23. Le tag explicite évite cet appel. `npx -y @ai-driven-dev/cli@5.7.0 doctor --global` vérifie l'installation, et `npx -y @ai-driven-dev/cli@5.7.0 clean --global --force` la retire. L'installation n'entre pas en conflit avec `install.py`, parce que les chemins sont disjoints. La CLI écrit sous `skills/aidd-<plugin>/` et `agents/`, et `install.py` pose ses liens en `skills/<nom>`. `opencode.json` n'est pas touché.
+
 ## Outillage
 
 ### Lancer toutes les batteries
@@ -464,18 +472,22 @@ Claude Code sait appliquer une mise à jour de plugin, pas dire ce qu'elle va ca
 par marketplace applique dans les dix minutes qui suivent le démarrage, donc la casse arrive
 décorrélée de sa cause. Or elle est **ici** : des noms de skills AIDD sont cités dans ce repo, et la
 montée 1.x → 2.x en avait déjà renommé trois (cf. [`CHANGELOG-aidd.md`](CHANGELOG-aidd.md)). D'où
-l'auto-update laissé désactivé pour `aidd-framework`, et ce dispositif : le détecteur `wrappers/claude/scripts/aidd-updates.py` compare les versions installées aux tags upstream et garde l'état, le bloc `SessionStart` de `settings.json` affiche une ligne au démarrage (une fois par jour au plus), le skill `skills/aidd-updates/` lit les changelogs, rédige le plan d'adaptation et l'applique sur accord, et `wrappers/claude/scripts/tests/test-aidd-updates.sh` est la batterie du détecteur.
+l'auto-update laissé désactivé pour `aidd-framework`, et ce dispositif : le détecteur `tools/aidd-updates.py` compare les versions installées aux tags upstream et garde l'état, le bloc `SessionStart` de `settings.json` affiche une ligne au démarrage (une fois par jour au plus), le skill `skills/aidd-updates/` lit les changelogs, rédige le plan d'adaptation et l'applique sur accord, et `tools/tests/test-aidd-updates.sh` est la batterie du détecteur.
 
 L'état vit **hors du repo**, dans `${XDG_STATE_HOME:-$HOME/.local/state}/aidd-updates/plan.md` : un
 front-matter YAML pour la machine, le plan en markdown pour l'humain. C'est un état de machine, et
 l'avertissement en tête de `CHANGELOG-aidd.md` interdit d'écrire ça dans le repo. Ce fichier est aussi
-l'**interface** entre le wrapper qui produit et le skill qui consomme, ce qui garde le skill neutre :
-changer de runtime ne réécrirait que le détecteur.
+l'**interface** entre le détecteur qui produit et le skill qui consomme, ce qui garde le skill neutre.
+Les commandes propres à un runtime, l'emplacement du détecteur et la commande de montée, ne vivent que
+dans `skills/aidd-updates/references/detecteur.md`. La ligne de démarrage n'existe que sous Claude Code.
+Sous OpenCode, le skill s'invoque à la main par `/aidd-updates`, mesuré le 2026-11-23 avec OpenCode 1.19.6.
+
+**Le détecteur lit les deux runtimes.** Sous Claude Code, il lit `~/.claude/plugins/installed_plugins.json`. Sous OpenCode, il lit le manifeste que la CLI AIDD écrit à l'installation globale, `${XDG_CONFIG_HOME:-$HOME/.config}/aidd/manifest.json`. Un runtime absent n'est pas une panne. Un fichier présent mais illisible s'écrit dans `derniere_erreur`, sans masquer l'autre runtime. Pour chaque plugin, la version retenue est la plus basse des runtimes qui l'ont, et le champ `runtimes` de l'état nomme les runtimes où AIDD est installé.
 
 ```bash
-bash wrappers/claude/scripts/tests/test-aidd-updates.sh          # hors réseau
-python3 wrappers/claude/scripts/aidd-updates.py --refresh        # force une vérification
-python3 wrappers/claude/scripts/aidd-updates.py --etat           # ce que le skill lit
+bash tools/tests/test-aidd-updates.sh          # hors réseau
+python3 tools/aidd-updates.py --refresh        # force une vérification
+python3 tools/aidd-updates.py --etat           # ce que le skill lit
 ```
 
 **Le chemin chaud ne touche jamais le réseau.** `--notify` lit le cache et détache un `--refresh`

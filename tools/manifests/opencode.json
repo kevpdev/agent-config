@@ -6,6 +6,7 @@
   "entrees": [
     {"mode": "link", "source": "wrappers/opencode/plugins/harness-guards", "cible": "plugins/harness-guards"},
     {"mode": "link", "source": "tools/worktree.sh", "cible": "scripts/worktree.sh"},
+    {"mode": "link", "source": "tools/aidd-updates.py", "cible": "scripts/aidd-updates.py"},
     {"mode": "glob-dirs", "source": "skills/*", "cible": "skills"}
   ]
 }

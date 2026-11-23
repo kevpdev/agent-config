@@ -74,6 +74,8 @@ L'installation globale n'est pas supportée par AIDD (doc-vérifié le 2026-11-0
 | `aidd setup --help`, CLI 5.5.0 et 5.6.0 | `--scope user` n'accepte que `claude,codex,copilot,cursor` |
 | `aidd_docs/tasks/2026_10/2026_10_07_opencode-plugin-loading/verification.md` | « Global installation […] were not exercised » |
 
+**Avenant du 2026-11-23** (#122). Ce constat ne vaut plus depuis la CLI 5.7.0. `setup --global` accepte `opencode` et copie skills et agents dans `~/.config/opencode/`. L'installation globale est faite et documentée dans le README, section « OpenCode ».
+
 ### La mémoire, elle, est déjà partagée
 
 Le trou ne touche que les skills. La mémoire AIDD vit dans le dépôt, sous `aidd_docs/memory/`, et `aidd-context:02-project-memory` la branche sur chaque outil par son fichier de contexte (doc-vérifié, `aidd-context` 2.8.1, `references/tools.md` et `actions/04-sync.md`) :
