@@ -57,13 +57,16 @@ puis `--etat` : `retards` doit être vide.
 **Sous OpenCode, la montée réinstalle tout.** Ni `sync --global`, ni `plugin update --scope user`, ni
 `framework update` ne font monter une installation globale, mesuré le 2026-11-23 avec la CLI 5.7.0
 (#122). Seul `setup --global --release` le fait, et il laisse en place les fichiers que la nouvelle
-version a retirés, d'où le `clean` avant.
+version a retirés, d'où le `clean` avant. Ce `clean` retire l'installation globale de la CLI pour tous les outils qu'elle a servis, pas seulement OpenCode. Sous Claude, les plugins passent par `claude plugin`, hors de la CLI.
 
 - **`<liste>`** : tous les plugins installés sous OpenCode, pas seulement ceux en retard, parce que
   `clean` les retire tous. La relever **avant** le `clean`, dans le manifeste de la CLI :
   `python3 -c 'import json,os; p=os.path.join(os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config"),"aidd","manifest.json"); print(",".join(x["name"] for x in json.load(open(p))["tools"]["opencode"]["plugins"]))'`.
-- **`vX.Y.Z`** : le dernier tag de release du framework, de la forme `vX.Y.Z`, dans le dépôt que le
-  détecteur interroge (`git ls-remote --tags https://github.com/ai-driven-dev/framework.git`). Le
+- **`vX.Y.Z`** : le dernier tag de release du framework, dans le dépôt que le détecteur interroge.
+  `git ls-remote` trie en texte, donc sa dernière ligne n'est pas la dernière version, et il faut
+  ce tri par version :
+  `git ls-remote --tags https://github.com/ai-driven-dev/framework.git | grep -oE 'refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$' | sed 's#refs/tags/##' | sort -V | tail -1`.
+  Le
   détecteur, lui, compare les tags par plugin (`aidd-<plugin>-vX.Y.Z`) : la release retenue doit
   porter les versions de `cle_upstream`, ce que `--etat` confirme après la montée.
 
