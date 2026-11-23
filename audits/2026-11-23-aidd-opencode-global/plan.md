@@ -1,6 +1,6 @@
 ---
 objective: "AIDD est installé globalement pour OpenCode sur la machine, documenté, et /aidd-updates détecte, planifie et applique les montées AIDD aussi bien sous OpenCode que sous Claude Code."
-status: pending
+status: done
 ---
 
 # Plan: AIDD global sous OpenCode, et /aidd-updates agnostique

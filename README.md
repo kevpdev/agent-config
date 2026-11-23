@@ -371,7 +371,7 @@ AIDD s'installe pour OpenCode une fois par machine, à la main, par la CLI du fr
 npm_config_ignore_scripts=true npx -y @ai-driven-dev/cli@5.7.0 setup --global --source remote --ide opencode --plugins aidd-context,aidd-dev,aidd-vcs,aidd-pm,aidd-orchestrator,aidd-refine --yes
 ```
 
-`--source remote` est obligatoire en mode non interactif, ce que la doc d'AIDD ne disait pas au 2026-11-23. `npx -y @ai-driven-dev/cli@5.7.0 doctor --global` vérifie l'installation, et `npx -y @ai-driven-dev/cli@5.7.0 clean --global --force` la retire. L'installation n'entre pas en conflit avec `install.py`, parce que les chemins sont disjoints. La CLI écrit sous `skills/aidd-<plugin>/` et `agents/`, et `install.py` pose ses liens en `skills/<nom>`. `opencode.json` n'est pas touché.
+`--source remote` est obligatoire en mode non interactif, ce que la doc d'AIDD ne disait pas au 2026-11-23. Sans `--release vX.Y.Z`, `setup` interroge l'API des releases de GitHub, qui a rendu des erreurs 504 le 2026-11-23. Le tag explicite évite cet appel. `npx -y @ai-driven-dev/cli@5.7.0 doctor --global` vérifie l'installation, et `npx -y @ai-driven-dev/cli@5.7.0 clean --global --force` la retire. L'installation n'entre pas en conflit avec `install.py`, parce que les chemins sont disjoints. La CLI écrit sous `skills/aidd-<plugin>/` et `agents/`, et `install.py` pose ses liens en `skills/<nom>`. `opencode.json` n'est pas touché.
 
 ## Outillage
 
