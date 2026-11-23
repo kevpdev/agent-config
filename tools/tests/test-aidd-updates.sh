@@ -110,7 +110,7 @@ verifie "un plugin non installe n'est pas un retard" "non" \
   "$(echo "$SORTIE" | grep -q 'orchestrator' && echo oui || echo non)"
 verifie "runtimes, Claude seul" "[claude]" "$(champ runtimes)"
 
-echo "1b. calibration, OpenCode only (AIDD manifest, no installed_plugins.json)"
+echo "1b. calibrage OpenCode — manifeste AIDD seul, sans installed_plugins.json"
 # Own state dir and tags file: the following cases rely on the state left by calibration 1.
 (
   export AIDD_UPDATES_STATE_DIR="$TMP/etat-opencode"
@@ -216,22 +216,23 @@ echo "9. mode inconnu"
 lance --nawak > /dev/null
 verifie "sortie 2 sur un mode inconnu" "2" "$?"
 
-# --------------------------------------------------------- 11. both runtimes
+# --------------------------------------------------------- 10. both runtimes
 
-echo "11. deux runtimes, la version la plus basse gagne"
+echo "10. deux runtimes, la version la plus basse gagne"
 rm -f "$PLAN"
 ecrire_installe "3.0.0" "2.8.0"
 write_aidd_manifest "2.7.0"
 ecrire_tags "aidd-refine-v3.0.0" "aidd-dev-v2.8.0"
 lance --refresh > /dev/null
 verifie "cle_installe.aidd-dev est la plus basse" "2.7.0" "$(etat_field 'd["cle_installe"]["aidd-dev"]')"
+verifie "un plugin present sous Claude seul est garde" "3.0.0" "$(etat_field 'd["cle_installe"]["aidd-refine"]')"
 verifie "retard aidd-dev rendu" "2.7.0>2.8.0" \
   "$(etat_field 'd["retards"]["aidd-dev"]["de"] + ">" + d["retards"]["aidd-dev"]["vers"]')"
 verifie "runtimes, les deux" "['claude', 'opencode']" "$(etat_field 'd["runtimes"]')"
 
-# --------------------------------------------------------- 12. no runtime at all
+# --------------------------------------------------------- 11. no runtime at all
 
-echo "12. aucun runtime"
+echo "11. aucun runtime"
 rm -f "$PLAN" "$AIDD_UPDATES_PLUGINS_JSON" "$AIDD_UPDATES_AIDD_MANIFEST"
 lance --refresh > /dev/null
 verifie "sortie 0" "0" "$?"
@@ -239,9 +240,9 @@ verifie "derniere_erreur renseignee" "oui" \
   "$([ -n "$(champ derniere_erreur)" ] && [ "$(champ derniere_erreur)" != "null" ] && echo oui || echo non)"
 verifie "aucune trace Python" "non" "$(grep -q 'Traceback' "$TMP/err.txt" && echo oui || echo non)"
 
-# --------------------------------------------------------- 13. unreadable AIDD manifest
+# --------------------------------------------------------- 12. unreadable AIDD manifest
 
-echo "13. manifeste AIDD illisible, Claude lisible"
+echo "12. manifeste AIDD illisible, Claude lisible"
 rm -f "$PLAN"
 ecrire_installe "2.2.1" "2.3.1"
 echo '{ pas du json' > "$AIDD_UPDATES_AIDD_MANIFEST"
@@ -254,9 +255,29 @@ verifie "runtimes, Claude seul" "['claude']" "$(etat_field 'd["runtimes"]')"
 verifie "aucune trace Python" "non" "$(grep -q 'Traceback' "$TMP/err.txt" && echo oui || echo non)"
 rm -f "$AIDD_UPDATES_AIDD_MANIFEST"
 
-# --------------------------------------------------------- 10. le vrai reseau, non bloquant
+# --------------------------------------------------------- 13. unexpected manifest shape
 
-echo "10. reseau reel (informatif, n'echoue pas hors ligne)"
+echo "13. manifeste AIDD de forme inattendue, Claude lisible"
+for forme in '{"tools": {"opencode": "x"}}' '{"tools": {"opencode": {"plugins": {"aidd-dev": "2.7.0"}}}}'; do
+  rm -f "$PLAN"
+  echo "$forme" > "$AIDD_UPDATES_AIDD_MANIFEST"
+  lance --refresh > /dev/null
+  verifie "Claude reste rendu ($forme)" "['claude']" "$(etat_field 'd["runtimes"]')"
+  verifie "derniere_erreur nomme le manifeste ($forme)" "oui" \
+    "$(champ derniere_erreur | grep -q 'manifeste AIDD illisible' && echo oui || echo non)"
+done
+rm -f "$AIDD_UPDATES_AIDD_MANIFEST"
+
+# --------------------------------------------------------- 14. total failure clears runtimes
+
+echo "14. panne totale, runtimes remis a vide"
+rm -f "$AIDD_UPDATES_PLUGINS_JSON"
+lance --refresh > /dev/null
+verifie "runtimes vide" "[]" "$(etat_field 'd["runtimes"]')"
+
+# --------------------------------------------------------- 15. le vrai reseau, non bloquant
+
+echo "15. reseau reel (informatif, n'echoue pas hors ligne)"
 unset AIDD_UPDATES_TAGS_FILE
 rm -f "$PLAN"
 ecrire_installe "2.2.1" "2.3.1"

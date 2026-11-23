@@ -210,28 +210,39 @@ def _read_json(path: Path, label: str) -> dict | None:
 
 
 def claude_versions() -> dict[str, str] | None:
-    data = _read_json(fichier_plugins(), "installed_plugins.json")
+    path = fichier_plugins()
+    data = _read_json(path, "installed_plugins.json")
     if data is None:
         return None
-    found = {}
-    for identifier, entries in (data.get("plugins") or {}).items():
-        name = identifier.split("@")[0]
-        if not name.startswith("aidd-") or not entries:
-            continue
-        found[name] = entries[0].get("version", "0.0.0")
-    return found
+    try:
+        found = {}
+        for identifier, entries in (data.get("plugins") or {}).items():
+            name = identifier.split("@")[0]
+            if not name.startswith("aidd-") or not entries:
+                continue
+            found[name] = str(entries[0].get("version", "0.0.0"))
+        return found
+    except (AttributeError, TypeError, KeyError, IndexError) as err:
+        # Unexpected shape: report it as unreadable, so the other runtime is still read.
+        raise Panne(f"installed_plugins.json illisible ({path}) : forme inattendue, {err}") from err
 
 
 def opencode_versions() -> dict[str, str] | None:
-    data = _read_json(aidd_manifest_file(), "manifeste AIDD")
+    path = aidd_manifest_file()
+    data = _read_json(path, "manifeste AIDD")
     if data is None:
         return None
-    plugins = ((data.get("tools") or {}).get("opencode") or {}).get("plugins") or []
-    return {
-        p["name"]: p.get("version", "0.0.0")
-        for p in plugins
-        if isinstance(p, dict) and str(p.get("name", "")).startswith("aidd-")
-    }
+    try:
+        plugins = ((data.get("tools") or {}).get("opencode") or {}).get("plugins") or []
+        if not isinstance(plugins, list):
+            raise TypeError(f"plugins est un {type(plugins).__name__}, liste attendue")
+        return {
+            p["name"]: str(p.get("version", "0.0.0"))
+            for p in plugins
+            if isinstance(p, dict) and str(p.get("name", "")).startswith("aidd-")
+        }
+    except (AttributeError, TypeError, KeyError) as err:
+        raise Panne(f"manifeste AIDD illisible ({path}) : forme inattendue, {err}") from err
 
 
 RUNTIMES = (("claude", claude_versions), ("opencode", opencode_versions))
@@ -336,10 +347,12 @@ def _perime(horodatage: str | None, heures: int) -> bool:
 
 def mode_refresh() -> int:
     etat, corps = lire()
+    runtimes: list[str] = []  # a total failure must not keep runtimes from an earlier refresh
     try:
         installe, runtimes, erreurs = versions_installees()
         upstream = versions_upstream()
     except Panne as err:
+        etat["runtimes"] = runtimes
         etat["derniere_erreur"] = str(err).replace("\n", " ")[:300]
         etat["verifie_le"] = maintenant()
         ecrire(etat, corps)  # le plan existant survit a une panne de rafraichissement
