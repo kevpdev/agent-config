@@ -477,8 +477,10 @@ l'auto-update laissé désactivé pour `aidd-framework`, et ce dispositif : le d
 L'état vit **hors du repo**, dans `${XDG_STATE_HOME:-$HOME/.local/state}/aidd-updates/plan.md` : un
 front-matter YAML pour la machine, le plan en markdown pour l'humain. C'est un état de machine, et
 l'avertissement en tête de `CHANGELOG-aidd.md` interdit d'écrire ça dans le repo. Ce fichier est aussi
-l'**interface** entre le wrapper qui produit et le skill qui consomme, ce qui garde le skill neutre :
-changer de runtime ne réécrirait que le détecteur.
+l'**interface** entre le détecteur qui produit et le skill qui consomme, ce qui garde le skill neutre.
+Les commandes propres à un runtime, l'emplacement du détecteur et la commande de montée, ne vivent que
+dans `skills/aidd-updates/references/detecteur.md`. La ligne de démarrage n'existe que sous Claude Code.
+Sous OpenCode, le skill s'invoque à la main par `/aidd-updates`, mesuré le 2026-11-23 avec OpenCode 1.19.6.
 
 **Le détecteur lit les deux runtimes.** Sous Claude Code, il lit `~/.claude/plugins/installed_plugins.json`. Sous OpenCode, il lit le manifeste que la CLI AIDD écrit à l'installation globale, `${XDG_CONFIG_HOME:-$HOME/.config}/aidd/manifest.json`. Un runtime absent n'est pas une panne. Un fichier présent mais illisible s'écrit dans `derniere_erreur`, sans masquer l'autre runtime. Pour chaque plugin, la version retenue est la plus basse des runtimes qui l'ont, et le champ `runtimes` de l'état nomme les runtimes où AIDD est installé.
 

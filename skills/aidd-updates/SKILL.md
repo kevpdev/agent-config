@@ -12,7 +12,7 @@ disable-model-invocation: true
 
 # aidd-updates — décider d'une montée de version AIDD en connaissance de cause
 
-Claude Code sait appliquer une mise à jour de plugin, pas te dire ce qu'elle va casser. Le risque
+Claude Code et OpenCode savent appliquer une mise à jour de plugin, pas te dire ce qu'elle va casser. Le risque
 n'est pas la montée elle-même, c'est que 16 noms de skills AIDD soient cités dans ce repo et qu'un
 renommage upstream les rende muets sans erreur visible. Ce skill produit la décision, pas la mise à
 jour.
@@ -36,7 +36,7 @@ Dérouler le flux. Ne lire que la prochaine action.
 | --- | --- |
 | lire-etat | interroge le détecteur, puis branche entre à jour, plan valide et à planifier |
 | planifier | lit les changelogs des versions sautées, prouve les patchs par grep, écrit le plan |
-| appliquer | monte les plugins, applique les patchs, propose l'entrée de `CHANGELOG-aidd.md` |
+| appliquer | monte les plugins de chaque runtime listé, applique les patchs, propose l'entrée de `CHANGELOG-aidd.md` |
 
 ## Transversal rules
 
@@ -58,7 +58,7 @@ Dérouler le flux. Ne lire que la prochaine action.
 
 ## References
 
-- `references/detecteur.md` — l'emplacement du détecteur, ses quatre commandes, et les champs d'état qui portent une décision
+- `references/detecteur.md` — l'emplacement du détecteur par runtime, ses quatre commandes, les champs d'état qui portent une décision, et les commandes de montée par runtime
 
 ## Assets
 
@@ -74,4 +74,4 @@ Une batterie jouable seule pour la donnée, le reste en relecture humaine du run
 | une machine sans retard | le skill dit « à jour » et s'arrête sans ouvrir un seul changelog |
 | un plan sur disque encore valide | le skill l'affiche tel quel, il ne replanifie pas |
 | une rupture upstream sans occurrence ici | elle sort en une ligne du plan, jamais en tâche |
-| aucun accord humain dans le tour courant | aucune commande `claude plugin update` n'est lancée |
+| aucun accord humain dans le tour courant | aucune commande de montée n'est lancée, quel que soit le runtime |

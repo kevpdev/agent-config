@@ -33,8 +33,8 @@ Pourquoi cet ordre : le lecteur arrive à froid et décide en lisant la premièr
 
 ## Commandes de la montée
 
-```bash
-claude plugin marketplace update aidd-framework
-claude plugin update <plugin>@aidd-framework   # une fois par plugin en retard
-# puis redémarrer la session : les skills et agents ne sont pas rechargés à chaud
-```
+<Pour chaque runtime de `runtimes`, recopier ses commandes depuis la table « Commandes de montée,
+par runtime » de `references/detecteur.md`, avec les plugins et la release de ce plan. Aucune ligne
+pour un runtime absent de `runtimes`.>
+
+Puis redémarrer la session : les skills et agents ne sont pas rechargés à chaud.
