@@ -365,6 +365,14 @@ Les skills ne passent pas par `skills: [...]` : un lien sous `skills/` est déco
 
 Les règles ne passent pas par un `AGENTS.md` généré. OpenCode ne lit ni `~/.claude/rules` ni aucun dossier de règles, mais son tableau `instructions` accepte un glob. Il lit donc `rules/*.md` dans le repo, et une règle modifiée s'applique sans rien régénérer. OpenCode n'a pas de scope par chemin, donc aucune règle du glob n'est propre à une stack. Les règles propres à Claude restent hors du glob, dans `wrappers/claude/rules/`.
 
+AIDD s'installe pour OpenCode une fois par machine, à la main, par la CLI du framework. Les plugins sont ceux installés sous Claude Code :
+
+```bash
+npm_config_ignore_scripts=true npx -y @ai-driven-dev/cli@5.7.0 setup --global --source remote --ide opencode --plugins aidd-context,aidd-dev,aidd-vcs,aidd-pm,aidd-orchestrator,aidd-refine --yes
+```
+
+`--source remote` est obligatoire en mode non interactif, et la doc d'AIDD ne le dit pas. `npx -y @ai-driven-dev/cli@5.7.0 doctor --global` vérifie l'installation, et `npx @ai-driven-dev/cli@5.7.0 clean --global --force` la retire. Elle n'entre pas en conflit avec `install.py`, parce que les chemins sont disjoints. La CLI écrit sous `skills/aidd-<plugin>/` et `agents/`, et `install.py` pose ses liens en `skills/<nom>`. `opencode.json` n'est pas touché.
+
 ## Outillage
 
 ### Lancer toutes les batteries
