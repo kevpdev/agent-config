@@ -54,6 +54,7 @@
 
 - **NE PAS ajouter une question en cours d'analyse** — à la place, la capturer et continuer. L'agent peut déclarer le contrat cassé (une question devenue fausse ou sans objet : stop, rendre le partiel, remonter l'arbitrage), jamais le rouvrir. Seul l'humain rouvre.
 - **NE PAS creuser une découverte qui ne touche aucune question du contrat** — à la place, la capturer en une ligne et continuer. Capturer coûte dix secondes, traiter coûte la session.
+  **Une idée à faire** (une issue, un skill, un script) se capture par `vault-capture --idea` (`capture --idea` dans le vault), qui l'écrit dans `8 IDEAS/` du vault perso. **À LA PLACE de** la garder dans l'état hypomnesis, où un résumé l'efface sans bruit, ou dans un fichier du repo, hors de la source unique. Le protocole fait foi dans `decisions/2026-11-25-source-unique-des-idees.md` du vault. Une idée née chez un client ne part jamais vers le vault perso.
 - **Re-trier après les mesures.** Une question classée « à trancher par l'humain » avant de mesurer l'est souvent par ignorance, pas par nature. Avant de rendre un arbitrage, chercher la commande qui le tuerait.
 - **Quand aucun humain n'est joignable** (`aidd-dev:09-for-sure`, `aidd-orchestrator:01-sdlc`) : consigner l'arbitrage dans le fichier de suivi du run et continuer sur l'hypothèse la plus défendable, marquée « supposé ». Le contrat de ces boucles est justement que l'humain est parti.
 

@@ -6,6 +6,11 @@
   },
   {
     "skill": "vault-capture",
+    "id": "positif-idee-a-faire",
+    "query": "Idée à faire pour plus tard : un script qui compte les idées raw par projet. Range-la avec les autres idées du vault."
+  },
+  {
+    "skill": "vault-capture",
     "id": "negatif-vers-capture",
     "expect_trigger": false,
     "query": "Je suis dans mon vault Obsidian, capture cette idée dans l'inbox : relire les règles chargées chaque mois."
