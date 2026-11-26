@@ -87,6 +87,14 @@ Le fichier du rang 3 se crée au premier fait projet, pas d'avance. **Dans le va
 
 **POURQUOI** : les deux se modifient ou se suppriment en un geste, et les brouillons montrés ont été validés tels quels.
 
+## Le flux dans le corps d'une issue
+
+**DÉCLENCHEUR** : je rédige le corps d'une issue, à la demande ou d'office, sous-agent et run SDLC compris.
+
+**À LA PLACE de** décrire la solution par des étapes numérotées seules, dessiner d'abord le flux du scénario en Mermaid vertical (`mermaid.md`), puis les étapes. Le gabarit d'`aidd-vcs:04-issue-create` ne le demande pas. Dans un outil de tickets qui n'affiche pas Mermaid, le flux s'écrit en ASCII dans un bloc de code.
+
+**POURQUOI** : l'utilisateur comprend par le schéma (`profil.md`), et des étapes numérotées ne montrent pas l'enchaînement.
+
 ## CI GitHub
 
 **DÉCLENCHEUR** : je crée ou modifie un fichier de `.github/workflows/`, `.github/dependabot.yml` ou le ruleset d'un dépôt.
