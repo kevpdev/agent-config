@@ -85,6 +85,8 @@ Le fichier du rang 3 se crée au premier fait projet, pas d'avance. **Dans le va
 
 **À LA PLACE de** montrer le brouillon et attendre l'accord, créer, puis donner le lien, même si le skill dit d'attendre.
 
+**Le corps d'une issue porte le flux de son scénario** en Mermaid vertical, avant les étapes numérotées. Le gabarit du skill ne le demande pas. **POURQUOI, demandé par l'utilisateur le 2026-11-26** : il comprend par le schéma (`profil.md`), et des étapes numérotées seules ne montrent pas l'enchaînement.
+
 **POURQUOI** : les deux se modifient ou se suppriment en un geste, et les brouillons montrés ont été validés tels quels.
 
 ## CI GitHub
